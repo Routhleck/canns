@@ -1,0 +1,9 @@
+# Changes here will be overwritten by Copier. Do not edit manually.
+_commit: v0.2.10
+_src_path: gh:jlevy/simple-modern-uv
+package_author_email: sichaohe@outlook.com
+package_author_name: Sichao He
+package_description: A Python Library for Continuous Attractor Neural Networks
+package_github_org: routhleck
+package_module: canns
+package_name: canns
