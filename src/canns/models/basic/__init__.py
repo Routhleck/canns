@@ -1,1 +1,1 @@
-from .cann1d import CANN1D
+from .cann1d import CANN1D as CANN1D
