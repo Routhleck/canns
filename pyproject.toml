@@ -59,11 +59,11 @@ dev = [
 cpu = [
     "BrainX[cpu]"
 ]
-cuda = [
-    "BrainX[cuda12]"
+cuda12 = [
+    "BrainX[cuda12]; platform_system == 'Linux'"
 ]
 tpu = [
-    "BrainX[tpu]"
+    "BrainX[tpu]; platform_system == 'Linux'"
 ]
 
 [project.scripts]
@@ -164,8 +164,13 @@ reportUnreachable = false
 # reportPrivateLocalImportUsage = false
 # reportMissingImports = false
 # reportUnnecessaryIsInstance = false
-# reportUnknownVariableType = false
-# reportUnknownArgumentType = false
+reportArgumentType = false
+reportGeneralTypeIssues = false
+reportUnknownArgumentType = false
+reportUnknownVariableType = false
+reportOperatorIssue = false
+reportUnsupportedOperands = false
+
 
 [tool.codespell]
 # Add here as needed:

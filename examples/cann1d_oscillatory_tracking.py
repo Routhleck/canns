@@ -1,8 +1,9 @@
-import jax
 import brainstate as bst
-import brainunit as u
-from canns.models import CANN1D
 import braintools
+import brainunit as u
+import jax
+
+from canns.models import CANN1D
 
 dur1, dur2, dur3 = 100., 2000., 500.
 

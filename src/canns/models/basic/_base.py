@@ -1,4 +1,4 @@
 import brainstate as bst
 
-class BasicModel(bst.nn.Dynamics):
-    ...
+
+class BasicModel(bst.nn.Dynamics): ...
