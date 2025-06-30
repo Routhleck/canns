@@ -38,6 +38,7 @@ classifiers = [
 # ---- Main dependencies ----
 
 dependencies = [
+    "BrainX[cpu]",
 ]
 
 
@@ -56,13 +57,13 @@ dev = [
 
 [project.optional-dependencies]
 cpu = [
-    "BrainX[cpu]
+    "BrainX[cpu]"
 ]
 cuda = [
-    "BrainX[cuda12]
+    "BrainX[cuda12]"
 ]
 tpu = [
-    "BrainX[tpu]
+    "BrainX[tpu]"
 ]
 
 [project.scripts]
