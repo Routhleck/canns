@@ -1,3 +1,3 @@
-class Models:
-    def __init__(self):
-        pass 
+from .basic import *
+from .hybird import *
+from .brain_inspired import *
