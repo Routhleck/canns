@@ -54,9 +54,20 @@ dev = [
     "funlog>=0.2.1",
 ]
 
+[project.optional-dependencies]
+cpu = [
+    "BrainX[cpu]
+]
+cuda = [
+    "BrainX[cuda12]
+]
+tpu = [
+    "BrainX[tpu]
+]
+
 [project.scripts]
 # Add script entry points here:
-canns = "canns:main"
+canns = "canns:master"
 
 
 # ---- Build system ----

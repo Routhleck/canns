@@ -1,7 +1,9 @@
-from ._base import BasicModel
 import brainstate as bst
 import brainunit as u
 import jax.numpy as jnp
+
+from ._base import BasicModel
+
 
 class CANN1D(BasicModel):
     '''
