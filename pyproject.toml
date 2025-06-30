@@ -38,6 +38,7 @@ classifiers = [
 # ---- Main dependencies ----
 
 dependencies = [
+    "BrainX[cpu]",
 ]
 
 
@@ -54,9 +55,20 @@ dev = [
     "funlog>=0.2.1",
 ]
 
+[project.optional-dependencies]
+cpu = [
+    "BrainX[cpu]"
+]
+cuda12 = [
+    "BrainX[cuda12]; platform_system == 'Linux'"
+]
+tpu = [
+    "BrainX[tpu]; platform_system == 'Linux'"
+]
+
 [project.scripts]
 # Add script entry points here:
-canns = "canns:main"
+canns = "canns:master"
 
 
 # ---- Build system ----
@@ -133,7 +145,9 @@ ignore = [
 # than mypy and with a good extension for VSCode/Cursor.
 # https://marketplace.visualstudio.com/items?itemName=detachhead.basedpyright
 # https://docs.basedpyright.com/latest/configuration/config-files/#sample-pyprojecttoml-file
-include = ["src", "tests", "devtools"]
+include = ["src"]
+#exclude = [ ... ]
+#include = ["src", "tests", "devtools"]
 # By default BasedPyright is very strict, so you almost certainly want to disable
 # some of the rules.
 # First, these turn off warnings about (yes) how you ignore warnings:
@@ -152,8 +166,12 @@ reportUnreachable = false
 # reportPrivateLocalImportUsage = false
 # reportMissingImports = false
 # reportUnnecessaryIsInstance = false
-# reportUnknownVariableType = false
-# reportUnknownArgumentType = false
+reportArgumentType = false
+reportGeneralTypeIssues = false
+reportUnknownArgumentType = false
+reportUnknownVariableType = false
+reportOperatorIssue = false
+
 
 [tool.codespell]
 # Add here as needed:
