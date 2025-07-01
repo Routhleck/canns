@@ -1,9 +1,10 @@
 import brainstate as bst
+import brainstate.compile
 import braintools
 import brainunit as u
 import jax
 
-from canns.models import CANN1D
+from canns.models import CANN1D, CANN1D_SFA
 
 dur1, dur2, dur3 = 100., 2000., 500.
 
@@ -11,30 +12,35 @@ dur1, dur2, dur3 = 100., 2000., 500.
 @jax.jit
 def get_inp(t):
     pos = u.math.where(t < dur1, 0., u.math.where(t < dur1 + dur2, final_pos * (t - dur1) / (dur2 - dur1), final_pos))
-    inp = cann.get_stimulus_by_pos(pos)
+    inp = cann_sfa.get_stimulus_by_pos(pos)
     return inp
 
 
 bst.environ.set(dt=0.1)
 cann = CANN1D(num=512)
+cann_sfa = CANN1D_SFA(num=512)
 cann.init_state()
+cann_sfa.init_state()
 
 
 def run_step(t):
     with bst.environ.context(t=t):
-        cann(get_inp(t))
-        return cann.u.value, cann.v.value, cann.inp.value
+        inp = get_inp(t)
+        cann_sfa(inp)
+        cann(inp)
+        return cann.u.value, cann_sfa.u.value, cann_sfa.v.value, cann_sfa.inp.value
 
 
-final_pos = cann.a / cann.tau_v * 0.6 * dur2
+final_pos = cann_sfa.a / cann_sfa.tau_v * 0.6 * dur2
 
 times = u.math.arange(0, dur1 + dur2 + dur3, bst.environ.get_dt())
-us, vs, inps = bst.compile.for_loop(run_step, times)
+cann_us, cann_sfa_us, cann_sfa_vs, inps = bst.compile.for_loop(run_step, times, pbar=brainstate.compile.ProgressBar(10))
 braintools.visualize.animate_1D(
-    dynamical_vars=[{'ys': us, 'xs': cann.x, 'legend': 'u'},
-                    {'ys': vs, 'xs': cann.x, 'legend': 'v'},
-                    {'ys': inps, 'xs': cann.x, 'legend': 'Iext'}],
-    frame_step=10,
+    dynamical_vars=[{'ys': cann_us, 'xs': cann_sfa.x, 'legend': 'u'},
+                    {'ys': cann_sfa_us, 'xs': cann_sfa.x, 'legend': 'u(sfa)'},
+                    {'ys': cann_sfa_vs, 'xs': cann_sfa.x, 'legend': 'v(sfa)'},
+                    {'ys': inps, 'xs': cann_sfa.x, 'legend': 'Iext'}],
+    frame_step=5,
     frame_delay=5,
-    save_path='cann1d_oscillatory_tracking.gif',
+    save_path='CANN1D_oscillatory_tracking.gif',
 )
