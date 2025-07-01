@@ -3,24 +3,7 @@ import brainunit as u
 
 from ._base import BasicModel
 
-
-class CANN1D(BasicModel):
-    """
-    A 1D continuous attractor network model.
-
-    Reference:
-        @article{wu2008dynamics,
-            title={Dynamics and computation of continuous attractors},
-            author={Wu, Si and Hamaguchi, Kosuke and Amari, Shun-ichi},
-            journal={Neural computation},
-            volume={20},
-            number={4},
-            pages={994--1025},
-            year={2008},
-            publisher={MIT Press One Rogers Street, Cambridge, MA 02142-1209, USA journals-info~…}
-        }
-    """
-
+class BaseCANN1D(BasicModel):
     def __init__(
         self,
         num,
@@ -33,6 +16,9 @@ class CANN1D(BasicModel):
         z_max=u.math.pi,
         **kwargs,
     ):
+        """
+        Base class for 1D continuous attractor network models.
+        """
         super().__init__(num, **kwargs)
 
         # parameters
@@ -53,14 +39,6 @@ class CANN1D(BasicModel):
         # The connection matrix
         self.conn_mat = self.make_conn()
 
-    def init_state(self, *args, **kwargs):
-        # variables
-        self.r = bst.HiddenState(u.math.zeros(self.varshape))
-        self.u = bst.HiddenState(u.math.zeros(self.varshape))
-
-        # inputs
-        self.inp = bst.State(u.math.zeros(self.varshape))
-
     def dist(self, d):
         d = u.math.remainder(d, self.z_range)
         d = u.math.where(d > self.z_range / 2, d - self.z_range, d)
@@ -80,6 +58,32 @@ class CANN1D(BasicModel):
     def get_stimulus_by_pos(self, pos):
         return self.A * u.math.exp(-0.25 * u.math.square(self.dist(self.x - pos) / self.a))
 
+
+class CANN1D(BaseCANN1D):
+    """
+    A 1D continuous attractor network model.
+
+    Reference:
+        @article{wu2008dynamics,
+            title={Dynamics and computation of continuous attractors},
+            author={Wu, Si and Hamaguchi, Kosuke and Amari, Shun-ichi},
+            journal={Neural computation},
+            volume={20},
+            number={4},
+            pages={994--1025},
+            year={2008},
+            publisher={MIT Press One Rogers Street, Cambridge, MA 02142-1209, USA journals-info~…}
+        }
+    """
+
+    def init_state(self, *args, **kwargs):
+        # variables
+        self.r = bst.HiddenState(u.math.zeros(self.varshape))
+        self.u = bst.HiddenState(u.math.zeros(self.varshape))
+
+        # inputs
+        self.inp = bst.State(u.math.zeros(self.varshape))
+
     def update(self, inp):
         self.inp.value = inp
         r1 = u.math.square(self.u.value)
@@ -91,7 +95,7 @@ class CANN1D(BasicModel):
         )
 
 
-class CANN1D_SFA(BasicModel):
+class CANN1D_SFA(BaseCANN1D):
     """
     A 1D continuous attractor network model with spike frequency adaptation(SFA).
 
@@ -120,27 +124,9 @@ class CANN1D_SFA(BasicModel):
         m=0.3,
         **kwargs,
     ):
-        super().__init__(num, **kwargs)
-
-        # parameters
-        self.tau = tau  # The synaptic time constant
+        super().__init__(num, tau, k, a, A, J0, z_min, z_max, **kwargs)
         self.tau_v = tau_v
-        self.k = k  # Degree of the rescaled inhibition
-        self.a = a  # Half-width of the range of excitatory connections
-        self.A = A  # Magnitude of the external input
-        self.J0 = J0  # Maximum connection value
         self.m = m
-
-        # feature space
-        self.z_min = z_min
-        self.z_max = z_max
-        self.z_range = z_max - z_min
-        self.x = u.math.linspace(z_min, z_max, num)
-        self.rho = num / self.z_range  # The neural density
-        self.dx = self.z_range / num  # The stimulus density
-
-        # The connection matrix
-        self.conn_mat = self.make_conn()
 
     def init_state(self, *args, **kwargs):
         # variables
@@ -150,25 +136,6 @@ class CANN1D_SFA(BasicModel):
 
         # inputs
         self.inp = bst.State(u.math.zeros(self.varshape))
-
-    def dist(self, d):
-        d = u.math.remainder(d, self.z_range)
-        d = u.math.where(d > self.z_range / 2, d - self.z_range, d)
-        return d
-
-    def make_conn(self):
-        x_left = u.math.reshape(self.x, (-1, 1))
-        x_right = u.math.repeat(self.x.reshape((1, -1)), len(self.x), axis=0)
-        d = self.dist(x_left - x_right)
-        conn = (
-            self.J0
-            * u.math.exp(-0.5 * u.math.square(d / self.a))
-            / (u.math.sqrt(2 * u.math.pi) * self.a)
-        )
-        return conn
-
-    def get_stimulus_by_pos(self, pos):
-        return self.A * u.math.exp(-0.25 * u.math.square(self.dist(self.x - pos) / self.a))
 
     def update(self, inp):
         self.inp.value = inp

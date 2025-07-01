@@ -40,7 +40,7 @@ braintools.visualize.animate_1D(
                     {'ys': cann_sfa_us, 'xs': cann_sfa.x, 'legend': 'u(sfa)'},
                     {'ys': cann_sfa_vs, 'xs': cann_sfa.x, 'legend': 'v(sfa)'},
                     {'ys': inps, 'xs': cann_sfa.x, 'legend': 'Iext'}],
-    frame_step=5,
+    frame_step=60,
     frame_delay=5,
     save_path='CANN1D_oscillatory_tracking.gif',
 )
