@@ -12,8 +12,7 @@ dur1, dur2, dur3 = 100., 2000., 500.
 @jax.jit
 def get_inp(t):
     pos = u.math.where(t < dur1, 0., u.math.where(t < dur1 + dur2, final_pos * (t - dur1) / (dur2 - dur1), final_pos))
-    inp = cann_sfa.get_stimulus_by_pos(pos)
-    return inp
+    return cann_sfa.get_stimulus_by_pos(pos)
 
 
 bst.environ.set(dt=0.1)
