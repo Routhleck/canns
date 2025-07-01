@@ -39,6 +39,7 @@ classifiers = [
 
 dependencies = [
     "BrainX[cpu]",
+    "tqdm"
 ]
 
 
