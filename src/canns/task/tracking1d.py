@@ -252,6 +252,8 @@ class SmoothTracking1D(Tracking1D):
             duration (Sequence[float | Quantity]): The duration of each segment of smooth movement.
             time_step (float | Quantity, optional): The simulation time step. Defaults to 0.1.
         """
+        assert len(tuple(Iext)) == (len(tuple(duration)) + 1), \
+            "Iext must have one more element than duration to define start and end points for each segment."
         super().__init__(
             cann_instance=cann_instance,
             Iext=Iext,

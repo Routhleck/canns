@@ -1,6 +1,5 @@
 import brainstate
 import braintools
-import numpy as np
 
 from canns.task.tracking1d import PopulationCoding1D, TemplateMatching1D, SmoothTracking1D
 from canns.models import CANN1D
@@ -69,9 +68,8 @@ def test_smooth_tracking_1d():
 
     task_st = SmoothTracking1D(
         cann_instance=cann,
-        Iext_start=0.,
-        Iext_end=10.,
-        duration=50.,
+        Iext=(1., 0.75, 2., 1.75, 3.),
+        duration=(10., 10., 10., 10.),
         time_step=brainstate.environ.get_dt(),
     )
     task_st.init_state()
