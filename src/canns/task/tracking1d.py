@@ -49,7 +49,7 @@ class Tracking1D(BaseTask):
         self.current_step = 0
         self.time_step = time_step
         self.total_duration = sum(duration)
-        self.total_steps = u.math.ceil(self.total_duration / self.time_step)
+        self.total_steps = u.math.ceil(self.total_duration / self.time_step).astype(dtype=int)
 
         # Pre-computes the entire sequence of external inputs for the simulation.
         self.Iext_sequence = self._make_Iext_sequence()
