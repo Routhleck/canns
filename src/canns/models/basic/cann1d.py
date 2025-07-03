@@ -3,6 +3,7 @@ import brainunit as u
 
 from ._base import BasicModel
 
+
 class BaseCANN1D(BasicModel):
     """
     Base class for 1D Continuous Attractor Neural Network (CANN) models.
@@ -10,6 +11,7 @@ class BaseCANN1D(BasicModel):
     neuronal properties, feature space, and the connectivity matrix, which
     are shared by different CANN model variations.
     """
+
     def __init__(
         self,
         num,
@@ -40,18 +42,18 @@ class BaseCANN1D(BasicModel):
 
         # --- Model Parameters ---
         self.tau = tau  # Synaptic time constant.
-        self.k = k      # Degree of the rescaled inhibition.
-        self.a = a      # Half-width of the range of excitatory connections.
-        self.A = A      # Magnitude of the external input.
-        self.J0 = J0    # Maximum connection value (amplitude of the connectivity kernel).
+        self.k = k  # Degree of the rescaled inhibition.
+        self.a = a  # Half-width of the range of excitatory connections.
+        self.A = A  # Magnitude of the external input.
+        self.J0 = J0  # Maximum connection value (amplitude of the connectivity kernel).
 
         # --- Feature Space Properties ---
-        self.z_min = z_min          # Minimum of the feature space.
-        self.z_max = z_max          # Maximum of the feature space.
-        self.z_range = z_max - z_min # The total range of the feature space.
+        self.z_min = z_min  # Minimum of the feature space.
+        self.z_max = z_max  # Maximum of the feature space.
+        self.z_range = z_max - z_min  # The total range of the feature space.
         # An array representing the preferred feature value for each neuron.
         self.x = u.math.linspace(z_min, z_max, num)
-        self.rho = num / self.z_range # The neural density.
+        self.rho = num / self.z_range  # The neural density.
         self.dx = self.z_range / num  # The discretization step of the feature space.
 
         # --- Connectivity Matrix ---
@@ -194,19 +196,19 @@ class CANN1D_SFA(BaseCANN1D):
         """
         super().__init__(num, tau, k, a, A, J0, z_min, z_max, **kwargs)
         # --- SFA-specific Parameters ---
-        self.tau_v = tau_v # Time constant of the adaptation variable.
-        self.m = m         # Strength of the adaptation.
+        self.tau_v = tau_v  # Time constant of the adaptation variable.
+        self.m = m  # Strength of the adaptation.
 
     def init_state(self, *args, **kwargs):
         """Initializes the state variables of the model, including the adaptation variable."""
         # --- State Variables ---
-        self.r = bst.HiddenState(u.math.zeros(self.varshape)) # Firing rate.
-        self.u = bst.HiddenState(u.math.zeros(self.varshape)) # Synaptic inputs.
+        self.r = bst.HiddenState(u.math.zeros(self.varshape))  # Firing rate.
+        self.u = bst.HiddenState(u.math.zeros(self.varshape))  # Synaptic inputs.
         # self.v: The adaptation variable, which provides a slow hyperpolarizing current.
         self.v = bst.HiddenState(u.math.zeros(self.varshape))
 
         # --- Inputs ---
-        self.inp = bst.State(u.math.zeros(self.varshape)) # External input.
+        self.inp = bst.State(u.math.zeros(self.varshape))  # External input.
 
     def update(self, inp):
         """

@@ -1,7 +1,6 @@
 from typing import Sequence
 
 import brainstate
-import jax
 import brainstate as bst
 import brainunit as u
 from brainunit import Quantity
