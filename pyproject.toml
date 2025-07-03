@@ -189,3 +189,4 @@ testpaths = [
 ]
 norecursedirs = []
 filterwarnings = []
+addopts = "--assert=plain"
