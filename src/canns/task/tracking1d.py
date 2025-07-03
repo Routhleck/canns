@@ -4,6 +4,7 @@ import brainstate
 import brainstate as bst
 import brainunit as u
 from brainunit import Quantity
+from saiunit.math import dtype
 
 from ._base import BaseTask
 from ..models.basic.cann1d import BaseCANN1D
@@ -48,7 +49,7 @@ class Tracking1D(BaseTask):
         self.current_step = 0
         self.time_step = time_step
         self.total_duration = sum(duration)
-        self.total_steps = int(self.total_duration / self.time_step)
+        self.total_steps = u.math.ceil(self.total_duration / self.time_step)
 
         # Pre-computes the entire sequence of external inputs for the simulation.
         self.Iext_sequence = self._make_Iext_sequence()
@@ -60,7 +61,7 @@ class Tracking1D(BaseTask):
         Initializes the state variables for the simulation run.
         This method should be called at the beginning of a simulation.
         """
-        self.current_step = brainstate.State(0)
+        self.current_step = brainstate.State(0, dtype=int)
         self.inputs = brainstate.State(u.math.zeros(self.cann_instance.varshape))
 
     def _make_Iext_sequence(self):
@@ -95,7 +96,7 @@ class Tracking1D(BaseTask):
         # Check if the simulation has completed all steps.
         return u.math.where(
             self.current_step.value >= self.total_steps,
-            False,  # Return False to signal the end.
+            self.Iext_sequence[-1],  # Return the last input position if the end is reached.
             self.Iext_sequence[self.current_step.value]  # Return the pre-calculated input.
         )
 
