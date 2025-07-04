@@ -54,7 +54,7 @@ class BaseCANN1D(BasicModel):
         # An array representing the preferred feature value for each neuron.
         self.x = u.math.linspace(z_min, z_max, num)
         self.rho = num / self.z_range  # The neural density.
-        self.dx = self.z_range / num  # The discretization step of the feature space.
+        self.dx = self.z_range / num  # The stimulus density
 
         # --- Connectivity Matrix ---
         # The connection matrix, defining the strength of synapses between all pairs of neurons.
