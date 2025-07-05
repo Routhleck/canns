@@ -1,4 +1,4 @@
-import brainstate as bst
+import brainstate
 import brainunit as u
 import jax
 import matplotlib.pyplot as plt
@@ -180,13 +180,13 @@ class CANN2D(BaseCANN2D):
         """
         # --- State Variables ---
         # Firing rate of the neurons.
-        self.r = bst.HiddenState(u.math.zeros((self.length, self.length)))
+        self.r = brainstate.HiddenState(u.math.zeros((self.length, self.length)))
         # Synaptic input to the neurons.
-        self.u = bst.HiddenState(u.math.zeros((self.length, self.length)))
+        self.u = brainstate.HiddenState(u.math.zeros((self.length, self.length)))
 
         # --- Inputs ---
         # External input to the neurons
-        self.inp = bst.State(u.math.zeros((self.length, self.length)))
+        self.inp = brainstate.State(u.math.zeros((self.length, self.length)))
 
     def update(self, inp):
         """
@@ -206,7 +206,7 @@ class CANN2D(BaseCANN2D):
         Irec = (self.r.value.flatten() @ self.conn_mat).reshape((self.length, self.length))
         # Update the synaptic input based on the recurrent input and external input.
         self.u.value += (
-            (-self.u.value + Irec + self.inp.value) / self.tau * bst.environ.get_dt()
+            (-self.u.value + Irec + self.inp.value) / self.tau * brainstate.environ.get_dt()
         )
 
 
@@ -242,13 +242,13 @@ class CANN2D_SFA(BaseCANN2D):
     def init_state(self, *args, **kwargs):
         """Initializes the state variables of the model, including the adaptation variable."""
         # --- State Variables ---
-        self.r = bst.HiddenState(u.math.zeros(self.varshape))  # Firing rate.
-        self.u = bst.HiddenState(u.math.zeros(self.varshape))  # Synaptic input.
+        self.r = brainstate.HiddenState(u.math.zeros(self.varshape))  # Firing rate.
+        self.u = brainstate.HiddenState(u.math.zeros(self.varshape))  # Synaptic input.
         # self.v: The adaptation variable, which tracks the synaptic inputs 'u' and provides negative feedback.
-        self.v = bst.HiddenState(u.math.zeros(self.varshape))
+        self.v = brainstate.HiddenState(u.math.zeros(self.varshape))
 
         # --- Inputs ---
-        self.inp = bst.State(u.math.zeros(self.varshape))  # External input.
+        self.inp = brainstate.State(u.math.zeros(self.varshape))  # External input.
 
     def update(self, inp):
         """
@@ -267,10 +267,10 @@ class CANN2D_SFA(BaseCANN2D):
         Irec = (self.r.value.flatten() @ self.conn_mat).reshape((self.length, self.length))
         # Update the synaptic input. Note the additional '- self.v.value' term,
         self.u.value += (
-            (-self.u.value + Irec + self.inp.value - self.v.value) / self.tau * bst.environ.get_dt()
+            (-self.u.value + Irec + self.inp.value - self.v.value) / self.tau * brainstate.environ.get_dt()
         )
         # Update the adaptation variable 'v'. It slowly tracks the membrane potential 'u'
         # and has its own decay, creating a slow negative feedback loop.
         self.v.value += (
-            (-self.v.value + self.m * self.u.value) / self.tau_v * bst.environ.get_dt()
+            (-self.v.value + self.m * self.u.value) / self.tau_v * brainstate.environ.get_dt()
         )

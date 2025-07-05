@@ -1,7 +1,6 @@
 from typing import Sequence
 
 import brainstate
-import brainstate as bst
 import brainunit as u
 from brainunit import Quantity
 from saiunit.math import dtype
@@ -54,7 +53,7 @@ class Tracking1D(BaseTask):
         # Pre-computes the entire sequence of external inputs for the simulation.
         self.Iext_sequence = self._make_Iext_sequence()
 
-        self.run_steps = u.math.arange(0, self.total_duration, bst.environ.get_dt())
+        self.run_steps = u.math.arange(0, self.total_duration, brainstate.environ.get_dt())
 
     def init_state(self, *args, **kwargs):
         """
@@ -225,7 +224,7 @@ class TemplateMatching1D(Tracking1D):
         # Generate the base stimulus pattern.
         stimulus = self.cann_instance.get_stimulus_by_pos(pos)
         # Add random noise to the stimulus.
-        noise = 0.1 * self.cann_instance.A * bst.random.randn(*self.cann_instance.varshape)
+        noise = 0.1 * self.cann_instance.A * brainstate.random.randn(*self.cann_instance.varshape)
         self.inputs.value = stimulus + noise
 
 
