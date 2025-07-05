@@ -1,5 +1,6 @@
 import brainstate as bst
 import brainunit as u
+from brainunit import Quantity
 
 from ._base import BasicModel
 
@@ -14,14 +15,14 @@ class BaseCANN1D(BasicModel):
 
     def __init__(
         self,
-        num,
-        tau=1.0,
-        k=8.1,
-        a=0.5,
-        A=10,
-        J0=4.0,
-        z_min=-u.math.pi,
-        z_max=u.math.pi,
+        num: int,
+        tau: Quantity | float = 1.0,
+        k: float = 8.1,
+        a: float = 0.5,
+        A: float = 10,
+        J0: float = 4.0,
+        z_min: float = -u.math.pi,
+        z_max: float = u.math.pi,
         **kwargs,
     ):
         """
@@ -54,7 +55,7 @@ class BaseCANN1D(BasicModel):
         # An array representing the preferred feature value for each neuron.
         self.x = u.math.linspace(z_min, z_max, num)
         self.rho = num / self.z_range  # The neural density.
-        self.dx = self.z_range / num  # The discretization step of the feature space.
+        self.dx = self.z_range / num  # The stimulus density
 
         # --- Connectivity Matrix ---
         # The connection matrix, defining the strength of synapses between all pairs of neurons.
@@ -174,16 +175,16 @@ class CANN1D_SFA(BaseCANN1D):
 
     def __init__(
         self,
-        num,
-        tau=1.0,
-        tau_v=50.0,
-        k=8.1,
-        a=0.3,
-        A=0.2,
-        J0=1.0,
-        z_min=-u.math.pi,
-        z_max=u.math.pi,
-        m=0.3,
+        num: int,
+        tau: Quantity | float = 1.0,
+        tau_v: Quantity | float = 50.0,
+        k: float = 8.1,
+        a: float = 0.3,
+        A: float = 0.2,
+        J0: float = 1.0,
+        z_min: float = -u.math.pi,
+        z_max: float = u.math.pi,
+        m: float = 0.3,
         **kwargs,
     ):
         """
@@ -204,7 +205,7 @@ class CANN1D_SFA(BaseCANN1D):
         # --- State Variables ---
         self.r = bst.HiddenState(u.math.zeros(self.varshape))  # Firing rate.
         self.u = bst.HiddenState(u.math.zeros(self.varshape))  # Synaptic inputs.
-        # self.v: The adaptation variable, which provides a slow hyperpolarizing current.
+        # self.v: The adaptation variable, which tracks the synaptic inputs 'u' and provides negative feedback.
         self.v = bst.HiddenState(u.math.zeros(self.varshape))
 
         # --- Inputs ---
