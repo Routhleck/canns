@@ -1,5 +1,9 @@
+import math
+from typing import Tuple
+
 import brainstate
 import brainunit as u
+import jax
 from brainunit import Quantity
 from matplotlib import pyplot as plt
 
@@ -22,6 +26,24 @@ class BaseCANN(BasicModel):
     neuronal properties, feature space, and the connectivity matrix, which
     are shared by different CANN model variations.
     """
+
+    def __init__(
+        self,
+        shape: int | Tuple[int, ...],
+        **kwargs,
+    ):
+        """
+        Initializes the base CANN model.
+
+        Args:
+            shape (int or tuple): The number of neurons in the network. If a tuple is provided,
+                                it defines the shape of the network (e.g., (length, length) for 2D).
+            **kwargs: Additional keyword arguments passed to the parent BasicModel.
+        """
+        self.shape = shape
+        super().__init__(math.prod(shape) if isinstance(shape, tuple) else shape, **kwargs)
+
+
     def make_conn(self):
         """
         Constructs the connectivity matrix for the CANN model.
@@ -312,8 +334,7 @@ class BaseCANN2D(BaseCANN):
             **kwargs: Additional keyword arguments passed to the parent BasicModel.
         """
         self.length = length
-        self.num = length ** 2  # Total number of neurons in the 2D grid.
-        super().__init__(self.num, **kwargs)
+        super().__init__((self.length,) * 2, **kwargs)  # square network of neurons
 
         # --- Model Parameters ---
         self.tau = tau  # Synaptic time constant.
@@ -512,13 +533,13 @@ class CANN2D_SFA(BaseCANN2D):
     def init_state(self, *args, **kwargs):
         """Initializes the state variables of the model, including the adaptation variable."""
         # --- State Variables ---
-        self.r = brainstate.HiddenState(u.math.zeros(self.varshape))  # Firing rate.
-        self.u = brainstate.HiddenState(u.math.zeros(self.varshape))  # Synaptic input.
+        self.r = brainstate.HiddenState(u.math.zeros((self.length, self.length)))  # Firing rate.
+        self.u = brainstate.HiddenState(u.math.zeros((self.length, self.length)))  # Synaptic input.
         # self.v: The adaptation variable, which tracks the synaptic inputs 'u' and provides negative feedback.
-        self.v = brainstate.HiddenState(u.math.zeros(self.varshape))
+        self.v = brainstate.HiddenState(u.math.zeros((self.length, self.length)))
 
         # --- Inputs ---
-        self.inp = brainstate.State(u.math.zeros(self.varshape))  # External input.
+        self.inp = brainstate.State(u.math.zeros((self.length, self.length)))  # External input.
 
     def update(self, inp):
         """

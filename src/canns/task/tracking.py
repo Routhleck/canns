@@ -12,7 +12,9 @@ __all__ = [
     'PopulationCoding1D',
     'TemplateMatching1D',
     'SmoothTracking1D',
-    'CustomTracking1D',
+    'PopulationCoding2D',
+    'TemplateMatching2D',
+    'SmoothTracking2D',
 ]
 
 
@@ -64,7 +66,7 @@ class TrackingTask(BaseTask):
         This method should be called at the beginning of a simulation.
         """
         self.current_step = brainstate.State(0, dtype=int)
-        self.inputs = brainstate.State(u.math.zeros(self.cann_instance.varshape))
+        self.inputs = brainstate.State(u.math.zeros(self.cann_instance.shape))
 
     def _make_Iext_sequence(self):
         """
@@ -183,7 +185,7 @@ class PopulationCoding(TrackingTask):
                 self.current_step.value < end_stim_step
             ),
             self.cann_instance.get_stimulus_by_pos(pos),  # Apply stimulus
-            u.math.zeros(self.cann_instance.varshape, dtype=float)  # Apply no stimulus
+            u.math.zeros(self.cann_instance.shape, dtype=float)  # Apply no stimulus
         )
         self.current_step.value += 1
 
@@ -235,7 +237,7 @@ class TemplateMatching(TrackingTask):
         stimulus = self.cann_instance.get_stimulus_by_pos(pos)
         # Add random noise to the stimulus.
         noise = 0.1 * self.cann_instance.A * brainstate.random.randn(*self.cann_instance.varshape)
-        self.inputs.value = stimulus + noise
+        self.inputs.value = stimulus + noise.reshape(self.cann_instance.shape)
 
 
 class SmoothTracking(TrackingTask):
@@ -279,31 +281,41 @@ class SmoothTracking(TrackingTask):
         The output is an array of shape (total_steps, ndim).
         """
         # The output sequence now has a shape of (total_steps, ndim) to hold coordinates.
-        Iext_sequence = u.math.zeros((self.total_steps, self.ndim), dtype=float)
+        Iext_sequence = Quantity(u.math.zeros((self.total_steps, self.ndim), dtype=float))
         start_step = 0
 
-        for i, dur in enumerate(self.duration):
-            num_steps = int(dur / self.time_step)
-            if num_steps == 0:
-                continue
-            end_step = start_step + num_steps
+        if self.ndim == 1:
+            for dur, iext_val in zip(self.duration, self.Iext):
+                num_steps = int(dur / self.time_step)
+                end_step = start_step + num_steps
+                Iext_sequence[start_step:end_step] = iext_val
+                start_step = end_step
+                # If total duration is not perfectly divisible, fill the remainder with the last value.
+            if start_step < self.total_steps:
+                Iext_sequence[start_step:] = self.Iext[-1]
+        else:
+            for i, dur in enumerate(self.duration):
+                num_steps = int(dur / self.time_step)
+                if num_steps == 0:
+                    continue
+                end_step = start_step + num_steps
 
-            # Define start and end points (which are now tuples/vectors) for interpolation
-            start_pos = self.Iext[i]
-            end_pos = self.Iext[i + 1]
+                # Define start and end points (which are now tuples/vectors) for interpolation
+                start_pos = self.Iext[i]
+                end_pos = self.Iext[i + 1]
 
-            # Interpolate each dimension independently
-            for d in range(self.ndim):
-                start_d = start_pos[d]
-                end_d = end_pos[d]
-                Iext_sequence[start_step:end_step, d] = u.math.linspace(start_d, end_d, num_steps)
+                # Interpolate each dimension independently
+                for d in range(self.ndim):
+                    start_d = start_pos[d]
+                    end_d = end_pos[d]
+                    Iext_sequence[start_step:end_step, d] = u.math.linspace(start_d, end_d, num_steps)
 
-            start_step = end_step
+                start_step = end_step
 
-        # Fill any remaining steps with the final position.
-        if start_step < self.total_steps:
-            # self.Iext[-1] is a tuple of shape (ndim,), which will be broadcast correctly.
-            Iext_sequence[start_step:, :] = self.Iext[-1]
+            # Fill any remaining steps with the final position.
+            if start_step < self.total_steps:
+                # self.Iext[-1] is a tuple of shape (ndim,), which will be broadcast correctly.
+                Iext_sequence[start_step:, :] = self.Iext[-1]
 
         return u.math.maybe_decimal(Iext_sequence)
 
@@ -321,7 +333,7 @@ class SmoothTracking(TrackingTask):
         self.inputs.value = self.cann_instance.get_stimulus_by_pos(pos)
 
 
-class PopulationCoding1D(TrackingTask):
+class PopulationCoding1D(PopulationCoding):
     """
     Population coding task for 1D continuous attractor networks.
     In this task, a stimulus is presented for a specific duration, preceded and followed by
@@ -354,15 +366,17 @@ class PopulationCoding1D(TrackingTask):
         super().__init__(
             cann_instance=cann_instance,
             ndim=1,
-            Iext=(Iext, Iext, Iext),  # Position is constant, but only applied during the middle phase.
-            duration=(before_duration, duration, after_duration),
+            before_duration=before_duration,
+            after_duration=after_duration,
+            Iext=Iext,
+            duration=duration,
             time_step=time_step,
         )
         self.before_duration = before_duration
         self.after_duration = after_duration
 
 
-class TemplateMatching1D(TrackingTask):
+class TemplateMatching1D(TemplateMatching):
     """
     Template matching task for 1D continuous attractor networks.
     This task presents a stimulus with added noise to test the network's ability to
@@ -388,13 +402,13 @@ class TemplateMatching1D(TrackingTask):
         super().__init__(
             cann_instance=cann_instance,
             ndim=1,
-            Iext=(Iext,),
-            duration=(duration,),
+            Iext=Iext,
+            duration=duration,
             time_step=time_step,
         )
 
 
-class SmoothTracking1D(TrackingTask):
+class SmoothTracking1D(SmoothTracking):
     """
     Smooth tracking task for 1D continuous attractor networks.
     This task provides an external input that moves smoothly over time, testing the network's
@@ -455,7 +469,7 @@ class CustomTracking1D(TrackingTask):
         raise NotImplementedError("Please implement the update logic for your custom task.")
 
 
-class PopulationCoding2D(TrackingTask):
+class PopulationCoding2D(PopulationCoding):
     """
     Population coding task for 2D continuous attractor networks.
     In this task, a stimulus is presented for a specific duration, preceded and followed by
@@ -485,18 +499,21 @@ class PopulationCoding2D(TrackingTask):
         # The task is structured as: no input -> input -> no input.
         # The base class handles this by taking sequences. Here, we provide dummy values for the
         # 'no input' periods, as the `update` method will handle turning off the input.
+        assert len(Iext) == 2, "Iext must be a tuple of two values for 2D tracking."
         super().__init__(
             cann_instance=cann_instance,
             ndim=2,
-            Iext=(Iext, Iext, Iext),  # Position is constant, but only applied during the middle phase.
-            duration=(before_duration, duration, after_duration),
+            before_duration=before_duration,
+            after_duration=after_duration,
+            Iext=Iext,
+            duration=duration,
             time_step=time_step,
         )
         self.before_duration = before_duration
         self.after_duration = after_duration
 
 
-class TemplateMatching2D(TrackingTask):
+class TemplateMatching2D(TemplateMatching):
     """
     Template matching task for 2D continuous attractor networks.
     This task presents a stimulus with added noise to test the network's ability to
@@ -519,16 +536,17 @@ class TemplateMatching2D(TrackingTask):
             duration (float | Quantity): The duration for which the noisy stimulus is presented.
             time_step (float | Quantity, optional): The simulation time step. Defaults to 0.1.
         """
+        assert len(Iext) == 2, "Iext must be a tuple of two values for 2D tracking."
         super().__init__(
             cann_instance=cann_instance,
             ndim=2,
-            Iext=(Iext,),
-            duration=(duration,),
+            Iext=Iext,
+            duration=duration,
             time_step=time_step,
         )
 
 
-class SmoothTracking2D(TrackingTask):
+class SmoothTracking2D(SmoothTracking):
     """
     Smooth tracking task for 2D continuous attractor networks.
     This task provides an external input that moves smoothly over time, testing the network's
