@@ -1,5 +1,6 @@
 import brainstate as bst
 import brainunit as u
+from brainunit import Quantity
 
 from ._base import BasicModel
 
@@ -14,14 +15,14 @@ class BaseCANN1D(BasicModel):
 
     def __init__(
         self,
-        num,
-        tau=1.0,
-        k=8.1,
-        a=0.5,
-        A=10,
-        J0=4.0,
-        z_min=-u.math.pi,
-        z_max=u.math.pi,
+        num: int,
+        tau: Quantity | float = 1.0,
+        k: float = 8.1,
+        a: float = 0.5,
+        A: float = 10,
+        J0: float = 4.0,
+        z_min: float = -u.math.pi,
+        z_max: float = u.math.pi,
         **kwargs,
     ):
         """
@@ -174,16 +175,16 @@ class CANN1D_SFA(BaseCANN1D):
 
     def __init__(
         self,
-        num,
-        tau=1.0,
-        tau_v=50.0,
-        k=8.1,
-        a=0.3,
-        A=0.2,
-        J0=1.0,
-        z_min=-u.math.pi,
-        z_max=u.math.pi,
-        m=0.3,
+        num: int,
+        tau: Quantity | float = 1.0,
+        tau_v: Quantity | float = 50.0,
+        k: float = 8.1,
+        a: float = 0.3,
+        A: float = 0.2,
+        J0: float = 1.0,
+        z_min: float = -u.math.pi,
+        z_max: float = u.math.pi,
+        m: float = 0.3,
         **kwargs,
     ):
         """

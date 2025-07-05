@@ -2,8 +2,10 @@ import brainstate as bst
 import brainunit as u
 import jax
 import matplotlib.pyplot as plt
+from brainunit import Quantity
 
 from ._base import BasicModel
+
 
 class BaseCANN2D(BasicModel):
     """
@@ -15,14 +17,14 @@ class BaseCANN2D(BasicModel):
 
     def __init__(
         self,
-        length,
-        tau=1.0,
-        k=8.1,
-        a=0.5,
-        A=10,
-        J0=4.0,
-        z_min=-u.math.pi,
-        z_max=u.math.pi,
+        length: int,
+        tau: Quantity | float = 1.0,
+        k: float = 8.1,
+        a: float = 0.5,
+        A: float = 10,
+        J0: float = 4.0,
+        z_min: float = -u.math.pi,
+        z_max: float = u.math.pi,
         **kwargs,
     ):
         """
@@ -109,6 +111,7 @@ class BaseCANN2D(BasicModel):
         x1, x2 = u.math.meshgrid(self.x, self.x)
         # Reshape the grid into a list of coordinate pairs.
         all_coords = u.math.stack([x1.flatten(), x2.flatten()]).T
+
         # Define a function to compute connectivity from one neuron to all others.
         @jax.vmap
         def get_conn_for_one_neuron(source_coord):
@@ -128,6 +131,7 @@ class BaseCANN2D(BasicModel):
                 / (u.math.sqrt(2 * u.math.pi) * self.a)
             )
             return conn_strengths
+
         return get_conn_for_one_neuron(all_coords)
 
     def get_stimulus_by_pos(self, pos):
@@ -158,6 +162,7 @@ class BaseCANN2D(BasicModel):
         stimulus_grid = stimulus_flat.reshape((num_neurons_per_dim, num_neurons_per_dim))
         return stimulus_grid
 
+
 class CANN2D(BaseCANN2D):
     """
     A 2D Continuous Attractor Neural Network (CANN) model.
@@ -168,23 +173,6 @@ class CANN2D(BaseCANN2D):
         Wu, S., Hamaguchi, K., & Amari, S. I. (2008). Dynamics and computation of continuous attractors.
         Neural computation, 20(4), 994-1025.
     """
-
-    def __init__(
-        self,
-        length,
-        tau=1.0,
-        k=8.1,
-        a=0.5,
-        A=10,
-        J0=4.0,
-        z_min=-u.math.pi,
-        z_max=u.math.pi,
-        **kwargs,
-    ):
-        """
-        Initializes the 2D CANN model with default parameters or specified ones.
-        """
-        super().__init__(length=length, tau=tau, k=k, a=a, A=A, J0=J0, z_min=z_min, z_max=z_max, **kwargs)
 
     def init_state(self, *args, **kwargs):
         """
@@ -231,16 +219,16 @@ class CANN2D_SFA(BaseCANN2D):
 
     def __init__(
         self,
-        length,
-        tau=1.0,
-        tau_v=50.0,
-        k=8.1,
-        a=0.5,
-        A=0.2,
-        J0=1.0,
-        z_min=-u.math.pi,
-        z_max=u.math.pi,
-        m=0.3,
+        length: int,
+        tau: Quantity | float = 1.0,
+        tau_v: Quantity | float = 50.0,
+        k: float = 8.1,
+        a: float = 0.3,
+        A: float = 0.2,
+        J0: float = 1.0,
+        z_min: float = -u.math.pi,
+        z_max: float = u.math.pi,
+        m: float = 0.3,
         **kwargs,
     ):
         """
@@ -254,8 +242,8 @@ class CANN2D_SFA(BaseCANN2D):
     def init_state(self, *args, **kwargs):
         """Initializes the state variables of the model, including the adaptation variable."""
         # --- State Variables ---
-        self.r = bst.HiddenState(u.math.zeros(self.varshape)) # Firing rate.
-        self.u = bst.HiddenState(u.math.zeros(self.varshape)) # Synaptic input.
+        self.r = bst.HiddenState(u.math.zeros(self.varshape))  # Firing rate.
+        self.u = bst.HiddenState(u.math.zeros(self.varshape))  # Synaptic input.
         # self.v: The adaptation variable, which tracks the synaptic inputs 'u' and provides negative feedback.
         self.v = bst.HiddenState(u.math.zeros(self.varshape))
 
