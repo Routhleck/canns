@@ -204,7 +204,7 @@ class CANN1D_SFA(BaseCANN1D):
         # --- State Variables ---
         self.r = bst.HiddenState(u.math.zeros(self.varshape))  # Firing rate.
         self.u = bst.HiddenState(u.math.zeros(self.varshape))  # Synaptic inputs.
-        # self.v: The adaptation variable, which provides a slow hyperpolarizing current.
+        # self.v: The adaptation variable, which tracks the synaptic inputs 'u' and provides negative feedback.
         self.v = bst.HiddenState(u.math.zeros(self.varshape))
 
         # --- Inputs ---

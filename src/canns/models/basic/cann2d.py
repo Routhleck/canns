@@ -220,3 +220,69 @@ class CANN2D(BaseCANN2D):
         self.u.value += (
             (-self.u.value + Irec + self.inp.value) / self.tau * bst.environ.get_dt()
         )
+
+
+class CANN2D_SFA(BaseCANN2D):
+    """
+    A 2D Continuous Attractor Neural Network (CANN) model with a specific
+    implementation of the Synaptic Firing Activity (SFA) dynamics.
+    This model extends the base CANN2D class to include SFA-specific dynamics.
+    """
+
+    def __init__(
+        self,
+        length,
+        tau=1.0,
+        tau_v=50.0,
+        k=8.1,
+        a=0.5,
+        A=0.2,
+        J0=1.0,
+        z_min=-u.math.pi,
+        z_max=u.math.pi,
+        m=0.3,
+        **kwargs,
+    ):
+        """
+        Initializes the 2D CANN model with SFA dynamics.
+        """
+        super().__init__(length=length, tau=tau, k=k, a=a, A=A, J0=J0, z_min=z_min, z_max=z_max, **kwargs)
+        # --- SFA-specific Parameters ---
+        self.tau_v = tau_v  # Time Constant of the adaptation variable.
+        self.m = m  # Strength of the adaptation.
+
+    def init_state(self, *args, **kwargs):
+        """Initializes the state variables of the model, including the adaptation variable."""
+        # --- State Variables ---
+        self.r = bst.HiddenState(u.math.zeros(self.varshape)) # Firing rate.
+        self.u = bst.HiddenState(u.math.zeros(self.varshape)) # Synaptic input.
+        # self.v: The adaptation variable, which tracks the synaptic inputs 'u' and provides negative feedback.
+        self.v = bst.HiddenState(u.math.zeros(self.varshape))
+
+        # --- Inputs ---
+        self.inp = bst.State(u.math.zeros(self.varshape))  # External input.
+
+    def update(self, inp):
+        """
+        The main update function for the SFA model. It includes dynamics for both
+        the membrane potential and the adaptation variable.
+
+        Args:
+            inp (Array): The external input for the current time step.
+        """
+        self.inp.value = inp
+        # Firing rate calculation is the same as the standard CANN model.
+        r1 = u.math.square(self.u.value)
+        r2 = 1.0 + self.k * u.math.sum(r1)
+        self.r.value = r1 / r2
+        # Calculate recurrent input.
+        Irec = (self.r.value.flatten() @ self.conn_mat).reshape((self.length, self.length))
+        # Update the synaptic input. Note the additional '- self.v.value' term,
+        self.u.value += (
+            (-self.u.value + Irec + self.inp.value - self.v.value) / self.tau * bst.environ.get_dt()
+        )
+        # Update the adaptation variable 'v'. It slowly tracks the membrane potential 'u'
+        # and has its own decay, creating a slow negative feedback loop.
+        self.v.value += (
+            (-self.v.value + self.m * self.u.value) / self.tau_v * bst.environ.get_dt()
+        )
