@@ -1,7 +1,7 @@
 import brainstate
 import braintools
 
-from canns.task.tracking1d import PopulationCoding1D, TemplateMatching1D, SmoothTracking1D
+from canns.task.tracking import PopulationCoding1D, TemplateMatching1D, SmoothTracking1D
 from canns.models import CANN1D
 
 

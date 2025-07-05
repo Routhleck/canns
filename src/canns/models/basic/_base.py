@@ -1,4 +1,8 @@
-import brainstate as bst
+import brainstate
 
 
-class BasicModel(bst.nn.Dynamics): ...
+class BasicModel(brainstate.nn.Dynamics):
+    """
+    Base class for basic models.
+    """
+    pass
