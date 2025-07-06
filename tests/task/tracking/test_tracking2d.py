@@ -63,7 +63,7 @@ def test_template_matching_2d():
     #     save_path='test_tracking2d_template_matching.gif',
     # )
 
-def test_smooth_tracking_1d():
+def test_smooth_tracking_2d():
     brainstate.environ.set(dt=0.1)
     cann = CANN2D_SFA(length=100)
     cann.init_state()

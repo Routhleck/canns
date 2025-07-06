@@ -157,12 +157,11 @@ class BaseCANN1D(BaseCANN):
         d = self.dist(x_left - x_right)
         # Compute the connection strengths using a Gaussian (normal distribution) function.
         # Neurons with similar feature preferences will have stronger excitatory connections.
-        conn = (
+        return (
             self.J0
             * u.math.exp(-0.5 * u.math.square(d / self.a))
             / (u.math.sqrt(2 * u.math.pi) * self.a)
         )
-        return conn
 
     def get_stimulus_by_pos(self, pos):
         """
