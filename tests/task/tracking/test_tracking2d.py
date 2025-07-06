@@ -7,7 +7,7 @@ from canns.models import CANN2D, CANN2D_SFA
 
 def test_population_coding_2d():
     brainstate.environ.set(dt=0.1)
-    cann = CANN2D(length=100)
+    cann = CANN2D(length=16)
     cann.init_state()
 
     task_pc = PopulationCoding2D(

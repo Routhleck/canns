@@ -36,12 +36,19 @@ class BaseCANN(BasicModel):
         Initializes the base CANN model.
 
         Args:
-            shape (int or tuple): The number of neurons in the network. If a tuple is provided,
-                                it defines the shape of the network (e.g., (length, length) for 2D).
+            shape (int or tuple): The number of neurons in the network. If an int is provided,
+                                  it will be converted to a single-element tuple. If a tuple is provided,
+                                  it defines the shape of the network (e.g., (length, length) for 2D).
+                                  Internally, shape is always stored as a tuple.
             **kwargs: Additional keyword arguments passed to the parent BasicModel.
         """
-        self.shape = shape
-        super().__init__(math.prod(shape) if isinstance(shape, tuple) else shape, **kwargs)
+        if isinstance(shape, int):
+            self.shape = (shape,)
+        elif isinstance(shape, tuple):
+            self.shape = shape
+        else:
+            raise TypeError("shape must be an int or a tuple of ints")
+        super().__init__(math.prod(self.shape), **kwargs)
 
     def make_conn(self):
         """
@@ -448,8 +455,7 @@ class BaseCANN2D(BaseCANN):
         stimulus_flat = self.A * u.math.exp(-0.25 * u.math.square(scalar_distances / self.a))
         # Reshape the flat stimulus array back into a 2D grid.
         num_neurons_per_dim = self.x.shape[0]
-        stimulus_grid = stimulus_flat.reshape((num_neurons_per_dim, num_neurons_per_dim))
-        return stimulus_grid
+        return stimulus_flat.reshape((num_neurons_per_dim, num_neurons_per_dim))
 
 
 class CANN2D(BaseCANN2D):
