@@ -37,10 +37,6 @@ This is an ongoing experimental project, some features may change in the future.
 
 
 
-<!-- USAGE EXAMPLES -->
-
-## Usage
-
 <!-- MARKDOWN LINKS & IMAGES -->
 <!-- https://www.markdownguide.org/basic-syntax/#reference-style-links -->
 [contributors-shield]: https://img.shields.io/github/contributors/routhleck/canns.svg?style=for-the-badge
