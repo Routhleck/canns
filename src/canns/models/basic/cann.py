@@ -6,8 +6,8 @@ import jax
 from brainunit import Quantity
 from matplotlib import pyplot as plt
 
-from ._base import BasicModel
 from ...typing import time_type
+from ._base import BasicModel
 
 __all__ = [
     # Base Model

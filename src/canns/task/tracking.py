@@ -1,12 +1,12 @@
-from typing import Sequence
+from collections.abc import Sequence
 
 import brainstate
 import brainunit as u
 from brainunit import Quantity
 
-from ._base import BaseTask
 from ..models.basic.cann import BaseCANN, BaseCANN1D, BaseCANN2D
 from ..typing import Iext_type, time_type
+from ._base import BaseTask
 
 __all__ = [
     'PopulationCoding1D',
@@ -81,7 +81,7 @@ class TrackingTask(BaseTask):
 
         start_step = 0
         dur_steps = [int(dur / self.time_step) for dur in self.duration]
-        for num_steps, iext_val in zip(dur_steps, self.Iext):
+        for num_steps, iext_val in zip(dur_steps, self.Iext, strict=False):
             end_step = start_step + num_steps
             Iext_sequence[start_step:end_step, :] = iext_val
             start_step = end_step
@@ -285,7 +285,7 @@ class SmoothTracking(TrackingTask):
         start_step = 0
 
         if self.ndim == 1:
-            for dur, iext_val in zip(self.duration, self.Iext):
+            for dur, iext_val in zip(self.duration, self.Iext, strict=False):
                 num_steps = int(dur / self.time_step)
                 end_step = start_step + num_steps
                 Iext_sequence[start_step:end_step] = iext_val
