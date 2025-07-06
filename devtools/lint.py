@@ -1,3 +1,4 @@
+import os.path
 import subprocess
 from pathlib import Path
 
@@ -6,12 +7,14 @@ from rich import get_console, reconfigure
 from rich import print as rprint
 
 # Update as needed.
+DEVTOOLS_DIR = Path(__file__).parent
 ROOT_DIR = Path(__file__).parent.parent
 
 # 更新路径为相对于项目根目录
 SRC_PATHS = [str(ROOT_DIR / "src")]
 DOC_PATHS = [str(ROOT_DIR / "README.md")]
 
+codespell_ignore = os.path.join(DEVTOOLS_DIR, "codespell_ignore.txt")
 
 reconfigure(emoji=not get_console().options.legacy_windows)  # No emojis on legacy windows.
 
@@ -20,7 +23,7 @@ def main():
     rprint()
 
     errcount = 0
-    errcount += run(["codespell", "--write-changes", *SRC_PATHS, *DOC_PATHS])
+    errcount += run(["codespell", "--ignore-words", f"{codespell_ignore}", *SRC_PATHS, *DOC_PATHS])
     errcount += run(["ruff", "check", "--fix", *SRC_PATHS])
     errcount += run(["ruff", "format", *SRC_PATHS])
     # errcount += run(["basedpyright", "--stats", *SRC_PATHS])
