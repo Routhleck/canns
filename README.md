@@ -11,8 +11,9 @@
 
 <div align="center">
   <a href="https://github.com/routhleck/canns">
-    <img src="images/logo.png" alt="Logo" height="100">
+    <img src="images/logo.svg" alt="Logo" height="100">
   </a>
+
 
 <h3 align="center">Continuous Attractor Neural Networks (CANNs) Python Library</h3>
 
