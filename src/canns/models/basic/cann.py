@@ -1,5 +1,4 @@
 import math
-from typing import Tuple
 
 import brainstate
 import brainunit as u
@@ -19,6 +18,7 @@ __all__ = [
     'CANN2D', 'CANN2D_SFA',
 ]
 
+
 class BaseCANN(BasicModel):
     """
     Base class for Continuous Attractor Neural Network (CANN) models.
@@ -29,7 +29,7 @@ class BaseCANN(BasicModel):
 
     def __init__(
         self,
-        shape: int | Tuple[int, ...],
+        shape: int | tuple[int, ...],
         **kwargs,
     ):
         """
@@ -42,7 +42,6 @@ class BaseCANN(BasicModel):
         """
         self.shape = shape
         super().__init__(math.prod(shape) if isinstance(shape, tuple) else shape, **kwargs)
-
 
     def make_conn(self):
         """
