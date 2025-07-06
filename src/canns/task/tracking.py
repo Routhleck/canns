@@ -175,8 +175,8 @@ class PopulationCoding(TrackingTask):
             return False
 
         # Determine the time boundaries for applying the stimulus.
-        start_stim_step = self.before_duration / self.time_step
-        end_stim_step = (self.total_duration - self.after_duration) / self.time_step
+        start_stim_step = int(self.before_duration / self.time_step)
+        end_stim_step = int((self.total_duration - self.after_duration) / self.time_step)
 
         # Apply stimulus only if the current step is within the stimulation window.
         self.inputs.value = u.math.where(
