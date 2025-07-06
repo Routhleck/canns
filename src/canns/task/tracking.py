@@ -58,7 +58,7 @@ class TrackingTask(BaseTask):
         # Pre-computes the entire sequence of external inputs for the simulation.
         self.Iext_sequence = self._make_Iext_sequence()
 
-        self.run_steps = u.math.arange(0, self.total_duration, brainstate.environ.get_dt())
+        self.run_steps = u.math.arange(0, self.total_duration, time_step)
 
     def init_state(self, *args, **kwargs):
         """
