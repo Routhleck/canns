@@ -33,7 +33,7 @@
 
 
 
-This is an ongoing experimental project, some features may change in the future.
+This project is currently in active development. Its features and functionality may be further refined and adjusted in future updates.
 
 
 
