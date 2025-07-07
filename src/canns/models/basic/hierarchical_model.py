@@ -3,7 +3,20 @@ import brainunit as u
 import jax
 
 from ...task.path_integration import map2pi
-from ._base import BasicModel
+from ._base import BasicModel, BasicModelGroup
+
+__all__ = [
+    # Base Units
+    "GaussRecUnits",
+    "NonRecUnits",
+    # Band Cell and Grid Cell Models
+    "BandCell",
+    "GridCell",
+    # Hierarchical Path Integration Model
+    "HierarchicalPathIntegrationModel",
+    # Hierarchical Network
+    "HierarchicalNetwork",
+]
 
 
 class GaussRecUnits(BasicModel):
@@ -159,8 +172,8 @@ class BandCell(BasicModel):
         gain=0.2,
         **kwargs,
     ):
-        super(BandCell, self).__init__(**kwargs)
         self.size = size  # The number of neurons in each neuron group except DN
+        super().__init__(size, **kwargs)
 
         # feature space
         self.z_min = z_min
@@ -290,8 +303,8 @@ class GridCell(BasicModel):
         J0=1.0,
         mbar=1.0,
     ):
-        super(GridCell, self).__init__()
         self.num = num**2
+        super().__init__(self.num)
         # dynamics parameters
         self.tau = tau  # The synaptic time constant
         self.tau_v = tau_v
@@ -397,16 +410,18 @@ class GridCell(BasicModel):
         self.get_center()
 
 
-class HierarchicalPathIntegrationModel(BasicModel):
-    def __init__(self, spacing, angle, place_center=10 * brainstate.random.rand(512, 2)):
-        super(HierarchicalPathIntegrationModel, self).__init__()
+class HierarchicalPathIntegrationModel(BasicModelGroup):
+    def __init__(self, spacing, angle, place_center=None):
+        super().__init__()
         self.band_cell_x = BandCell(angle=angle, spacing=spacing, noise=0.0)
         self.band_cell_y = BandCell(angle=angle + u.math.pi / 3, spacing=spacing, noise=0.0)
         self.band_cell_z = BandCell(angle=angle + u.math.pi / 3 * 2, spacing=spacing, noise=0.0)
         self.Grid_cell = GridCell(num=20, angle=angle, spacing=spacing)
         self.proj_k_x = self.band_cell_x.proj_k
         self.proj_k_y = self.band_cell_y.proj_k
-        self.place_center = place_center
+        self.place_center = (
+            place_center if place_center is not None else 10 * brainstate.random.rand(512, 2)
+        )
         self.make_conn()
         self.make_Wg2p()
         self.num_place = place_center.shape[0]
@@ -511,9 +526,9 @@ class HierarchicalPathIntegrationModel(BasicModel):
         self.grid_output = u.math.dot(self.Wg2p, grid_fr)
 
 
-class HierarchicalNetwork(BasicModel):
+class HierarchicalNetwork(BasicModelGroup):
     def __init__(self, num_module, num_place):
-        super(HierarchicalNetwork, self).__init__()
+        super().__init__()
         self.num_module = num_module
         self.num_place = num_place**2
         # randomly sample num_place place field centers from a square arena (5m x 5m)

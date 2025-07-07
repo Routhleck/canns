@@ -7,3 +7,11 @@ class BasicModel(brainstate.nn.Dynamics):
     """
 
     pass
+
+
+class BasicModelGroup(brainstate.nn.DynamicsGroup):
+    """
+    Base class for groups of basic models.
+    """
+
+    pass
