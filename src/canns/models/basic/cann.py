@@ -11,11 +11,15 @@ from ._base import BasicModel
 
 __all__ = [
     # Base Model
-    'BaseCANN', 'BaseCANN1D', 'BaseCANN2D',
+    "BaseCANN",
+    "BaseCANN1D",
+    "BaseCANN2D",
     # CANN 1D Models
-    'CANN1D', 'CANN1D_SFA',
+    "CANN1D",
+    "CANN1D_SFA",
     # CANN 2D Models
-    'CANN2D', 'CANN2D_SFA',
+    "CANN2D",
+    "CANN2D_SFA",
 ]
 
 
@@ -297,11 +301,15 @@ class CANN1D_SFA(BaseCANN1D):
         Irec = u.math.dot(self.conn_mat, self.r.value)
         # Update the synaptic input. Note the additional '- self.v.value' term,
         self.u.value += (
-            (-self.u.value + Irec + self.inp.value - self.v.value) / self.tau * brainstate.environ.get_dt()
+            (-self.u.value + Irec + self.inp.value - self.v.value)
+            / self.tau
+            * brainstate.environ.get_dt()
         )
         # Update the adaptation variable 'v'. It slowly tracks the membrane potential 'u'
         # and has its own decay, creating a slow negative feedback loop.
-        self.v.value += (-self.v.value + self.m * self.u.value) / self.tau_v * brainstate.environ.get_dt()
+        self.v.value += (
+            (-self.v.value + self.m * self.u.value) / self.tau_v * brainstate.environ.get_dt()
+        )
 
 
 class BaseCANN2D(BaseCANN):
@@ -529,7 +537,9 @@ class CANN2D_SFA(BaseCANN2D):
         """
         Initializes the 2D CANN model with SFA dynamics.
         """
-        super().__init__(length=length, tau=tau, k=k, a=a, A=A, J0=J0, z_min=z_min, z_max=z_max, **kwargs)
+        super().__init__(
+            length=length, tau=tau, k=k, a=a, A=A, J0=J0, z_min=z_min, z_max=z_max, **kwargs
+        )
         # --- SFA-specific Parameters ---
         self.tau_v = tau_v  # Time Constant of the adaptation variable.
         self.m = m  # Strength of the adaptation.
@@ -562,7 +572,9 @@ class CANN2D_SFA(BaseCANN2D):
         Irec = (self.r.value.flatten() @ self.conn_mat).reshape((self.length, self.length))
         # Update the synaptic input. Note the additional '- self.v.value' term,
         self.u.value += (
-            (-self.u.value + Irec + self.inp.value - self.v.value) / self.tau * brainstate.environ.get_dt()
+            (-self.u.value + Irec + self.inp.value - self.v.value)
+            / self.tau
+            * brainstate.environ.get_dt()
         )
         # Update the adaptation variable 'v'. It slowly tracks the membrane potential 'u'
         # and has its own decay, creating a slow negative feedback loop.

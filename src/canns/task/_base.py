@@ -5,4 +5,5 @@ class BaseTask(Module):
     """
     Base class for tasks module.
     """
+
     pass
