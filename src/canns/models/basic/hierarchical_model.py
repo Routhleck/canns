@@ -76,12 +76,11 @@ class GaussRecUnits(BasicModel):
     def make_conn(self):
         dis = self.x[:, None] - self.x[None, :]
         d = self.dist(dis)
-        conn = (
+        return (
             self.J
             * u.math.exp(-0.5 * u.math.square(d / self.a))
             / (u.math.sqrt(2 * u.math.pi) * self.a)
         )
-        return conn
 
     # critical connection strength
     def Jc(self):
@@ -235,10 +234,9 @@ class BandCell(BasicModel):
 
     def make_conn(self, shift):
         d = self.dist(self.x[:, None] - self.x[None, :] + shift)
-        conn = u.math.exp(-0.5 * u.math.square(d / self.Band_cells.a)) / (
+        return u.math.exp(-0.5 * u.math.square(d / self.Band_cells.a)) / (
             u.math.sqrt(2 * u.math.pi) * self.Band_cells.a
         )
-        return conn
 
     def Postophase(self, pos):
         phase = u.math.mod(u.math.dot(pos, self.proj_k), 2 * u.math.pi) - u.math.pi
@@ -363,8 +361,7 @@ class GridCell(BasicModel):
         d = map2pi(d)
         delta_x = d[:, 0]
         delta_y = (d[:, 1] - 1 / 2 * d[:, 0]) * 2 / u.math.sqrt(3)
-        dis = u.math.sqrt(delta_x**2 + delta_y**2)
-        return dis
+        return u.math.sqrt(delta_x**2 + delta_y**2)
 
     def make_conn(self):
         @jax.vmap
@@ -471,8 +468,7 @@ class HierarchicalPathIntegrationModel(BasicModelGroup):
     def Postophase(self, pos):
         phase_x = u.math.mod(u.math.dot(pos, self.proj_k_x), 2 * u.math.pi) - u.math.pi
         phase_y = u.math.mod(u.math.dot(pos, self.proj_k_y), 2 * u.math.pi) - u.math.pi
-        Phase = u.math.array([phase_x, phase_y]).transpose()
-        return Phase
+        return u.math.array([phase_x, phase_y]).transpose()
 
     def make_Wg2p(self):
         phase_place = self.Postophase(self.place_center)
@@ -493,15 +489,13 @@ class HierarchicalPathIntegrationModel(BasicModelGroup):
         d = map2pi(d)
         delta_x = d[:, 0]
         delta_y = (d[:, 1] - 1 / 2 * d[:, 0]) * 2 / u.math.sqrt(3)
-        dis = u.math.sqrt(delta_x**2 + delta_y**2)
-        return dis
+        return u.math.sqrt(delta_x**2 + delta_y**2)
 
     def get_input(self, Phase):
         dis = self.dist(Phase - self.Grid_cell.value_grid)
-        input = u.math.exp(-0.5 * u.math.square(dis / self.band_cell_x.Band_cells.a)) / (
+        return u.math.exp(-0.5 * u.math.square(dis / self.band_cell_x.Band_cells.a)) / (
             u.math.sqrt(2 * u.math.pi) * self.band_cell_x.Band_cells.a
         )
-        return input
 
     def update(self, velocity, loc, loc_input_stre=0.0):
         self.band_cell_x(velocity=velocity, loc=loc, loc_input_stre=loc_input_stre)
