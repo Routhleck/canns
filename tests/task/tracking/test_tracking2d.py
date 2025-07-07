@@ -37,7 +37,7 @@ def test_population_coding_2d():
 
 def test_template_matching_2d():
     brainstate.environ.set(dt=0.1)
-    cann = CANN2D(length=100)
+    cann = CANN2D(length=16)
     cann.init_state()
 
     task_tm = TemplateMatching2D(
@@ -65,7 +65,7 @@ def test_template_matching_2d():
 
 def test_smooth_tracking_2d():
     brainstate.environ.set(dt=0.1)
-    cann = CANN2D_SFA(length=100)
+    cann = CANN2D_SFA(length=16)
     cann.init_state()
 
     task_st = SmoothTracking2D(
