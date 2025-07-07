@@ -9,12 +9,12 @@ from ..typing import Iext_type, time_type
 from ._base import BaseTask
 
 __all__ = [
-    'PopulationCoding1D',
-    'TemplateMatching1D',
-    'SmoothTracking1D',
-    'PopulationCoding2D',
-    'TemplateMatching2D',
-    'SmoothTracking2D',
+    "PopulationCoding1D",
+    "TemplateMatching1D",
+    "SmoothTracking1D",
+    "PopulationCoding2D",
+    "TemplateMatching2D",
+    "SmoothTracking2D",
 ]
 
 
@@ -31,7 +31,7 @@ class TrackingTask(BaseTask):
         Iext: Sequence[Iext_type],
         duration: Sequence[time_type],
         time_step: time_type = 0.1,
-        **kwargs
+        **kwargs,
     ):
         """
         Initializes the 1D tracking task.
@@ -102,7 +102,7 @@ class TrackingTask(BaseTask):
         return u.math.where(
             self.current_step.value >= self.total_steps,
             self.Iext_sequence[-1],  # Return the last input position if the end is reached.
-            self.Iext_sequence[self.current_step.value]  # Return the pre-calculated input.
+            self.Iext_sequence[self.current_step.value],  # Return the pre-calculated input.
         )
 
     def update(self):
@@ -152,7 +152,11 @@ class PopulationCoding(TrackingTask):
         super().__init__(
             cann_instance=cann_instance,
             ndim=ndim,
-            Iext=(Iext, Iext, Iext),  # Position is constant, but only applied during the middle phase.
+            Iext=(
+                Iext,
+                Iext,
+                Iext,
+            ),  # Position is constant, but only applied during the middle phase.
             duration=(before_duration, duration, after_duration),
             time_step=time_step,
         )
@@ -181,11 +185,10 @@ class PopulationCoding(TrackingTask):
         # Apply stimulus only if the current step is within the stimulation window.
         self.inputs.value = u.math.where(
             u.math.logical_and(
-                self.current_step.value > start_stim_step,
-                self.current_step.value < end_stim_step
+                self.current_step.value > start_stim_step, self.current_step.value < end_stim_step
             ),
             self.cann_instance.get_stimulus_by_pos(pos),  # Apply stimulus
-            u.math.zeros(self.cann_instance.shape, dtype=float)  # Apply no stimulus
+            u.math.zeros(self.cann_instance.shape, dtype=float),  # Apply no stimulus
         )
         self.current_step.value += 1
 
@@ -264,8 +267,9 @@ class SmoothTracking(TrackingTask):
             duration (Sequence[float | Quantity]): The duration of each segment of smooth movement.
             time_step (float | Quantity, optional): The simulation time step. Defaults to 0.1.
         """
-        assert len(tuple(Iext)) == (len(tuple(duration)) + 1), \
+        assert len(tuple(Iext)) == (len(tuple(duration)) + 1), (
             "Iext must have one more element than duration to define start and end points for each segment."
+        )
         super().__init__(
             cann_instance=cann_instance,
             ndim=ndim,
@@ -308,7 +312,9 @@ class SmoothTracking(TrackingTask):
                 for d in range(self.ndim):
                     start_d = start_pos[d]
                     end_d = end_pos[d]
-                    Iext_sequence[start_step:end_step, d] = u.math.linspace(start_d, end_d, num_steps)
+                    Iext_sequence[start_step:end_step, d] = u.math.linspace(
+                        start_d, end_d, num_steps
+                    )
 
                 start_step = end_step
 
