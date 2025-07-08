@@ -2,7 +2,7 @@ import brainstate
 import braintools
 
 from canns.task.tracking import PopulationCoding1D, TemplateMatching1D, SmoothTracking1D
-from canns.models import CANN1D
+from canns.models.basic import CANN1D
 
 
 def test_population_coding_1d():

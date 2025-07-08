@@ -181,3 +181,4 @@ cython_debug/
 .vscode/
 *.gif
 .DS_Store
+*.npz

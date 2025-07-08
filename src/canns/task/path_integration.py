@@ -4,6 +4,7 @@ import brainstate
 import brainunit as u
 import numpy as np
 import ratinabox
+from matplotlib import pyplot as plt
 from ratinabox.Agent import Agent
 from ratinabox.Environment import Environment
 from tqdm import tqdm
@@ -51,6 +52,7 @@ class PathIntegrationTask(BaseTask):
         # time settings
         self.duration = duration
         self.dt = dt if dt is not None else brainstate.environ.get_dt()
+        self.total_steps = int(self.duration / self.dt)
         # environment settings
         self.width = width
         self.height = height
@@ -79,21 +81,50 @@ class PathIntegrationTask(BaseTask):
 
         self.progress_bar = progress_bar
 
+    def reset(self):
+        """
+        Resets the agent's position to the starting position.
+        """
+        self.agent = Agent(
+            Environment=self.env,
+            params={
+                "speed_mean": self.speed_mean,
+                "speed_std": self.speed_std,
+            },
+        )
+        self.agent.pos = np.array(self.start_pos)
+
     def generate_trajectory(self) -> TrajectoryData:
         """Generates the inputs for the agent based on its current position."""
 
-        for _ in tqdm(range(int(self.duration / self.dt)), disable=not self.progress_bar):
+        for _ in tqdm(range(self.total_steps), disable=not self.progress_bar, desc=f"[{type(self).__name__}]Generating trajectories"):
             self.agent.update(dt=self.dt)
 
-        position = self.agent.history["pos"]
+        position = np.array(self.agent.history["pos"])
         velocity = np.array(self.agent.history["vel"])
         speed = np.linalg.norm(velocity, axis=1)
         hd_angle = np.where(speed == 0, 0, np.angle(velocity[:, 0] + velocity[:, 1] * 1j))
-        rot_vel = map2pi(np.diff(hd_angle))
+        rot_vel = np.zeros_like(hd_angle)
+        rot_vel[1:] = map2pi(np.diff(hd_angle))
 
         return TrajectoryData(
             position=position, velocity=velocity, speed=speed, hd_angle=hd_angle, rot_vel=rot_vel
         )
+
+    def show_trajectory(
+        self,
+        show=True,
+        save_path=None,
+    ):
+        """
+        Displays the trajectory of the agent in the environment.
+        """
+        self.reset()
+        self.generate_trajectory()
+        fig, ax = plt.subplots(1, 1, figsize=(3, 3))
+        self.agent.plot_trajectory(t_start=0, t_end=self.total_steps, fig=fig, ax=ax,color="changing")
+        plt.show() if show else None
+        plt.savefig(save_path) if save_path else None
 
 
 def map2pi(a):
@@ -107,7 +138,7 @@ def map2pi(a):
         The angle mapped to the interval [-pi, pi].
     """
     # Normalize to [0, 2*pi]
-    b = np.fmod(a + u.math.pi, 2 * u.math.pi)
+    b = u.math.fmod(a + u.math.pi, 2 * u.math.pi) if not isinstance(a, np.ndarray) else np.fmod(a + np.pi, 2 * np.pi)
     # Map to [-pi, pi]
     c = b - np.pi
     return c
