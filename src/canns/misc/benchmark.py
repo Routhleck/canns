@@ -1,14 +1,13 @@
-import time
 import functools
+import time
 
 
 def benchmark(runs=10):
-
     def decorator(func):
         @functools.wraps(func)
         def wrapper(*args, **kwargs):
             total_time = 0
-            fastest_time = float('inf')
+            fastest_time = float("inf")
             slowest_time = 0
             all_times = []
 

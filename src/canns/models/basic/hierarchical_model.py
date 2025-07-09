@@ -47,6 +47,7 @@ class GaussRecUnits(BasicModel):
         center (brainstate.State): The decoded center of the activity bump.
         input (brainstate.State): The external input to the network.
     """
+
     def __init__(
         self,
         size: int,
@@ -201,6 +202,7 @@ class NonRecUnits(BasicModel):
         u (brainstate.State): The synaptic inputs to the neurons.
         input (brainstate.State): The external input to the neurons.
     """
+
     def __init__(
         self,
         size: int,
@@ -304,6 +306,7 @@ class BandCell(BasicModel):
         center_ideal (brainstate.State): The ideal, noise-free center based on velocity integration.
         center (brainstate.State): The actual decoded center of the band cell activity bump.
     """
+
     def __init__(
         self,
         angle,
@@ -548,6 +551,7 @@ class GridCell(BasicModel):
         v (brainstate.HiddenState): The adaptation variables for the neurons.
         center (brainstate.State): The decoded 2D center of the activity bump.
     """
+
     def __init__(
         self,
         num,
@@ -659,6 +663,7 @@ class GridCell(BasicModel):
         Returns:
             Array: The connection matrix (num x num).
         """
+
         @jax.vmap
         def get_J(v):
             d = self.dist(v - self.value_grid)
@@ -745,6 +750,7 @@ class HierarchicalPathIntegrationModel(BasicModelGroup):
         Wg2p (brainunit.math.ndarray): The connection weights from grid cells to place cells.
         grid_output (brainstate.State): The activity of the place cells.
     """
+
     def __init__(self, spacing, angle, place_center=None):
         """Initializes the HierarchicalPathIntegrationModel.
 
@@ -940,6 +946,7 @@ class HierarchicalNetwork(BasicModelGroup):
         place_fr (brainstate.HiddenState): The firing rates of the place cell population.
         decoded_pos (brainstate.State): The final decoded 2D position.
     """
+
     def __init__(self, num_module, num_place):
         """Initializes the HierarchicalNetwork.
 
