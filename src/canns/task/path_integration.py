@@ -97,7 +97,11 @@ class PathIntegrationTask(BaseTask):
     def generate_trajectory(self) -> TrajectoryData:
         """Generates the inputs for the agent based on its current position."""
 
-        for _ in tqdm(range(self.total_steps), disable=not self.progress_bar, desc=f"[{type(self).__name__}]Generating trajectories"):
+        for _ in tqdm(
+            range(self.total_steps),
+            disable=not self.progress_bar,
+            desc=f"[{type(self).__name__}]Generating trajectories",
+        ):
             self.agent.update(dt=self.dt)
 
         position = np.array(self.agent.history["pos"])
@@ -124,10 +128,12 @@ class PathIntegrationTask(BaseTask):
         if len(self.agent.history["pos"]) == 0:
             raise ValueError("No trajectory data available. Please generate the trajectory first.")
         fig, ax = plt.subplots(1, 1, figsize=(3, 3))
-        self.agent.plot_trajectory(t_start=0, t_end=self.total_steps, fig=fig, ax=ax,color="changing")
+        self.agent.plot_trajectory(
+            t_start=0, t_end=self.total_steps, fig=fig, ax=ax, color="changing"
+        )
         plt.show() if show else None
         plt.savefig(save_path) if save_path else None
-    
+
     def get_empty_trajectory(self) -> TrajectoryData:
         """
         Returns an empty trajectory data structure with the same shape as the generated trajectory.
@@ -141,10 +147,12 @@ class PathIntegrationTask(BaseTask):
             rot_vel=np.zeros(self.total_steps),
         )
 
+
 def map2pi(a):
     b = np.where(a > np.pi, a - np.pi * 2, a)
     c = np.where(b < -np.pi, b + np.pi * 2, b)
     return c
+
 
 def map2pi_jnp(a):
     b = u.math.where(a > np.pi, a - np.pi * 2, a)

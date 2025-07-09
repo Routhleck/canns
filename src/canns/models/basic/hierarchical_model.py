@@ -1,7 +1,6 @@
 import brainstate
 import brainunit as u
 import jax
-import numpy as np
 from brainstate.nn import exp_euler_step
 
 from ...task.path_integration import map2pi_jnp
@@ -54,7 +53,11 @@ class GaussRecUnits(BasicModel):
     def init_state(self):
         self.r = brainstate.HiddenState(u.math.zeros(self.size))  # The neural firing rate
         self.u = brainstate.HiddenState(u.math.zeros(self.size))  # The neural synaptic input
-        self.center = brainstate.State(u.math.zeros(1,))  # The center of the bump
+        self.center = brainstate.State(
+            u.math.zeros(
+                1,
+            )
+        )  # The center of the bump
 
         self.input = brainstate.State(u.math.zeros(self.size))  # The external input
 
@@ -103,7 +106,8 @@ class GaussRecUnits(BasicModel):
         self.r.value = r1 / r2
         Irec = u.math.dot(self.conn_mat, self.r.value)
         self.u.value = (
-            self.u.value + (-self.u.value + Irec + self.input.value) / self.tau * brainstate.environ.get_dt()
+            self.u.value
+            + (-self.u.value + Irec + self.input.value) / self.tau * brainstate.environ.get_dt()
         )
         self.center = self.decode(self.u.value)
 
@@ -147,8 +151,13 @@ class NonRecUnits(BasicModel):
 
     def update(self, input):
         self.input.value = input
-        self.r.value = self.activate(self.u.value) + self.noise_0 * brainstate.random.randn(self.size)
-        self.u.value = self.u.value + (-self.u.value + self.input.value) / self.tau * brainstate.environ.get_dt()
+        self.r.value = self.activate(self.u.value) + self.noise_0 * brainstate.random.randn(
+            self.size
+        )
+        self.u.value = (
+            self.u.value
+            + (-self.u.value + self.input.value) / self.tau * brainstate.environ.get_dt()
+        )
 
 
 # the intact networks contains a group of EPG neurons (recurrent units), two P-EN neurons (non-recurrent units), one group of
@@ -206,8 +215,16 @@ class BandCell(BasicModel):
         self.synapses()
 
     def init_state(self, *args, **kwargs):
-        self.center_ideal = brainstate.State(u.math.zeros(1,))  # The center of v-
-        self.center = brainstate.State(u.math.zeros(1,))  # The center of v-
+        self.center_ideal = brainstate.State(
+            u.math.zeros(
+                1,
+            )
+        )  # The center of v-
+        self.center = brainstate.State(
+            u.math.zeros(
+                1,
+            )
+        )  # The center of v-
 
         # init heading direction
         self.Band_cells.init_state()
@@ -339,7 +356,11 @@ class GridCell(BasicModel):
         self.v = brainstate.HiddenState(u.math.zeros(self.num))
 
         self.input = brainstate.State(u.math.zeros(self.num))
-        self.center = brainstate.State(u.math.zeros(2,))
+        self.center = brainstate.State(
+            u.math.zeros(
+                2,
+            )
+        )
 
     def reset_state(self, *args, **kwargs):
         self.r.value = u.math.zeros(self.num)
@@ -347,7 +368,9 @@ class GridCell(BasicModel):
         self.v.value = u.math.zeros(self.num)
 
         self.input.value = u.math.zeros(self.num)
-        self.center.value = u.math.zeros(2,)
+        self.center.value = u.math.zeros(
+            2,
+        )
 
     def dist(self, d):
         d = map2pi_jnp(d)
@@ -377,7 +400,9 @@ class GridCell(BasicModel):
         exppos_x = u.math.exp(1j * self.x_grid)
         exppos_y = u.math.exp(1j * self.y_grid)
         r = u.math.where(self.r.value > u.math.max(self.r.value) * 0.1, self.r.value, 0)
-        self.center.value = u.math.asarray([u.math.angle(u.math.sum(exppos_x * r)), u.math.angle(u.math.sum(exppos_y * r))])
+        self.center.value = u.math.asarray(
+            [u.math.angle(u.math.sum(exppos_x * r)), u.math.angle(u.math.sum(exppos_y * r))]
+        )
 
     def update(self, input):
         self.input.value = input
@@ -444,7 +469,9 @@ class HierarchicalPathIntegrationModel(BasicModelGroup):
         # Calculate the distance between each grid cell and band cell
         grid_vector = u.math.zeros(value_grid.shape)
         grid_vector = grid_vector.at[:, 0].set(value_grid[:, 0])
-        grid_vector = grid_vector.at[:, 1].set((value_grid[:, 1] - 1 / 2 * value_grid[:, 0]) * 2 / u.math.sqrt(3))
+        grid_vector = grid_vector.at[:, 1].set(
+            (value_grid[:, 1] - 1 / 2 * value_grid[:, 0]) * 2 / u.math.sqrt(3)
+        )
         z_vector = u.math.array([-1 / 2, u.math.sqrt(3) / 2])
         grid_phase_z = u.math.dot(grid_vector, z_vector)
         dis_x = self.band_cell_x.dist(grid_x[:, None] - band_x[None, :])
@@ -565,9 +592,15 @@ class HierarchicalNetwork(BasicModelGroup):
         for i in range(self.num_module):
             # update the band cell module
             self.MEC_model_list[i](velocity=velocity, loc=loc, loc_input_stre=loc_input_stre)
-            self.grid_fr.value = self.grid_fr.value.at[i].set(self.MEC_model_list[i].Grid_cell.u.value)
-            self.band_x_fr.value = self.band_x_fr.value.at[i].set(self.MEC_model_list[i].band_cell_x.Band_cells.r.value)
-            self.band_y_fr.value = self.band_y_fr.value.at[i].set(self.MEC_model_list[i].band_cell_y.Band_cells.r.value)
+            self.grid_fr.value = self.grid_fr.value.at[i].set(
+                self.MEC_model_list[i].Grid_cell.u.value
+            )
+            self.band_x_fr.value = self.band_x_fr.value.at[i].set(
+                self.MEC_model_list[i].band_cell_x.Band_cells.r.value
+            )
+            self.band_y_fr.value = self.band_y_fr.value.at[i].set(
+                self.MEC_model_list[i].band_cell_y.Band_cells.r.value
+            )
             grid_output_module = self.MEC_model_list[i].grid_output
             # W_g2p = self.W_g2p_list[i]
             # grid_fr = self.MEC_model_list[i].Grid_cell.r
