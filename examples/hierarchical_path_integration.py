@@ -1,3 +1,5 @@
+import time
+
 import brainstate
 import brainunit as u
 import jax
@@ -16,7 +18,7 @@ task_pi = PathIntegrationTask(
     height=5,
     speed_mean=0.16,
     speed_std=0.016,
-    duration=10000.0,
+    duration=1000.0,
     dt=0.1,
     start_pos=(2.5, 2.5),
     progress_bar=True,
@@ -80,6 +82,7 @@ def run_step(t, vel, loc):
 total_time = trajectory.velocity.shape[0]
 indices = np.arange(total_time)
 
+# jax.profiler.start_trace("/tmp/profile-data")
 # with jax.disable_jit():
 band_x_r, band_y_r, grid_r, place_r = brainstate.compile.for_loop(
     run_step,
@@ -88,13 +91,25 @@ band_x_r, band_y_r, grid_r, place_r = brainstate.compile.for_loop(
     u.math.asarray(trajectory.position),
     pbar=brainstate.compile.ProgressBar(10),
 )
+from canns.misc.benchmark import benchmark
+@benchmark(runs=5)
+def benchmarked_run_step():
+    brainstate.compile.for_loop(
+        run_step,
+        u.math.asarray(indices),
+        u.math.asarray(trajectory.velocity),
+        u.math.asarray(trajectory.position),
+        pbar=brainstate.compile.ProgressBar(10),
+    )
+benchmarked_run_step()
+# jax.profiler.stop_trace()
 
-activity_file_path = os.path.join(PATH, 'band_grid_place_activity.npz')
-
-np.savez(
-    activity_file_path,
-    band_x_r=band_x_r,
-    band_y_r=band_y_r,
-    grid_r=grid_r,
-    place_r=place_r,
-)
+# activity_file_path = os.path.join(PATH, 'band_grid_place_activity.npz')
+#
+# np.savez(
+#     activity_file_path,
+#     band_x_r=band_x_r,
+#     band_y_r=band_y_r,
+#     grid_r=grid_r,
+#     place_r=place_r,
+# )

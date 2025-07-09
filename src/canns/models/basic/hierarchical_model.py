@@ -204,7 +204,7 @@ class BandCell(BasicModel):
         # self.PFL3_shift_num = int(self.PFL3_shift / self.dx) # the number of interval shifted
 
         # neurons
-        self.Band_cells = GaussRecUnits(size=size, noise=noise)  # heading direction
+        self.band_cells = GaussRecUnits(size=size, noise=noise)  # heading direction
         self.left = NonRecUnits(size=size, noise=noise)
         self.right = NonRecUnits(size=size, noise=noise)
 
@@ -227,7 +227,7 @@ class BandCell(BasicModel):
         )  # The center of v-
 
         # init heading direction
-        self.Band_cells.init_state()
+        self.band_cells.init_state()
         # init left and right neurons
         self.left.init_state()
         self.right.init_state()
@@ -249,8 +249,8 @@ class BandCell(BasicModel):
 
     def make_conn(self, shift):
         d = self.dist(self.x[:, None] - self.x[None, :] + shift)
-        return u.math.exp(-0.5 * u.math.square(d / self.Band_cells.a)) / (
-            u.math.sqrt(2 * u.math.pi) * self.Band_cells.a
+        return u.math.exp(-0.5 * u.math.square(d / self.band_cells.a)) / (
+            u.math.sqrt(2 * u.math.pi) * self.band_cells.a
         )
 
     def Postophase(self, pos):
@@ -260,16 +260,16 @@ class BandCell(BasicModel):
     def get_stimulus_by_pos(self, pos):
         phase = self.Postophase(pos)
         d = self.dist(phase - self.x)
-        return u.math.exp(-0.25 * u.math.square(d / self.Band_cells.a))
+        return u.math.exp(-0.25 * u.math.square(d / self.band_cells.a))
 
     # move the heading direction representation (for testing)
     def move_heading(self, shift):
-        self.Band_cells.r.value = u.math.roll(self.Band_cells.r, shift)
-        self.Band_cells.u.value = u.math.roll(self.Band_cells.u, shift)
+        self.band_cells.r.value = u.math.roll(self.band_cells.r, shift)
+        self.band_cells.u.value = u.math.roll(self.band_cells.u, shift)
 
     def get_center(self):
         exppos = u.math.exp(1j * self.x)
-        r = self.Band_cells.r.value
+        r = self.band_cells.r.value
         self.center.value = u.math.angle(u.math.atleast_1d(u.math.sum(exppos * r)))
 
     def reset(self):
@@ -284,7 +284,7 @@ class BandCell(BasicModel):
         center_ideal = self.center_ideal.value + v_phi * brainstate.environ.get_dt()
         self.center_ideal.value = map2pi_jnp(center_ideal)
         # EPG output last time step
-        Band_output = self.Band_cells.r.value
+        Band_output = self.band_cells.r.value
         # PEN input
         left_input = self.syn_Band2Left(Band_output)
         right_input = self.syn_Band2Right(Band_output)
@@ -296,7 +296,7 @@ class BandCell(BasicModel):
         # EPG input
         Band_input = self.syn_Left2Band(self.left.r.value) + self.syn_Right2Band(self.right.r.value)
         # EPG output
-        self.Band_cells(Band_input + loc_input)
+        self.band_cells(Band_input + loc_input)
         # self.Band_cells.update(loc_input)
         self.get_center()
 
@@ -439,7 +439,7 @@ class HierarchicalPathIntegrationModel(BasicModelGroup):
         self.band_cell_x = BandCell(angle=angle, spacing=spacing, noise=0.0)
         self.band_cell_y = BandCell(angle=angle + u.math.pi / 3, spacing=spacing, noise=0.0)
         self.band_cell_z = BandCell(angle=angle + u.math.pi / 3 * 2, spacing=spacing, noise=0.0)
-        self.Grid_cell = GridCell(num=20, angle=angle, spacing=spacing)
+        self.grid_cell = GridCell(num=20, angle=angle, spacing=spacing)
         self.proj_k_x = self.band_cell_x.proj_k
         self.proj_k_y = self.band_cell_y.proj_k
         self.place_center = (
@@ -456,14 +456,14 @@ class HierarchicalPathIntegrationModel(BasicModelGroup):
         self.band_cell_x.init_state()
         self.band_cell_y.init_state()
         self.band_cell_z.init_state()
-        self.Grid_cell.init_state()
+        self.grid_cell.init_state()
 
     def make_conn(self):
-        value_grid = self.Grid_cell.value_grid
+        value_grid = self.grid_cell.value_grid
         band_x = self.band_cell_x.x
         band_y = self.band_cell_y.x
         band_z = self.band_cell_z.x
-        J0 = self.Grid_cell.J0 * 0.1
+        J0 = self.grid_cell.J0 * 0.1
         grid_x = value_grid[:, 0]
         grid_y = value_grid[:, 1]
         # Calculate the distance between each grid cell and band cell
@@ -479,18 +479,18 @@ class HierarchicalPathIntegrationModel(BasicModelGroup):
         dis_z = self.band_cell_z.dist(grid_phase_z[:, None] - band_z[None, :])
         self.W_x_grid = (
             J0
-            * u.math.exp(-0.5 * u.math.square(dis_x / self.band_cell_x.Band_cells.a))
-            / (u.math.sqrt(2 * u.math.pi) * self.band_cell_x.Band_cells.a)
+            * u.math.exp(-0.5 * u.math.square(dis_x / self.band_cell_x.band_cells.a))
+            / (u.math.sqrt(2 * u.math.pi) * self.band_cell_x.band_cells.a)
         )
         self.W_y_grid = (
             J0
-            * u.math.exp(-0.5 * u.math.square(dis_y / self.band_cell_y.Band_cells.a))
-            / (u.math.sqrt(2 * u.math.pi) * self.band_cell_y.Band_cells.a)
+            * u.math.exp(-0.5 * u.math.square(dis_y / self.band_cell_y.band_cells.a))
+            / (u.math.sqrt(2 * u.math.pi) * self.band_cell_y.band_cells.a)
         )
         self.W_z_grid = (
             J0
-            * u.math.exp(-0.5 * u.math.square(dis_z / self.band_cell_z.Band_cells.a))
-            / (u.math.sqrt(2 * u.math.pi) * self.band_cell_z.Band_cells.a)
+            * u.math.exp(-0.5 * u.math.square(dis_z / self.band_cell_z.band_cells.a))
+            / (u.math.sqrt(2 * u.math.pi) * self.band_cell_z.band_cells.a)
         )
 
     def Postophase(self, pos):
@@ -500,7 +500,7 @@ class HierarchicalPathIntegrationModel(BasicModelGroup):
 
     def make_Wg2p(self):
         phase_place = self.Postophase(self.place_center)
-        phase_grid = self.Grid_cell.value_grid
+        phase_grid = self.grid_cell.value_grid
         d = phase_place[:, u.math.newaxis, :] - phase_grid[u.math.newaxis, :, :]
         d = map2pi_jnp(d)
         delta_x = d[:, :, 0]
@@ -508,8 +508,8 @@ class HierarchicalPathIntegrationModel(BasicModelGroup):
         # delta_x = d[:,:,0] + d[:,:,1]/2
         # delta_y = d[:,:,1] * u.math.sqrt(3) / 2
         dis = u.math.sqrt(delta_x**2 + delta_y**2)
-        Wg2p = u.math.exp(-0.5 * u.math.square(dis / self.band_cell_x.Band_cells.a)) / (
-            u.math.sqrt(2 * u.math.pi) * self.band_cell_x.Band_cells.a
+        Wg2p = u.math.exp(-0.5 * u.math.square(dis / self.band_cell_x.band_cells.a)) / (
+            u.math.sqrt(2 * u.math.pi) * self.band_cell_x.band_cells.a
         )
         self.Wg2p = Wg2p
 
@@ -520,9 +520,9 @@ class HierarchicalPathIntegrationModel(BasicModelGroup):
         return u.math.sqrt(delta_x**2 + delta_y**2)
 
     def get_input(self, Phase):
-        dis = self.dist(Phase - self.Grid_cell.value_grid)
-        return u.math.exp(-0.5 * u.math.square(dis / self.band_cell_x.Band_cells.a)) / (
-            u.math.sqrt(2 * u.math.pi) * self.band_cell_x.Band_cells.a
+        dis = self.dist(Phase - self.grid_cell.value_grid)
+        return u.math.exp(-0.5 * u.math.square(dis / self.band_cell_x.band_cells.a)) / (
+            u.math.sqrt(2 * u.math.pi) * self.band_cell_x.band_cells.a
         )
 
     def update(self, velocity, loc, loc_input_stre=0.0):
@@ -530,9 +530,9 @@ class HierarchicalPathIntegrationModel(BasicModelGroup):
         self.band_cell_y(velocity=velocity, loc=loc, loc_input_stre=loc_input_stre)
         self.band_cell_z(velocity=velocity, loc=loc, loc_input_stre=loc_input_stre)
         band_output = (
-            self.W_x_grid @ self.band_cell_x.Band_cells.r.value
-            + self.W_y_grid @ self.band_cell_y.Band_cells.r.value
-            + self.W_z_grid @ self.band_cell_z.Band_cells.r.value
+            self.W_x_grid @ self.band_cell_x.band_cells.r.value
+            + self.W_y_grid @ self.band_cell_y.band_cells.r.value
+            + self.W_z_grid @ self.band_cell_z.band_cells.r.value
         )
         # band_output = (self.W_x_grid @ self.band_cell_x.Band_cells.r + self.W_y_grid @ self.band_cell_y.Band_cells.r)
         max_output = u.math.max(band_output)
@@ -542,10 +542,27 @@ class HierarchicalPathIntegrationModel(BasicModelGroup):
         Phase = u.math.array([phase_x, phase_y]).transpose()
         # Phase = self.Postophase(loc)
         loc_input = self.get_input(Phase) * 5000
-        self.Grid_cell.update(input=loc_input)
-        grid_fr = self.Grid_cell.r.value
+        self.grid_cell.update(input=loc_input)
+        grid_fr = self.grid_cell.r.value
         # self.grid_output = u.math.dot(self.Wg2p, grid_fr-u.math.max(grid_fr)/2)
-        self.grid_output = u.math.dot(self.Wg2p, grid_fr)
+        self.grid_output.value = u.math.dot(self.Wg2p, grid_fr)
+
+        # band_cell_x_states = self.band_cell_x.states()
+        # band_cell_y_states = self.band_cell_y.states()
+        # band_cell_z_states = self.band_cell_z.states()
+        # gird_cell_states = self.grid_cell.states()
+        #
+        # return {
+        #     'band_cell_x': band_cell_x_states,
+        #     'band_cell_y': band_cell_y_states,
+        #     'band_cell_z': band_cell_z_states,
+        #     'grid_cell': gird_cell_states,
+        #
+        #     'gird_fr': gird_cell_states['r'],
+        #     'band_x_fr': band_cell_x_states['band_cells']['r'],
+        #     'band_y_fr': band_cell_y_states['band_cells']['r'],
+        #     'grid_output': self.grid_output,
+        # }
 
 
 class HierarchicalNetwork(BasicModelGroup):
@@ -593,15 +610,15 @@ class HierarchicalNetwork(BasicModelGroup):
             # update the band cell module
             self.MEC_model_list[i](velocity=velocity, loc=loc, loc_input_stre=loc_input_stre)
             self.grid_fr.value = self.grid_fr.value.at[i].set(
-                self.MEC_model_list[i].Grid_cell.u.value
+                self.MEC_model_list[i].grid_cell.r.value
             )
             self.band_x_fr.value = self.band_x_fr.value.at[i].set(
-                self.MEC_model_list[i].band_cell_x.Band_cells.r.value
+                self.MEC_model_list[i].band_cell_x.band_cells.r.value
             )
             self.band_y_fr.value = self.band_y_fr.value.at[i].set(
-                self.MEC_model_list[i].band_cell_y.Band_cells.r.value
+                self.MEC_model_list[i].band_cell_y.band_cells.r.value
             )
-            grid_output_module = self.MEC_model_list[i].grid_output
+            grid_output_module = self.MEC_model_list[i].grid_output.value
             # W_g2p = self.W_g2p_list[i]
             # grid_fr = self.MEC_model_list[i].Grid_cell.r
             # grid_output_module = u.math.dot(W_g2p, grid_fr)
