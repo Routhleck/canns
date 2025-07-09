@@ -2,35 +2,54 @@ import brainstate
 import brainunit as u
 import jax
 import numpy as np
+import os
 
 from canns.models.basic import HierarchicalNetwork
 from canns.task.path_integration import PathIntegrationTask
+
+PATH = os.path.dirname(os.path.abspath(__file__))
 
 
 brainstate.environ.set(dt=0.1)
 task_pi = PathIntegrationTask(
     width=5,
     height=5,
-    speed_mean=0.04,
+    speed_mean=0.16,
     speed_std=0.016,
-    duration=100000.0,
+    duration=10000.0,
     dt=0.1,
     start_pos=(2.5, 2.5),
     progress_bar=True,
 )
-trajectory = task_pi.generate_trajectory()
+
+
+trajectory_file_path = os.path.join(PATH, 'trajectory_test.npz')
+trajectory_graph_file_path = os.path.join(PATH, 'trajectory_graph.png')
+
+if os.path.exists(trajectory_file_path):
+    print(f"Loading trajectory from {trajectory_file_path}")
+    data = np.load(trajectory_file_path)
+    trajectory = task_pi.get_empty_trajectory()
+    trajectory.position = data['position']
+    trajectory.velocity = data['velocity']
+    trajectory.speed = data['speed']
+    trajectory.hd_angle = data['hd_angle']
+    trajectory.rot_vel = data['rot_vel']
+else:
+    print(f"Generating new trajectory and saving to {trajectory_file_path}")
+    trajectory = task_pi.generate_trajectory()
+    task_pi.show_trajectory(show=False, save_path=trajectory_graph_file_path)
+    np.savez(
+        trajectory_file_path,
+        position=trajectory.position,
+        velocity=trajectory.velocity,
+        speed=trajectory.speed,
+        hd_angle=trajectory.hd_angle,
+        rot_vel=trajectory.rot_vel,
+    )
 
 hierarchical_net = HierarchicalNetwork(num_module=5, num_place=30)
 hierarchical_net.init_state()
-
-np.savez(
-    'trajectory_test.npz',
-    position=trajectory.position,
-    velocity=trajectory.velocity,
-    speed=trajectory.speed,
-    hd_angle=trajectory.hd_angle,
-    rot_vel=trajectory.rot_vel,
-)
 
 def initialize(t, input_stre):
     hierarchical_net(
@@ -60,6 +79,8 @@ def run_step(t, vel, loc):
 
 total_time = trajectory.velocity.shape[0]
 indices = np.arange(total_time)
+
+# with jax.disable_jit():
 band_x_r, band_y_r, grid_r, place_r = brainstate.compile.for_loop(
     run_step,
     u.math.asarray(indices),
@@ -68,9 +89,10 @@ band_x_r, band_y_r, grid_r, place_r = brainstate.compile.for_loop(
     pbar=brainstate.compile.ProgressBar(10),
 )
 
+activity_file_path = os.path.join(PATH, 'band_grid_place_activity.npz')
 
 np.savez(
-    'band_grid_place_activity.npz',
+    activity_file_path,
     band_x_r=band_x_r,
     band_y_r=band_y_r,
     grid_r=grid_r,

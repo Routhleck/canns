@@ -11,7 +11,7 @@ from tqdm import tqdm
 
 from ._base import BaseTask
 
-__all__ = ["map2pi", "PathIntegrationTask"]
+__all__ = ["map2pi", "map2pi_jnp", "PathIntegrationTask"]
 
 
 @dataclass
@@ -119,26 +119,34 @@ class PathIntegrationTask(BaseTask):
         """
         Displays the trajectory of the agent in the environment.
         """
-        self.reset()
-        self.generate_trajectory()
+        # self.reset()
+        # self.generate_trajectory()
+        if len(self.agent.history["pos"]) == 0:
+            raise ValueError("No trajectory data available. Please generate the trajectory first.")
         fig, ax = plt.subplots(1, 1, figsize=(3, 3))
         self.agent.plot_trajectory(t_start=0, t_end=self.total_steps, fig=fig, ax=ax,color="changing")
         plt.show() if show else None
         plt.savefig(save_path) if save_path else None
-
+    
+    def get_empty_trajectory(self) -> TrajectoryData:
+        """
+        Returns an empty trajectory data structure with the same shape as the generated trajectory.
+        This is useful for initializing the trajectory data structure without any actual data.
+        """
+        return TrajectoryData(
+            position=np.zeros((self.total_steps, 2)),
+            velocity=np.zeros((self.total_steps, 2)),
+            speed=np.zeros(self.total_steps),
+            hd_angle=np.zeros(self.total_steps),
+            rot_vel=np.zeros(self.total_steps),
+        )
 
 def map2pi(a):
-    """
-    Maps an angle 'a' to the interval [-pi, pi] using the modulo operator.
+    b = np.where(a > np.pi, a - np.pi * 2, a)
+    c = np.where(b < -np.pi, b + np.pi * 2, b)
+    return c
 
-    Args:
-        a: The input angle in radians.
-
-    Returns:
-        The angle mapped to the interval [-pi, pi].
-    """
-    # Normalize to [0, 2*pi]
-    b = u.math.fmod(a + u.math.pi, 2 * u.math.pi) if not isinstance(a, np.ndarray) else np.fmod(a + np.pi, 2 * np.pi)
-    # Map to [-pi, pi]
-    c = b - np.pi
+def map2pi_jnp(a):
+    b = u.math.where(a > np.pi, a - np.pi * 2, a)
+    c = u.math.where(b < -np.pi, b + np.pi * 2, b)
     return c

@@ -1,8 +1,10 @@
 import brainstate
 import brainunit as u
 import jax
+import numpy as np
+from brainstate.nn import exp_euler_step
 
-from ...task.path_integration import map2pi
+from ...task.path_integration import map2pi_jnp
 from ._base import BasicModel, BasicModelGroup
 
 __all__ = [
@@ -136,7 +138,7 @@ class NonRecUnits(BasicModel):
 
     # choose the activation function
     def activate(self, x):
-        return u.math.tanh(x)
+        return u.math.relu(x)
 
     def dist(self, d):
         d = u.math.remainder(d, self.z_range)
@@ -263,7 +265,7 @@ class BandCell(BasicModel):
 
         v_phi = u.math.dot(velocity, self.proj_k)
         center_ideal = self.center_ideal.value + v_phi * brainstate.environ.get_dt()
-        self.center_ideal.value = map2pi(center_ideal)
+        self.center_ideal.value = map2pi_jnp(center_ideal)
         # EPG output last time step
         Band_output = self.Band_cells.r.value
         # PEN input
@@ -348,7 +350,7 @@ class GridCell(BasicModel):
         self.center.value = u.math.zeros(2,)
 
     def dist(self, d):
-        d = map2pi(d)
+        d = map2pi_jnp(d)
         delta_x = d[:, 0]
         delta_y = (d[:, 1] - 1 / 2 * d[:, 0]) * 2 / u.math.sqrt(3)
         return u.math.sqrt(delta_x**2 + delta_y**2)
@@ -381,15 +383,25 @@ class GridCell(BasicModel):
         self.input.value = input
         Irec = u.math.dot(self.conn_mat, self.r.value)
         # Update neural state
-        self.u.value += (
-            (-self.u.value + Irec + self.input.value - self.v.value)
-            / self.tau
-            * brainstate.environ.get_dt()
+        self.v.value = exp_euler_step(
+            lambda v: (-v + self.m * self.u.value) / self.tau_v,
+            self.v.value,
+        )
+        self.u.value = exp_euler_step(
+            lambda u, Irec: (-u + Irec + self.input.value - self.v.value) / self.tau,
+            self.u.value,
+            Irec,
         )
         self.u.value = u.math.where(self.u.value > 0, self.u.value, 0)
-        self.v.value += (
-            (-self.v.value + self.m * self.u.value) / self.tau_v * brainstate.environ.get_dt()
-        )
+        # self.u.value += (
+        #     (-self.u.value + Irec + self.input.value - self.v.value)
+        #     / self.tau
+        #     * brainstate.environ.get_dt()
+        # )
+        # self.u.value = u.math.where(self.u.value > 0, self.u.value, 0)
+        # self.v.value += (
+        #     (-self.v.value + self.m * self.u.value) / self.tau_v * brainstate.environ.get_dt()
+        # )
         r1 = u.math.square(self.u.value)
         r2 = 1.0 + self.k * u.math.sum(r1)
         self.r.value = r1 / r2
@@ -431,8 +443,8 @@ class HierarchicalPathIntegrationModel(BasicModelGroup):
         grid_y = value_grid[:, 1]
         # Calculate the distance between each grid cell and band cell
         grid_vector = u.math.zeros(value_grid.shape)
-        grid_vector.at[:, 0].set(value_grid[:, 0])
-        grid_vector.at[:, 1].set((value_grid[:, 1] - 1 / 2 * value_grid[:, 0]) * 2 / u.math.sqrt(3))
+        grid_vector = grid_vector.at[:, 0].set(value_grid[:, 0])
+        grid_vector = grid_vector.at[:, 1].set((value_grid[:, 1] - 1 / 2 * value_grid[:, 0]) * 2 / u.math.sqrt(3))
         z_vector = u.math.array([-1 / 2, u.math.sqrt(3) / 2])
         grid_phase_z = u.math.dot(grid_vector, z_vector)
         dis_x = self.band_cell_x.dist(grid_x[:, None] - band_x[None, :])
@@ -463,7 +475,7 @@ class HierarchicalPathIntegrationModel(BasicModelGroup):
         phase_place = self.Postophase(self.place_center)
         phase_grid = self.Grid_cell.value_grid
         d = phase_place[:, u.math.newaxis, :] - phase_grid[u.math.newaxis, :, :]
-        d = map2pi(d)
+        d = map2pi_jnp(d)
         delta_x = d[:, :, 0]
         delta_y = (d[:, :, 1] - 1 / 2 * d[:, :, 0]) * 2 / u.math.sqrt(3)
         # delta_x = d[:,:,0] + d[:,:,1]/2
@@ -475,7 +487,7 @@ class HierarchicalPathIntegrationModel(BasicModelGroup):
         self.Wg2p = Wg2p
 
     def dist(self, d):
-        d = map2pi(d)
+        d = map2pi_jnp(d)
         delta_x = d[:, 0]
         delta_y = (d[:, 1] - 1 / 2 * d[:, 0]) * 2 / u.math.sqrt(3)
         return u.math.sqrt(delta_x**2 + delta_y**2)
