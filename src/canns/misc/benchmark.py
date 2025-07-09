@@ -16,7 +16,7 @@ def benchmark(runs=10):
 
             result = func(*args, **kwargs)
 
-            for i in range(runs):
+            for _ in range(runs):
                 start_time = time.perf_counter()
                 func(*args, **kwargs)
                 end_time = time.perf_counter()
