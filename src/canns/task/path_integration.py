@@ -131,8 +131,8 @@ class PathIntegrationTask(BaseTask):
         self.agent.plot_trajectory(
             t_start=0, t_end=self.total_steps, fig=fig, ax=ax, color="changing"
         )
-        plt.show() if show else None
         plt.savefig(save_path) if save_path else None
+        plt.show() if show else None
 
     def get_empty_trajectory(self) -> TrajectoryData:
         """
