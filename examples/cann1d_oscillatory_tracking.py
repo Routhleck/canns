@@ -4,7 +4,7 @@ import braintools
 import brainunit as u
 import jax
 
-from canns.models import CANN1D, CANN1D_SFA
+from canns.models.basic import CANN1D, CANN1D_SFA
 
 dur1, dur2, dur3 = 100., 2000., 500.
 
