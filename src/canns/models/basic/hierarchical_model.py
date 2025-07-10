@@ -3,7 +3,7 @@ import brainunit as u
 import jax
 from brainstate.nn import exp_euler_step
 
-from ...task.path_integration import map2pi_jnp
+from ...task.path_integration import map2pi
 from ._base import BasicModel, BasicModelGroup
 
 __all__ = [
@@ -506,7 +506,7 @@ class BandCell(BasicModel):
 
         v_phi = u.math.dot(velocity, self.proj_k)
         center_ideal = self.center_ideal.value + v_phi * brainstate.environ.get_dt()
-        self.center_ideal.value = map2pi_jnp(center_ideal)
+        self.center_ideal.value = map2pi(center_ideal)
         # EPG output last time step
         Band_output = self.band_cells.r.value
         # PEN input
@@ -649,7 +649,7 @@ class GridCell(BasicModel):
         Returns:
             Array: The corresponding distances on the hexagonal lattice.
         """
-        d = map2pi_jnp(d)
+        d = map2pi(d)
         delta_x = d[:, 0]
         delta_y = (d[:, 1] - 1 / 2 * d[:, 0]) * 2 / u.math.sqrt(3)
         return u.math.sqrt(delta_x**2 + delta_y**2)
@@ -847,7 +847,7 @@ class HierarchicalPathIntegrationModel(BasicModelGroup):
         phase_place = self.Postophase(self.place_center)
         phase_grid = self.grid_cell.value_grid
         d = phase_place[:, u.math.newaxis, :] - phase_grid[u.math.newaxis, :, :]
-        d = map2pi_jnp(d)
+        d = map2pi(d)
         delta_x = d[:, :, 0]
         delta_y = (d[:, :, 1] - 1 / 2 * d[:, :, 0]) * 2 / u.math.sqrt(3)
         # delta_x = d[:,:,0] + d[:,:,1]/2
@@ -867,7 +867,7 @@ class HierarchicalPathIntegrationModel(BasicModelGroup):
         Returns:
             Array: The corresponding distances on the hexagonal lattice.
         """
-        d = map2pi_jnp(d)
+        d = map2pi(d)
         delta_x = d[:, 0]
         delta_y = (d[:, 1] - 1 / 2 * d[:, 0]) * 2 / u.math.sqrt(3)
         return u.math.sqrt(delta_x**2 + delta_y**2)
@@ -945,6 +945,9 @@ class HierarchicalNetwork(BasicModelGroup):
         band_y_fr (brainstate.HiddenState): The firing rates of the y-oriented band cell population.
         place_fr (brainstate.HiddenState): The firing rates of the place cell population.
         decoded_pos (brainstate.State): The final decoded 2D position.
+
+    References:
+        Anonymous Author(s) "Unfolding the Black Box of Recurrent Neural Networks for Path Integration" (under review).
     """
 
     def __init__(self, num_module, num_place):
