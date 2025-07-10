@@ -945,6 +945,9 @@ class HierarchicalNetwork(BasicModelGroup):
         band_y_fr (brainstate.HiddenState): The firing rates of the y-oriented band cell population.
         place_fr (brainstate.HiddenState): The firing rates of the place cell population.
         decoded_pos (brainstate.State): The final decoded 2D position.
+
+    References:
+        Anonymous Author(s) "Unfolding the Black Box of Recurrent Neural Networks for Path Integration" (under review).
     """
 
     def __init__(self, num_module, num_place):
