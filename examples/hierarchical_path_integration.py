@@ -35,7 +35,7 @@ else:
     print(f"Generating new trajectory and saving to {trajectory_file_path}")
     task_pi.get_data()
     task_pi.show_data(show=False, save_path=trajectory_graph_file_path)
-    task_pi.save_data(trajectory_graph_file_path)
+    task_pi.save_data(trajectory_file_path)
 
 hierarchical_net = HierarchicalNetwork(num_module=5, num_place=30)
 hierarchical_net.init_state()

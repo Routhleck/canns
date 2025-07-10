@@ -57,6 +57,7 @@ class TrackingTask(Task):
                     to be used for generating the stimulus patterns.
         """
         super().__init__()
+        assert config is not None
         self.duration = config.get("duration", [])
         self.Iext = config.get("Iext", [])
         self.ndim = ndim
