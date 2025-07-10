@@ -1,9 +1,7 @@
 from collections.abc import Sequence
 
-import brainstate
 import brainunit as u
 import numpy as np
-from fontTools.misc.plistlib import end_string
 from tqdm import tqdm
 
 from ..models.basic.cann import BaseCANN, BaseCANN1D, BaseCANN2D
@@ -121,18 +119,21 @@ class TrackingTask(Task):
         for i, pos in tqdm(
             enumerate(self.Iext_sequence),
             desc=f"<{type(self).__name__}>Generating Task data",
-            disable=not progress_bar
+            disable=not progress_bar,
         ):
             data[i] = self.get_stimulus_by_pos(pos)
 
         self.data = data
 
-    def show_data(self, show=True, save_path=None, ):
+    def show_data(
+        self,
+        show=True,
+        save_path=None,
+    ):
         raise NotImplementedError(
             "The show_data method is not implemented for TrackingTask. "
             "Please implement this method in subclasses to visualize the task data."
         )
-
 
 
 class PopulationCoding(TrackingTask):
@@ -141,6 +142,7 @@ class PopulationCoding(TrackingTask):
     In this task, a stimulus is presented for a specific duration, preceded and followed by
     periods of no stimulation, to test the network's ability to form and maintain a memory bump.
     """
+
     def __init__(
         self,
         cann_instance: BaseCANN,
@@ -196,7 +198,7 @@ class PopulationCoding(TrackingTask):
         # ):
         if progress_bar:
             print(f"<{type(self).__name__}>Generating Task data(No For Loop)")
-        data[start_time_step: end_time_step] = stimulus
+        data[start_time_step:end_time_step] = stimulus
 
         self.data = data
 
@@ -250,7 +252,7 @@ class TemplateMatching(TrackingTask):
         for i in tqdm(
             range(self.total_steps),
             desc=f"<{type(self).__name__}>Generating Task data",
-            disable=not progress_bar
+            disable=not progress_bar,
         ):
             noise = 0.1 * self.A * np.random.randn(*self.shape)
             data[i] = stimulus + noise
@@ -311,7 +313,9 @@ class SmoothTracking(TrackingTask):
                 if num_steps == 0:
                     continue
                 end_step = start_step + num_steps
-                Iext_sequence[start_step:end_step] = np.linspace(self.Iext[i], self.Iext[i + 1], num_steps).reshape(-1, 1)
+                Iext_sequence[start_step:end_step] = np.linspace(
+                    self.Iext[i], self.Iext[i + 1], num_steps
+                ).reshape(-1, 1)
                 start_step = end_step
             if start_step < self.total_steps:
                 Iext_sequence[start_step:] = self.Iext[-1]
@@ -330,9 +334,7 @@ class SmoothTracking(TrackingTask):
                 for d in range(self.ndim):
                     start_d = start_pos[d]
                     end_d = end_pos[d]
-                    Iext_sequence[start_step:end_step, d] = np.linspace(
-                        start_d, end_d, num_steps
-                    )
+                    Iext_sequence[start_step:end_step, d] = np.linspace(start_d, end_d, num_steps)
 
                 start_step = end_step
 

@@ -60,7 +60,9 @@ class Task(ABC):
             ValueError: If `self.data` is None, as there is nothing to save.
         """
         if self.data is None:
-            raise ValueError("Data has not been loaded or generated (self.data is None). Please call get_data() first.")
+            raise ValueError(
+                "Data has not been loaded or generated (self.data is None). Please call get_data() first."
+            )
 
         output_path = Path(filepath)
         output_path.parent.mkdir(parents=True, exist_ok=True)
@@ -99,7 +101,11 @@ class Task(ABC):
         print(f"Data successfully loaded from: {output_path}")
 
     @abstractmethod
-    def show_data(self, show=True, save_path=None, ) -> None:
+    def show_data(
+        self,
+        show=True,
+        save_path=None,
+    ) -> None:
         """
         Abstract method to display a task.
 

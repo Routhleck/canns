@@ -13,10 +13,12 @@ from ._base import Task
 
 __all__ = ["map2pi", "PathIntegrationTask"]
 
+
 def map2pi(a):
     b = u.math.where(a > np.pi, a - np.pi * 2, a)
     c = u.math.where(b < -np.pi, b + np.pi * 2, b)
     return c
+
 
 @dataclass
 class TrajectoryData:
@@ -30,7 +32,6 @@ class TrajectoryData:
     speed: np.ndarray
     hd_angle: np.ndarray
     rot_vel: np.ndarray
-
 
 
 class PathIntegrationTask(Task):
@@ -150,6 +151,3 @@ class PathIntegrationTask(Task):
             hd_angle=np.zeros(self.total_steps),
             rot_vel=np.zeros(self.total_steps),
         )
-
-
-
