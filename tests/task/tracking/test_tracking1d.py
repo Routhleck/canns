@@ -18,14 +18,13 @@ def test_population_coding_1d():
         Iext=0.,
         time_step=brainstate.environ.get_dt(),
     )
-    task_pc.init_state()
+    task_pc.get_data()
 
-    def run_step(t):
-        task_pc()
-        cann(task_pc.inputs.value)
+    def run_step(t, inputs):
+        cann(inputs)
         return cann.u.value, cann.inp.value
 
-    us, inps = brainstate.compile.for_loop(run_step, task_pc.run_steps, pbar=brainstate.compile.ProgressBar(10))
+    us, inps = brainstate.compile.for_loop(run_step, task_pc.run_steps, task_pc.data, pbar=brainstate.compile.ProgressBar(10))
     # braintools.visualize.animate_1D(
     #     dynamical_vars=[{'ys': us, 'xs': cann.x, 'legend': 'u'},
     #                     {'ys': inps, 'xs': cann.x, 'legend': 'Iext'}],
@@ -45,14 +44,13 @@ def test_template_matching_1d():
         duration=20.,
         time_step=brainstate.environ.get_dt(),
     )
-    task_tm.init_state()
+    task_tm.get_data()
 
-    def run_step(t):
-        task_tm()
-        cann(task_tm.inputs.value)
+    def run_step(t, inputs):
+        cann(inputs)
         return cann.u.value, cann.inp.value
 
-    us, inps = brainstate.compile.for_loop(run_step, task_tm.run_steps, pbar=brainstate.compile.ProgressBar(10))
+    us, inps = brainstate.compile.for_loop(run_step, task_tm.run_steps, task_tm.data, pbar=brainstate.compile.ProgressBar(10))
     # braintools.visualize.animate_1D(
     #     dynamical_vars=[{'ys': us, 'xs': cann.x, 'legend': 'u'},
     #                     {'ys': inps, 'xs': cann.x, 'legend': 'Iext'}],
@@ -72,14 +70,13 @@ def test_smooth_tracking_1d():
         duration=(10., 10., 10., 10.),
         time_step=brainstate.environ.get_dt(),
     )
-    task_st.init_state()
+    task_st.get_data()
 
-    def run_step(t):
-        task_st()
-        cann(task_st.inputs.value)
+    def run_step(t, inputs):
+        cann(inputs)
         return cann.u.value, cann.inp.value
 
-    us, inps = brainstate.compile.for_loop(run_step, task_st.run_steps, pbar=brainstate.compile.ProgressBar(10))
+    us, inps = brainstate.compile.for_loop(run_step, task_st.run_steps, task_st.data, pbar=brainstate.compile.ProgressBar(10))
     # braintools.visualize.animate_1D(
     #     dynamical_vars=[{'ys': us, 'xs': cann.x, 'legend': 'u'},
     #                     {'ys': inps, 'xs': cann.x, 'legend': 'Iext'}],

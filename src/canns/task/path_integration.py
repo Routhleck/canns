@@ -9,10 +9,14 @@ from ratinabox.Agent import Agent
 from ratinabox.Environment import Environment
 from tqdm import tqdm
 
-from ._base import BaseTask
+from ._base import Task
 
-__all__ = ["map2pi", "map2pi_jnp", "PathIntegrationTask"]
+__all__ = ["map2pi", "PathIntegrationTask"]
 
+def map2pi(a):
+    b = u.math.where(a > np.pi, a - np.pi * 2, a)
+    c = u.math.where(b < -np.pi, b + np.pi * 2, b)
+    return c
 
 @dataclass
 class TrajectoryData:
@@ -28,7 +32,8 @@ class TrajectoryData:
     rot_vel: np.ndarray
 
 
-class PathIntegrationTask(BaseTask):
+
+class PathIntegrationTask(Task):
     """
     A base class for path integration tasks, inheriting from BaseTask.
     This class is intended to be extended for specific path integration tasks.
@@ -44,9 +49,8 @@ class PathIntegrationTask(BaseTask):
         dt=None,
         start_pos=(2.5, 2.5),
         progress_bar=True,
-        **kwargs,
     ):
-        super().__init__(**kwargs)
+        super().__init__()
 
         # --- task settings ---
         # time settings
@@ -94,13 +98,13 @@ class PathIntegrationTask(BaseTask):
         )
         self.agent.pos = np.array(self.start_pos)
 
-    def generate_trajectory(self) -> TrajectoryData:
+    def get_data(self):
         """Generates the inputs for the agent based on its current position."""
 
         for _ in tqdm(
             range(self.total_steps),
             disable=not self.progress_bar,
-            desc=f"[{type(self).__name__}]Generating trajectories",
+            desc=f"<{type(self).__name__}>Generating Task data",
         ):
             self.agent.update(dt=self.dt)
 
@@ -111,11 +115,11 @@ class PathIntegrationTask(BaseTask):
         rot_vel = np.zeros_like(hd_angle)
         rot_vel[1:] = map2pi(np.diff(hd_angle))
 
-        return TrajectoryData(
+        self.data = TrajectoryData(
             position=position, velocity=velocity, speed=speed, hd_angle=hd_angle, rot_vel=rot_vel
         )
 
-    def show_trajectory(
+    def show_data(
         self,
         show=True,
         save_path=None,
@@ -125,8 +129,8 @@ class PathIntegrationTask(BaseTask):
         """
         # self.reset()
         # self.generate_trajectory()
-        if len(self.agent.history["pos"]) == 0:
-            raise ValueError("No trajectory data available. Please generate the trajectory first.")
+        if self.data is None:
+            raise ValueError("No trajectory data available. Please generate the data first.")
         fig, ax = plt.subplots(1, 1, figsize=(3, 3))
         self.agent.plot_trajectory(
             t_start=0, t_end=self.total_steps, fig=fig, ax=ax, color="changing"
@@ -148,13 +152,4 @@ class PathIntegrationTask(BaseTask):
         )
 
 
-def map2pi(a):
-    b = np.where(a > np.pi, a - np.pi * 2, a)
-    c = np.where(b < -np.pi, b + np.pi * 2, b)
-    return c
 
-
-def map2pi_jnp(a):
-    b = u.math.where(a > np.pi, a - np.pi * 2, a)
-    c = u.math.where(b < -np.pi, b + np.pi * 2, b)
-    return c
