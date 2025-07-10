@@ -4,7 +4,7 @@ import braintools
 import brainunit as u
 import jax
 
-from canns.models import CANN2D
+from canns.models.basic import CANN2D
 
 bst.environ.set(dt=0.1)
 
