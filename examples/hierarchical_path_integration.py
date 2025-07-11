@@ -69,15 +69,23 @@ def run_step(t, vel, loc):
 total_time = task_pi.data.velocity.shape[0]
 indices = np.arange(total_time)
 
-# jax.profiler.start_trace("/tmp/profile-data")
-# with jax.disable_jit():
-band_x_r, band_y_r, grid_r, place_r = brainstate.compile.for_loop(
-    run_step,
-    u.math.asarray(indices),
-    u.math.asarray(task_pi.data.velocity),
-    u.math.asarray(task_pi.data.position),
-    pbar=brainstate.compile.ProgressBar(10),
-)
+
+# band_x_r, band_y_r, grid_r, place_r = brainstate.compile.for_loop(
+#     run_step,
+#     u.math.asarray(indices),
+#     u.math.asarray(task_pi.data.velocity),
+#     u.math.asarray(task_pi.data.position),
+#     pbar=brainstate.compile.ProgressBar(10),
+# )
+
+# band_x_r, band_y_r, grid_r, place_r = hierarchical_net.run(
+#     u.math.asarray(indices),
+#     u.math.asarray(task_pi.data.velocity),
+#     u.math.asarray(task_pi.data.position),
+#     pbar=brainstate.compile.ProgressBar(10),
+# )
+
+
 from canns.misc.benchmark import benchmark
 @benchmark(runs=5)
 def benchmarked_run_step():
@@ -89,7 +97,7 @@ def benchmarked_run_step():
         pbar=brainstate.compile.ProgressBar(10),
     )
 benchmarked_run_step()
-# jax.profiler.stop_trace()
+
 
 # activity_file_path = os.path.join(PATH, 'band_grid_place_activity.npz')
 #
