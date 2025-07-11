@@ -1,7 +1,8 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, asdict
 
 import brainstate
 import brainunit as u
+import jax
 import numpy as np
 import ratinabox
 from matplotlib import pyplot as plt
@@ -13,7 +14,6 @@ from ._base import Task
 
 __all__ = ["map2pi", "PathIntegrationTask"]
 
-
 def map2pi(a):
     b = u.math.where(a > np.pi, a - np.pi * 2, a)
     c = u.math.where(b < -np.pi, b + np.pi * 2, b)
@@ -21,7 +21,7 @@ def map2pi(a):
 
 
 @dataclass
-class TrajectoryData:
+class PathIntegrationData:
     """
     A dataclass to hold the inputs for the path integration task.
     It contains the position, velocity, speed, heading angle, and rotational velocity of the agent.
@@ -51,7 +51,7 @@ class PathIntegrationTask(Task):
         start_pos=(2.5, 2.5),
         progress_bar=True,
     ):
-        super().__init__()
+        super().__init__(data_class=PathIntegrationData)
 
         # --- task settings ---
         # time settings
@@ -116,7 +116,7 @@ class PathIntegrationTask(Task):
         rot_vel = np.zeros_like(hd_angle)
         rot_vel[1:] = map2pi(np.diff(hd_angle))
 
-        self.data = TrajectoryData(
+        self.data = PathIntegrationData(
             position=position, velocity=velocity, speed=speed, hd_angle=hd_angle, rot_vel=rot_vel
         )
 
@@ -139,12 +139,12 @@ class PathIntegrationTask(Task):
         plt.savefig(save_path) if save_path else None
         plt.show() if show else None
 
-    def get_empty_trajectory(self) -> TrajectoryData:
+    def get_empty_trajectory(self) -> PathIntegrationData:
         """
         Returns an empty trajectory data structure with the same shape as the generated trajectory.
         This is useful for initializing the trajectory data structure without any actual data.
         """
-        return TrajectoryData(
+        return PathIntegrationData(
             position=np.zeros((self.total_steps, 2)),
             velocity=np.zeros((self.total_steps, 2)),
             speed=np.zeros(self.total_steps),

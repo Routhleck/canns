@@ -1,3 +1,4 @@
+import dataclasses
 from abc import ABC, abstractmethod
 from pathlib import Path
 
@@ -20,15 +21,18 @@ class Task(ABC):
               NumPy array or a dictionary of arrays.
     """
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, data_class=None):
         """
         Initializes the Task instance.
 
         Args:
-            config (dict, optional): A dictionary containing configurations
-                                     for the task. Defaults to None.
+            data_class (type, optional): A dataclass type for structured data.
+                                          If provided, the task will use this
+                                          class to structure the loaded or
+                                          generated data.
         """
         self.data = None  # Data is not loaded at initialization
+        self.data_class = data_class  # Optional data class for structured data
 
     @abstractmethod
     def get_data(self) -> None:
@@ -67,10 +71,14 @@ class Task(ABC):
         output_path = Path(filepath)
         output_path.parent.mkdir(parents=True, exist_ok=True)
 
-        if isinstance(self.data, dict):
-            np.savez_compressed(output_path, **self.data)
+        data_to_save = self.data
+        if dataclasses.is_dataclass(self.data) and not isinstance(self.data, type):
+            data_to_save = dataclasses.asdict(self.data)
+
+        if isinstance(data_to_save, dict):
+            np.savez_compressed(output_path, **data_to_save)
         else:
-            np.savez_compressed(output_path, data=self.data)
+            np.savez_compressed(output_path, data=data_to_save)
 
         print(f"Data successfully saved to: {output_path}")
 
@@ -93,10 +101,15 @@ class Task(ABC):
             raise ValueError(f"File {output_path} does not exist.")
 
         loaded_data = np.load(output_path, allow_pickle=True)
-        if len(loaded_data.files) == 1:
-            self.data = loaded_data[loaded_data.files[0]]
+
+        data_dict = {key: loaded_data[key] for key in loaded_data.files}
+
+        if self.data_class and dataclasses.is_dataclass(self.data_class):
+            self.data = self.data_class(**data_dict)
+        elif len(data_dict) == 1 and 'data' in data_dict:
+            self.data = data_dict['data']
         else:
-            self.data = {key: loaded_data[key] for key in loaded_data.files}
+            self.data = data_dict
 
         print(f"Data successfully loaded from: {output_path}")
 
