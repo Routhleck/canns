@@ -33,13 +33,13 @@ def benchmark(runs=10):
 
             print(f"--- Benchmark Results: '{func.__name__}' ---")
             print(f"Total Run times: {runs}")
-            print(f"Total Times runs: {total_time:.6f} 秒")
-            print(f"Average Time: {average_time:.6f} 秒")
-            print(f"Fastest: {fastest_time:.6f} 秒")
-            print(f"Slowest: {slowest_time:.6f} 秒")
+            print(f"Total Times runs: {total_time:.6f} s")
+            print(f"Average Time: {average_time:.6f} s")
+            print(f"Fastest: {fastest_time:.6f} s")
+            print(f"Slowest: {slowest_time:.6f} s")
             print("-" * 40)
 
-            return result  # 返回原始函数的最后一次执行结果
+            return result
 
         return wrapper
 
