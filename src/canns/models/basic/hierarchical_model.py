@@ -269,10 +269,10 @@ class NonRecUnits(BasicModel):
 
     def update(self, input):
         self.input.value = input
-        self.r.value = jax.lax.cond(
+        self.r.value = u.math.where(
             self.noise_0 != 0.0,
-            lambda: self.activate(self.u.value) + self.noise_0 * brainstate.random.randn(self.size),
-            lambda: self.activate(self.u.value),
+            self.activate(self.u.value) + self.noise_0 * brainstate.random.randn(self.size),
+            self.activate(self.u.value),
         )
         # self.r.value = self.activate(self.u.value) + self.noise_0 * brainstate.random.randn(
         #     self.size
