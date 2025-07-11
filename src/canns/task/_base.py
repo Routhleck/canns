@@ -106,8 +106,8 @@ class Task(ABC):
 
         if self.data_class and dataclasses.is_dataclass(self.data_class):
             self.data = self.data_class(**data_dict)
-        elif len(data_dict) == 1 and 'data' in data_dict:
-            self.data = data_dict['data']
+        elif len(data_dict) == 1 and "data" in data_dict:
+            self.data = data_dict["data"]
         else:
             self.data = data_dict
 

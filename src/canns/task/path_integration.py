@@ -1,8 +1,7 @@
-from dataclasses import dataclass, asdict
+from dataclasses import dataclass
 
 import brainstate
 import brainunit as u
-import jax
 import numpy as np
 import ratinabox
 from matplotlib import pyplot as plt
@@ -13,6 +12,7 @@ from tqdm import tqdm
 from ._base import Task
 
 __all__ = ["map2pi", "PathIntegrationTask"]
+
 
 def map2pi(a):
     b = u.math.where(a > np.pi, a - np.pi * 2, a)
