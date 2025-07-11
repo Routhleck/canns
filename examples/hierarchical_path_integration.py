@@ -51,7 +51,6 @@ init_time = 500
 indices = np.arange(init_time)
 input_stre = np.zeros(init_time)
 input_stre[:400]=100.
-# with jax.checking_leaks():
 brainstate.compile.for_loop(
     initialize,
     u.math.asarray(indices),
