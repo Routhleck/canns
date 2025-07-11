@@ -269,9 +269,14 @@ class NonRecUnits(BasicModel):
 
     def update(self, input):
         self.input.value = input
-        self.r.value = self.activate(self.u.value) + self.noise_0 * brainstate.random.randn(
-            self.size
+        self.r.value = u.math.where(
+            self.noise_0 != 0.0,
+            self.activate(self.u.value) + self.noise_0 * brainstate.random.randn(self.size),
+            self.activate(self.u.value),
         )
+        # self.r.value = self.activate(self.u.value) + self.noise_0 * brainstate.random.randn(
+        #     self.size
+        # )
         self.u.value = (
             self.u.value
             + (-self.u.value + self.input.value) / self.tau * brainstate.environ.get_dt()
@@ -501,8 +506,16 @@ class BandCell(BasicModel):
             loc (Array): The current 2D location.
             loc_input_stre (float): The strength of the location-based input.
         """
-        # location input
-        loc_input = self.get_stimulus_by_pos(loc) * loc_input_stre
+        loc_input = jax.lax.cond(
+            loc_input_stre != 0.0,
+            lambda op: self.get_stimulus_by_pos(op[0]) * op[1],
+            lambda op: u.math.zeros(self.size, dtype=float),
+            operand=(loc, loc_input_stre),
+        )
+        # if loc_input_stre != 0.:
+        #     loc_input = self.get_stimulus_by_pos(loc) * loc_input_stre
+        # else:
+        #     loc_input = u.math.zeros(self.size)
 
         v_phi = u.math.dot(velocity, self.proj_k)
         center_ideal = self.center_ideal.value + v_phi * brainstate.environ.get_dt()
@@ -1027,3 +1040,63 @@ class HierarchicalNetwork(BasicModelGroup):
         self.decoded_pos.value = center
         self.place_fr.value = u_place**2 / (1 + u.math.sum(u_place**2))
         # self.place_fr = softmax(grid_output)
+
+    # the optimized run function is not run well(the performance is not good enough, as the original one),
+    '''
+    def run(self, indices, velocities, positions, loc_input_stre=0.0, pbar=None):
+        """Runs the hierarchical network for a series of time steps.
+
+        Args:
+            indices (Array): The indices of the time steps to run.
+            velocities (Array): The 2D velocity vectors at each time step.
+            positions (Array): The 2D position vectors at each time step.
+            loc_input_stre (Array): The strength of the location-based input.
+            p_bar (ProgressBar): A progress bar for tracking the simulation progress.
+        """
+
+        band_x_r = u.math.zeros((indices.shape[0], self.num_module, 180))
+        band_y_r = u.math.zeros((indices.shape[0], self.num_module, 180))
+        grid_r = u.math.zeros((indices.shape[0], self.num_module, 20**2))
+        grid_output = u.math.zeros((indices.shape[0], self.num_place))
+        loc_input_stre = u.math.ones((indices.shape[0],)) * loc_input_stre
+
+        for i, model in enumerate(self.MEC_model_list):
+            if pbar is None:
+                pbar = brainstate.compile.ProgressBar(
+                    total=indices.shape[0], desc=f"Module {i + 1}/{self.num_module}"
+                )
+
+            def run_single_module(velocity, loc, loc_input_stre):
+                model(velocity=velocity, loc=loc, loc_input_stre=loc_input_stre)
+                return (
+                    model.band_cell_x.band_cells.r.value,
+                    model.band_cell_y.band_cells.r.value,
+                    model.grid_cell.r.value,
+                    model.grid_output.value,
+                )
+
+            single_band_x_r, single_band_y_r, single_grid_r, single_grid_output = (
+                brainstate.compile.for_loop(
+                    run_single_module,
+                    velocities,
+                    positions,
+                    loc_input_stre,
+                    pbar=pbar,
+                )
+            )
+            band_x_r = band_x_r.at[:, i, :].set(single_band_x_r)
+            band_y_r = band_y_r.at[:, i, :].set(single_band_y_r)
+            grid_r = grid_r.at[:, i, :].set(single_grid_r)
+            grid_output += single_grid_output
+
+        grid_output = u.math.where(grid_output > 0, grid_output, 0)
+        u_place = u.math.where(
+            grid_output > u.math.max(grid_output, axis=1, keepdims=True) / 2,
+            grid_output - u.math.max(grid_output, axis=1, keepdims=True) / 2,
+            0,
+        )
+
+        place_r = u_place**2 / (1 + u.math.sum(u_place**2, axis=1, keepdims=True))
+
+        return band_x_r, band_y_r, grid_r, place_r
+    '''
