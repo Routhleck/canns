@@ -119,7 +119,7 @@ class TrackingTask(Task):
 
         for i, pos in tqdm(
             enumerate(self.Iext_sequence),
-            desc=f"<{type(self).__name__}>Generating Task data",
+            desc=f"<{type(self).__name__}> Generating Task data",
             disable=not progress_bar,
         ):
             data[i] = self.get_stimulus_by_pos(pos)

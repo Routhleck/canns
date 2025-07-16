@@ -35,6 +35,7 @@ def test_population_coding_1d():
         ylabel='Activity',
         repeat=True,
         save_path='test_population_coding_1d.gif',
+        show=False,
     )
 
 def test_template_matching_1d():
@@ -65,6 +66,7 @@ def test_template_matching_1d():
         ylabel='Activity',
         repeat=True,
         save_path='test_template_matching_1d.gif',
+        show=False,
     )
 
 def test_smooth_tracking_1d():
@@ -94,4 +96,6 @@ def test_smooth_tracking_1d():
         ylabel='Activity',
         repeat=True,
         save_path='test_smooth_tracking_1d.gif',
+        show=False,
     )
+test_population_coding_1d()

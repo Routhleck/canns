@@ -1,6 +1,7 @@
 import brainstate
-import braintools
+import numpy as np
 
+from canns.analyzer.visualize import energy_landscape_2d_animation
 from canns.task.tracking import PopulationCoding2D, TemplateMatching2D, SmoothTracking2D
 from canns.models.basic import CANN2D, CANN2D_SFA
 
@@ -25,6 +26,18 @@ def test_population_coding_2d():
         return cann.u.value, cann.r.value, cann.inp.value
 
     us, rs, inps = brainstate.compile.for_loop(run_step, task_pc.run_steps, task_pc.data, pbar=brainstate.compile.ProgressBar(10))
+    energy_landscape_2d_animation(
+        zs_data=us,
+        time_steps_per_second=100,
+        fps=20,
+        title='Population Coding 2D',
+        xlabel='State X',
+        ylabel='State Y',
+        clabel='Activity',
+        repeat=True,
+        save_path='test_population_coding_2d.gif',
+        show=False,
+    )
     # braintools.visualize.animate_2D(
     #     values=us.reshape((us.shape[0], -1)),
     #     net_size=(cann.length, cann.length),
