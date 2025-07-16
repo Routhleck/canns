@@ -98,4 +98,3 @@ def test_smooth_tracking_1d():
         save_path='test_smooth_tracking_1d.gif',
         show=False,
     )
-test_population_coding_1d()

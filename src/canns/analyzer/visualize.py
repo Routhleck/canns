@@ -48,16 +48,16 @@ def energy_landscape_1d_static(
         Tuple[plt.Figure, plt.Axes]: Returns the Matplotlib Figure and Axes objects
                                      for further modification outside the function.
     """
-    # --- 1. Create the figure and axes ---
+    # --- Create the figure and axes ---
     fig, ax = plt.subplots(figsize=figsize)
 
-    # --- 2. Loop through and plot each energy curve ---
+    # --- Loop through and plot each energy curve ---
     # Use .items() to iterate over both keys (labels) and values (data) of the dictionary
     for label, (x_data, y_data) in data_sets.items():
         # Plot the curve, using the dictionary key directly as the label
         ax.plot(x_data, y_data, label=label, **kwargs)
 
-    # --- 3. Configure the plot's appearance ---
+    # --- Configure the plot's appearance ---
     ax.set_title(title, fontsize=16, fontweight='bold')
     ax.set_xlabel(xlabel, fontsize=12)
     ax.set_ylabel(ylabel, fontsize=12)
@@ -70,7 +70,7 @@ def energy_landscape_1d_static(
     if grid:
         ax.grid(True, linestyle='--', alpha=0.6)
 
-    # --- 4. Save and display the plot ---
+    # --- Save and display the plot ---
     if save_path:
         # Using bbox_inches='tight' prevents labels from being cut off
         plt.savefig(save_path, dpi=300, bbox_inches='tight')
@@ -78,7 +78,7 @@ def energy_landscape_1d_static(
 
     plt.show() if show else None
 
-    # --- 5. Return the figure and axes objects ---
+    # --- Return the figure and axes objects ---
     return fig, ax
 
 
@@ -127,113 +127,117 @@ def energy_landscape_1d_animation(
     Returns:
         matplotlib.animation.FuncAnimation: The animation object.
     """
-    # --- Input Validation and Timing Calculation ---
-    if not data_sets:
-        raise ValueError("The 'data_sets' dictionary cannot be empty.")
-
-    first_key = list(data_sets.keys())[0]
-    total_sim_steps = data_sets[first_key][1].shape[0]
-
-    # Calculate total simulation duration in seconds from the data itself
-    total_duration_s = total_sim_steps / time_steps_per_second
-
-    # Calculate the total number of frames needed for the output video
-    num_video_frames = int(total_duration_s * fps)
-
-    # Create an array of the simulation step indices that we will actually render
-    # This correctly handles up-sampling or down-sampling the data to match the desired fps
-    sim_indices_to_render = np.linspace(0, total_sim_steps - 1, num_video_frames, dtype=int)
-
-    # --- Initial Setup ---
     fig, ax = plt.subplots(figsize=figsize)
-    lines = {}
 
-    # Set stable axis limits to prevent jumping
-    global_ymin, global_ymax = float('inf'), float('-inf')
-    for _, (_, ys_data) in data_sets.items():
-        if ys_data.shape[0] != total_sim_steps:
-            raise ValueError("All datasets must have the same number of time steps.")
-        global_ymin = min(global_ymin, np.min(ys_data))
-        global_ymax = max(global_ymax, np.max(ys_data))
+    try:
+        # --- Input Validation and Timing Calculation ---
+        if not data_sets:
+            raise ValueError("The 'data_sets' dictionary cannot be empty.")
 
-    y_buffer = (global_ymax - global_ymin) * 0.1 if global_ymax > global_ymin else 1.0
-    ax.set_ylim(global_ymin - y_buffer, global_ymax + y_buffer)
+        first_key = list(data_sets.keys())[0]
+        total_sim_steps = data_sets[first_key][1].shape[0]
 
-    # --- Plot the Initial Frame ---
-    initial_sim_index = sim_indices_to_render[0]
-    for label, (x_data, ys_data) in data_sets.items():
-        line, = ax.plot(x_data, ys_data[initial_sim_index, :], label=label, **kwargs)
-        lines[label] = line
+        # Calculate total simulation duration in seconds from the data itself
+        total_duration_s = total_sim_steps / time_steps_per_second
 
-    # Configure plot appearance
-    ax.set_title(title, fontsize=16, fontweight='bold')
-    ax.set_xlabel(xlabel, fontsize=12)
-    ax.set_ylabel(ylabel, fontsize=12)
-    if grid:
-        ax.grid(True, linestyle='--', alpha=0.6)
-    ax.legend()
+        # Calculate the total number of frames needed for the output video
+        num_video_frames = int(total_duration_s * fps)
 
-    time_text = ax.text(0.05, 0.9, '', transform=ax.transAxes, fontsize=12,
-                        bbox=dict(facecolor='white', alpha=0.7))
+        # Create an array of the simulation step indices that we will actually render
+        # This correctly handles up-sampling or down-sampling the data to match the desired fps
+        sim_indices_to_render = np.linspace(0, total_sim_steps - 1, num_video_frames, dtype=int)
 
-    # --- Define the Animation Update Function ---
-    def animate(frame_index):
-        """This function is called for each frame of the video."""
-        sim_index = sim_indices_to_render[frame_index]
+        lines = {}
 
-        artists_to_update = []
-        for label, line in lines.items():
-            _, ys_data = data_sets[label]
-            line.set_ydata(ys_data[sim_index, :])
-            artists_to_update.append(line)
+        # Set stable axis limits to prevent jumping
+        global_ymin, global_ymax = float('inf'), float('-inf')
+        for _, (_, ys_data) in data_sets.items():
+            if ys_data.shape[0] != total_sim_steps:
+                raise ValueError("All datasets must have the same number of time steps.")
+            global_ymin = min(global_ymin, np.min(ys_data))
+            global_ymax = max(global_ymax, np.max(ys_data))
 
-        # Update time text to show actual simulation time
-        current_time_s = sim_index / time_steps_per_second
-        time_text.set_text(f'Time: {current_time_s:.2f} s')
-        artists_to_update.append(time_text)
+        y_buffer = (global_ymax - global_ymin) * 0.1 if global_ymax > global_ymin else 1.0
+        ax.set_ylim(global_ymin - y_buffer, global_ymax + y_buffer)
 
-        return artists_to_update
+        # --- Plot the Initial Frame ---
+        initial_sim_index = sim_indices_to_render[0]
+        for label, (x_data, ys_data) in data_sets.items():
+            line, = ax.plot(x_data, ys_data[initial_sim_index, :], label=label, **kwargs)
+            lines[label] = line
 
-    # --- Create and Return the Animation ---
-    interval_ms = 1000 / fps
-    ani = animation.FuncAnimation(
-        fig,
-        animate,
-        frames=num_video_frames,
-        interval=interval_ms,
-        blit=True,
-        repeat=repeat
-    )
+        # Configure plot appearance
+        ax.set_title(title, fontsize=16, fontweight='bold')
+        ax.set_xlabel(xlabel, fontsize=12)
+        ax.set_ylabel(ylabel, fontsize=12)
+        if grid:
+            ax.grid(True, linestyle='--', alpha=0.6)
+        ax.legend()
 
-    # --- Save or Show the Animation ---
-    if save_path:
-        if show_progress_bar:
-            # Setup the progress bar
-            pbar = tqdm(total=num_video_frames, desc=f"<{sys._getframe().f_code.co_name}> Saving to {save_path}")
+        time_text = ax.text(0.05, 0.9, '', transform=ax.transAxes, fontsize=12,
+                            bbox=dict(facecolor='white', alpha=0.7))
 
-            # Define the callback function that updates the progress bar
-            def progress_callback(current_frame, total_frames):
-                pbar.update(1)
+        # --- Define the Animation Update Function ---
+        def animate(frame_index):
+            """This function is called for each frame of the video."""
+            sim_index = sim_indices_to_render[frame_index]
 
-            # Save the animation with the callback
-            try:
-                writer = animation.PillowWriter(fps=fps)
-                ani.save(save_path, writer=writer, progress_callback=progress_callback)
-                pbar.close()  # Close the progress bar upon completion
-                print(f"\nAnimation successfully saved to: {save_path}")
-            except Exception as e:
-                pbar.close()
-                print(f"\nError saving animation: {e}")
-        else:
-            # Save without a progress bar
-            try:
-                writer = animation.PillowWriter(fps=fps)
-                ani.save(save_path, writer=writer)
-                print(f"Animation saved to: {save_path}")
-            except Exception as e:
-                print(f"Error saving animation: {e}")
-    plt.show() if show else None
-    return ani
+            artists_to_update = []
+            for label, line in lines.items():
+                _, ys_data = data_sets[label]
+                line.set_ydata(ys_data[sim_index, :])
+                artists_to_update.append(line)
+
+            # Update time text to show actual simulation time
+            current_time_s = sim_index / time_steps_per_second
+            time_text.set_text(f'Time: {current_time_s:.2f} s')
+            artists_to_update.append(time_text)
+
+            return artists_to_update
+
+        # --- Create and Return the Animation ---
+        interval_ms = 1000 / fps
+        ani = animation.FuncAnimation(
+            fig,
+            animate,
+            frames=num_video_frames,
+            interval=interval_ms,
+            blit=True,
+            repeat=repeat
+        )
+
+        # --- Save or Show the Animation ---
+        if save_path:
+            if show_progress_bar:
+                # Setup the progress bar
+                pbar = tqdm(total=num_video_frames, desc=f"<{sys._getframe().f_code.co_name}> Saving to {save_path}")
+
+                # Define the callback function that updates the progress bar
+                def progress_callback(current_frame, total_frames):
+                    pbar.update(1)
+
+                # Save the animation with the callback
+                try:
+                    writer = animation.PillowWriter(fps=fps)
+                    ani.save(save_path, writer=writer, progress_callback=progress_callback)
+                    pbar.close()  # Close the progress bar upon completion
+                    print(f"\nAnimation successfully saved to: {save_path}")
+                except Exception as e:
+                    pbar.close()
+                    print(f"\nError saving animation: {e}")
+            else:
+                # Save without a progress bar
+                try:
+                    writer = animation.PillowWriter(fps=fps)
+                    ani.save(save_path, writer=writer)
+                    print(f"Animation saved to: {save_path}")
+                except Exception as e:
+                    print(f"Error saving animation: {e}")
+        plt.show() if show else None
+        return ani
+    finally:
+        # Ensure we clean up the figure to avoid memory leaks
+        plt.close(fig)
 
 
 def energy_landscape_2d_static(
@@ -332,87 +336,90 @@ def energy_landscape_2d_animation(
     Returns:
         matplotlib.animation.FuncAnimation: The animation object.
     """
+    fig, ax = plt.subplots(figsize=figsize)
+
     if zs_data.ndim != 3:
         raise ValueError(f"Input zs_data must be a 3D array, but got shape {zs_data.shape}")
 
-    # --- Timing Calculation ---
-    total_sim_steps = zs_data.shape[0]
-    total_duration_s = total_sim_steps / time_steps_per_second
-    num_video_frames = int(total_duration_s * fps)
-    sim_indices_to_render = np.linspace(0, total_sim_steps - 1, num_video_frames, dtype=int)
+    try:
+        # --- Timing Calculation ---
+        total_sim_steps = zs_data.shape[0]
+        total_duration_s = total_sim_steps / time_steps_per_second
+        num_video_frames = int(total_duration_s * fps)
+        sim_indices_to_render = np.linspace(0, total_sim_steps - 1, num_video_frames, dtype=int)
 
-    # --- Initial Setup ---
-    fig, ax = plt.subplots(figsize=figsize)
 
-    # Set stable color limits by finding global min/max across all time
-    vmin = np.min(zs_data)
-    vmax = np.max(zs_data)
+        # Set stable color limits by finding global min/max across all time
+        vmin = np.min(zs_data)
+        vmax = np.max(zs_data)
 
-    # --- Plot the Initial Frame ---
-    initial_sim_index = sim_indices_to_render[0]
-    initial_z_data = zs_data[initial_sim_index, :, :]
+        # --- Plot the Initial Frame ---
+        initial_sim_index = sim_indices_to_render[0]
+        initial_z_data = zs_data[initial_sim_index, :, :]
 
-    im = ax.imshow(
-        initial_z_data, origin='lower', aspect='auto',
-        vmin=vmin, vmax=vmax,  # Use stable color limits
-        **kwargs
-    )
+        im = ax.imshow(
+            initial_z_data, origin='lower', aspect='auto',
+            vmin=vmin, vmax=vmax,  # Use stable color limits
+            **kwargs
+        )
 
-    cbar = fig.colorbar(im, ax=ax)
-    cbar.set_label(clabel, fontsize=12)
+        cbar = fig.colorbar(im, ax=ax)
+        cbar.set_label(clabel, fontsize=12)
 
-    ax.set_title(title, fontsize=16, fontweight='bold')
-    ax.set_xlabel(xlabel, fontsize=12)
-    ax.set_ylabel(ylabel, fontsize=12)
-    if grid:
-        ax.grid(True, linestyle='--', alpha=0.4, color='white')
+        ax.set_title(title, fontsize=16, fontweight='bold')
+        ax.set_xlabel(xlabel, fontsize=12)
+        ax.set_ylabel(ylabel, fontsize=12)
+        if grid:
+            ax.grid(True, linestyle='--', alpha=0.4, color='white')
 
-    time_text = ax.text(0.05, 0.95, '', transform=ax.transAxes, fontsize=12,
-                        color='white', bbox=dict(facecolor='black', alpha=0.5),
-                        verticalalignment='top')
+        time_text = ax.text(0.05, 0.95, '', transform=ax.transAxes, fontsize=12,
+                            color='white', bbox=dict(facecolor='black', alpha=0.5),
+                            verticalalignment='top')
 
-    # --- Define the Animation Update Function ---
-    def animate(frame_index):
-        sim_index = sim_indices_to_render[frame_index]
-        im.set_data(zs_data[sim_index, :, :])
-        current_time_s = sim_index / time_steps_per_second
-        time_text.set_text(f'Time: {current_time_s:.2f} s')
-        return im, time_text
+        # --- Define the Animation Update Function ---
+        def animate(frame_index):
+            sim_index = sim_indices_to_render[frame_index]
+            im.set_data(zs_data[sim_index, :, :])
+            current_time_s = sim_index / time_steps_per_second
+            time_text.set_text(f'Time: {current_time_s:.2f} s')
+            return im, time_text
 
-    # --- Create and Return the Animation ---
-    interval_ms = 1000 / fps
-    ani = animation.FuncAnimation(
-        fig, animate, frames=num_video_frames, interval=interval_ms, blit=True, repeat=repeat
-    )
+        # --- Create and Return the Animation ---
+        interval_ms = 1000 / fps
+        ani = animation.FuncAnimation(
+            fig, animate, frames=num_video_frames, interval=interval_ms, blit=True, repeat=repeat
+        )
 
-    # --- Save or Show the Animation ---
-    if save_path:
-        if show_progress_bar:
-            pbar = tqdm(total=num_video_frames, desc=f"Saving to {save_path}")
+        # --- Save or Show the Animation ---
+        if save_path:
+            if show_progress_bar:
+                pbar = tqdm(total=num_video_frames, desc=f"Saving to {save_path}")
 
-            def progress_callback(current_frame, total_frames):
-                pbar.update(1)
+                def progress_callback(current_frame, total_frames):
+                    pbar.update(1)
 
-            try:
-                writer = animation.PillowWriter(fps=fps)
-                ani.save(save_path, writer=writer, progress_callback=progress_callback)
-                pbar.close()
-                print(f"\nAnimation successfully saved to: {save_path}")
-            except Exception as e:
-                pbar.close()
-                print(f"\nError saving animation: {e}")
-        else:
-            try:
-                writer = animation.PillowWriter(fps=fps)
-                ani.save(save_path, writer=writer)
-                print(f"Animation saved to: {save_path}")
-            except Exception as e:
-                print(f"Error saving animation: {e}")
+                try:
+                    writer = animation.PillowWriter(fps=fps)
+                    ani.save(save_path, writer=writer, progress_callback=progress_callback)
+                    pbar.close()
+                    print(f"\nAnimation successfully saved to: {save_path}")
+                except Exception as e:
+                    pbar.close()
+                    print(f"\nError saving animation: {e}")
+            else:
+                try:
+                    writer = animation.PillowWriter(fps=fps)
+                    ani.save(save_path, writer=writer)
+                    print(f"Animation saved to: {save_path}")
+                except Exception as e:
+                    print(f"Error saving animation: {e}")
 
-    if show:
-        plt.show()
+        if show:
+            plt.show()
 
-    return ani
+    finally:
+        # Ensure we clean up the figure to avoid memory leaks
+        plt.close(fig)
 
 
 def raster_plot(
