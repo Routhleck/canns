@@ -1,3 +1,1 @@
-class Analyzer:
-    def __init__(self):
-        pass
+from . import visualize as visualize
