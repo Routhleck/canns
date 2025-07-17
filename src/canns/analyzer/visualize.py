@@ -430,38 +430,41 @@ def energy_landscape_2d_animation(
 
 def raster_plot(
     spike_train: np.ndarray,
+    mode: str = 'block',
     title: str = "Raster Plot",
     xlabel: str = "Time Step",
     ylabel: str = "Neuron Index",
     figsize: Tuple[int, int] = (12, 6),
-    marker_size: float = 1.0,
     color: str = 'black',
     save_path: Optional[str] = None,
-    show: bool = True
+    show: bool = True,
+    **kwargs
 ):
     """
-    Generates a raster plot directly from a spike train matrix.
+    Generates a raster plot from a spike train matrix.
+
+    This function can generate two styles of plots:
+    - 'scatter': A traditional raster plot with markers for each spike. Best for a large number of neurons.
+    - 'block': A heatmap-style plot where each spike is a colored block. Best for a small number of neurons.
 
     Args:
         spike_train (np.ndarray):
             A 2D boolean/integer array of shape (timesteps, num_neurons).
-        title (str, optional):
-            The title of the plot. Defaults to "Raster Plot".
-        xlabel (str, optional):
-            The label for the X-axis. Defaults to "Time Step".
-        ylabel (str, optional):
-            The label for the Y-axis. Defaults to "Neuron Index".
-        figsize (Tuple[int, int], optional):
-            The size of the figure, as a tuple (width, height). Defaults to (12, 6).
-        marker_size (float, optional):
-            The size of the markers in the raster plot. Defaults to 1.0.
+        mode (str, optional):
+            The plotting mode, either 'scatter' or 'block'. Defaults to 'scatter'.
+        title (str, optional): The title of the plot.
+        xlabel (str, optional): The label for the X-axis.
+        ylabel (str, optional): The label for the Y-axis.
+        figsize (Tuple[int, int], optional): The size of the figure.
         color (str, optional):
-            The color of the markers in the raster plot. Defaults to 'black'.
-        save_path (Optional[str], optional):
-            The file path to save the plot. If provided, the plot will be saved to a file.
-            Defaults to None.
-        show (bool, optional):
-            Whether to show the plot. Defaults to True.
+            The color for the spikes. For 'scatter' mode, this is the marker color.
+            For 'block' mode, this is the 'on' color in the colormap.
+        save_path (Optional[str], optional): The file path to save the plot.
+        show (bool, optional): Whether to show the plot.
+        **kwargs:
+            Additional keyword arguments passed to the plotting function.
+            For 'scatter' mode, passed to `ax.scatter()` (e.g., `marker_size`).
+            For 'block' mode, passed to `ax.imshow()` (e.g., `cmap`).
     """
     if spike_train.ndim != 2:
         raise ValueError(f"Input spike_train must be a 2D array, but got shape {spike_train.shape}")
@@ -469,17 +472,45 @@ def raster_plot(
     fig, ax = plt.subplots(figsize=figsize)
 
     try:
-        # Find the coordinates (time_index, neuron_index) of the spikes
-        time_indices, neuron_indices = np.where(spike_train)
-
-        ax.scatter(time_indices, neuron_indices, s=marker_size, c=color, marker='|', alpha=0.8)
-
         ax.set_title(title, fontsize=16, fontweight='bold')
         ax.set_xlabel(xlabel, fontsize=12)
         ax.set_ylabel(ylabel, fontsize=12)
 
-        ax.set_xlim(0, spike_train.shape[0])
-        ax.set_ylim(-1, spike_train.shape[1])
+        if mode == 'scatter':
+            # --- Traditional Scatter Plot Mode ---
+            time_indices, neuron_indices = np.where(spike_train)
+
+            # Set default marker size if not provided in kwargs
+            marker_size = kwargs.pop('marker_size', 1.0)
+
+            ax.scatter(time_indices, neuron_indices, s=marker_size, c=color, marker='|', alpha=0.8, **kwargs)
+            ax.set_xlim(0, spike_train.shape[0])
+            ax.set_ylim(-1, spike_train.shape[1])
+
+        elif mode == 'block':
+            # --- Block / Image Mode ---
+            # imshow expects data oriented as (row, column), which corresponds to (neuron, time).
+            # So we need to transpose the spike_train.
+            data_to_show = spike_train.T
+
+            # Create a custom colormap: 0 -> transparent, 1 -> specified color
+            from matplotlib.colors import ListedColormap
+            cmap = kwargs.pop('cmap', ListedColormap(['white', color]))
+
+            # Use imshow to create the block plot.
+            # `interpolation='none'` ensures sharp, non-blurry blocks.
+            # `aspect='auto'` allows the blocks to be non-square to fill the space.
+            ax.imshow(data_to_show, aspect='auto', interpolation='none', cmap=cmap, **kwargs)
+
+            # Set the ticks to be at the center of the neurons
+            ax.set_yticks(np.arange(spike_train.shape[1]))
+            ax.set_yticklabels(np.arange(spike_train.shape[1]))
+            # Optional: reduce the number of y-ticks if there are too many neurons
+            if spike_train.shape[1] > 20:
+                ax.yaxis.set_major_locator(plt.MaxNLocator(integer=True, nbins=10))
+
+        else:
+            raise ValueError(f"Invalid mode '{mode}'. Choose 'scatter' or 'block'.")
 
         if save_path:
             plt.savefig(save_path, dpi=300, bbox_inches='tight')
@@ -493,71 +524,104 @@ def raster_plot(
         plt.close(fig)
 
 
-def average_firing_rate(
+def average_firing_rate_plot(
     spike_train: np.ndarray,
-    dt: float = 0.1,
-    mode: str = 'per_neuron',
+    dt: float,
+    mode: str = 'population',
+    weights: Optional[np.ndarray] = None,
     title: str = "Average Firing Rate",
-    figsize: Tuple[int, int] = (10, 5),
+    figsize: Tuple[int, int] = (12, 5),
     save_path: Optional[str] = None,
     show: bool = True,
     **kwargs
 ):
     """
-    Calculates and plots the average firing rate from a spike train.
+    Calculates and plots different types of average neural activity from a spike train.
 
     Args:
         spike_train (np.ndarray):
             A 2D boolean/integer array of shape (timesteps, num_neurons).
-        dt (float, optional):
-            Time step in seconds for the simulation. Default is 0.1 seconds.
+        dt (float):
+            Time step of the simulation in seconds.
         mode (str, optional):
-            Mode for calculating the average firing rate.
-            'per_neuron' calculates the average rate per neuron,
-            'population' calculates the average rate across the population.
-            Defaults to 'per_neuron'.
-        title (str, optional):
-            The title of the plot. Defaults to "Average Firing Rate".
-        figsize (Tuple[int, int], optional):
-            The size of the figure, as a tuple (width, height). Defaults to (10, 5).
-        save_path (Optional[str], optional):
-            The file path to save the plot. If provided, the plot will be saved to a file.
-            Defaults to None.
-        show (bool, optional):
-            Whether to show the plot. Defaults to True.
+            The plotting mode. Can be:
+            - 'per_neuron': Average rate for each neuron over the entire duration. (X-axis: Neuron Index)
+            - 'population': Average rate of all neurons at each time step. (X-axis: Time)
+            - 'weighted_average': Weighted average of neural activity over time. Requires 'weights' argument. (X-axis: Time)
+            Defaults to 'population'.
+        weights (Optional[np.ndarray], optional):
+            A 1D array of shape (num_neurons,) required for 'weighted_average' mode.
+            Represents the preferred value (e.g., angle, position) for each neuron.
+        ... (other args are the same) ...
+
+    Returns:
+        Tuple[np.ndarray, Tuple[plt.Figure, plt.Axes]]:
+            A tuple containing the calculated data and the plot objects.
     """
     if spike_train.ndim != 2:
-        raise ValueError(f"Input spike_train must be a 2D array, but got shape {spike_train.shape}")
+        raise ValueError("Input spike_train must be a 2D array.")
 
     fig, ax = plt.subplots(figsize=figsize)
 
     try:
-
         num_timesteps, num_neurons = spike_train.shape
         ax.set_title(title, fontsize=16, fontweight='bold')
 
         if mode == 'per_neuron':
+            # --- Average rate for each neuron over time ---
+            duration_s = num_timesteps * dt
             total_spikes_per_neuron = np.sum(spike_train, axis=0)
-            avg_rates = total_spikes_per_neuron / dt
+            # Rate = total spikes / total duration
+            calculated_data = total_spikes_per_neuron / duration_s
 
-            ax.plot(np.arange(num_neurons), avg_rates, **kwargs)
+            ax.plot(np.arange(num_neurons), calculated_data, **kwargs)
             ax.set_xlabel("Neuron Index", fontsize=12)
             ax.set_ylabel("Average Firing Rate (Hz)", fontsize=12)
             ax.set_xlim(0, num_neurons - 1)
 
         elif mode == 'population':
+            # --- Average rate of the whole population over time ---
             spikes_per_timestep = np.sum(spike_train, axis=1)
-            # Rate = (total spikes in bin) / (num_neurons * bin_duration)
-            avg_rates = spikes_per_timestep / (num_neurons * dt)
+            # Population Rate = (total spikes in bin) / (num_neurons * bin_duration)
+            # This definition is debated, another is just total spikes / bin_duration.
+            # We will use the simpler total spikes / bin_duration, which is the summed rate.
+            calculated_data = spikes_per_timestep / dt
 
             time_vector = np.arange(num_timesteps) * dt
-            ax.plot(time_vector, avg_rates, **kwargs)
+            ax.plot(time_vector, calculated_data, **kwargs)
             ax.set_xlabel("Time (s)", fontsize=12)
-            ax.set_ylabel("Population Average Rate (Hz)", fontsize=12)
+            ax.set_ylabel("Total Population Rate (Hz)", fontsize=12)
+            ax.set_xlim(0, time_vector[-1])
+
+        elif mode == 'weighted_average':
+            # --- Weighted average of activity over time (decoding) ---
+            if weights is None:
+                raise ValueError("'weights' argument is required for 'weighted_average' mode.")
+            if weights.shape != (num_neurons,):
+                raise ValueError(f"Shape of 'weights' {weights.shape} must match num_neurons ({num_neurons}).")
+
+            # Calculate the sum of spikes at each time step
+            total_spikes_per_timestep = np.sum(spike_train, axis=1)
+
+            # Calculate the weighted sum of spikes at each time step
+            # spike_train (T, N) * weights (N,) -> broadcasting -> (T, N) -> sum(axis=1) -> (T,)
+            weighted_sum_of_spikes = np.sum(spike_train * weights, axis=1)
+
+            # Calculate the weighted average. Use a small epsilon to avoid division by zero.
+            epsilon = 1e-9
+            calculated_data = weighted_sum_of_spikes / (total_spikes_per_timestep + epsilon)
+
+            # Handle time steps with no spikes: set them to NaN (Not a Number) so they don't get plotted
+            calculated_data[total_spikes_per_timestep == 0] = np.nan
+
+            time_vector = np.arange(num_timesteps) * dt
+            ax.plot(time_vector, calculated_data, **kwargs)
+            ax.set_xlabel("Time (s)", fontsize=12)
+            ax.set_ylabel("Decoded Value (Weighted Average)", fontsize=12)
             ax.set_xlim(0, time_vector[-1])
 
         else:
-            raise ValueError(f"Invalid mode '{mode}'. Choose 'per_neuron' or 'population'.")
+            raise ValueError(f"Invalid mode '{mode}'. Choose 'per_neuron', 'population', or 'weighted_average'.")
 
         ax.grid(True, linestyle='--', alpha=0.6)
 
@@ -569,7 +633,6 @@ def average_firing_rate(
             plt.show()
 
     finally:
-        # Ensure we clean up the figure to avoid memory leaks
         plt.close(fig)
 
 

@@ -116,3 +116,31 @@ def firing_rate_to_spike_train(
     spike_train = random_values < spike_probabilities
 
     return spike_train.astype(np.int8)
+
+
+def normalize_firing_rates(
+    firing_rates: np.ndarray,
+) -> np.ndarray:
+    """
+    Normalizes firing rates to a range of [0, 1] based on the maximum firing rate.
+
+    Args:
+        firing_rates (np.ndarray):
+            2D array of shape (timesteps_rate, num_neurons) with firing rates in dt_rate.
+        dt_rate (float):
+            The time step of the input firing rate in seconds (e.g., 0.1s).
+        dt_spike (float):
+            The desired time step of the output spike train in seconds (e.g., 0.001s).
+
+    Returns:
+        np.ndarray:
+            A 2D array of shape (timesteps_rate, num_neurons) with normalized firing rates.
+    """
+    if firing_rates.ndim != 2:
+        raise ValueError("firing_rates must be a 2D array.")
+
+    max_firing_rate = np.max(firing_rates)
+    if max_firing_rate == 0:
+        return np.zeros_like(firing_rates)
+
+    return firing_rates / max_firing_rate
