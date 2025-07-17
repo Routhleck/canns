@@ -51,35 +51,39 @@ def energy_landscape_1d_static(
     # --- Create the figure and axes ---
     fig, ax = plt.subplots(figsize=figsize)
 
-    # --- Loop through and plot each energy curve ---
-    # Use .items() to iterate over both keys (labels) and values (data) of the dictionary
-    for label, (x_data, y_data) in data_sets.items():
-        # Plot the curve, using the dictionary key directly as the label
-        ax.plot(x_data, y_data, label=label, **kwargs)
+    try:
 
-    # --- Configure the plot's appearance ---
-    ax.set_title(title, fontsize=16, fontweight='bold')
-    ax.set_xlabel(xlabel, fontsize=12)
-    ax.set_ylabel(ylabel, fontsize=12)
+        # --- Loop through and plot each energy curve ---
+        # Use .items() to iterate over both keys (labels) and values (data) of the dictionary
+        for label, (x_data, y_data) in data_sets.items():
+            # Plot the curve, using the dictionary key directly as the label
+            ax.plot(x_data, y_data, label=label, **kwargs)
 
-    # If requested, display the legend
-    if show_legend:
-        ax.legend()
+        # --- Configure the plot's appearance ---
+        ax.set_title(title, fontsize=16, fontweight='bold')
+        ax.set_xlabel(xlabel, fontsize=12)
+        ax.set_ylabel(ylabel, fontsize=12)
 
-    # Set the grid
-    if grid:
-        ax.grid(True, linestyle='--', alpha=0.6)
+        # If requested, display the legend
+        if show_legend:
+            ax.legend()
 
-    # --- Save and display the plot ---
-    if save_path:
-        # Using bbox_inches='tight' prevents labels from being cut off
-        plt.savefig(save_path, dpi=300, bbox_inches='tight')
-        print(f"Plot saved to: {save_path}")
+        # Set the grid
+        if grid:
+            ax.grid(True, linestyle='--', alpha=0.6)
 
-    plt.show() if show else None
+        # --- Save and display the plot ---
+        if save_path:
+            # Using bbox_inches='tight' prevents labels from being cut off
+            plt.savefig(save_path, dpi=300, bbox_inches='tight')
+            print(f"Plot saved to: {save_path}")
 
-    # --- Return the figure and axes objects ---
-    return fig, ax
+        if show:
+            plt.show()
+
+    finally:
+        # Ensure we clean up the figure to avoid memory leaks
+        plt.close(fig)
 
 
 def energy_landscape_1d_animation(
@@ -233,8 +237,8 @@ def energy_landscape_1d_animation(
                     print(f"Animation saved to: {save_path}")
                 except Exception as e:
                     print(f"Error saving animation: {e}")
-        plt.show() if show else None
-        return ani
+        if show:
+            plt.show()
     finally:
         # Ensure we clean up the figure to avoid memory leaks
         plt.close(fig)
@@ -275,27 +279,30 @@ def energy_landscape_2d_static(
 
     fig, ax = plt.subplots(figsize=figsize)
 
-    # Use imshow for efficient 2D plotting. origin='lower' puts (0,0) at the bottom-left.
-    im = ax.imshow(z_data, origin='lower', aspect='auto', **kwargs)
+    try:
+        # Use imshow for efficient 2D plotting. origin='lower' puts (0,0) at the bottom-left.
+        im = ax.imshow(z_data, origin='lower', aspect='auto', **kwargs)
 
-    cbar = fig.colorbar(im, ax=ax)
-    cbar.set_label(clabel, fontsize=12)
+        cbar = fig.colorbar(im, ax=ax)
+        cbar.set_label(clabel, fontsize=12)
 
-    ax.set_title(title, fontsize=16, fontweight='bold')
-    ax.set_xlabel(xlabel, fontsize=12)
-    ax.set_ylabel(ylabel, fontsize=12)
+        ax.set_title(title, fontsize=16, fontweight='bold')
+        ax.set_xlabel(xlabel, fontsize=12)
+        ax.set_ylabel(ylabel, fontsize=12)
 
-    if grid:
-        ax.grid(True, linestyle='--', alpha=0.4, color='white')
+        if grid:
+            ax.grid(True, linestyle='--', alpha=0.4, color='white')
 
-    if save_path:
-        plt.savefig(save_path, dpi=300, bbox_inches='tight')
-        print(f"Plot saved to: {save_path}")
+        if save_path:
+            plt.savefig(save_path, dpi=300, bbox_inches='tight')
+            print(f"Plot saved to: {save_path}")
 
-    if show:
-        plt.show()
+        if show:
+            plt.show()
 
-    return fig, ax
+    finally:
+        # Ensure we clean up the figure to avoid memory leaks
+        plt.close(fig)
 
 
 def energy_landscape_2d_animation(
@@ -347,7 +354,6 @@ def energy_landscape_2d_animation(
         total_duration_s = total_sim_steps / time_steps_per_second
         num_video_frames = int(total_duration_s * fps)
         sim_indices_to_render = np.linspace(0, total_sim_steps - 1, num_video_frames, dtype=int)
-
 
         # Set stable color limits by finding global min/max across all time
         vmin = np.min(zs_data)
@@ -423,15 +429,148 @@ def energy_landscape_2d_animation(
 
 
 def raster_plot(
-
+    spike_train: np.ndarray,
+    title: str = "Raster Plot",
+    xlabel: str = "Time Step",
+    ylabel: str = "Neuron Index",
+    figsize: Tuple[int, int] = (12, 6),
+    marker_size: float = 1.0,
+    color: str = 'black',
+    save_path: Optional[str] = None,
+    show: bool = True
 ):
-    ...
+    """
+    Generates a raster plot directly from a spike train matrix.
+
+    Args:
+        spike_train (np.ndarray):
+            A 2D boolean/integer array of shape (timesteps, num_neurons).
+        title (str, optional):
+            The title of the plot. Defaults to "Raster Plot".
+        xlabel (str, optional):
+            The label for the X-axis. Defaults to "Time Step".
+        ylabel (str, optional):
+            The label for the Y-axis. Defaults to "Neuron Index".
+        figsize (Tuple[int, int], optional):
+            The size of the figure, as a tuple (width, height). Defaults to (12, 6).
+        marker_size (float, optional):
+            The size of the markers in the raster plot. Defaults to 1.0.
+        color (str, optional):
+            The color of the markers in the raster plot. Defaults to 'black'.
+        save_path (Optional[str], optional):
+            The file path to save the plot. If provided, the plot will be saved to a file.
+            Defaults to None.
+        show (bool, optional):
+            Whether to show the plot. Defaults to True.
+    """
+    if spike_train.ndim != 2:
+        raise ValueError(f"Input spike_train must be a 2D array, but got shape {spike_train.shape}")
+
+    fig, ax = plt.subplots(figsize=figsize)
+
+    try:
+        # Find the coordinates (time_index, neuron_index) of the spikes
+        time_indices, neuron_indices = np.where(spike_train)
+
+        ax.scatter(time_indices, neuron_indices, s=marker_size, c=color, marker='|', alpha=0.8)
+
+        ax.set_title(title, fontsize=16, fontweight='bold')
+        ax.set_xlabel(xlabel, fontsize=12)
+        ax.set_ylabel(ylabel, fontsize=12)
+
+        ax.set_xlim(0, spike_train.shape[0])
+        ax.set_ylim(-1, spike_train.shape[1])
+
+        if save_path:
+            plt.savefig(save_path, dpi=300, bbox_inches='tight')
+            print(f"Plot saved to: {save_path}")
+
+        if show:
+            plt.show()
+
+    finally:
+        # Ensure we clean up the figure to avoid memory leaks
+        plt.close(fig)
 
 
 def average_firing_rate(
-
+    spike_train: np.ndarray,
+    dt: float = 0.1,
+    mode: str = 'per_neuron',
+    title: str = "Average Firing Rate",
+    figsize: Tuple[int, int] = (10, 5),
+    save_path: Optional[str] = None,
+    show: bool = True,
+    **kwargs
 ):
-    ...
+    """
+    Calculates and plots the average firing rate from a spike train.
+
+    Args:
+        spike_train (np.ndarray):
+            A 2D boolean/integer array of shape (timesteps, num_neurons).
+        dt (float, optional):
+            Time step in seconds for the simulation. Default is 0.1 seconds.
+        mode (str, optional):
+            Mode for calculating the average firing rate.
+            'per_neuron' calculates the average rate per neuron,
+            'population' calculates the average rate across the population.
+            Defaults to 'per_neuron'.
+        title (str, optional):
+            The title of the plot. Defaults to "Average Firing Rate".
+        figsize (Tuple[int, int], optional):
+            The size of the figure, as a tuple (width, height). Defaults to (10, 5).
+        save_path (Optional[str], optional):
+            The file path to save the plot. If provided, the plot will be saved to a file.
+            Defaults to None.
+        show (bool, optional):
+            Whether to show the plot. Defaults to True.
+    """
+    if spike_train.ndim != 2:
+        raise ValueError(f"Input spike_train must be a 2D array, but got shape {spike_train.shape}")
+
+    fig, ax = plt.subplots(figsize=figsize)
+
+    try:
+
+        num_timesteps, num_neurons = spike_train.shape
+        ax.set_title(title, fontsize=16, fontweight='bold')
+
+        if mode == 'per_neuron':
+            total_spikes_per_neuron = np.sum(spike_train, axis=0)
+            avg_rates = total_spikes_per_neuron / dt
+
+            ax.plot(np.arange(num_neurons), avg_rates, **kwargs)
+            ax.set_xlabel("Neuron Index", fontsize=12)
+            ax.set_ylabel("Average Firing Rate (Hz)", fontsize=12)
+            ax.set_xlim(0, num_neurons - 1)
+
+        elif mode == 'population':
+            spikes_per_timestep = np.sum(spike_train, axis=1)
+            # Rate = (total spikes in bin) / (num_neurons * bin_duration)
+            avg_rates = spikes_per_timestep / (num_neurons * dt)
+
+            time_vector = np.arange(num_timesteps) * dt
+            ax.plot(time_vector, avg_rates, **kwargs)
+            ax.set_xlabel("Time (s)", fontsize=12)
+            ax.set_ylabel("Population Average Rate (Hz)", fontsize=12)
+            ax.set_xlim(0, time_vector[-1])
+
+        else:
+            raise ValueError(f"Invalid mode '{mode}'. Choose 'per_neuron' or 'population'.")
+
+        ax.grid(True, linestyle='--', alpha=0.6)
+
+        if save_path:
+            plt.savefig(save_path, dpi=300, bbox_inches='tight')
+            print(f"Plot saved to: {save_path}")
+
+        if show:
+            plt.show()
+
+    finally:
+        # Ensure we clean up the figure to avoid memory leaks
+        plt.close(fig)
 
 
 def tuning_curve(
