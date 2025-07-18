@@ -1,45 +1,34 @@
-import brainstate as bst
-import brainstate.compile
-import braintools
-import brainunit as u
-import jax
+import brainstate
 
+from canns.analyzer.visualize import energy_landscape_1d_animation
 from canns.models.basic import CANN1D, CANN1D_SFA
+from canns.task.tracking import SmoothTracking1D
 
-dur1, dur2, dur3 = 100., 2000., 500.
-
-
-@jax.jit
-def get_inp(t):
-    pos = u.math.where(t < dur1, 0., u.math.where(t < dur1 + dur2, final_pos * (t - dur1) / (dur2 - dur1), final_pos))
-    return cann_sfa.get_stimulus_by_pos(pos)
-
-
-bst.environ.set(dt=0.1)
+brainstate.environ.set(dt=0.1)
 cann = CANN1D(num=512)
-cann_sfa = CANN1D_SFA(num=512)
 cann.init_state()
-cann_sfa.init_state()
 
+task_st = SmoothTracking1D(
+    cann_instance=cann,
+    Iext=(1., 0.75, 2., 1.75, 3.),
+    duration=(10., 10., 10., 10.),
+    time_step=brainstate.environ.get_dt(),
+)
+task_st.get_data()
 
-def run_step(t):
-    with bst.environ.context(t=t):
-        inp = get_inp(t)
-        cann_sfa(inp)
-        cann(inp)
-        return cann.u.value, cann_sfa.u.value, cann_sfa.v.value, cann_sfa.inp.value
+def run_step(t, inputs):
+    cann(inputs)
+    return cann.u.value, cann.inp.value
 
-
-final_pos = cann_sfa.a / cann_sfa.tau_v * 0.6 * dur2
-
-times = u.math.arange(0, dur1 + dur2 + dur3, bst.environ.get_dt())
-cann_us, cann_sfa_us, cann_sfa_vs, inps = bst.compile.for_loop(run_step, times, pbar=brainstate.compile.ProgressBar(10))
-braintools.visualize.animate_1D(
-    dynamical_vars=[{'ys': cann_us, 'xs': cann_sfa.x, 'legend': 'u'},
-                    {'ys': cann_sfa_us, 'xs': cann_sfa.x, 'legend': 'u(sfa)'},
-                    {'ys': cann_sfa_vs, 'xs': cann_sfa.x, 'legend': 'v(sfa)'},
-                    {'ys': inps, 'xs': cann_sfa.x, 'legend': 'Iext'}],
-    frame_step=60,
-    frame_delay=5,
-    save_path='CANN1D_oscillatory_tracking.gif',
+us, inps = brainstate.compile.for_loop(run_step, task_st.run_steps, task_st.data, pbar=brainstate.compile.ProgressBar(10))
+energy_landscape_1d_animation(
+    {'u': (cann.x, us), 'Iext': (cann.x, inps)},
+    time_steps_per_second=100,
+    fps=20,
+    title='Smooth Tracking 1D',
+    xlabel='State',
+    ylabel='Activity',
+    repeat=True,
+    save_path='test_smooth_tracking_1d.gif',
+    show=False,
 )
