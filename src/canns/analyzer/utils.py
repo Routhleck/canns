@@ -1,5 +1,4 @@
 import numpy as np
-from scipy.signal import convolve2d
 
 
 def spike_train_to_firing_rate(
@@ -8,7 +7,7 @@ def spike_train_to_firing_rate(
     dt_rate: float
 ) -> np.ndarray:
     """
-    Converts a high-resolution spike train to a low-resolution firing rate signal. (Downsampling)
+    Converts a high-resolution spike train to a low-resolution firing rate signal.
 
     This function bins the spikes into larger time windows (`dt_rate`) and calculates
     the average firing rate for each bin.
@@ -46,7 +45,7 @@ def spike_train_to_firing_rate(
         neuron_spike_times = spike_times[neuron_indices == n]
 
         # define bins for the histogram
-        bins = np.arange(num_timesteps_rate + 1) * dt_rate
+        bins = np.arange(0, duration_s + dt_rate, dt_rate)
 
         # compute the histogram of spikes in the defined bins
         spike_counts_in_bins, _ = np.histogram(neuron_spike_times, bins=bins)
@@ -62,11 +61,17 @@ def firing_rate_to_spike_train(
     dt_spike: float
 ) -> np.ndarray:
     """
-    Converts a low-resolution firing rate signal to a high-resolution binary spike train. (Upsampling)
+    Converts a low-resolution firing rate signal to a high-resolution binary spike train.
 
-    This function first upsamples the rate signal using linear interpolation and then
-    generates binary spikes (0 or 1) using a Bernoulli process at the high resolution,
-    which is more appropriate for generating binary spike trains than a Poisson process.
+    This function generates spikes using a Bernoulli process in each high-resolution time bin.
+    The probability of a spike in each bin is calculated as:
+        P(spike in dt_spike) = rate (spikes/dt_rate) / dt_rate (sec) * dt_spike (sec)
+    Note:
+        - A Bernoulli process is used, not a Poisson process. This means that in each time bin,
+          at most one spike can occur.
+        - For high firing rates, the computed spike probability may exceed 1 and will be clipped to 1.
+          This can lead to deviations from the expected Poisson statistics at high rates.
+
 
     Args:
         firing_rates (np.ndarray):
@@ -103,8 +108,6 @@ def firing_rate_to_spike_train(
     high_res_rates[high_res_rates < 0] = 0
 
     # Generate spikes using a Bernoulli process
-    # Calculate the probability of a spike in each high-resolution time bin.
-    # P(spike in dt_spike) = rate (spikes/dt_rate) / dt_rate (sec) * dt_spike (sec)
     spike_probabilities = high_res_rates * dt_spike / dt_rate
 
     # Probabilities must be <= 1. This can happen if rate > 1/dt_spike.
@@ -127,10 +130,6 @@ def normalize_firing_rates(
     Args:
         firing_rates (np.ndarray):
             2D array of shape (timesteps_rate, num_neurons) with firing rates in dt_rate.
-        dt_rate (float):
-            The time step of the input firing rate in seconds (e.g., 0.1s).
-        dt_spike (float):
-            The desired time step of the output spike train in seconds (e.g., 0.001s).
 
     Returns:
         np.ndarray:

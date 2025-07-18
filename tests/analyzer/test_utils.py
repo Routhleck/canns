@@ -42,6 +42,16 @@ def test_fr_to_st_random():
     spike_train = firing_rate_to_spike_train(rates, dt_spike=dt_spike, dt_rate=dt_rate)
     assert spike_train.shape == (int(duration / dt_spike), num_neurons), "spike train shape mismatch"
 
+    # Compute mean input rate per neuron (Hz)
+    mean_input_rates = np.mean(rates, axis=0) / dt_rate  # rates are in spikes per dt_rate, so divide by dt_rate for Hz
+    # Compute mean output rate per neuron (Hz)
+    mean_output_rates = np.mean(spike_train, axis=0) / dt_spike  # spike_train is binary, so mean gives spikes per dt_spike
+    # Assert that mean output rates are close to mean input rates (allowing 10% relative tolerance)
+    np.testing.assert_allclose(
+        mean_output_rates, mean_input_rates, rtol=0.1,
+        err_msg="Mean output firing rates do not match input rates within tolerance"
+    )
+
 def test_st_to_fr_zero_rate_produces_no_spikes():
     duration = 100
     dt_spike = 0.001
@@ -82,3 +92,13 @@ def test_st_to_fr_random():
     firing_rates = spike_train_to_firing_rate(spikes, dt_spike=dt_spike, dt_rate=dt_rate)
 
     assert firing_rates.shape == (int(duration / dt_rate), num_neurons), "firing rates shape mismatch"
+
+    # Compute mean input rate per neuron (Hz)
+    mean_input_rates = np.mean(spikes, axis=0) / dt_spike  # spikes are binary, so mean gives spikes per dt_spike
+    # Compute mean output rate per neuron (Hz)
+    mean_output_rates = np.mean(firing_rates, axis=0) * dt_rate  # firing rates are in spikes per dt_rate, so multiply by dt_rate
+    # Assert that mean output rates are close to mean input rates (allowing 10% relative tolerance)
+    np.testing.assert_allclose(
+        mean_output_rates, mean_input_rates, rtol=0.1,
+        err_msg="Mean output firing rates do not match input rates within tolerance"
+    )

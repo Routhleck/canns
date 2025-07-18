@@ -276,6 +276,7 @@ def energy_landscape_2d_static(
     """
     if z_data.ndim != 2:
         raise ValueError(f"Input z_data must be a 2D array, but got shape {z_data.shape}")
+    assert z_data.size > 0, "Input z_data must not be empty."
 
     fig, ax = plt.subplots(figsize=figsize)
 
@@ -468,6 +469,8 @@ def raster_plot(
     """
     if spike_train.ndim != 2:
         raise ValueError(f"Input spike_train must be a 2D array, but got shape {spike_train.shape}")
+    assert spike_train.size > 0, "Input spike_train must not be empty."
+    assert mode in ('block', 'scatter'), f"Invalid mode '{mode}'. Choose 'scatter' or 'block'."
 
     fig, ax = plt.subplots(figsize=figsize)
 
@@ -637,7 +640,15 @@ def average_firing_rate_plot(
 
 
 def tuning_curve(
-
+    x: np.ndarray,
+    y: np.ndarray,
+    title: str = "Tuning Curve",
+    xlabel: str = "Input Value",
+    ylabel: str = "Firing Rate",
+    figsize: Tuple[int, int] = (10, 6),
+    save_path: Optional[str] = None,
+    show: bool = True,
+    **kwargs
 ):
     ...
 
