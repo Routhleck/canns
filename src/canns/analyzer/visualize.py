@@ -607,9 +607,7 @@ def average_firing_rate_plot(
             # spike_train (T, N) * weights (N,) -> broadcasting -> (T, N) -> sum(axis=1) -> (T,)
             weighted_sum_of_spikes = np.sum(spike_train * weights, axis=1)
 
-            # Calculate the weighted average. Use a small epsilon to avoid division by zero.
-            epsilon = 1e-9
-            calculated_data = weighted_sum_of_spikes / (total_spikes_per_timestep + epsilon)
+            calculated_data = weighted_sum_of_spikes / (total_spikes_per_timestep + 1e-9)
 
             # Handle time steps with no spikes: set them to NaN (Not a Number) so they don't get plotted
             calculated_data[total_spikes_per_timestep == 0] = np.nan
