@@ -1,9 +1,10 @@
 import os
 
 import brainstate
+import numpy as np
 
 from canns.analyzer.visualize import energy_landscape_1d_animation, energy_landscape_2d_animation, \
-    energy_landscape_1d_static, energy_landscape_2d_static, raster_plot, average_firing_rate_plot
+    energy_landscape_1d_static, energy_landscape_2d_static, raster_plot, average_firing_rate_plot, tuning_curve
 from canns.analyzer.utils import firing_rate_to_spike_train, normalize_firing_rates
 from canns.task.tracking import PopulationCoding1D, PopulationCoding2D, SmoothTracking1D
 from canns.models.basic import CANN1D, CANN2D
@@ -178,3 +179,42 @@ def test_average_firing_rate():
     )
     assert os.path.isfile(output_path_population), f"Output file {output_path_population} was not created."
 
+
+def test_tuning_curve():
+    brainstate.environ.set(dt=0.1)
+    cann = CANN1D(num=32)
+    cann.init_state()
+
+    task_st = SmoothTracking1D(
+        cann_instance=cann,
+        Iext=(0., 0., np.pi, 2*np.pi),
+        duration=(2., 20., 20.),
+        time_step=brainstate.environ.get_dt(),
+    )
+    task_st.get_data()
+
+    def run_step(t, inputs):
+        cann(inputs)
+        return cann.r.value, cann.inp.value
+
+    rs, inps = brainstate.compile.for_loop(run_step, task_st.run_steps, task_st.data,
+                                           pbar=brainstate.compile.ProgressBar(10))
+
+    neuron_indices_to_plot = [0, 8, 16]
+    output_path = 'test_tuning_curve.png'
+    tuning_curve(
+        stimulus=task_st.Iext_sequence.squeeze(),
+        firing_rates=rs,
+        neuron_indices=neuron_indices_to_plot,
+        pref_stim=cann.x,
+        num_bins=50,
+        title='Tuning Curves of Selected Neurons',
+        xlabel='Stimulus Position (rad)',
+        ylabel='Average Firing Rate',
+        show=False,
+        save_path=output_path,
+        linewidth=2,
+        marker='o',
+        markersize=4,
+    )
+    assert os.path.isfile(output_path), f"Output file {output_path} was not created."

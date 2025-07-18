@@ -1,8 +1,10 @@
 import sys
+from collections.abc import Iterable
 
 import numpy as np
 from matplotlib import animation
 from matplotlib import pyplot as plt
+from scipy.stats import binned_statistic
 from tqdm import tqdm
 
 # --- CANN Model related visualization method ---
@@ -664,16 +666,120 @@ def average_firing_rate_plot(
 
 
 def tuning_curve(
-    x: np.ndarray,
-    y: np.ndarray,
+    stimulus: np.ndarray,
+    firing_rates: np.ndarray,
+    neuron_indices: np.ndarray | int,
+    pref_stim: np.ndarray | None = None,
+    num_bins: int = 50,
     title: str = "Tuning Curve",
-    xlabel: str = "Input Value",
-    ylabel: str = "Firing Rate",
+    xlabel: str = "Stimulus Value",
+    ylabel: str = "Average Firing Rate",
     figsize: tuple[int, int] = (10, 6),
     save_path: str | None = None,
     show: bool = True,
     **kwargs,
-): ...
+):
+    """
+    Computes and plots the tuning curve for one or more neurons.
+
+    A tuning curve shows how the average firing rate of a neuron changes as a
+    function of an external stimulus.
+
+    Args:
+        stimulus (np.ndarray): A 1D array representing the stimulus value at each
+                               time step. Shape: (num_time_steps,).
+        firing_rates (np.ndarray): A 2D array of firing rates for all neurons at
+                                   each time step.
+                                   Shape: (num_time_steps, num_neurons).
+        neuron_indices (np.ndarray | int): The index or a list/array of indices
+                                           of the neuron(s) to plot.
+        pref_stim (np.ndarray | None, optional): A 1D array containing the preferred
+                                                 stimulus for each neuron. If provided,
+                                                 it's used for the legend labels.
+                                                 Shape: (num_neurons,). Defaults to None.
+        num_bins (int, optional): The number of bins to use for grouping the
+                                  stimulus space. Defaults to 50.
+        title (str, optional): The title of the plot. Defaults to "Tuning Curve".
+        xlabel (str, optional): The label for the x-axis. Defaults to "Stimulus Value".
+        ylabel (str, optional): The label for the y-axis. Defaults to "Average Firing Rate".
+        figsize (tuple[int, int], optional): The figure size if a new figure is
+                                             created. Defaults to (10, 6).
+        save_path (str | None, optional): The file path to save the figure.
+                                          If None, the figure is not saved.
+                                          Defaults to None.
+        show (bool, optional): Whether to display the plot. Defaults to True.
+        **kwargs: Additional keyword arguments to be passed to `ax.plot`
+                  (e.g., linewidth, marker, color).
+    """
+    # --- 1. Input Validation and Preparation ---
+    if stimulus.ndim != 1:
+        raise ValueError(f"stimulus must be a 1D array, but has {stimulus.ndim} dimensions.")
+    if firing_rates.ndim != 2:
+        raise ValueError(
+            f"firing_rates must be a 2D array, but has {firing_rates.ndim} dimensions."
+        )
+    if stimulus.shape[0] != firing_rates.shape[0]:
+        raise ValueError(
+            f"The first dimension (time steps) of stimulus and firing_rates must match: "
+            f"{stimulus.shape[0]} != {firing_rates.shape[0]}"
+        )
+
+    # Ensure neuron_indices is a list for consistent processing
+    if isinstance(neuron_indices, int):
+        neuron_indices = [neuron_indices]
+    elif not isinstance(neuron_indices, Iterable):
+        raise TypeError(
+            "neuron_indices must be an integer or an iterable (e.g., list, np.ndarray)."
+        )
+
+    # --- Setup Plotting Environment ---
+    fig, ax = plt.subplots(figsize=figsize)
+
+    try:
+        # --- Computation and Plotting Loop ---
+        for neuron_idx in neuron_indices:
+            # Get the time series of firing rates for the current neuron
+            neuron_fr = firing_rates[:, neuron_idx]
+
+            # Use binned_statistic for efficient binning and averaging.
+            # 'statistic'='mean' calculates the average of values in each bin.
+            # 'bins'=num_bins divides the stimulus range into num_bins equal intervals.
+            mean_rates, bin_edges, _ = binned_statistic(
+                x=stimulus, values=neuron_fr, statistic="mean", bins=num_bins
+            )
+
+            # Calculate the center of each bin for plotting on the x-axis
+            bin_centers = (bin_edges[:-1] + bin_edges[1:]) / 2
+
+            # Create a label for the legend
+            label = f"Neuron {neuron_idx}"
+            if pref_stim is not None and neuron_idx < len(pref_stim):
+                label += f" (pref_stim={pref_stim[neuron_idx]:.2f})"
 
 
+            # Plot the curve. Bins that were empty will have a `nan` mean,
+            # which matplotlib handles gracefully (it won't plot them).
+            ax.plot(bin_centers, mean_rates, label=label, **kwargs)
+
+        # --- Final Touches and Output ---
+        ax.set_title(title, fontsize=16)
+        ax.set_xlabel(xlabel, fontsize=12)
+        ax.set_ylabel(ylabel, fontsize=12)
+        ax.legend()
+        ax.grid(True, linestyle="--", alpha=0.6)
+
+        fig.tight_layout()
+
+        if save_path:
+            plt.savefig(save_path, dpi=300)
+            print(f"Tuning curve saved to {save_path}")
+
+        if show:
+            plt.show()
+    finally:
+        # Ensure we clean up the figure to avoid memory leaks
+        plt.close(fig)
+
+
+# TODO: Implement phase_plane_plot (NEED DISCUSSION)
 def phase_plane_plot(): ...
