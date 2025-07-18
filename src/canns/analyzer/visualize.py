@@ -1,5 +1,5 @@
 import sys
-from typing import Iterable
+from collections.abc import Iterable
 
 import numpy as np
 from matplotlib import animation
@@ -718,7 +718,9 @@ def tuning_curve(
     if stimulus.ndim != 1:
         raise ValueError(f"stimulus must be a 1D array, but has {stimulus.ndim} dimensions.")
     if firing_rates.ndim != 2:
-        raise ValueError(f"firing_rates must be a 2D array, but has {firing_rates.ndim} dimensions.")
+        raise ValueError(
+            f"firing_rates must be a 2D array, but has {firing_rates.ndim} dimensions."
+        )
     if stimulus.shape[0] != firing_rates.shape[0]:
         raise ValueError(
             f"The first dimension (time steps) of stimulus and firing_rates must match: "
@@ -729,13 +731,14 @@ def tuning_curve(
     if isinstance(neuron_indices, int):
         neuron_indices = [neuron_indices]
     elif not isinstance(neuron_indices, Iterable):
-        raise TypeError("neuron_indices must be an integer or an iterable (e.g., list, np.ndarray).")
+        raise TypeError(
+            "neuron_indices must be an integer or an iterable (e.g., list, np.ndarray)."
+        )
 
     # --- Setup Plotting Environment ---
     fig, ax = plt.subplots(figsize=figsize)
 
     try:
-
         # --- Computation and Plotting Loop ---
         for neuron_idx in neuron_indices:
             # Get the time series of firing rates for the current neuron
@@ -745,7 +748,7 @@ def tuning_curve(
             # 'statistic'='mean' calculates the average of values in each bin.
             # 'bins'=num_bins divides the stimulus range into num_bins equal intervals.
             mean_rates, bin_edges, _ = binned_statistic(
-                x=stimulus, values=neuron_fr, statistic='mean', bins=num_bins
+                x=stimulus, values=neuron_fr, statistic="mean", bins=num_bins
             )
 
             # Calculate the center of each bin for plotting on the x-axis
@@ -767,7 +770,7 @@ def tuning_curve(
         ax.set_xlabel(xlabel, fontsize=12)
         ax.set_ylabel(ylabel, fontsize=12)
         ax.legend()
-        ax.grid(True, linestyle='--', alpha=0.6)
+        ax.grid(True, linestyle="--", alpha=0.6)
 
         fig.tight_layout()
 
@@ -782,5 +785,5 @@ def tuning_curve(
         plt.close(fig)
 
 
-
+# TODO: Implement phase_plane_plot (NEED DISCUSSION)
 def phase_plane_plot(): ...

@@ -183,3 +183,4 @@ cython_debug/
 .DS_Store
 *.npz
 *.npy
+*.png

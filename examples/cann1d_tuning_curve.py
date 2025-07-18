@@ -34,6 +34,7 @@ rs, inps = brainstate.compile.for_loop(run_step, task_st.run_steps, task_st.data
 #     save_path='smooth_tracking_1d.gif',
 #     show=False,
 # )
+
 neuron_indices_to_plot = [128, 256, 384]
 tuning_curve(
     stimulus=task_st.Iext_sequence.squeeze(),
