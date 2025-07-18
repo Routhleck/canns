@@ -699,9 +699,6 @@ def tuning_curve(
                                                  Shape: (num_neurons,). Defaults to None.
         num_bins (int, optional): The number of bins to use for grouping the
                                   stimulus space. Defaults to 50.
-        ax (plt.Axes | None, optional): A Matplotlib Axes object to plot on.
-                                        If None, a new figure and axes are created.
-                                        Defaults to None.
         title (str, optional): The title of the plot. Defaults to "Tuning Curve".
         xlabel (str, optional): The label for the x-axis. Defaults to "Stimulus Value".
         ylabel (str, optional): The label for the y-axis. Defaults to "Average Firing Rate".
