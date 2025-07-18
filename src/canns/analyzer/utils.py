@@ -2,9 +2,7 @@ import numpy as np
 
 
 def spike_train_to_firing_rate(
-    spike_train: np.ndarray,
-    dt_spike: float,
-    dt_rate: float
+    spike_train: np.ndarray, dt_spike: float, dt_rate: float
 ) -> np.ndarray:
     """
     Converts a high-resolution spike train to a low-resolution firing rate signal.
@@ -56,9 +54,7 @@ def spike_train_to_firing_rate(
 
 
 def firing_rate_to_spike_train(
-    firing_rates: np.ndarray,
-    dt_rate: float,
-    dt_spike: float
+    firing_rates: np.ndarray, dt_rate: float, dt_spike: float
 ) -> np.ndarray:
     """
     Converts a low-resolution firing rate signal to a high-resolution binary spike train.

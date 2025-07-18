@@ -1,24 +1,24 @@
 import sys
-from typing import Dict, Tuple, Optional
 
 import numpy as np
-from matplotlib import pyplot as plt, animation
+from matplotlib import animation
+from matplotlib import pyplot as plt
 from tqdm import tqdm
-
 
 # --- CANN Model related visualization method ---
 
+
 def energy_landscape_1d_static(
-    data_sets: Dict[str, Tuple[np.ndarray, np.ndarray]],
+    data_sets: dict[str, tuple[np.ndarray, np.ndarray]],
     title: str = "1D Energy Landscape",
     xlabel: str = "Collective Variable / State",
     ylabel: str = "Energy",
     show_legend: bool = True,
-    figsize: Tuple[int, int] = (10, 6),
+    figsize: tuple[int, int] = (10, 6),
     grid: bool = False,
-    save_path: Optional[str] = None,
+    save_path: str | None = None,
     show=True,
-    **kwargs
+    **kwargs,
 ):
     """
     Plots a 1D static energy landscape using Matplotlib.
@@ -52,7 +52,6 @@ def energy_landscape_1d_static(
     fig, ax = plt.subplots(figsize=figsize)
 
     try:
-
         # --- Loop through and plot each energy curve ---
         # Use .items() to iterate over both keys (labels) and values (data) of the dictionary
         for label, (x_data, y_data) in data_sets.items():
@@ -60,7 +59,7 @@ def energy_landscape_1d_static(
             ax.plot(x_data, y_data, label=label, **kwargs)
 
         # --- Configure the plot's appearance ---
-        ax.set_title(title, fontsize=16, fontweight='bold')
+        ax.set_title(title, fontsize=16, fontweight="bold")
         ax.set_xlabel(xlabel, fontsize=12)
         ax.set_ylabel(ylabel, fontsize=12)
 
@@ -70,12 +69,12 @@ def energy_landscape_1d_static(
 
         # Set the grid
         if grid:
-            ax.grid(True, linestyle='--', alpha=0.6)
+            ax.grid(True, linestyle="--", alpha=0.6)
 
         # --- Save and display the plot ---
         if save_path:
             # Using bbox_inches='tight' prevents labels from being cut off
-            plt.savefig(save_path, dpi=300, bbox_inches='tight')
+            plt.savefig(save_path, dpi=300, bbox_inches="tight")
             print(f"Plot saved to: {save_path}")
 
         if show:
@@ -87,19 +86,19 @@ def energy_landscape_1d_static(
 
 
 def energy_landscape_1d_animation(
-    data_sets: Dict[str, Tuple[np.ndarray, np.ndarray]],
+    data_sets: dict[str, tuple[np.ndarray, np.ndarray]],
     time_steps_per_second: int,
     fps: int = 30,
     title: str = "Evolving 1D Energy Landscape",
     xlabel: str = "Collective Variable / State",
     ylabel: str = "Energy",
-    figsize: Tuple[int, int] = (10, 6),
+    figsize: tuple[int, int] = (10, 6),
     grid: bool = False,
     repeat: bool = True,
-    save_path: Optional[str] = None,
+    save_path: str | None = None,
     show: bool = True,
     show_progress_bar: bool = True,
-    **kwargs
+    **kwargs,
 ):
     """
     Creates an animation of an evolving 1D energy landscape with intuitive timing controls.
@@ -154,7 +153,7 @@ def energy_landscape_1d_animation(
         lines = {}
 
         # Set stable axis limits to prevent jumping
-        global_ymin, global_ymax = float('inf'), float('-inf')
+        global_ymin, global_ymax = float("inf"), float("-inf")
         for _, (_, ys_data) in data_sets.items():
             if ys_data.shape[0] != total_sim_steps:
                 raise ValueError("All datasets must have the same number of time steps.")
@@ -167,19 +166,25 @@ def energy_landscape_1d_animation(
         # --- Plot the Initial Frame ---
         initial_sim_index = sim_indices_to_render[0]
         for label, (x_data, ys_data) in data_sets.items():
-            line, = ax.plot(x_data, ys_data[initial_sim_index, :], label=label, **kwargs)
+            (line,) = ax.plot(x_data, ys_data[initial_sim_index, :], label=label, **kwargs)
             lines[label] = line
 
         # Configure plot appearance
-        ax.set_title(title, fontsize=16, fontweight='bold')
+        ax.set_title(title, fontsize=16, fontweight="bold")
         ax.set_xlabel(xlabel, fontsize=12)
         ax.set_ylabel(ylabel, fontsize=12)
         if grid:
-            ax.grid(True, linestyle='--', alpha=0.6)
+            ax.grid(True, linestyle="--", alpha=0.6)
         ax.legend()
 
-        time_text = ax.text(0.05, 0.9, '', transform=ax.transAxes, fontsize=12,
-                            bbox=dict(facecolor='white', alpha=0.7))
+        time_text = ax.text(
+            0.05,
+            0.9,
+            "",
+            transform=ax.transAxes,
+            fontsize=12,
+            bbox=dict(facecolor="white", alpha=0.7),
+        )
 
         # --- Define the Animation Update Function ---
         def animate(frame_index):
@@ -194,7 +199,7 @@ def energy_landscape_1d_animation(
 
             # Update time text to show actual simulation time
             current_time_s = sim_index / time_steps_per_second
-            time_text.set_text(f'Time: {current_time_s:.2f} s')
+            time_text.set_text(f"Time: {current_time_s:.2f} s")
             artists_to_update.append(time_text)
 
             return artists_to_update
@@ -202,19 +207,17 @@ def energy_landscape_1d_animation(
         # --- Create and Return the Animation ---
         interval_ms = 1000 / fps
         ani = animation.FuncAnimation(
-            fig,
-            animate,
-            frames=num_video_frames,
-            interval=interval_ms,
-            blit=True,
-            repeat=repeat
+            fig, animate, frames=num_video_frames, interval=interval_ms, blit=True, repeat=repeat
         )
 
         # --- Save or Show the Animation ---
         if save_path:
             if show_progress_bar:
                 # Setup the progress bar
-                pbar = tqdm(total=num_video_frames, desc=f"<{sys._getframe().f_code.co_name}> Saving to {save_path}")
+                pbar = tqdm(
+                    total=num_video_frames,
+                    desc=f"<{sys._getframe().f_code.co_name}> Saving to {save_path}",
+                )
 
                 # Define the callback function that updates the progress bar
                 def progress_callback(current_frame, total_frames):
@@ -250,11 +253,11 @@ def energy_landscape_2d_static(
     xlabel: str = "X-Index",
     ylabel: str = "Y-Index",
     clabel: str = "Value",
-    figsize: Tuple[int, int] = (8, 7),
+    figsize: tuple[int, int] = (8, 7),
     grid: bool = False,
-    save_path: Optional[str] = None,
+    save_path: str | None = None,
     show: bool = True,
-    **kwargs
+    **kwargs,
 ):
     """
     Plots a static 2D landscape from a 2D array as a heatmap.
@@ -282,20 +285,20 @@ def energy_landscape_2d_static(
 
     try:
         # Use imshow for efficient 2D plotting. origin='lower' puts (0,0) at the bottom-left.
-        im = ax.imshow(z_data, origin='lower', aspect='auto', **kwargs)
+        im = ax.imshow(z_data, origin="lower", aspect="auto", **kwargs)
 
         cbar = fig.colorbar(im, ax=ax)
         cbar.set_label(clabel, fontsize=12)
 
-        ax.set_title(title, fontsize=16, fontweight='bold')
+        ax.set_title(title, fontsize=16, fontweight="bold")
         ax.set_xlabel(xlabel, fontsize=12)
         ax.set_ylabel(ylabel, fontsize=12)
 
         if grid:
-            ax.grid(True, linestyle='--', alpha=0.4, color='white')
+            ax.grid(True, linestyle="--", alpha=0.4, color="white")
 
         if save_path:
-            plt.savefig(save_path, dpi=300, bbox_inches='tight')
+            plt.savefig(save_path, dpi=300, bbox_inches="tight")
             print(f"Plot saved to: {save_path}")
 
         if show:
@@ -314,13 +317,13 @@ def energy_landscape_2d_animation(
     xlabel: str = "X-Index",
     ylabel: str = "Y-Index",
     clabel: str = "Value",
-    figsize: Tuple[int, int] = (8, 7),
+    figsize: tuple[int, int] = (8, 7),
     grid: bool = False,
     repeat: bool = True,
-    save_path: Optional[str] = None,
+    save_path: str | None = None,
     show: bool = True,
     show_progress_bar: bool = True,
-    **kwargs
+    **kwargs,
 ):
     """
     Creates an animation of an evolving 2D landscape from a 3D data cube.
@@ -365,30 +368,40 @@ def energy_landscape_2d_animation(
         initial_z_data = zs_data[initial_sim_index, :, :]
 
         im = ax.imshow(
-            initial_z_data, origin='lower', aspect='auto',
-            vmin=vmin, vmax=vmax,  # Use stable color limits
-            **kwargs
+            initial_z_data,
+            origin="lower",
+            aspect="auto",
+            vmin=vmin,
+            vmax=vmax,  # Use stable color limits
+            **kwargs,
         )
 
         cbar = fig.colorbar(im, ax=ax)
         cbar.set_label(clabel, fontsize=12)
 
-        ax.set_title(title, fontsize=16, fontweight='bold')
+        ax.set_title(title, fontsize=16, fontweight="bold")
         ax.set_xlabel(xlabel, fontsize=12)
         ax.set_ylabel(ylabel, fontsize=12)
         if grid:
-            ax.grid(True, linestyle='--', alpha=0.4, color='white')
+            ax.grid(True, linestyle="--", alpha=0.4, color="white")
 
-        time_text = ax.text(0.05, 0.95, '', transform=ax.transAxes, fontsize=12,
-                            color='white', bbox=dict(facecolor='black', alpha=0.5),
-                            verticalalignment='top')
+        time_text = ax.text(
+            0.05,
+            0.95,
+            "",
+            transform=ax.transAxes,
+            fontsize=12,
+            color="white",
+            bbox=dict(facecolor="black", alpha=0.5),
+            verticalalignment="top",
+        )
 
         # --- Define the Animation Update Function ---
         def animate(frame_index):
             sim_index = sim_indices_to_render[frame_index]
             im.set_data(zs_data[sim_index, :, :])
             current_time_s = sim_index / time_steps_per_second
-            time_text.set_text(f'Time: {current_time_s:.2f} s')
+            time_text.set_text(f"Time: {current_time_s:.2f} s")
             return im, time_text
 
         # --- Create and Return the Animation ---
@@ -431,15 +444,15 @@ def energy_landscape_2d_animation(
 
 def raster_plot(
     spike_train: np.ndarray,
-    mode: str = 'block',
+    mode: str = "block",
     title: str = "Raster Plot",
     xlabel: str = "Time Step",
     ylabel: str = "Neuron Index",
-    figsize: Tuple[int, int] = (12, 6),
-    color: str = 'black',
-    save_path: Optional[str] = None,
+    figsize: tuple[int, int] = (12, 6),
+    color: str = "black",
+    save_path: str | None = None,
     show: bool = True,
-    **kwargs
+    **kwargs,
 ):
     """
     Generates a raster plot from a spike train matrix.
@@ -470,27 +483,35 @@ def raster_plot(
     if spike_train.ndim != 2:
         raise ValueError(f"Input spike_train must be a 2D array, but got shape {spike_train.shape}")
     assert spike_train.size > 0, "Input spike_train must not be empty."
-    assert mode in ('block', 'scatter'), f"Invalid mode '{mode}'. Choose 'scatter' or 'block'."
+    assert mode in ("block", "scatter"), f"Invalid mode '{mode}'. Choose 'scatter' or 'block'."
 
     fig, ax = plt.subplots(figsize=figsize)
 
     try:
-        ax.set_title(title, fontsize=16, fontweight='bold')
+        ax.set_title(title, fontsize=16, fontweight="bold")
         ax.set_xlabel(xlabel, fontsize=12)
         ax.set_ylabel(ylabel, fontsize=12)
 
-        if mode == 'scatter':
+        if mode == "scatter":
             # --- Traditional Scatter Plot Mode ---
             time_indices, neuron_indices = np.where(spike_train)
 
             # Set default marker size if not provided in kwargs
-            marker_size = kwargs.pop('marker_size', 1.0)
+            marker_size = kwargs.pop("marker_size", 1.0)
 
-            ax.scatter(time_indices, neuron_indices, s=marker_size, c=color, marker='|', alpha=0.8, **kwargs)
+            ax.scatter(
+                time_indices,
+                neuron_indices,
+                s=marker_size,
+                c=color,
+                marker="|",
+                alpha=0.8,
+                **kwargs,
+            )
             ax.set_xlim(0, spike_train.shape[0])
             ax.set_ylim(-1, spike_train.shape[1])
 
-        elif mode == 'block':
+        elif mode == "block":
             # --- Block / Image Mode ---
             # imshow expects data oriented as (row, column), which corresponds to (neuron, time).
             # So we need to transpose the spike_train.
@@ -498,12 +519,13 @@ def raster_plot(
 
             # Create a custom colormap: 0 -> transparent, 1 -> specified color
             from matplotlib.colors import ListedColormap
-            cmap = kwargs.pop('cmap', ListedColormap(['white', color]))
+
+            cmap = kwargs.pop("cmap", ListedColormap(["white", color]))
 
             # Use imshow to create the block plot.
             # `interpolation='none'` ensures sharp, non-blurry blocks.
             # `aspect='auto'` allows the blocks to be non-square to fill the space.
-            ax.imshow(data_to_show, aspect='auto', interpolation='none', cmap=cmap, **kwargs)
+            ax.imshow(data_to_show, aspect="auto", interpolation="none", cmap=cmap, **kwargs)
 
             # Set the ticks to be at the center of the neurons
             ax.set_yticks(np.arange(spike_train.shape[1]))
@@ -516,7 +538,7 @@ def raster_plot(
             raise ValueError(f"Invalid mode '{mode}'. Choose 'scatter' or 'block'.")
 
         if save_path:
-            plt.savefig(save_path, dpi=300, bbox_inches='tight')
+            plt.savefig(save_path, dpi=300, bbox_inches="tight")
             print(f"Plot saved to: {save_path}")
 
         if show:
@@ -530,13 +552,13 @@ def raster_plot(
 def average_firing_rate_plot(
     spike_train: np.ndarray,
     dt: float,
-    mode: str = 'population',
-    weights: Optional[np.ndarray] = None,
+    mode: str = "population",
+    weights: np.ndarray | None = None,
     title: str = "Average Firing Rate",
-    figsize: Tuple[int, int] = (12, 5),
-    save_path: Optional[str] = None,
+    figsize: tuple[int, int] = (12, 5),
+    save_path: str | None = None,
     show: bool = True,
-    **kwargs
+    **kwargs,
 ):
     """
     Calculates and plots different types of average neural activity from a spike train.
@@ -568,9 +590,9 @@ def average_firing_rate_plot(
 
     try:
         num_timesteps, num_neurons = spike_train.shape
-        ax.set_title(title, fontsize=16, fontweight='bold')
+        ax.set_title(title, fontsize=16, fontweight="bold")
 
-        if mode == 'per_neuron':
+        if mode == "per_neuron":
             # --- Average rate for each neuron over time ---
             duration_s = num_timesteps * dt
             total_spikes_per_neuron = np.sum(spike_train, axis=0)
@@ -582,7 +604,7 @@ def average_firing_rate_plot(
             ax.set_ylabel("Average Firing Rate (Hz)", fontsize=12)
             ax.set_xlim(0, num_neurons - 1)
 
-        elif mode == 'population':
+        elif mode == "population":
             # --- Average rate of the whole population over time ---
             spikes_per_timestep = np.sum(spike_train, axis=1)
             # Population Rate = (total spikes in bin) / (num_neurons * bin_duration)
@@ -596,12 +618,14 @@ def average_firing_rate_plot(
             ax.set_ylabel("Total Population Rate (Hz)", fontsize=12)
             ax.set_xlim(0, time_vector[-1])
 
-        elif mode == 'weighted_average':
+        elif mode == "weighted_average":
             # --- Weighted average of activity over time (decoding) ---
             if weights is None:
                 raise ValueError("'weights' argument is required for 'weighted_average' mode.")
             if weights.shape != (num_neurons,):
-                raise ValueError(f"Shape of 'weights' {weights.shape} must match num_neurons ({num_neurons}).")
+                raise ValueError(
+                    f"Shape of 'weights' {weights.shape} must match num_neurons ({num_neurons})."
+                )
 
             # Calculate the sum of spikes at each time step
             total_spikes_per_timestep = np.sum(spike_train, axis=1)
@@ -622,12 +646,14 @@ def average_firing_rate_plot(
             ax.set_xlim(0, time_vector[-1])
 
         else:
-            raise ValueError(f"Invalid mode '{mode}'. Choose 'per_neuron', 'population', or 'weighted_average'.")
+            raise ValueError(
+                f"Invalid mode '{mode}'. Choose 'per_neuron', 'population', or 'weighted_average'."
+            )
 
-        ax.grid(True, linestyle='--', alpha=0.6)
+        ax.grid(True, linestyle="--", alpha=0.6)
 
         if save_path:
-            plt.savefig(save_path, dpi=300, bbox_inches='tight')
+            plt.savefig(save_path, dpi=300, bbox_inches="tight")
             print(f"Plot saved to: {save_path}")
 
         if show:
@@ -643,15 +669,11 @@ def tuning_curve(
     title: str = "Tuning Curve",
     xlabel: str = "Input Value",
     ylabel: str = "Firing Rate",
-    figsize: Tuple[int, int] = (10, 6),
-    save_path: Optional[str] = None,
+    figsize: tuple[int, int] = (10, 6),
+    save_path: str | None = None,
     show: bool = True,
-    **kwargs
-):
-    ...
+    **kwargs,
+): ...
 
 
-def phase_plane_plot(
-
-):
-    ...
+def phase_plane_plot(): ...

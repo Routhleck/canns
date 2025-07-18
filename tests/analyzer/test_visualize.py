@@ -30,7 +30,7 @@ def test_energy_landscape_1d():
 
     us, inps = brainstate.compile.for_loop(run_step, task_pc.run_steps, task_pc.data, pbar=brainstate.compile.ProgressBar(10))
 
-    output_path_static = 'test_energy_landscape_1d_static.gif'
+    output_path_static = 'test_energy_landscape_1d_static.png'
     energy_landscape_1d_static(
         {'u': (cann.x, us[0]), 'Iext': (cann.x, inps[0])},
         title='Population Coding 1D (Static)',
