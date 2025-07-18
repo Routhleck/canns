@@ -94,9 +94,9 @@ def test_st_to_fr_random():
     assert firing_rates.shape == (int(duration / dt_rate), num_neurons), "firing rates shape mismatch"
 
     # Compute mean input rate per neuron (Hz)
-    mean_input_rates = np.mean(spikes, axis=0) / dt_spike  # spikes are binary, so mean gives spikes per dt_spike
+    mean_input_rates = np.mean(spikes, axis=0) / dt_spike * dt_rate  # spikes are binary, so mean gives spikes per dt_spike
     # Compute mean output rate per neuron (Hz)
-    mean_output_rates = np.mean(firing_rates, axis=0) * dt_rate  # firing rates are in spikes per dt_rate, so multiply by dt_rate
+    mean_output_rates = np.mean(firing_rates, axis=0)  # firing rates are in spikes per dt_rate, so multiply by dt_rate
     # Assert that mean output rates are close to mean input rates (allowing 10% relative tolerance)
     np.testing.assert_allclose(
         mean_output_rates, mean_input_rates, rtol=0.1,
