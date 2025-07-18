@@ -753,10 +753,9 @@ def tuning_curve(
 
             # Create a label for the legend
             label = f"Neuron {neuron_idx}"
-            if pref_stim is not None:
-                # Check index to prevent errors
-                if neuron_idx < len(pref_stim):
-                    label += f" (pref_stim={pref_stim[neuron_idx]:.2f})"
+            if pref_stim is not None and neuron_idx < len(pref_stim):
+                label += f" (pref_stim={pref_stim[neuron_idx]:.2f})"
+
 
             # Plot the curve. Bins that were empty will have a `nan` mean,
             # which matplotlib handles gracefully (it won't plot them).
