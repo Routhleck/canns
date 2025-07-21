@@ -21,7 +21,12 @@ def run_step(t, inputs):
     cann(inputs)
     return cann.r.value, cann.inp.value
 
-rs, inps = brainstate.compile.for_loop(run_step, task_st.run_steps, task_st.data, pbar=brainstate.compile.ProgressBar(10))
+rs, inps = brainstate.compile.for_loop(
+    run_step,
+    task_st.run_steps,
+    task_st.data,
+    pbar=brainstate.compile.ProgressBar(10)
+)
 
 # energy_landscape_1d_animation(
 #     {'u': (cann.x, rs), 'Iext': (cann.x, inps)},
