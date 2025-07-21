@@ -33,7 +33,7 @@ def test_energy_landscape_1d():
 
     output_path_static = 'test_energy_landscape_1d_static.png'
     energy_landscape_1d_static(
-        {'u': (cann.x, us[0]), 'Iext': (cann.x, inps[0])},
+        {'u': (cann.x, us[int(task_pc.total_steps/2)]), 'Iext': (cann.x, inps[int(task_pc.total_steps/2)])},
         title='Population Coding 1D (Static)',
         xlabel='State',
         ylabel='Activity',
@@ -79,7 +79,7 @@ def test_energy_landscape_2d():
 
     output_path_static = 'test_energy_landscape_2d_static.png'
     energy_landscape_2d_static(
-        z_data=us[0],
+        z_data=us[int(task_pc.total_steps/2)],
         title='Population Coding 2D (Static)',
         xlabel='State X',
         ylabel='State Y',
@@ -162,7 +162,7 @@ def test_average_firing_rate():
     average_firing_rate_plot(
         rs,
         mode='population',
-        title='Average Firing Rate',
+        title='Average Firing Rate (Population)',
         dt=0.1,
         save_path=output_path_population,
         show=False,
@@ -172,7 +172,7 @@ def test_average_firing_rate():
     average_firing_rate_plot(
         rs,
         mode='per_neuron',
-        title='Average Firing Rate',
+        title='Average Firing Rate (Per Neuron)',
         dt=0.1,
         save_path=output_path_per_neuron,
         show=False,
