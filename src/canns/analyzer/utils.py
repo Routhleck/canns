@@ -119,6 +119,7 @@ def firing_rate_to_spike_train(
 
 def normalize_firing_rates(
     firing_rates: np.ndarray,
+    method: str = "min_max",
 ) -> np.ndarray:
     """
     Normalizes firing rates to a range of [0, 1] based on the maximum firing rate.
@@ -126,6 +127,10 @@ def normalize_firing_rates(
     Args:
         firing_rates (np.ndarray):
             2D array of shape (timesteps_rate, num_neurons) with firing rates in dt_rate.
+        method (str):
+            Normalization method, either 'min_max' or 'z_score'.
+            - 'min_max': Normalizes to the range [0, 1].
+            - 'z_score': Normalizes to have mean 0 and standard deviation 1.
 
     Returns:
         np.ndarray:
@@ -134,8 +139,25 @@ def normalize_firing_rates(
     if firing_rates.ndim != 2:
         raise ValueError("firing_rates must be a 2D array.")
 
-    max_firing_rate = np.max(firing_rates)
-    if max_firing_rate == 0:
-        return np.zeros_like(firing_rates)
+    if method not in ["min_max", "z_score"]:
+        raise ValueError("Normalization method must be 'min_max' or 'z_score'.")
 
-    return firing_rates / max_firing_rate
+    match method:
+        case "min_max":
+            data_min = firing_rates.min()
+            data_max = firing_rates.max()
+
+            if data_max - data_min != 0:
+                min_max_scaled_data = (firing_rates - data_min) / (data_max - data_min)
+            else:
+                min_max_scaled_data = np.zeros_like(firing_rates, dtype=float)
+            return min_max_scaled_data
+        case "z_score":
+            data_mean = firing_rates.mean()
+            data_std = firing_rates.std()
+
+            if data_std != 0:
+                z_score_scaled_data = (firing_rates - data_mean) / data_std
+            else:
+                z_score_scaled_data = np.zeros_like(firing_rates, dtype=float)
+            return z_score_scaled_data
