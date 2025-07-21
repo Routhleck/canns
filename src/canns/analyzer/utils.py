@@ -147,21 +147,17 @@ def normalize_firing_rates(
             data_min = firing_rates.min()
             data_max = firing_rates.max()
 
-            # 检查分母是否为零，以避免除零错误
             if data_max - data_min != 0:
                 min_max_scaled_data = (firing_rates - data_min) / (data_max - data_min)
             else:
-                # 如果所有值都相同，则归一化结果为全零
                 min_max_scaled_data = np.zeros_like(firing_rates, dtype=float)
             return min_max_scaled_data
         case "z_score":
             data_mean = firing_rates.mean()
             data_std = firing_rates.std()
 
-            # 检查标准差是否为零，以避免除零错误
             if data_std != 0:
                 z_score_scaled_data = (firing_rates - data_mean) / data_std
             else:
-                # 如果标准差为零（所有值都相同），则标准化结果为全零
                 z_score_scaled_data = np.zeros_like(firing_rates, dtype=float)
             return z_score_scaled_data
