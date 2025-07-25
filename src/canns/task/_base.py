@@ -100,12 +100,29 @@ class Task(ABC):
         if not output_path.exists():
             raise ValueError(f"File {output_path} does not exist.")
 
-        loaded_data = np.load(output_path, allow_pickle=True)
+        try:
+            # First try loading without pickle for security
+            loaded_data = np.load(output_path, allow_pickle=False)
+        except ValueError as e:
+            # If it fails, check if it's due to object arrays that require pickle
+            if "allow_pickle" in str(e).lower():
+                raise ValueError(
+                    f"File {output_path} contains pickled objects which are not allowed for security reasons. "
+                    "Please save data using only standard NumPy arrays and basic Python types."
+                ) from e
+            else:
+                raise e
 
         data_dict = {key: loaded_data[key] for key in loaded_data.files}
 
         if self.data_class and dataclasses.is_dataclass(self.data_class):
-            self.data = self.data_class(**data_dict)
+            try:
+                self.data = self.data_class(**data_dict)
+            except TypeError as e:
+                raise ValueError(
+                    f"Cannot instantiate data_class {self.data_class.__name__} with loaded data. "
+                    f"Missing or incompatible fields: {e}"
+                ) from e
         elif len(data_dict) == 1 and "data" in data_dict:
             self.data = data_dict["data"]
         else:

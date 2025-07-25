@@ -8,18 +8,31 @@ from matplotlib import pyplot as plt
 
 from ...typing import time_type
 from ._base import BasicModel
+# Import unified implementations
+from .cann_unified import (
+    UnifiedBaseCANN, SFAMixin,
+    UnifiedCANN1D, UnifiedCANN2D,
+    UnifiedCANN1D_SFA, UnifiedCANN2D_SFA
+)
 
 __all__ = [
-    # Base Model
+    # Base Model (original)
     "BaseCANN",
     "BaseCANN1D",
     "BaseCANN2D",
-    # CANN 1D Models
+    # CANN 1D Models (original)
     "CANN1D",
     "CANN1D_SFA",
-    # CANN 2D Models
+    # CANN 2D Models (original)
     "CANN2D",
     "CANN2D_SFA",
+    # Unified implementations (new, optimized)
+    "UnifiedBaseCANN",
+    "SFAMixin",
+    "UnifiedCANN1D",
+    "UnifiedCANN2D", 
+    "UnifiedCANN1D_SFA",
+    "UnifiedCANN2D_SFA",
 ]
 
 
