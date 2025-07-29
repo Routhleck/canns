@@ -1,6 +1,21 @@
-sphinx
-nbsphinx
-jupyter-book
-sphinx-rtd-theme
-sphinx-intl
-myst-parser
+# Sphinx and extensions
+sphinx>=5.0
+nbsphinx>=0.8.0
+sphinx-rtd-theme>=1.0.0
+sphinx-intl>=2.0.0
+myst-parser>=0.18.0
+
+# Jupyter support
+jupyter>=1.0.0
+jupyter-book>=0.13.0
+nbconvert>=6.0.0
+ipykernel>=6.0.0
+
+# Dependencies for notebooks to run
+matplotlib>=3.5.0
+numpy>=1.21.0
+scipy>=1.8.0
+
+# Optional dependencies that might be imported
+brainunit
+brainstate
