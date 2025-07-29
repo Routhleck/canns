@@ -6,7 +6,9 @@ sys.path.insert(0, os.path.abspath('../src'))
 
 # -- Project information -----------------------------------------------------
 project = 'CANNs'
-copyright = '2025, Sichao He'
+# Note: Using 'copyright' variable name is required by Sphinx
+# ruff: noqa: A001
+copyright = '2025, Sichao He'  # noqa: A001
 author = 'Sichao He'
 release = '0.1.0'
 
