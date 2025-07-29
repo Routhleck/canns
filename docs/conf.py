@@ -116,6 +116,7 @@ html_theme_options = {
 # -- Options for nbsphinx ---------------------------------------------------
 nbsphinx_execute = 'never'  # Don't execute notebooks during build
 nbsphinx_allow_errors = True
+nbsphinx_requirejs_path = ''  # Disable requirejs to avoid conflicts
 
 # -- Internationalization ---------------------------------------------------
 language = 'en'

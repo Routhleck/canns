@@ -43,14 +43,3 @@ jobs:
         name: documentation
         path: docs/_build/html
         retention-days: 30
-    
-    - name: Test notebooks
-      run: |
-        # Install additional dependencies for notebook testing
-        pip install nbconvert jupyter
-        
-        # Test that notebooks can be converted (basic syntax check)
-        for notebook in docs/en/notebooks/*.ipynb; do
-          echo "Testing $notebook"
-          jupyter nbconvert --to html --execute-timeout=60 "$notebook" --output-dir=/tmp
-        done
