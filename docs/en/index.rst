@@ -40,7 +40,7 @@ Welcome to the CANNs (Continuous Attractor Neural Networks) documentation! This 
    :maxdepth: 2
    :caption: API Reference
    
-   api/index
+   ../autoapi/index
 
 .. toctree::
    :maxdepth: 2

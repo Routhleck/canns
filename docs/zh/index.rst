@@ -8,7 +8,7 @@ CANNs 文档
    :caption: 内容目录:
 
    notebooks/index
-   api/index
+   ../autoapi/index
 
 介绍
 ----
