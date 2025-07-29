@@ -96,6 +96,8 @@ html_theme_options = {
     "source_repository": "https://github.com/routhleck/canns/",
     "source_branch": "main",
     "source_directory": "docs/",
+    "light_logo": "logo.svg",
+    "dark_logo": "logo.svg",
     "light_css_variables": {
         "color-brand-primary": "#2980b9",
         "color-brand-content": "#2980b9",

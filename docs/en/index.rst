@@ -1,3 +1,8 @@
+.. image:: ../_static/logo.svg
+   :alt: CANNs Logo
+   :width: 200px
+   :align: center
+
 CANNs Documentation
 ===================
 
