@@ -1,0 +1,8 @@
+brainx[cpu]
+ratinabox>=1.15.3
+tqdm
+matplotlib
+numpy
+scipy
+jupyter
+ipywidgets

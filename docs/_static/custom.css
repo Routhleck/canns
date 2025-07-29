@@ -1,0 +1,59 @@
+/* Custom CSS for CANNs documentation */
+
+/* Improve readability of code blocks */
+.highlight {
+    background-color: #f8f8f8;
+    border: 1px solid #e1e4e5;
+    border-radius: 4px;
+    margin: 1em 0;
+}
+
+/* Better spacing for notebook cells */
+.jp-Cell {
+    margin-bottom: 1em;
+}
+
+/* Style for interactive badges */
+.badge-container {
+    margin: 10px 0;
+}
+
+.badge-container img {
+    margin-right: 10px;
+}
+
+/* Improve table styling */
+table.docutils {
+    border-collapse: collapse;
+    margin: 1em 0;
+}
+
+table.docutils th,
+table.docutils td {
+    border: 1px solid #e1e4e5;
+    padding: 8px 12px;
+}
+
+table.docutils th {
+    background-color: #f8f9fa;
+    font-weight: bold;
+}
+
+/* Better admonition styling */
+.admonition {
+    margin: 1em 0;
+    padding: 0.5em 1em;
+    border-left: 4px solid #007acc;
+    background-color: #f8f9fa;
+}
+
+.admonition-title {
+    font-weight: bold;
+    margin-bottom: 0.5em;
+}
+
+/* Responsive images */
+img {
+    max-width: 100%;
+    height: auto;
+}

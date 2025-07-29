@@ -37,7 +37,7 @@ def energy_landscape_1d_static(
         ylabel (str, optional): The label for the Y-axis. Defaults to "Energy".
         show_legend (bool, optional): Whether to display the legend. Defaults to True.
         figsize (Tuple[int, int], optional): The size of the figure, as a tuple (width, height). Defaults to (10, 6).
-        grid (bool, optional): Whether to display a grid. Defaults to True.
+        grid (bool, optional): Whether to display a grid. Defaults to False.
         save_path (Optional[str], optional):
             The file path to save the plot. If provided, the plot will be saved to a file.
             Defaults to None.
@@ -48,7 +48,7 @@ def energy_landscape_1d_static(
 
     Returns:
         Tuple[plt.Figure, plt.Axes]: Returns the Matplotlib Figure and Axes objects
-                                     for further modification outside the function.
+            for further modification outside the function.
     """
     # --- Create the figure and axes ---
     fig, ax = plt.subplots(figsize=figsize)
@@ -110,7 +110,7 @@ def energy_landscape_1d_animation(
             A dictionary of the evolving landscapes.
             - Keys (str) are the labels for the legend.
             - Values are tuples (x_data, ys_data), where ys_data is a 2D array
-              of shape (total_sim_steps, num_states).
+            of shape (total_sim_steps, num_states).
         time_steps_per_second (int):
             The number of data points (rows in ys_data) that correspond to one
             second of simulation time. (e.g., if dt=0.001s, this is 1000).
