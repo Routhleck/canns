@@ -19,7 +19,7 @@ jobs:
         fetch-depth: 0  # Fetch all history for version detection
     
     - name: Set up Python
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v5
       with:
         python-version: '3.11'
     
@@ -67,7 +67,7 @@ jobs:
         fetch-depth: 0
     
     - name: Set up Python
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v5
       with:
         python-version: '3.11'
     
@@ -143,12 +143,11 @@ jobs:
         echo "EOF" >> $GITHUB_OUTPUT
     
     - name: Create Release
-      uses: actions/create-release@v1
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        tag_name: ${{ github.ref }}
-        release_name: Release ${{ github.ref }}
-        body: ${{ steps.changelog.outputs.changelog }}
-        draft: false
-        prerelease: false
+      run: |
+        TAG_NAME=${GITHUB_REF#refs/tags/}
+        gh release create "$TAG_NAME" \
+          --title "Release $TAG_NAME" \
+          --notes-file release_notes.md \
+          --verify-tag
