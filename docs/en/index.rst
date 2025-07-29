@@ -32,28 +32,25 @@ Welcome to the CANNs (Continuous Attractor Neural Networks) documentation! This 
 
 .. toctree::
    :maxdepth: 2
-   :caption: Tutorials
+   :caption: Examples
+   :hidden:
    
-   notebooks/04_1d_networks
-   notebooks/05_2d_networks
-   notebooks/06_hierarchical_models
-
-.. toctree::
-   :maxdepth: 2
-   :caption: Advanced Topics
-   
-   notebooks/07_custom_tasks
-   notebooks/08_visualization
-   notebooks/09_performance_optimization
+   GitHub Examples <https://github.com/routhleck/canns/tree/master/examples>
 
 .. toctree::
    :maxdepth: 2
    :caption: API Reference
+   :hidden:
    
-   api/models
-   api/tasks
-   api/analyzer
-   api/trainer
+   GitHub Repository <https://github.com/routhleck/canns>
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Resources
+   :hidden:
+   
+   GitHub Issues <https://github.com/routhleck/canns/issues>
+   Discussions <https://github.com/routhleck/canns/discussions>
 
 **Language**: `English <../en/>`_ | `中文 <../zh/>`_
 
