@@ -63,10 +63,12 @@ autoapi_options = [
     'special-members',
     'imported-members',
 ]
-autoapi_ignore = ['*/_version.py', '*/py.typed']
+autoapi_ignore = ['*/_version.py', '*/py.typed', '**/py.typed']
 autoapi_python_class_content = 'both'  # Include both class and __init__ docstrings
 autoapi_member_order = 'groupwise'
 autoapi_keep_files = False
+# Additional settings to avoid import resolution errors
+autoapi_python_use_implicit_namespaces = True
 
 # -- Autodoc configuration ---------------------------------------------------
 autodoc_default_options = {
