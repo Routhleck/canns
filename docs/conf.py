@@ -57,18 +57,20 @@ autoapi_type = 'python'
 autoapi_template_dir = '_templates/autoapi'
 autoapi_options = [
     'members',
-    'undoc-members',
+    'undoc-members', 
     'show-inheritance',
     'show-module-summary',
     'special-members',
     'imported-members',
 ]
+autoapi_generate_api_docs = True
+autoapi_add_toctree_entry = True
 # Suppress duplicate object warnings
 suppress_warnings = ['autosummary', 'autosummary.import_cycle']
 autoapi_ignore = ['*/_version.py', '*/py.typed', '**/py.typed']
 autoapi_python_class_content = 'both'  # Include both class and __init__ docstrings
 autoapi_member_order = 'groupwise'
-autoapi_keep_files = False
+autoapi_keep_files = True
 # Additional settings to avoid import resolution errors
 autoapi_python_use_implicit_namespaces = True
 
@@ -86,6 +88,9 @@ autodoc_typehints_description_target = 'documented'
 # -- Options for HTML output ------------------------------------------------
 html_theme = 'furo'
 html_static_path = ['_static']
+
+# Favicon
+html_favicon = '_static/logo.svg'
 
 # Custom CSS files
 html_css_files = [
