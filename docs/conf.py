@@ -87,6 +87,9 @@ autodoc_typehints_description_target = 'documented'
 html_theme = 'furo'
 html_static_path = ['_static']
 
+# Favicon
+html_favicon = '_static/logo.svg'
+
 # Custom CSS files
 html_css_files = [
     'custom.css',
