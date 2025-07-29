@@ -27,7 +27,6 @@ Welcome to the CANNs (Continuous Attractor Neural Networks) documentation! This 
    :caption: Getting Started
    
    notebooks/01_introduction
-   notebooks/02_quickstart
    notebooks/03_core_concepts
 
 .. toctree::
@@ -40,9 +39,8 @@ Welcome to the CANNs (Continuous Attractor Neural Networks) documentation! This 
 .. toctree::
    :maxdepth: 2
    :caption: API Reference
-   :hidden:
    
-   GitHub Repository <https://github.com/routhleck/canns>
+   api/index
 
 .. toctree::
    :maxdepth: 2

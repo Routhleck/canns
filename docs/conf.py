@@ -37,18 +37,50 @@ except (ImportError, AttributeError):
 # -- General configuration ---------------------------------------------------
 extensions = [
     'sphinx.ext.autodoc',
+    'sphinx.ext.autosummary',
     'sphinx.ext.viewcode',
     'sphinx.ext.napoleon',
+    'sphinx.ext.intersphinx',
+    'sphinx_autodoc_typehints',
+    'autoapi.extension',
     'nbsphinx',
     'myst_parser',
-    'sphinx.ext.intersphinx',
+    'sphinx_design',
 ]
 
 templates_path = ['_templates']
 exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 
+# -- AutoAPI configuration ---------------------------------------------------
+autoapi_dirs = ['../src/']
+autoapi_type = 'python'
+autoapi_template_dir = '_templates/autoapi'
+autoapi_options = [
+    'members',
+    'undoc-members',
+    'show-inheritance',
+    'show-module-summary',
+    'special-members',
+    'imported-members',
+]
+autoapi_ignore = ['*/_version.py', '*/py.typed']
+autoapi_python_class_content = 'both'  # Include both class and __init__ docstrings
+autoapi_member_order = 'groupwise'
+autoapi_keep_files = False
+
+# -- Autodoc configuration ---------------------------------------------------
+autodoc_default_options = {
+    'members': True,
+    'member-order': 'bysource',
+    'special-members': '__init__',
+    'undoc-members': True,
+    'exclude-members': '__weakref__'
+}
+autodoc_typehints = 'description'
+autodoc_typehints_description_target = 'documented'
+
 # -- Options for HTML output ------------------------------------------------
-html_theme = 'sphinx_rtd_theme'
+html_theme = 'furo'
 html_static_path = ['_static']
 
 # Custom CSS files
@@ -56,16 +88,23 @@ html_css_files = [
     'custom.css',
 ]
 
-# Additional theme options
+# Furo theme options
 html_theme_options = {
-    'display_version': True,
-    'prev_next_buttons_location': 'bottom',
-    'style_external_links': False,
-    'collapse_navigation': False,
-    'sticky_navigation': True,
-    'navigation_depth': 4,
-    'includehidden': True,
-    'titles_only': False
+    "sidebar_hide_name": False,
+    "navigation_with_keys": True,
+    "top_of_page_button": "edit",
+    "source_repository": "https://github.com/routhleck/canns/",
+    "source_branch": "main",
+    "source_directory": "docs/",
+    "light_css_variables": {
+        "color-brand-primary": "#2980b9",
+        "color-brand-content": "#2980b9",
+        "color-admonition-background": "transparent",
+    },
+    "dark_css_variables": {
+        "color-brand-primary": "#79afd1",
+        "color-brand-content": "#79afd1",
+    },
 }
 
 # -- Options for nbsphinx ---------------------------------------------------
