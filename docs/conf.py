@@ -63,6 +63,8 @@ autoapi_options = [
     'special-members',
     'imported-members',
 ]
+# Suppress duplicate object warnings
+suppress_warnings = ['autosummary', 'autosummary.import_cycle']
 autoapi_ignore = ['*/_version.py', '*/py.typed', '**/py.typed']
 autoapi_python_class_content = 'both'  # Include both class and __init__ docstrings
 autoapi_member_order = 'groupwise'
