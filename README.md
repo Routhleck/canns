@@ -383,13 +383,6 @@ This project is licensed under the MIT License. See the [LICENSE](LICENSE) file 
 **Email**: sichaohe@outlook.com  
 **Project Link**: [https://github.com/routhleck/canns](https://github.com/routhleck/canns)
 
----
-
-<div align="center">
-
-如果这个项目对您有帮助，请考虑给我们一个 ⭐️
-
-</div>
 
 
 
