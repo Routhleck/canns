@@ -1,0 +1,16 @@
+name: canns-docs
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python>=3.11
+  - pip
+  - jupyter
+  - matplotlib
+  - numpy
+  - scipy
+  - tqdm
+  - pip:
+    - brainx[cpu]
+    - ratinabox>=1.15.3
+    - canns

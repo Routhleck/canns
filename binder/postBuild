@@ -1,0 +1,10 @@
+#!/bin/bash
+
+# Install the local package in development mode
+pip install -e .
+
+# Enable Jupyter extensions
+jupyter nbextension enable --py widgetsnbextension --sys-prefix
+
+# Trust notebooks to allow widgets
+find docs/en/notebooks -name "*.ipynb" -exec jupyter trust {} \;

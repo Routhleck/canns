@@ -1,0 +1,3 @@
+# This file ensures the _static directory is included in git
+# The _static directory is required by Sphinx for custom CSS, JS, and other static files
+# Even if empty, Sphinx expects this directory to exist when html_static_path is configured

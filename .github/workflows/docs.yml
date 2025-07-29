@@ -1,0 +1,45 @@
+name: Documentation
+
+on:
+  push:
+    branches: [ master ]  # Only trigger on master branch pushes
+  pull_request:
+    branches: [ master ]  # Still test PRs but don't deploy
+
+jobs:
+  build-docs:
+    name: Build documentation
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+    
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+    
+    - name: Install system dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y pandoc
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -e .
+        pip install -r docs/requirements.txt
+    
+    - name: Build documentation
+      run: |
+        cd docs
+        sphinx-build -b html . _build/html
+    
+    - name: Upload documentation artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: documentation
+        path: docs/_build/html
+        retention-days: 30
