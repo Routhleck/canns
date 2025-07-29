@@ -10,7 +10,29 @@ project = 'CANNs'
 # ruff: noqa: A001
 copyright = '2025, Sichao He'  # noqa: A001
 author = 'Sichao He'
-release = '0.1.0'
+
+# Get version from the installed package or git tags
+try:
+    # Try to import from the package
+    import canns
+    version = canns.__version__
+    release = version
+except (ImportError, AttributeError):
+    # Fallback: try to get from git tags
+    try:
+        import subprocess
+        result = subprocess.run(['git', 'describe', '--tags', '--abbrev=0'], 
+                              capture_output=True, text=True, cwd=os.path.dirname(__file__))
+        if result.returncode == 0:
+            git_version = result.stdout.strip().lstrip('v')
+            version = git_version
+            release = git_version
+        else:
+            version = '0.5.1'
+            release = '0.5.1'
+    except Exception:
+        version = '0.5.1' 
+        release = '0.5.1'
 
 # -- General configuration ---------------------------------------------------
 extensions = [
