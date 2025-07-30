@@ -20,7 +20,7 @@
   <p align="center">
     A Python Library for Continuous Attractor Neural Networks (CANNs) and other brain-inspired computational models. It provides a unified, high-level API to easily load, analyze, and train state-of-the-art CANN architectures, enabling researchers and developers to quickly experiment with and deploy brain-inspired solutions.
     <br />
-    <a href="docs/en/"><strong>📖 Documentation »</strong></a>
+    <a href="https://routhleck.com/canns/"><strong>📖 Documentation »</strong></a>
     <br />
     <br />
     <a href="#getting-started">🚀 Getting Started</a>
