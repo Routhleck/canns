@@ -14,6 +14,10 @@ try:
     HAS_NUMBA = True
 except ImportError:
     HAS_NUMBA = False
+    print(
+        "Using numba for FAST CANN1D bump fitting, now using pure numpy implementation.",
+        "Try numba by `pip install numba` to speed up the process.",
+    )
 
     # Create dummy decorators if numba is not available
     def jit(*args, **kwargs):
@@ -64,7 +68,7 @@ def bump_fits(
     nbt = data.shape[0]
     flat_data = data.flatten()
     normed_data = (flat_data / np.median(flat_data)) - 1.0
-    bumps = mcmc(
+    bumps = _mcmc(
         nbt=nbt,
         data=normed_data,
         n_steps=n_steps,
@@ -507,7 +511,7 @@ def _compute_predicted_intensity_parallel(positions, kappas, amplis, n_bumps, n_
     return predicted
 
 
-def site_logl(
+def _site_logl(
     intens,
     bump,
     n_roi,
@@ -613,7 +617,7 @@ def _parallel_distance_matrix(pos1_array, pos2_array):
     return dist_matrix
 
 
-def interf_logl(
+def _interf_logl(
     b1,
     b2,
     n_bump_max,
@@ -681,7 +685,7 @@ def _randint(n):
     return np.random.randint(0, n)
 
 
-def create_bump(
+def _create_bump(
     bump,
     n_bump_max,
     ampli_max,
@@ -700,7 +704,7 @@ def create_bump(
     return False
 
 
-def del_bump(bump):
+def _del_bump(bump):
     if bump.nbump == 0:
         return True
     if HAS_NUMBA:
@@ -718,7 +722,7 @@ def del_bump(bump):
     return False
 
 
-def diffuse(
+def _diffuse(
     bump,
     sigma_diff,
 ):
@@ -738,7 +742,7 @@ def diffuse(
     return False
 
 
-def change_ampli(bump):
+def _change_ampli(bump):
     if bump.nbump == 0:
         return True
     if HAS_NUMBA:
@@ -753,7 +757,7 @@ def change_ampli(bump):
     return False
 
 
-def change_width(bump):
+def _change_width(bump):
     if bump.nbump == 0:
         return True
     if HAS_NUMBA:
@@ -776,7 +780,7 @@ def _metropolis_accept(delta_logl):
     return np.random.random() < np.exp(delta_logl)
 
 
-def mcmc(
+def _mcmc(
     nbt,
     data,
     n_steps,
@@ -801,11 +805,11 @@ def mcmc(
     total_logl = 0.0
     for i in range(ntime):
         data_seg = data[i * n_roi : (i + 1) * n_roi]
-        bumps[i].logl = site_logl(data_seg, bumps[i], n_roi, penbump, sig2, beta)
+        bumps[i].logl = _site_logl(data_seg, bumps[i], n_roi, penbump, sig2, beta)
         total_logl += bumps[i].logl
 
     for i in range(ntime - 1):
-        interfe[i] = interf_logl(bumps[i], bumps[i + 1], n_bump_max, sigcoup2, beta, jc)
+        interfe[i] = _interf_logl(bumps[i], bumps[i + 1], n_bump_max, sigcoup2, beta, jc)
         total_logl += interfe[i]
 
     print(f"Initial likelihood: {total_logl:.2f}")
@@ -830,35 +834,35 @@ def mcmc(
             operation_failed = True
 
             if rand_val < 0.01:
-                operation_failed = create_bump(proposal, n_bump_max, ampli_min, kappa_mean)
+                operation_failed = _create_bump(proposal, n_bump_max, ampli_min, kappa_mean)
             elif rand_val < 0.01 * (1 + proposal.nbump):
-                operation_failed = del_bump(proposal)
+                operation_failed = _del_bump(proposal)
             elif rand_val < 0.3:
-                operation_failed = diffuse(proposal, sigma_diff)
+                operation_failed = _diffuse(proposal, sigma_diff)
             elif rand_val < 0.4:
-                operation_failed = change_width(proposal)
+                operation_failed = _change_width(proposal)
             else:
-                operation_failed = change_ampli(proposal)
+                operation_failed = _change_ampli(proposal)
 
             # If operation succeeded (not failed)
             if not operation_failed:
                 # Calculate local likelihood for new state
                 data_seg = data[j * n_roi : (j + 1) * n_roi]
-                loglt = site_logl(data_seg, proposal, n_roi, penbump, sig2, beta)
+                loglt = _site_logl(data_seg, proposal, n_roi, penbump, sig2, beta)
 
                 # Calculate coupling changes
                 delta_logl = loglt - current.logl
 
                 # Handle boundary cases
                 if j == 0:  # First time point
-                    loglit1 = interf_logl(proposal, bumps[1], n_bump_max, sigcoup2, beta, jc)
+                    loglit1 = _interf_logl(proposal, bumps[1], n_bump_max, sigcoup2, beta, jc)
                     delta_logl += loglit1 - interfe[0]
                 elif j == ntime - 1:  # Last time point
-                    loglit1 = interf_logl(bumps[j - 1], proposal, n_bump_max, sigcoup2, beta, jc)
+                    loglit1 = _interf_logl(bumps[j - 1], proposal, n_bump_max, sigcoup2, beta, jc)
                     delta_logl += loglit1 - interfe[j - 1]
                 else:  # Middle time points
-                    loglit1 = interf_logl(bumps[j - 1], proposal, n_bump_max, sigcoup2, beta, jc)
-                    loglit2 = interf_logl(proposal, bumps[j + 1], n_bump_max, sigcoup2, beta, jc)
+                    loglit1 = _interf_logl(bumps[j - 1], proposal, n_bump_max, sigcoup2, beta, jc)
+                    loglit2 = _interf_logl(proposal, bumps[j + 1], n_bump_max, sigcoup2, beta, jc)
                     delta_logl += (loglit1 - interfe[j - 1]) + (loglit2 - interfe[j])
 
                 # Metropolis-Hastings acceptance criterion
