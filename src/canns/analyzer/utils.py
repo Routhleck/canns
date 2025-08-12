@@ -62,11 +62,11 @@ def firing_rate_to_spike_train(
     This function generates spikes using a Bernoulli process in each high-resolution time bin.
     The probability of a spike in each bin is calculated as:
     P(spike in dt_spike) = rate (spikes/dt_rate) / dt_rate (sec) * dt_spike (sec)
-    
+
     Note:
         A Bernoulli process is used, not a Poisson process. This means that in each time bin,
-        at most one spike can occur. For high firing rates, the computed spike probability may 
-        exceed 1 and will be clipped to 1. This can lead to deviations from the expected 
+        at most one spike can occur. For high firing rates, the computed spike probability may
+        exceed 1 and will be clipped to 1. This can lead to deviations from the expected
         Poisson statistics at high rates.
 
     Args:
