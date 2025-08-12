@@ -1,7 +1,6 @@
 import os
 import random
 from dataclasses import dataclass
-from typing import Optional
 
 import numpy as np
 from matplotlib import pyplot as plt
@@ -45,6 +44,7 @@ from canns.analyzer.experimental_data._datasets_utils import load_roi_data
 @dataclass
 class BumpFitsConfig:
     """Configuration for CANN1D bump fitting."""
+
     n_steps: int = 20000
     n_roi: int = 16
     n_bump_max: int = 4
@@ -55,17 +55,18 @@ class BumpFitsConfig:
     penbump: float = 0.4
     jc: float = 1.8
     beta: float = 5.0
-    random_seed: Optional[int] = None
+    random_seed: int | None = None
 
 
 @dataclass
 class AnimationConfig:
     """Configuration for 1D CANN bump animation."""
+
     show: bool = False
     max_height_value: float = 0.5
     max_width_range: int = 40
     npoints: int = 300
-    nframes: Optional[int] = None
+    nframes: int | None = None
     fps: int = 5
     bump_selection: str = "strongest"
     show_progress_bar: bool = True
@@ -76,6 +77,7 @@ class AnimationConfig:
 # ==================== Constants ====================
 class Constants:
     """Constants used throughout CANN1D analysis."""
+
     DEFAULT_FIGSIZE = (4, 4)
     DEFAULT_DPI = 100
     BASE_RADIUS = 1.0
@@ -86,28 +88,26 @@ class Constants:
 # ==================== Custom Exceptions ====================
 class CANN1DError(Exception):
     """Base exception for CANN1D analysis errors."""
+
     pass
 
 
 class FittingError(CANN1DError):
     """Raised when bump fitting fails."""
+
     pass
 
 
 class AnimationError(CANN1DError):
     """Raised when animation creation fails."""
+
     pass
 
 
-def bump_fits(
-    data,
-    config: Optional[BumpFitsConfig] = None,
-    save_path=None,
-    **kwargs
-):
+def bump_fits(data, config: BumpFitsConfig | None = None, save_path=None, **kwargs):
     """
     Fit CANN1D bumps to data using MCMC optimization.
-    
+
     Parameters:
         data : numpy.ndarray
             Input data for bump fitting
@@ -116,13 +116,13 @@ def bump_fits(
         save_path : str, optional
             Path to save the results
         **kwargs : backward compatibility parameters
-    
+
     Returns:
         bumps : list
             List of fitted bump objects
         fits_array : numpy.ndarray
             Array of fitted bump parameters
-        nbump_array : numpy.ndarray  
+        nbump_array : numpy.ndarray
             Array of bump counts and reconstructed signals
         centrbump_array : numpy.ndarray
             Array of centered bump data
@@ -130,19 +130,19 @@ def bump_fits(
     # Handle backward compatibility and configuration
     if config is None:
         config = BumpFitsConfig(
-            n_steps=kwargs.get('n_steps', 20000),
-            n_roi=kwargs.get('n_roi', 16),
-            n_bump_max=kwargs.get('n_bump_max', 4),
-            sigma_diff=kwargs.get('sigma_diff', 0.5),
-            ampli_min=kwargs.get('ampli_min', 2.0),
-            kappa_mean=kwargs.get('kappa_mean', 2.5),
-            sig2=kwargs.get('sig2', 1.0),
-            penbump=kwargs.get('penbump', 0.4),
-            jc=kwargs.get('jc', 1.8),
-            beta=kwargs.get('beta', 5.0),
-            random_seed=kwargs.get('random_seed', None)
+            n_steps=kwargs.get("n_steps", 20000),
+            n_roi=kwargs.get("n_roi", 16),
+            n_bump_max=kwargs.get("n_bump_max", 4),
+            sigma_diff=kwargs.get("sigma_diff", 0.5),
+            ampli_min=kwargs.get("ampli_min", 2.0),
+            kappa_mean=kwargs.get("kappa_mean", 2.5),
+            sig2=kwargs.get("sig2", 1.0),
+            penbump=kwargs.get("penbump", 0.4),
+            jc=kwargs.get("jc", 1.8),
+            beta=kwargs.get("beta", 5.0),
+            random_seed=kwargs.get("random_seed", None),
         )
-    
+
     try:
         # Set random seed for reproducibility
         if config.random_seed is not None:
@@ -273,10 +273,7 @@ def bump_fits(
 
 
 def create_1d_bump_animation(
-    fits_data,
-    config: Optional[AnimationConfig] = None,
-    save_path=None,
-    **kwargs
+    fits_data, config: AnimationConfig | None = None, save_path=None, **kwargs
 ):
     """
     Create 1D CANN bump animation using vectorized operations.
@@ -297,18 +294,18 @@ def create_1d_bump_animation(
     # Handle backward compatibility and configuration
     if config is None:
         config = AnimationConfig(
-            show=kwargs.get('show', False),
-            max_height_value=kwargs.get('max_height_value', 0.5),
-            max_width_range=kwargs.get('max_width_range', 40),
-            npoints=kwargs.get('npoints', 300),
-            nframes=kwargs.get('nframes', None),
-            fps=kwargs.get('fps', 5),
-            bump_selection=kwargs.get('bump_selection', "strongest"),
-            show_progress_bar=kwargs.get('show_progress_bar', True),
-            repeat=kwargs.get('repeat', False),
-            title=kwargs.get('title', "1D CANN Bump Animation")
+            show=kwargs.get("show", False),
+            max_height_value=kwargs.get("max_height_value", 0.5),
+            max_width_range=kwargs.get("max_width_range", 40),
+            npoints=kwargs.get("npoints", 300),
+            nframes=kwargs.get("nframes", None),
+            fps=kwargs.get("fps", 5),
+            bump_selection=kwargs.get("bump_selection", "strongest"),
+            show_progress_bar=kwargs.get("show_progress_bar", True),
+            repeat=kwargs.get("repeat", False),
+            title=kwargs.get("title", "1D CANN Bump Animation"),
         )
-    
+
     try:
         # ==== Smoothing functions ====
         def smooth(x, window=3):
@@ -381,7 +378,9 @@ def create_1d_bump_animation(
         height_range = np.max(heights_raw_smooth) - np.min(heights_raw_smooth)
         if height_range > 0:
             min_height, max_height = np.min(heights_raw_smooth), np.max(heights_raw_smooth)
-            heights = np.interp(heights_raw_smooth, (min_height, max_height), (0.1, config.max_height_value))
+            heights = np.interp(
+                heights_raw_smooth, (min_height, max_height), (0.1, config.max_height_value)
+            )
         else:
             heights = np.full_like(heights_raw_smooth, 0.1)
 
@@ -466,7 +465,9 @@ def create_1d_bump_animation(
             raise ValueError("Either save_path or show must be specified")
 
         # Create animation with repeat option
-        ani = FuncAnimation(fig, update, frames=nframes, init_func=init, blit=False, repeat=config.repeat)
+        ani = FuncAnimation(
+            fig, update, frames=nframes, init_func=init, blit=False, repeat=config.repeat
+        )
 
         # Save animation with progress tracking
         if save_path:
@@ -478,7 +479,9 @@ def create_1d_bump_animation(
 
                 try:
                     ani.save(
-                        save_path, writer=PillowWriter(fps=config.fps), progress_callback=progress_callback
+                        save_path,
+                        writer=PillowWriter(fps=config.fps),
+                        progress_callback=progress_callback,
                     )
                     pbar.close()
                     print(f"\nAnimation successfully saved to: {save_path}")

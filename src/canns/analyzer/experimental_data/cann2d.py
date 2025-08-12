@@ -1,17 +1,17 @@
 import multiprocessing as mp
 import numbers
 from dataclasses import dataclass
-from typing import Optional, Tuple, Dict, Any
+from typing import Any
 
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib import gridspec
 from numpy.exceptions import AxisError
 from ripser import ripser
-from scipy.ndimage import _ni_support, _nd_image
+from scipy.ndimage import _nd_image, _ni_support
 from scipy.ndimage._filters import _invalid_origin
 from scipy.sparse import coo_matrix
-from scipy.spatial.distance import squareform, pdist
+from scipy.spatial.distance import pdist, squareform
 from sklearn import preprocessing
 from tqdm import tqdm
 
@@ -22,6 +22,7 @@ from canns.analyzer.experimental_data._datasets_utils import load_grid_data
 @dataclass
 class SpikeEmbeddingConfig:
     """Configuration for spike train embedding."""
+
     res: int = 100000
     dt: int = 1000
     sigma: int = 5000
@@ -33,12 +34,13 @@ class SpikeEmbeddingConfig:
 @dataclass
 class TDAConfig:
     """Configuration for Topological Data Analysis."""
+
     dim: int = 6
     num_times: int = 5
     active_times: int = 15000
     k: int = 1000
     n_points: int = 1200
-    metric: str = 'cosine'
+    metric: str = "cosine"
     nbs: int = 800
     maxdim: int = 1
     coeff: int = 47
@@ -50,6 +52,7 @@ class TDAConfig:
 # ==================== Constants ====================
 class Constants:
     """Constants used throughout CANN2D analysis."""
+
     DEFAULT_FIGSIZE = (10, 8)
     DEFAULT_DPI = 300
     GAUSSIAN_SIGMA_FACTOR = 100
@@ -61,16 +64,19 @@ class Constants:
 # ==================== Custom Exceptions ====================
 class CANN2DError(Exception):
     """Base exception for CANN2D analysis errors."""
+
     pass
 
 
 class DataLoadError(CANN2DError):
     """Raised when data loading fails."""
+
     pass
 
 
 class ProcessingError(CANN2DError):
     """Raised when data processing fails."""
+
     pass
 
 
@@ -85,7 +91,6 @@ except ImportError:
         "Try numba by `pip install numba` to speed up the process.",
     )
 
-
     # Create dummy decorators if numba is not available
     def jit(*args, **kwargs):
         def decorator(func):
@@ -93,22 +98,20 @@ except ImportError:
 
         return decorator
 
-
     def njit(*args, **kwargs):
         def decorator(func):
             return func
 
         return decorator
 
-
     def prange(x):
         return range(x)
 
 
-def embed_spike_trains(spike_trains, config: Optional[SpikeEmbeddingConfig] = None, **kwargs):
+def embed_spike_trains(spike_trains, config: SpikeEmbeddingConfig | None = None, **kwargs):
     """
     Load and preprocess spike train data from npz file.
-    
+
     This function converts raw spike times into a time-binned spike matrix,
     optionally applying Gaussian smoothing and filtering based on animal movement speed.
 
@@ -126,12 +129,12 @@ def embed_spike_trains(spike_trains, config: Optional[SpikeEmbeddingConfig] = No
     # Handle backward compatibility and configuration
     if config is None:
         config = SpikeEmbeddingConfig(
-            res=kwargs.get('res', 100000),
-            dt=kwargs.get('dt', 1000),
-            sigma=kwargs.get('sigma', 5000),
-            smooth=kwargs.get('smooth0', True),
-            speed_filter=kwargs.get('speed0', True),
-            min_speed=kwargs.get('min_speed', 2.5)
+            res=kwargs.get("res", 100000),
+            dt=kwargs.get("dt", 1000),
+            sigma=kwargs.get("sigma", 5000),
+            smooth=kwargs.get("smooth0", True),
+            speed_filter=kwargs.get("speed0", True),
+            min_speed=kwargs.get("min_speed", 2.5),
         )
 
     try:
@@ -139,7 +142,7 @@ def embed_spike_trains(spike_trains, config: Optional[SpikeEmbeddingConfig] = No
         spikes_filtered = _extract_spike_data(spike_trains, config)
 
         # Step 2: Create time bins
-        time_bins = _create_time_bins(spike_trains['t'], config)
+        time_bins = _create_time_bins(spike_trains["t"], config)
 
         # Step 3: Bin spike data
         spikes_bin = _bin_spike_data(spikes_filtered, time_bins, config)
@@ -158,25 +161,27 @@ def embed_spike_trains(spike_trains, config: Optional[SpikeEmbeddingConfig] = No
         raise ProcessingError(f"Failed to embed spike trains: {e}") from e
 
 
-def _extract_spike_data(spike_trains: Dict[str, Any], config: SpikeEmbeddingConfig) -> Dict[int, np.ndarray]:
+def _extract_spike_data(
+    spike_trains: dict[str, Any], config: SpikeEmbeddingConfig
+) -> dict[int, np.ndarray]:
     """Extract and filter spike data within time window."""
     try:
         # Handle different spike data formats
-        spike_data = spike_trains['spike']
-        if hasattr(spike_data, 'item') and callable(spike_data.item):
+        spike_data = spike_trains["spike"]
+        if hasattr(spike_data, "item") and callable(spike_data.item):
             # numpy array with .item() method (from npz file)
             spikes_all = spike_data[()]
         elif isinstance(spike_data, dict):
             # Already a dictionary
             spikes_all = spike_data
-        elif isinstance(spike_data, (list, np.ndarray)):
+        elif isinstance(spike_data, list | np.ndarray):
             # List or array format
             spikes_all = spike_data
         else:
             # Try direct access
             spikes_all = spike_data
 
-        t = spike_trains['t']
+        t = spike_trains["t"]
 
         min_time0 = np.min(t)
         max_time0 = np.max(t)
@@ -204,9 +209,9 @@ def _extract_spike_data(spike_trains: Dict[str, Any], config: SpikeEmbeddingConf
         return spikes
 
     except KeyError as e:
-        raise DataLoadError(f"Missing required data key: {e}")
+        raise DataLoadError(f"Missing required data key: {e}") from e
     except Exception as e:
-        raise ProcessingError(f"Error extracting spike data: {e}")
+        raise ProcessingError(f"Error extracting spike data: {e}") from e
 
 
 def _create_time_bins(t: np.ndarray, config: SpikeEmbeddingConfig) -> np.ndarray:
@@ -220,10 +225,10 @@ def _create_time_bins(t: np.ndarray, config: SpikeEmbeddingConfig) -> np.ndarray
     return np.arange(np.floor(min_time), np.ceil(max_time) + 1, config.dt)
 
 
-def _bin_spike_data(spikes: Dict[int, np.ndarray], time_bins: np.ndarray,
-                    config: SpikeEmbeddingConfig) -> np.ndarray:
+def _bin_spike_data(
+    spikes: dict[int, np.ndarray], time_bins: np.ndarray, config: SpikeEmbeddingConfig
+) -> np.ndarray:
     """Convert spike times to binned spike matrix."""
-    t = np.arange(len(time_bins))
     min_time = time_bins[0]
     max_time = time_bins[-1]
 
@@ -232,9 +237,7 @@ def _bin_spike_data(spikes: Dict[int, np.ndarray], time_bins: np.ndarray,
     for n in spikes:
         spike_times = np.array(spikes[n] * config.res - min_time, dtype=int)
         # Filter valid spike times
-        spike_times = spike_times[
-            (spike_times < (max_time - min_time)) & (spike_times > 0)
-            ]
+        spike_times = spike_times[(spike_times < (max_time - min_time)) & (spike_times > 0)]
         spike_times = np.array(spike_times / config.dt, int)
 
         # Bin spikes
@@ -245,31 +248,22 @@ def _bin_spike_data(spikes: Dict[int, np.ndarray], time_bins: np.ndarray,
     return spikes_bin
 
 
-def _apply_temporal_smoothing(spikes_bin: np.ndarray,
-                              config: SpikeEmbeddingConfig) -> np.ndarray:
+def _apply_temporal_smoothing(spikes_bin: np.ndarray, config: SpikeEmbeddingConfig) -> np.ndarray:
     """Apply Gaussian temporal smoothing to spike matrix."""
-    # Calculate smoothing parameters
-    thresh = config.sigma * 5
-    num_thresh = int(thresh / config.dt)
-    num2_thresh = int(2 * num_thresh)
-    sig2 = 1 / (2 * (config.sigma / config.res) ** 2)
-
-    # Create Gaussian kernel
-    ker = np.exp(-np.power(np.arange(thresh + 1) / config.res, 2) * sig2)
-    kerwhere = np.arange(-num_thresh, num_thresh) * config.dt
+    # Calculate smoothing parameters (legacy implementation used custom kernel)
+    # Current implementation uses scipy's gaussian_filter1d for better performance
 
     # Apply smoothing (simplified version - could be further optimized)
     smoothed = np.zeros((spikes_bin.shape[0], spikes_bin.shape[1]))
 
     # Use scipy's gaussian_filter1d for better performance
     from scipy.ndimage import gaussian_filter1d
+
     sigma_bins = config.sigma / config.dt
 
     for n in range(spikes_bin.shape[1]):
         smoothed[:, n] = gaussian_filter1d(
-            spikes_bin[:, n].astype(float),
-            sigma=sigma_bins,
-            mode='constant'
+            spikes_bin[:, n].astype(float), sigma=sigma_bins, mode="constant"
         )
 
     # Normalize
@@ -277,31 +271,23 @@ def _apply_temporal_smoothing(spikes_bin: np.ndarray,
     return smoothed * normalization_factor
 
 
-def _apply_speed_filtering(spikes_bin: np.ndarray, spike_trains: Dict[str, Any],
-                           config: SpikeEmbeddingConfig) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+def _apply_speed_filtering(
+    spikes_bin: np.ndarray, spike_trains: dict[str, Any], config: SpikeEmbeddingConfig
+) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     """Apply speed-based filtering to spike data."""
     try:
         xx, yy, tt_pos, speed = _load_pos(
-            spike_trains['t'],
-            spike_trains['x'],
-            spike_trains['y'],
-            res=config.res,
-            dt=config.dt
+            spike_trains["t"], spike_trains["x"], spike_trains["y"], res=config.res, dt=config.dt
         )
 
         valid = speed > config.min_speed
 
-        return (
-            spikes_bin[valid, :],
-            xx[valid],
-            yy[valid],
-            tt_pos[valid]
-        )
+        return (spikes_bin[valid, :], xx[valid], yy[valid], tt_pos[valid])
 
     except KeyError as e:
-        raise DataLoadError(f"Missing position data for speed filtering: {e}")
+        raise DataLoadError(f"Missing position data for speed filtering: {e}") from e
     except Exception as e:
-        raise ProcessingError(f"Error in speed filtering: {e}")
+        raise ProcessingError(f"Error in speed filtering: {e}") from e
 
 
 def plot_projection(
@@ -338,14 +324,8 @@ def plot_projection(
     reduced_data = reduce_func(embed_data[::5])
 
     fig = plt.figure(figsize=figsize)
-    ax = fig.add_subplot(111, projection='3d')
-    ax.scatter(
-        reduced_data[:, 0],
-        reduced_data[:, 1],
-        reduced_data[:, 2],
-        s=1,
-        alpha=0.5
-    )
+    ax = fig.add_subplot(111, projection="3d")
+    ax.scatter(reduced_data[:, 0], reduced_data[:, 1], reduced_data[:, 2], s=1, alpha=0.5)
 
     ax.set_title(title)
     ax.set_xlabel(xlabel)
@@ -364,18 +344,19 @@ def plot_projection(
     return fig
 
 
-def tda_vis(embed_data: np.ndarray, config: Optional[TDAConfig] = None, **kwargs) -> Tuple[
-    Dict[str, Any], Optional[Dict[int, Any]]]:
+def tda_vis(
+    embed_data: np.ndarray, config: TDAConfig | None = None, **kwargs
+) -> tuple[dict[str, Any], dict[int, Any] | None]:
     """
     Topological Data Analysis visualization with optional shuffle testing.
-    
+
     Parameters:
         embed_data : ndarray
             Embedded spike train data.
         config : TDAConfig, optional
             Configuration object with all TDA parameters
         **kwargs : backward compatibility parameters
-    
+
     Returns:
         real_persistence : dict
             Persistent homology results for real data.
@@ -385,18 +366,18 @@ def tda_vis(embed_data: np.ndarray, config: Optional[TDAConfig] = None, **kwargs
     # Handle backward compatibility and configuration
     if config is None:
         config = TDAConfig(
-            dim=kwargs.get('dim', 6),
-            num_times=kwargs.get('num_times', 5),
-            active_times=kwargs.get('active_times', 15000),
-            k=kwargs.get('k', 1000),
-            n_points=kwargs.get('n_points', 1200),
-            metric=kwargs.get('metric', 'cosine'),
-            nbs=kwargs.get('nbs', 800),
-            maxdim=kwargs.get('maxdim', 1),
-            coeff=kwargs.get('coeff', 47),
-            show=kwargs.get('show', True),
-            do_shuffle=kwargs.get('do_shuffle', False),
-            num_shuffles=kwargs.get('num_shuffles', 1000)
+            dim=kwargs.get("dim", 6),
+            num_times=kwargs.get("num_times", 5),
+            active_times=kwargs.get("active_times", 15000),
+            k=kwargs.get("k", 1000),
+            n_points=kwargs.get("n_points", 1200),
+            metric=kwargs.get("metric", "cosine"),
+            nbs=kwargs.get("nbs", 800),
+            maxdim=kwargs.get("maxdim", 1),
+            coeff=kwargs.get("coeff", 47),
+            show=kwargs.get("show", True),
+            do_shuffle=kwargs.get("do_shuffle", False),
+            num_shuffles=kwargs.get("num_shuffles", 1000),
         )
 
     try:
@@ -418,7 +399,7 @@ def tda_vis(embed_data: np.ndarray, config: Optional[TDAConfig] = None, **kwargs
         raise ProcessingError(f"TDA analysis failed: {e}") from e
 
 
-def _compute_real_persistence(embed_data: np.ndarray, config: TDAConfig) -> Dict[str, Any]:
+def _compute_real_persistence(embed_data: np.ndarray, config: TDAConfig) -> dict[str, Any]:
     """Compute persistent homology for real data with progress tracking."""
 
     with tqdm(total=5, desc="Processing real data") as pbar:
@@ -427,7 +408,7 @@ def _compute_real_persistence(embed_data: np.ndarray, config: TDAConfig) -> Dict
         times_cube = _downsample_timepoints(embed_data, config.num_times)
         pbar.update(1)
 
-        # Step 2: Select most active time points  
+        # Step 2: Select most active time points
         pbar.set_description("Selecting active time points")
         movetimes = _select_active_timepoints(embed_data, times_cube, config.active_times)
         pbar.update(1)
@@ -455,7 +436,9 @@ def _downsample_timepoints(embed_data: np.ndarray, num_times: int) -> np.ndarray
     return np.arange(0, embed_data.shape[0], num_times)
 
 
-def _select_active_timepoints(embed_data: np.ndarray, times_cube: np.ndarray, active_times: int) -> np.ndarray:
+def _select_active_timepoints(
+    embed_data: np.ndarray, times_cube: np.ndarray, active_times: int
+) -> np.ndarray:
     """Select most active timepoints based on total activity."""
     activity_scores = np.sum(embed_data[times_cube, :], 1)
     most_active_indices = np.argsort(activity_scores)[-active_times:]
@@ -476,47 +459,45 @@ def _apply_denoising(dimred: np.ndarray, config: TDAConfig) -> np.ndarray:
         k=config.k,
         num_sample=config.n_points,
         omega=0.2,  # This could be made configurable
-        metric=config.metric
+        metric=config.metric,
     )
     return indstemp
 
 
-def _compute_persistence_homology(dimred: np.ndarray, indstemp: np.ndarray, config: TDAConfig) -> Dict[str, Any]:
+def _compute_persistence_homology(
+    dimred: np.ndarray, indstemp: np.ndarray, config: TDAConfig
+) -> dict[str, Any]:
     """Compute persistent homology using ripser."""
     d = _second_build(dimred, indstemp, metric=config.metric, nbs=config.nbs)
     np.fill_diagonal(d, 0)
 
     return ripser(
-        d,
-        maxdim=config.maxdim,
-        coeff=config.coeff,
-        do_cocycles=True,
-        distance_matrix=True
+        d, maxdim=config.maxdim, coeff=config.coeff, do_cocycles=True, distance_matrix=True
     )
 
 
-def _perform_shuffle_analysis(embed_data: np.ndarray, config: TDAConfig) -> Dict[int, Any]:
+def _perform_shuffle_analysis(embed_data: np.ndarray, config: TDAConfig) -> dict[int, Any]:
     """Perform shuffle analysis with progress tracking."""
     print(f"\nStarting shuffle analysis with {config.num_shuffles} iterations...")
 
     # Create parameters dict for shuffle analysis
     shuffle_params = {
-        'dim': config.dim,
-        'num_times': config.num_times,
-        'active_times': config.active_times,
-        'k': config.k,
-        'n_points': config.n_points,
-        'metric': config.metric,
-        'nbs': config.nbs,
-        'maxdim': config.maxdim,
-        'coeff': config.coeff
+        "dim": config.dim,
+        "num_times": config.num_times,
+        "active_times": config.active_times,
+        "k": config.k,
+        "n_points": config.n_points,
+        "metric": config.metric,
+        "nbs": config.nbs,
+        "maxdim": config.maxdim,
+        "coeff": config.coeff,
     }
 
     shuffle_max = _run_shuffle_analysis(
         embed_data,
         num_shuffles=config.num_shuffles,
         num_cores=Constants.MULTIPROCESSING_CORES,
-        **shuffle_params
+        **shuffle_params,
     )
 
     # Print shuffle analysis summary
@@ -525,19 +506,22 @@ def _perform_shuffle_analysis(embed_data: np.ndarray, config: TDAConfig) -> Dict
     return shuffle_max
 
 
-def _print_shuffle_summary(shuffle_max: Dict[int, Any]) -> None:
+def _print_shuffle_summary(shuffle_max: dict[int, Any]) -> None:
     """Print summary of shuffle analysis results."""
     print("\nSummary of shuffle-based analysis:")
     for dim_idx in [0, 1, 2]:
         if shuffle_max and dim_idx in shuffle_max and shuffle_max[dim_idx]:
             values = shuffle_max[dim_idx]
-            print(f"H{dim_idx}: {len(values)} valid iterations | "
-                  f"Mean maximum persistence: {np.mean(values):.4f} | "
-                  f"99.9th percentile: {np.percentile(values, 99.9):.4f}")
+            print(
+                f"H{dim_idx}: {len(values)} valid iterations | "
+                f"Mean maximum persistence: {np.mean(values):.4f} | "
+                f"99.9th percentile: {np.percentile(values, 99.9):.4f}"
+            )
 
 
-def _handle_visualization(real_persistence: Dict[str, Any], shuffle_max: Optional[Dict[int, Any]],
-                          config: TDAConfig) -> None:
+def _handle_visualization(
+    real_persistence: dict[str, Any], shuffle_max: dict[int, Any] | None, config: TDAConfig
+) -> None:
     """Handle visualization based on configuration."""
     if config.show:
         if config.do_shuffle and shuffle_max is not None:
@@ -550,13 +534,7 @@ def _handle_visualization(real_persistence: Dict[str, Any], shuffle_max: Optiona
         plt.close()
 
 
-def _load_pos(
-    t,
-    x,
-    y,
-    res=100000,
-    dt=1000
-):
+def _load_pos(t, x, y, res=100000, dt=1000):
     """
     Compute animal position and speed from spike data file.
 
@@ -594,28 +572,42 @@ def _load_pos(
 
     idx = np.concatenate((np.unique(idtt), [np.max(idtt) + 1]))
     divisor = np.bincount(idtt)
-    steps = (1.0 / divisor[divisor > 0])
+    steps = 1.0 / divisor[divisor > 0]
     N = np.max(divisor)
     ranges = np.multiply(np.arange(N)[np.newaxis, :], steps[:, np.newaxis])
     ranges[ranges >= 1] = np.nan
 
-    rangesx = x[idx[:-1], np.newaxis] + np.multiply(ranges, (x[idx[1:]] - x[idx[:-1]])[:, np.newaxis])
+    rangesx = x[idx[:-1], np.newaxis] + np.multiply(
+        ranges, (x[idx[1:]] - x[idx[:-1]])[:, np.newaxis]
+    )
     xx = rangesx[~np.isnan(ranges)]
 
-    rangesy = y[idx[:-1], np.newaxis] + np.multiply(ranges, (y[idx[1:]] - y[idx[:-1]])[:, np.newaxis])
+    rangesy = y[idx[:-1], np.newaxis] + np.multiply(
+        ranges, (y[idx[1:]] - y[idx[:-1]])[:, np.newaxis]
+    )
     yy = rangesy[~np.isnan(ranges)]
 
     xxs = _gaussian_filter1d(xx - np.min(xx), sigma=100)
     yys = _gaussian_filter1d(yy - np.min(yy), sigma=100)
     dx = (xxs[1:] - xxs[:-1]) * 100
     dy = (yys[1:] - yys[:-1]) * 100
-    speed = np.sqrt(dx ** 2 + dy ** 2) / 0.01
+    speed = np.sqrt(dx**2 + dy**2) / 0.01
     speed = np.concatenate(([speed[0]], speed))
     return xx, yy, tt, speed
 
 
-def _gaussian_filter1d(input, sigma, axis=-1, order=0, output=None,
-                       mode="reflect", cval=0.0, truncate=4.0, *, radius=None):
+def _gaussian_filter1d(
+    input,
+    sigma,
+    axis=-1,
+    order=0,
+    output=None,
+    mode="reflect",
+    cval=0.0,
+    truncate=4.0,
+    *,
+    radius=None,
+):
     """1-D Gaussian filter.
 
     Parameters
@@ -676,7 +668,7 @@ def _gaussian_filter1d(input, sigma, axis=-1, order=0, output=None,
     if radius is not None:
         lw = radius
     if not isinstance(lw, numbers.Integral) or lw < 0:
-        raise ValueError('Radius must be a nonnegative integer.')
+        raise ValueError("Radius must be a nonnegative integer.")
     # Since we are calling correlate, not convolve, revert the kernel
     weights = _gaussian_kernel1d(sigma, order, lw)[::-1]
     return _correlate1d(input, weights, axis, output, mode, cval, 0)
@@ -687,11 +679,11 @@ def _gaussian_kernel1d(sigma, order, radius):
     Computes a 1-D Gaussian convolution kernel.
     """
     if order < 0:
-        raise ValueError('order must be non-negative')
+        raise ValueError("order must be non-negative")
     exponent_range = np.arange(order + 1)
     sigma2 = sigma * sigma
     x = np.arange(-radius, radius + 1)
-    phi_x = np.exp(-0.5 / sigma2 * x ** 2)
+    phi_x = np.exp(-0.5 / sigma2 * x**2)
     phi_x = phi_x / phi_x.sum()
 
     if order == 0:
@@ -713,8 +705,7 @@ def _gaussian_kernel1d(sigma, order, radius):
         return q * phi_x
 
 
-def _correlate1d(input, weights, axis=-1, output=None, mode="reflect",
-                 cval=0.0, origin=0):
+def _correlate1d(input, weights, axis=-1, output=None, mode="reflect", cval=0.0, origin=0):
     """Calculate a 1-D correlation along the given axis.
 
     The lines of the array along the given axis are correlated with the
@@ -744,58 +735,51 @@ def _correlate1d(input, weights, axis=-1, output=None, mode="reflect",
     """
     input = np.asarray(input)
     weights = np.asarray(weights)
-    complex_input = input.dtype.kind == 'c'
-    complex_weights = weights.dtype.kind == 'c'
+    complex_input = input.dtype.kind == "c"
+    complex_weights = weights.dtype.kind == "c"
     if complex_input or complex_weights:
         if complex_weights:
             weights = weights.conj()
             weights = weights.astype(np.complex128, copy=False)
         kwargs = dict(axis=axis, mode=mode, origin=origin)
         output = _ni_support._get_output(output, input, complex_output=True)
-        return _complex_via_real_components(_correlate1d, input, weights,
-                                            output, cval, **kwargs)
+        return _complex_via_real_components(_correlate1d, input, weights, output, cval, **kwargs)
 
     output = _ni_support._get_output(output, input)
     weights = np.asarray(weights, dtype=np.float64)
     if weights.ndim != 1 or weights.shape[0] < 1:
-        raise RuntimeError('no filter weights given')
+        raise RuntimeError("no filter weights given")
     if not weights.flags.contiguous:
         weights = weights.copy()
     axis = _normalize_axis_index(axis, input.ndim)
     if _invalid_origin(origin, len(weights)):
-        raise ValueError('Invalid origin; origin must satisfy '
-                         '-(len(weights) // 2) <= origin <= '
-                         '(len(weights)-1) // 2')
+        raise ValueError(
+            "Invalid origin; origin must satisfy "
+            "-(len(weights) // 2) <= origin <= "
+            "(len(weights)-1) // 2"
+        )
     mode = _ni_support._extend_mode_to_code(mode)
-    _nd_image.correlate1d(input, weights, axis, output, mode, cval,
-                          origin)
+    _nd_image.correlate1d(input, weights, axis, output, mode, cval, origin)
     return output
 
 
 def _complex_via_real_components(func, input, weights, output, cval, **kwargs):
     """Complex convolution via a linear combination of real convolutions."""
-    complex_input = input.dtype.kind == 'c'
-    complex_weights = weights.dtype.kind == 'c'
+    complex_input = input.dtype.kind == "c"
+    complex_weights = weights.dtype.kind == "c"
     if complex_input and complex_weights:
         # real component of the output
-        func(input.real, weights.real, output=output.real,
-             cval=np.real(cval), **kwargs)
-        output.real -= func(input.imag, weights.imag, output=None,
-                            cval=np.imag(cval), **kwargs)
+        func(input.real, weights.real, output=output.real, cval=np.real(cval), **kwargs)
+        output.real -= func(input.imag, weights.imag, output=None, cval=np.imag(cval), **kwargs)
         # imaginary component of the output
-        func(input.real, weights.imag, output=output.imag,
-             cval=np.real(cval), **kwargs)
-        output.imag += func(input.imag, weights.real, output=None,
-                            cval=np.imag(cval), **kwargs)
+        func(input.real, weights.imag, output=output.imag, cval=np.real(cval), **kwargs)
+        output.imag += func(input.imag, weights.real, output=None, cval=np.imag(cval), **kwargs)
     elif complex_input:
-        func(input.real, weights, output=output.real, cval=np.real(cval),
-             **kwargs)
-        func(input.imag, weights, output=output.imag, cval=np.imag(cval),
-             **kwargs)
+        func(input.real, weights, output=output.real, cval=np.real(cval), **kwargs)
+        func(input.imag, weights, output=output.imag, cval=np.imag(cval), **kwargs)
     else:
         if np.iscomplexobj(cval):
-            raise ValueError("Cannot provide a complex-valued cval when the "
-                             "input is real.")
+            raise ValueError("Cannot provide a complex-valued cval when the input is real.")
         func(input, weights.real, output=output.real, cval=cval, **kwargs)
         func(input, weights.imag, output=output.imag, cval=cval, **kwargs)
     return output
@@ -812,9 +796,18 @@ def _normalize_axis_index(axis, ndim):
     return axis
 
 
-def _compute_persistence(sspikes, dim=6, num_times=5, active_times=15000,
-                         k=1000, n_points=1200, metric='cosine',
-                         nbs=800, maxdim=1, coeff=47):
+def _compute_persistence(
+    sspikes,
+    dim=6,
+    num_times=5,
+    active_times=15000,
+    k=1000,
+    n_points=1200,
+    metric="cosine",
+    nbs=800,
+    maxdim=1,
+    coeff=47,
+):
     # Time point downsampling
     times_cube = np.arange(0, sspikes.shape[0], num_times)
 
@@ -876,12 +869,11 @@ def _pca(data, dim=2):
 
     tot = np.sum(evals)
     var_exp = [(i / tot) * 100 for i in sorted(evals[:dim], reverse=True)]
-    cum_var_exp = np.cumsum(var_exp)
     components = np.dot(evecs.T, data.T).T
     return components, var_exp, evals[:dim]
 
 
-def _sample_denoising(data, k=10, num_sample=500, omega=0.2, metric='euclidean'):
+def _sample_denoising(data, k=10, num_sample=500, omega=0.2, metric="euclidean"):
     """
     Perform denoising and greedy sampling based on mutual k-NN graph.
 
@@ -898,13 +890,6 @@ def _sample_denoising(data, k=10, num_sample=500, omega=0.2, metric='euclidean')
         Fs (ndarray): Sampling scores at each step.
     """
     n = data.shape[0]
-    leftinds = np.arange(n)
-    F_D = np.zeros(n)
-    if metric in ("cosine", "correlation", "dice", "jaccard"):
-        angular = True
-    else:
-        angular = False
-
     X = squareform(pdist(data, metric))
     knn_indices = np.argsort(X)[:, :k]
     knn_dists = X[np.arange(X.shape[0])[:, None], knn_indices].copy()
@@ -915,7 +900,7 @@ def _sample_denoising(data, k=10, num_sample=500, omega=0.2, metric='euclidean')
     result.eliminate_zeros()
     transpose = result.transpose()
     prod_matrix = result.multiply(transpose)
-    result = (result + transpose - prod_matrix)
+    result = result + transpose - prod_matrix
     result.eliminate_zeros()
     X = result.toarray()
     F = np.sum(X, 1)
@@ -942,9 +927,7 @@ def _sample_denoising(data, k=10, num_sample=500, omega=0.2, metric='euclidean')
     return inds, d, Fs
 
 
-@njit(
-    fastmath=True
-)
+@njit(fastmath=True)
 def _smooth_knn_dist(distances, k, n_iter=64, local_connectivity=0.0, bandwidth=1.0):
     """
     Compute smoothed local distances for kNN graph with entropy balancing.
@@ -983,16 +966,13 @@ def _smooth_knn_dist(distances, k, n_iter=64, local_connectivity=0.0, bandwidth=
             if index > 0:
                 rho[i] = non_zero_dists[index - 1]
                 if interpolation > 1e-5:
-                    rho[i] += interpolation * (
-                        non_zero_dists[index] - non_zero_dists[index - 1]
-                    )
+                    rho[i] += interpolation * (non_zero_dists[index] - non_zero_dists[index - 1])
             else:
                 rho[i] = interpolation * non_zero_dists[0]
         elif non_zero_dists.shape[0] > 0:
             rho[i] = np.max(non_zero_dists)
 
-        for n in range(n_iter):
-
+        for _ in range(n_iter):
             psum = 0.0
             for j in range(1, distances.shape[1]):
                 d = distances[i, j] - rho[i]
@@ -1069,7 +1049,7 @@ def _compute_membership_strengths(knn_indices, knn_dists, sigmas, rhos):
     return rows, cols, vals
 
 
-def _second_build(data, indstemp, nbs=800, metric='cosine'):
+def _second_build(data, indstemp, nbs=800, metric="cosine"):
     """
     Reconstruct distance matrix after denoising for persistent homology.
 
@@ -1099,7 +1079,7 @@ def _second_build(data, indstemp, nbs=800, metric='cosine'):
     result.eliminate_zeros()
     transpose = result.transpose()
     prod_matrix = result.multiply(transpose)
-    result = (result + transpose - prod_matrix)
+    result = result + transpose - prod_matrix
     result.eliminate_zeros()
 
     # Build the final distance matrix
@@ -1128,9 +1108,13 @@ def _run_shuffle_analysis(sspikes, num_shuffles=1000, num_cores=4, **kwargs):
 
     # Use multiprocessing pool for parallel processing
     with mp.Pool(processes=num_cores) as pool:
-        results = list(tqdm(pool.imap(_process_single_shuffle, tasks),
-                            total=num_shuffles,
-                            desc="Running shuffle analysis"))
+        results = list(
+            tqdm(
+                pool.imap(_process_single_shuffle, tasks),
+                total=num_shuffles,
+                desc="Running shuffle analysis",
+            )
+        )
 
     # Collect results
     for res in results:
@@ -1149,9 +1133,9 @@ def _process_single_shuffle(args):
 
         dim_max_lifetimes = {}
         for dim in [0, 1, 2]:
-            if dim < len(persistence['dgms']):
+            if dim < len(persistence["dgms"]):
                 # Filter out infinite values
-                valid_bars = [bar for bar in persistence['dgms'][dim] if not np.isinf(bar[1])]
+                valid_bars = [bar for bar in persistence["dgms"][dim] if not np.isinf(bar[1])]
                 if valid_bars:
                     lifetimes = [bar[1] - bar[0] for bar in valid_bars]
                     if lifetimes:
@@ -1187,13 +1171,13 @@ def _plot_barcode_with_shuffle(persistence, shuffle_max):
     alpha = 1
     inf_delta = 0.1
     colormap = cs
-    maxdim = len(persistence['dgms']) - 1
+    maxdim = len(persistence["dgms"]) - 1
     dims = np.arange(maxdim + 1)
 
     min_birth, max_death = 0, 0
     for dim in dims:
         # Filter out infinite values
-        valid_bars = [bar for bar in persistence['dgms'][dim] if not np.isinf(bar[1])]
+        valid_bars = [bar for bar in persistence["dgms"][dim] if not np.isinf(bar[1])]
         if valid_bars:
             min_birth = min(min_birth, np.min(valid_bars))
             max_death = max(max_death, np.max(valid_bars))
@@ -1218,23 +1202,23 @@ def _plot_barcode_with_shuffle(persistence, shuffle_max):
         else:
             thresholds[dim] = 0
 
-    for dit, dim in enumerate(dims):
+    for _, dim in enumerate(dims):
         axes = plt.subplot(gs[dim])
-        axes.axis('off')
+        axes.axis("off")
 
         # Add gray background to represent shuffle region
         if dim in thresholds:
-            axes.axvspan(0, thresholds[dim], alpha=0.2, color='gray', zorder=-3)
-            axes.axvline(x=thresholds[dim], color='gray', linestyle='--', alpha=0.7)
+            axes.axvspan(0, thresholds[dim], alpha=0.2, color="gray", zorder=-3)
+            axes.axvline(x=thresholds[dim], color="gray", linestyle="--", alpha=0.7)
 
         # Filter out infinite values
-        d = np.array([bar for bar in persistence['dgms'][dim] if not np.isinf(bar[1])])
+        d = np.array([bar for bar in persistence["dgms"][dim] if not np.isinf(bar[1])])
         if len(d) == 0:
             d = np.zeros((0, 2))
 
         d = np.copy(d)
         d[np.isinf(d[:, 1]), 1] = infinity
-        dlife = (d[:, 1] - d[:, 0])
+        dlife = d[:, 1] - d[:, 0]
 
         # Select top 30 longest-lived bars
         if len(dlife) > 0:
@@ -1250,7 +1234,7 @@ def _plot_barcode_with_shuffle(persistence, shuffle_max):
 
             # Draw bars
             for i, idx in enumerate(dinds):
-                color = 'red' if idx in significant_bars else colormap[dim]
+                color = "red" if idx in significant_bars else colormap[dim]
                 axes.barh(
                     0.5 + i,
                     dlife[idx],
@@ -1265,10 +1249,10 @@ def _plot_barcode_with_shuffle(persistence, shuffle_max):
         else:
             indsall = 0
 
-        axes.plot([0, 0], [0, indsall], c='k', linestyle='-', lw=1)
-        axes.plot([0, indsall], [0, 0], c='k', linestyle='-', lw=1)
+        axes.plot([0, 0], [0, indsall], c="k", linestyle="-", lw=1)
+        axes.plot([0, indsall], [0, 0], c="k", linestyle="-", lw=1)
         axes.set_xlim([0, infinity])
-        axes.set_title(f"$H_{dim}$", loc='left')
+        axes.set_title(f"$H_{dim}$", loc="left")
 
     plt.tight_layout()
     return fig
@@ -1294,9 +1278,5 @@ if __name__ == "__main__":
     # plot_projection(reduce_func=reduce_func, embed_data=spikes, show=True)
 
     real_persistence, shuffle_max = tda_vis(
-        embed_data=spikes,
-        maxdim=1,
-        do_shuffle=True,
-        num_shuffles=3,
-        show=True
+        embed_data=spikes, maxdim=1, do_shuffle=True, num_shuffles=3, show=True
     )

@@ -8,8 +8,8 @@ other neurophysiological _datasets.
 
 from pathlib import Path
 from typing import Any
-import numpy as np
 
+import numpy as np
 
 from canns import _datasets
 
@@ -143,9 +143,9 @@ def load_grid_data(
                 result["y"] = data["y"]
 
             # Handle different spike data formats
-            if hasattr(result['spike'], 'item') and isinstance(result['spike'].item(), dict):
+            if hasattr(result["spike"], "item") and isinstance(result["spike"].item(), dict):
                 # Spike data is stored as a dictionary inside numpy array
-                spike_dict = result['spike'].item()
+                spike_dict = result["spike"].item()
                 print(f"Loaded {dataset_key}: {len(spike_dict)} neurons")
             else:
                 print(f"Loaded {dataset_key}: {len(result['spike'])} neurons")
