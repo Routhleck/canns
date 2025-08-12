@@ -8,25 +8,29 @@ from scipy.optimize import linear_sum_assignment
 from scipy.special import i0
 from tqdm import tqdm
 
-
 try:
     from numba import jit, njit, prange
+
     HAS_NUMBA = True
 except ImportError:
     HAS_NUMBA = False
+
     # Create dummy decorators if numba is not available
     def jit(*args, **kwargs):
         def decorator(func):
             return func
+
         return decorator
-    
+
     def njit(*args, **kwargs):
         def decorator(func):
             return func
+
         return decorator
-    
+
     def prange(x):
         return range(x)
+
 
 from canns.analyzer.experimental_data._datasets_utils import load_roi_data
 
@@ -55,7 +59,7 @@ def bump_fits(
 
     # MCMC parameters
     sigcoup = 2 * np.pi / n_roi
-    sigcoup2 = sigcoup ** 2
+    sigcoup2 = sigcoup**2
 
     nbt = data.shape[0]
     flat_data = data.flatten()
@@ -95,10 +99,10 @@ def bump_fits(
     for t, bump in enumerate(bumps):
         # 1. fills fits_array
         if bump.nbump > 0:
-            fits_array[fits_idx:fits_idx + bump.nbump, 0] = t
-            fits_array[fits_idx:fits_idx + bump.nbump, 1] = bump.pos[:bump.nbump]
-            fits_array[fits_idx:fits_idx + bump.nbump, 2] = bump.ampli[:bump.nbump]
-            fits_array[fits_idx:fits_idx + bump.nbump, 3] = bump.kappa[:bump.nbump]
+            fits_array[fits_idx : fits_idx + bump.nbump, 0] = t
+            fits_array[fits_idx : fits_idx + bump.nbump, 1] = bump.pos[: bump.nbump]
+            fits_array[fits_idx : fits_idx + bump.nbump, 2] = bump.ampli[: bump.nbump]
+            fits_array[fits_idx : fits_idx + bump.nbump, 3] = bump.kappa[: bump.nbump]
             fits_idx += bump.nbump
 
         # 2. fills nbump_array
@@ -108,28 +112,34 @@ def bump_fits(
         # compute von Mises distribution for bumps
         if bump.nbump > 0:
             # get bump parameters
-            pos_array = np.array(bump.pos[:bump.nbump])
-            ampli_array = np.array(bump.ampli[:bump.nbump])
-            kappa_array = np.array(bump.kappa[:bump.nbump])
+            pos_array = np.array(bump.pos[: bump.nbump])
+            ampli_array = np.array(bump.ampli[: bump.nbump])
+            kappa_array = np.array(bump.kappa[: bump.nbump])
 
             # Use optimized von Mises computation if available
             if HAS_NUMBA:
                 if n_roi >= 64:
-                    von_mises_vals = _compute_predicted_intensity_parallel(pos_array, kappa_array, ampli_array, bump.nbump, n_roi)
+                    von_mises_vals = _compute_predicted_intensity_parallel(
+                        pos_array, kappa_array, ampli_array, bump.nbump, n_roi
+                    )
                 else:
-                    von_mises_vals = _compute_predicted_intensity(pos_array, kappa_array, ampli_array, bump.nbump, n_roi)
+                    von_mises_vals = _compute_predicted_intensity(
+                        pos_array, kappa_array, ampli_array, bump.nbump, n_roi
+                    )
                 nbump_array[t, 2:] = von_mises_vals
             else:
                 # Fallback to broadcasting computation
                 diff = x_grid[:, None] - pos_array[None, :]
-                von_mises_vals = ampli_array[None, :] * np.exp(
-                    kappa_array[None, :] * np.cos(diff)
-                ) / (2 * np.pi * i0(kappa_array[None, :]))
+                von_mises_vals = (
+                    ampli_array[None, :]
+                    * np.exp(kappa_array[None, :] * np.cos(diff))
+                    / (2 * np.pi * i0(kappa_array[None, :]))
+                )
                 nbump_array[t, 2:] = np.sum(von_mises_vals, axis=1)
 
         # 3. fills centrbump_array
         if bump.nbump > 0:
-            data_segment = flat_data[t * n_roi:(t + 1) * n_roi]
+            data_segment = flat_data[t * n_roi : (t + 1) * n_roi]
 
             # get distances and normalized amplitudes
             for i in range(bump.nbump):
@@ -151,13 +161,15 @@ def bump_fits(
             centrbump_idx += bump.nbump * n_roi
 
     if save_path is not None:
-        os.makedirs(os.path.dirname(save_path) if os.path.dirname(save_path) else '.', exist_ok=True)
+        os.makedirs(
+            os.path.dirname(save_path) if os.path.dirname(save_path) else ".", exist_ok=True
+        )
 
         np.savez(
             save_path,
             fits=fits_array,  # shape: (n_fits, 4) - [time, pos, amplitude, kappa]
             nbump=nbump_array,  # shape: (n_timepoints, n_roi+2) - [time, n_bumps, reconstructed_signal...]
-            centrbump=centrbump_array  # shape: (n_points, 2) - [dist, normalized_amplitude]
+            centrbump=centrbump_array,  # shape: (n_points, 2) - [dist, normalized_amplitude]
         )
 
     return bumps, fits_array, nbump_array, centrbump_array
@@ -172,10 +184,10 @@ def create_1d_bump_animation(
     npoints=300,
     nframes=None,
     fps=5,
-    bump_selection='strongest',
+    bump_selection="strongest",
     show_progress_bar=True,
     repeat=False,
-    title='1D CANN Bump Animation'
+    title="1D CANN Bump Animation",
 ):
     """
     Create 1D CANN bump animation using vectorized operations
@@ -208,7 +220,7 @@ def create_1d_bump_animation(
         Whether the animation should repeat
     title : str
         Title for the animation
-        
+
     Returns:
     --------
     matplotlib.animation.FuncAnimation
@@ -218,22 +230,24 @@ def create_1d_bump_animation(
     # ==== Smoothing functions ====
     def smooth(x, window=3):
         """Apply simple moving average smoothing"""
-        return np.convolve(x, np.ones(window) / window, mode='same')
+        return np.convolve(x, np.ones(window) / window, mode="same")
 
     def smooth_circle(values, window=5):
         """Apply circular smoothing for periodic data"""
         pad = window // 2
         values_ext = np.concatenate([values[-pad:], values, values[:pad]])
         kernel = np.ones(window) / window
-        smoothed = np.convolve(values_ext, kernel, mode='valid')
+        smoothed = np.convolve(values_ext, kernel, mode="valid")
         return smoothed
 
     # ==== Data validation ====
     if fits_data is None or len(fits_data) == 0:
         raise ValueError("No bump data provided")
-    
+
     if fits_data.ndim != 2 or fits_data.shape[1] != 4:
-        raise ValueError(f"fits_data must be a 2D array with 4 columns, got shape {fits_data.shape}")
+        raise ValueError(
+            f"fits_data must be a 2D array with 4 columns, got shape {fits_data.shape}"
+        )
 
     # ==== Extract time information ====
     times = fits_data[:, 0].astype(int)
@@ -258,7 +272,7 @@ def create_1d_bump_animation(
             time_data = fits_data[time_mask]
 
             # Select bump based on strategy
-            if bump_selection == 'strongest':
+            if bump_selection == "strongest":
                 best_idx = np.argmax(time_data[:, 2])  # Maximum amplitude
             else:  # 'first'
                 best_idx = 0
@@ -291,20 +305,22 @@ def create_1d_bump_animation(
     width_range = np.max(widths_raw_smooth) - np.min(widths_raw_smooth)
     if width_range > 0:
         min_width, max_width = np.min(widths_raw_smooth), np.max(widths_raw_smooth)
-        width_ranges = np.interp(widths_raw_smooth, (min_width, max_width), (2, max_width_range)).astype(int)
+        width_ranges = np.interp(
+            widths_raw_smooth, (min_width, max_width), (2, max_width_range)
+        ).astype(int)
     else:
         width_ranges = np.full_like(widths_raw_smooth, max_width_range // 2, dtype=int)
 
     # ==== Initialize matplotlib animation ====
     fig, ax = plt.subplots(figsize=(4, 4), dpi=100)
-    line, = ax.plot([], [], color='red', linewidth=2)
+    (line,) = ax.plot([], [], color="red", linewidth=2)
 
     def init():
         """Initialize animation"""
         ax.set_xlim(-1.8, 1.8)
         ax.set_ylim(-1.8, 1.8)
-        ax.axis('off')
-        return line,
+        ax.axis("off")
+        return (line,)
 
     def update(frame):
         """Update function for each animation frame"""
@@ -326,7 +342,7 @@ def create_1d_bump_animation(
         # Vectorized kernel application (could be further optimized)
         for offset in range(-max_kernel_size, max_kernel_size + 1):
             dist = abs(offset)
-            gauss_weight = np.exp(-dist ** 2 / (2 * sigma ** 2))
+            gauss_weight = np.exp(-(dist**2) / (2 * sigma**2))
             if gauss_weight < 0.01:  # Skip negligible contributions
                 continue
             idx = (center_idx + offset) % npoints
@@ -343,43 +359,45 @@ def create_1d_bump_animation(
         ax.clear()
         ax.set_xlim(-1.8, 1.8)
         ax.set_ylim(-1.8, 1.8)
-        ax.axis('off')
-        ax.set_title(title, fontsize=14, fontweight='bold', pad=20)
+        ax.axis("off")
+        ax.set_title(title, fontsize=14, fontweight="bold", pad=20)
 
         # Draw base circle (reference)
         inner_x = base_radius * np.cos(theta)
         inner_y = base_radius * np.sin(theta)
-        ax.plot(inner_x, inner_y, color='gray', linestyle='--', linewidth=1)
+        ax.plot(inner_x, inner_y, color="gray", linestyle="--", linewidth=1)
 
         # Draw bump curve
-        ax.plot(x, y, color='red', linewidth=2)
+        ax.plot(x, y, color="red", linewidth=2)
 
         # Draw bump center marker
         dot_radius = base_radius * 0.96
         center_x = dot_radius * np.cos(pos_angle)
         center_y = dot_radius * np.sin(pos_angle)
-        ax.plot(center_x, center_y, 'o', color='black', markersize=6)
+        ax.plot(center_x, center_y, "o", color="black", markersize=6)
 
-        return line,
+        return (line,)
 
     # ==== Create and save animation ====
     if save_path is None and not show:
         raise ValueError("Either save_path or show must be specified")
-    
+
     try:
         # Create animation with repeat option
         ani = FuncAnimation(fig, update, frames=nframes, init_func=init, blit=False, repeat=repeat)
-        
+
         # Save animation with progress tracking
         if save_path:
             if show_progress_bar:
                 pbar = tqdm(total=nframes, desc=f"Saving animation to {save_path}")
-                
+
                 def progress_callback(current_frame, total_frames):
                     pbar.update(1)
-                    
+
                 try:
-                    ani.save(save_path, writer=PillowWriter(fps=fps), progress_callback=progress_callback)
+                    ani.save(
+                        save_path, writer=PillowWriter(fps=fps), progress_callback=progress_callback
+                    )
                     pbar.close()
                     print(f"\nAnimation successfully saved to: {save_path}")
                 except Exception as e:
@@ -393,12 +411,12 @@ def create_1d_bump_animation(
                 except Exception as e:
                     print(f"Error saving animation: {e}")
                     raise
-        
+
         if show:
             plt.show()
-            
+
         return ani
-        
+
     finally:
         # Ensure we clean up the figure to avoid memory leaks
         plt.close(fig)
@@ -433,17 +451,18 @@ def _von_mises_kernel(pos, kappa, ampli, x_roi):
         i0_approx = np.exp(kappa) / np.sqrt(2 * np.pi * kappa)
     else:
         # For small kappa, use Taylor expansion
-        i0_approx = 1.0 + (kappa * kappa / 4.0) + (kappa ** 4 / 64.0)
-    
+        i0_approx = 1.0 + (kappa * kappa / 4.0) + (kappa**4 / 64.0)
+
     result = ampli * np.exp(kappa * np.cos(angle)) / (2 * np.pi * i0_approx)
     return result
+
 
 @njit
 def _compute_predicted_intensity(positions, kappas, amplis, n_bumps, n_roi):
     """Numba-optimized predicted intensity calculation (serial for small n_roi)"""
     predicted = np.zeros(n_roi)
     x_grid = np.arange(n_roi) * 2 * np.pi / n_roi
-    
+
     # Use serial execution for small n_roi (< 64) to avoid parallel overhead
     for j in range(n_roi):
         x_roi = x_grid[j]
@@ -452,23 +471,24 @@ def _compute_predicted_intensity(positions, kappas, amplis, n_bumps, n_roi):
             angle = x_roi - positions[i]
             kappa = kappas[i]
             ampli = amplis[i]
-            
+
             # Fast i0 approximation
             if kappa > 3.75:
                 i0_approx = np.exp(kappa) / np.sqrt(2 * np.pi * kappa)
             else:
-                i0_approx = 1.0 + (kappa * kappa / 4.0) + (kappa ** 4 / 64.0)
-            
+                i0_approx = 1.0 + (kappa * kappa / 4.0) + (kappa**4 / 64.0)
+
             predicted[j] += ampli * np.exp(kappa * np.cos(angle)) / (2 * np.pi * i0_approx)
-    
+
     return predicted
+
 
 @njit(parallel=True)
 def _compute_predicted_intensity_parallel(positions, kappas, amplis, n_bumps, n_roi):
     """Parallel version for large n_roi (>= 64)"""
     predicted = np.zeros(n_roi)
     x_grid = np.arange(n_roi) * 2 * np.pi / n_roi
-    
+
     # Parallelize over ROI positions for large datasets
     for j in prange(n_roi):
         x_roi = x_grid[j]
@@ -476,15 +496,16 @@ def _compute_predicted_intensity_parallel(positions, kappas, amplis, n_bumps, n_
             angle = x_roi - positions[i]
             kappa = kappas[i]
             ampli = amplis[i]
-            
+
             if kappa > 3.75:
                 i0_approx = np.exp(kappa) / np.sqrt(2 * np.pi * kappa)
             else:
-                i0_approx = 1.0 + (kappa * kappa / 4.0) + (kappa ** 4 / 64.0)
-            
+                i0_approx = 1.0 + (kappa * kappa / 4.0) + (kappa**4 / 64.0)
+
             predicted[j] += ampli * np.exp(kappa * np.cos(angle)) / (2 * np.pi * i0_approx)
-    
+
     return predicted
+
 
 def site_logl(
     intens,
@@ -503,21 +524,25 @@ def site_logl(
     # Predicted intensity
     if bump.nbump > 0 and HAS_NUMBA:
         # Use numba-optimized version with smart parallel/serial selection
-        pos_arr = np.array(bump.pos[:bump.nbump])
-        kappa_arr = np.array(bump.kappa[:bump.nbump])
-        ampli_arr = np.array(bump.ampli[:bump.nbump])
-        
+        pos_arr = np.array(bump.pos[: bump.nbump])
+        kappa_arr = np.array(bump.kappa[: bump.nbump])
+        ampli_arr = np.array(bump.ampli[: bump.nbump])
+
         # Use parallel version only for large n_roi to avoid overhead
         if n_roi >= 64:
-            predicted = _compute_predicted_intensity_parallel(pos_arr, kappa_arr, ampli_arr, bump.nbump, n_roi)
+            predicted = _compute_predicted_intensity_parallel(
+                pos_arr, kappa_arr, ampli_arr, bump.nbump, n_roi
+            )
         else:
-            predicted = _compute_predicted_intensity(pos_arr, kappa_arr, ampli_arr, bump.nbump, n_roi)
+            predicted = _compute_predicted_intensity(
+                pos_arr, kappa_arr, ampli_arr, bump.nbump, n_roi
+            )
     elif bump.nbump > 0:
         # Fallback to original vectorized version
         x = np.arange(n_roi) * 2 * np.pi / n_roi
-        angles = x[:, None] - np.array(bump.pos[:bump.nbump])
-        kappa_arr = np.array(bump.kappa[:bump.nbump])
-        ampli_arr = np.array(bump.ampli[:bump.nbump])
+        angles = x[:, None] - np.array(bump.pos[: bump.nbump])
+        kappa_arr = np.array(bump.kappa[: bump.nbump])
+        ampli_arr = np.array(bump.ampli[: bump.nbump])
         vonmises_matrix = np.exp(kappa_arr * np.cos(angles)) / (2 * np.pi * i0(kappa_arr))
         predicted = np.sum(ampli_arr * vonmises_matrix, axis=1)
     else:
@@ -525,7 +550,7 @@ def site_logl(
 
     # Likelihood from residuals
     residuals = intens - predicted
-    logl -= 0.5 * np.sum(residuals ** 2) / sig2
+    logl -= 0.5 * np.sum(residuals**2) / sig2
 
     return beta * logl
 
@@ -538,20 +563,21 @@ def _compute_circular_distance(pos1, pos2):
         dist = 2 * np.pi - dist
     return dist
 
+
 @njit
 def _compute_coupling_fast(pos1_arr, pos2_arr, n1, n2, sigcoup2):
     """Numba-optimized coupling calculation for small numbers of bumps"""
     if n1 == 0 or n2 == 0:
         return 0.0
-    
+
     # For small numbers of bumps, use greedy matching (faster than Hungarian)
     total_likelihood = 0.0
     used_j = np.zeros(n2, dtype=np.bool_)
-    
+
     for i in range(n1):
         best_likelihood = -np.inf
         best_j = -1
-        
+
         for j in range(n2):
             if not used_j[j]:
                 # Inline circular distance calculation (faster than function call)
@@ -562,19 +588,20 @@ def _compute_coupling_fast(pos1_arr, pos2_arr, n1, n2, sigcoup2):
                 if likelihood > best_likelihood:
                     best_likelihood = likelihood
                     best_j = j
-        
+
         if best_j >= 0:
             used_j[best_j] = True
             total_likelihood += best_likelihood
-    
+
     return total_likelihood
+
 
 @njit
 def _parallel_distance_matrix(pos1_array, pos2_array):
     """Optimized computation of circular distance matrix (serial for small arrays)"""
     n1, n2 = len(pos1_array), len(pos2_array)
     dist_matrix = np.zeros((n1, n2))
-    
+
     # Use serial execution for small arrays to avoid parallel overhead
     for i in range(n1):
         for j in range(n2):
@@ -582,8 +609,9 @@ def _parallel_distance_matrix(pos1_array, pos2_array):
             if dist > np.pi:
                 dist = 2 * np.pi - dist
             dist_matrix[i, j] = dist
-    
+
     return dist_matrix
+
 
 def interf_logl(
     b1,
@@ -601,14 +629,14 @@ def interf_logl(
 
     # For small numbers of bumps, use numba-optimized greedy matching
     if HAS_NUMBA and b1.nbump <= 4 and b2.nbump <= 4:
-        pos1_arr = np.array(b1.pos[:b1.nbump])
-        pos2_arr = np.array(b2.pos[:b2.nbump])
+        pos1_arr = np.array(b1.pos[: b1.nbump])
+        pos2_arr = np.array(b2.pos[: b2.nbump])
         logli = _compute_coupling_fast(pos1_arr, pos2_arr, b1.nbump, b2.nbump, sigcoup2)
     else:
         # Use parallel distance matrix computation for larger numbers
-        pos1 = np.array(b1.pos[:b1.nbump])
-        pos2 = np.array(b2.pos[:b2.nbump])
-        
+        pos1 = np.array(b1.pos[: b1.nbump])
+        pos2 = np.array(b2.pos[: b2.nbump])
+
         if HAS_NUMBA:
             # Use parallel distance matrix calculation
             circular_dist = _parallel_distance_matrix(pos1, pos2)
@@ -616,11 +644,11 @@ def interf_logl(
             # Fallback to vectorized version
             dist_matrix = np.abs(pos1[:, None] - pos2)
             circular_dist = np.minimum(dist_matrix, 2 * np.pi - dist_matrix)
-        cost_matrix = -np.exp(-0.5 * circular_dist ** 2 / sigcoup2)
+        cost_matrix = -np.exp(-0.5 * circular_dist**2 / sigcoup2)
         row_indices, col_indices = linear_sum_assignment(cost_matrix)
         max_links = min(b1.nbump, b2.nbump, n_bump_max)
         n_matches = min(len(row_indices), max_links)
-        
+
         if n_matches > 0:
             matched_costs = cost_matrix[row_indices[:n_matches], col_indices[:n_matches]]
             logli = -np.sum(matched_costs)
@@ -629,23 +657,29 @@ def interf_logl(
 
     return beta * jc * logli
 
+
 @njit
 def _set_seed(value):
     np.random.seed(value)
+
+
 @njit
 def _uniform_random():
     """Numba-compatible random number generation"""
     return np.random.random()
 
-@njit 
+
+@njit
 def _gaussian_random(mu, sigma):
     """Numba-compatible Gaussian random number generation"""
     return np.random.normal(mu, sigma)
+
 
 @njit
 def _randint(n):
     """Numba-compatible random integer generation"""
     return np.random.randint(0, n)
+
 
 def create_bump(
     bump,
@@ -665,6 +699,7 @@ def create_bump(
     bump.nbump += 1
     return False
 
+
 def del_bump(bump):
     if bump.nbump == 0:
         return True
@@ -681,6 +716,7 @@ def del_bump(bump):
     bump.kappa.pop()
     bump.nbump -= 1
     return False
+
 
 def diffuse(
     bump,
@@ -701,6 +737,7 @@ def diffuse(
     bump.pos[i] = new_pos
     return False
 
+
 def change_ampli(bump):
     if bump.nbump == 0:
         return True
@@ -714,6 +751,7 @@ def change_ampli(bump):
         return True
     bump.ampli[i] += delta
     return False
+
 
 def change_width(bump):
     if bump.nbump == 0:
@@ -736,6 +774,7 @@ def _metropolis_accept(delta_logl):
     if delta_logl > 0:
         return True
     return np.random.random() < np.exp(delta_logl)
+
 
 def mcmc(
     nbt,
@@ -761,7 +800,7 @@ def mcmc(
     # Initial likelihood calculation
     total_logl = 0.0
     for i in range(ntime):
-        data_seg = data[i * n_roi:(i + 1) * n_roi]
+        data_seg = data[i * n_roi : (i + 1) * n_roi]
         bumps[i].logl = site_logl(data_seg, bumps[i], n_roi, penbump, sig2, beta)
         total_logl += bumps[i].logl
 
@@ -771,7 +810,9 @@ def mcmc(
 
     print(f"Initial likelihood: {total_logl:.2f}")
     if HAS_NUMBA:
-        print(f"Using Numba acceleration (n_roi={n_roi}, parallel={'Yes' if n_roi >= 64 else 'No'})")
+        print(
+            f"Using Numba acceleration (n_roi={n_roi}, parallel={'Yes' if n_roi >= 64 else 'No'})"
+        )
     else:
         print("Numba not available - install with: pip install numba")
 
@@ -802,7 +843,7 @@ def mcmc(
             # If operation succeeded (not failed)
             if not operation_failed:
                 # Calculate local likelihood for new state
-                data_seg = data[j * n_roi:(j + 1) * n_roi]
+                data_seg = data[j * n_roi : (j + 1) * n_roi]
                 loglt = site_logl(data_seg, proposal, n_roi, penbump, sig2, beta)
 
                 # Calculate coupling changes
@@ -825,7 +866,7 @@ def mcmc(
                     accept = _metropolis_accept(delta_logl)
                 else:
                     accept = delta_logl > 0 or random.random() < np.exp(delta_logl)
-                
+
                 if accept:
                     proposal.logl = loglt
                     bumps[j] = proposal
@@ -850,19 +891,16 @@ def mcmc(
 if __name__ == "__main__":
     data = load_roi_data()
     bumps, fits, nbump, centrbump = bump_fits(
-        data,
-        n_steps=5000,
-        n_roi=16,
-        save_path=os.path.join(os.getcwd(), 'test.npz')
+        data, n_steps=5000, n_roi=16, save_path=os.path.join(os.getcwd(), "test.npz")
     )
 
     # fits = np.load(os.path.join(os.getcwd(), 'test.npz'))['fits']
     create_1d_bump_animation(
         fits,
         show=True,
-        save_path=os.path.join(os.getcwd(), 'bump_animation.gif'),
+        save_path=os.path.join(os.getcwd(), "bump_animation.gif"),
         nframes=100,
-        bump_selection='first'
+        bump_selection="first",
     )
 
     # print(bumps)

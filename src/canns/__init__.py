@@ -1,5 +1,5 @@
-from . import analyzer as analyzer
 from . import _datasets as _datasets
+from . import analyzer as analyzer
 from . import misc as misc
 from . import models as models
 from . import pipeline as pipeline
@@ -16,7 +16,7 @@ except ImportError:
 __all__ = [
     "analyzer",
     "_datasets",
-    "misc", 
+    "misc",
     "models",
     "pipeline",
     "trainer",
