@@ -1,5 +1,7 @@
 import os
 import random
+from dataclasses import dataclass
+from typing import Optional
 
 import numpy as np
 from matplotlib import pyplot as plt
@@ -39,360 +41,436 @@ except ImportError:
 from canns.analyzer.experimental_data._datasets_utils import load_roi_data
 
 
+# ==================== Configuration Classes ====================
+@dataclass
+class BumpFitsConfig:
+    """Configuration for CANN1D bump fitting."""
+    n_steps: int = 20000
+    n_roi: int = 16
+    n_bump_max: int = 4
+    sigma_diff: float = 0.5
+    ampli_min: float = 2.0
+    kappa_mean: float = 2.5
+    sig2: float = 1.0
+    penbump: float = 0.4
+    jc: float = 1.8
+    beta: float = 5.0
+    random_seed: Optional[int] = None
+
+
+@dataclass
+class AnimationConfig:
+    """Configuration for 1D CANN bump animation."""
+    show: bool = False
+    max_height_value: float = 0.5
+    max_width_range: int = 40
+    npoints: int = 300
+    nframes: Optional[int] = None
+    fps: int = 5
+    bump_selection: str = "strongest"
+    show_progress_bar: bool = True
+    repeat: bool = False
+    title: str = "1D CANN Bump Animation"
+
+
+# ==================== Constants ====================
+class Constants:
+    """Constants used throughout CANN1D analysis."""
+    DEFAULT_FIGSIZE = (4, 4)
+    DEFAULT_DPI = 100
+    BASE_RADIUS = 1.0
+    MAX_KERNEL_SIZE = 60
+    NUMBA_THRESHOLD = 64  # ROI count threshold for parallel processing
+
+
+# ==================== Custom Exceptions ====================
+class CANN1DError(Exception):
+    """Base exception for CANN1D analysis errors."""
+    pass
+
+
+class FittingError(CANN1DError):
+    """Raised when bump fitting fails."""
+    pass
+
+
+class AnimationError(CANN1DError):
+    """Raised when animation creation fails."""
+    pass
+
+
 def bump_fits(
     data,
-    n_steps=20000,
-    n_roi=16,
-    n_bump_max=4,
-    sigma_diff=0.5,
-    ampli_min=2.0,
-    kappa_mean=2.5,
-    sig2=1.0,
-    penbump=0.4,
-    jc=1.8,
-    beta=5.0,
+    config: Optional[BumpFitsConfig] = None,
     save_path=None,
-    random_seed=None,
+    **kwargs
 ):
-    # Set random seed for reproducibility
-    if random_seed is not None:
-        np.random.seed(random_seed)
-        random.seed(random_seed)
-        if HAS_NUMBA:
-            _set_seed(random_seed)
-
-    # MCMC parameters
-    sigcoup = 2 * np.pi / n_roi
-    sigcoup2 = sigcoup**2
-
-    nbt = data.shape[0]
-    flat_data = data.flatten()
-    normed_data = (flat_data / np.median(flat_data)) - 1.0
-    bumps = _mcmc(
-        nbt=nbt,
-        data=normed_data,
-        n_steps=n_steps,
-        n_roi=n_roi,
-        n_bump_max=n_bump_max,
-        sigma_diff=sigma_diff,
-        ampli_min=ampli_min,
-        kappa_mean=kappa_mean,
-        sig2=sig2,
-        sigcoup2=sigcoup2,
-        penbump=penbump,
-        jc=jc,
-        beta=beta,
-    )
-
-    # compute total bumps and central bump points
-    total_bumps = sum(bump.nbump for bump in bumps)
-    total_centrbump_points = sum(bump.nbump * n_roi for bump in bumps)
-
-    # preallocate arrays
-    fits_array = np.zeros((total_bumps, 4))  # [time, pos, amplitude, kappa]
-    nbump_array = np.zeros((nbt, n_roi + 2))  # [time, n_bumps, reconstructed_signal...]
-    centrbump_array = np.zeros((total_centrbump_points, 2))  # [dist, normalized_amplitude]
-
-    # create x_grid for von Mises distribution
-    x_grid = np.arange(n_roi) * 2 * np.pi / n_roi
-    roi_positions = np.arange(n_roi) * 2 * np.pi / n_roi
-
-    fits_idx = 0
-    centrbump_idx = 0
-
-    for t, bump in enumerate(bumps):
-        # 1. fills fits_array
-        if bump.nbump > 0:
-            fits_array[fits_idx : fits_idx + bump.nbump, 0] = t
-            fits_array[fits_idx : fits_idx + bump.nbump, 1] = bump.pos[: bump.nbump]
-            fits_array[fits_idx : fits_idx + bump.nbump, 2] = bump.ampli[: bump.nbump]
-            fits_array[fits_idx : fits_idx + bump.nbump, 3] = bump.kappa[: bump.nbump]
-            fits_idx += bump.nbump
-
-        # 2. fills nbump_array
-        nbump_array[t, 0] = t
-        nbump_array[t, 1] = bump.nbump
-
-        # compute von Mises distribution for bumps
-        if bump.nbump > 0:
-            # get bump parameters
-            pos_array = np.array(bump.pos[: bump.nbump])
-            ampli_array = np.array(bump.ampli[: bump.nbump])
-            kappa_array = np.array(bump.kappa[: bump.nbump])
-
-            # Use optimized von Mises computation if available
+    """
+    Fit CANN1D bumps to data using MCMC optimization.
+    
+    Parameters:
+        data : numpy.ndarray
+            Input data for bump fitting
+        config : BumpFitsConfig, optional
+            Configuration object with all fitting parameters
+        save_path : str, optional
+            Path to save the results
+        **kwargs : backward compatibility parameters
+    
+    Returns:
+        bumps : list
+            List of fitted bump objects
+        fits_array : numpy.ndarray
+            Array of fitted bump parameters
+        nbump_array : numpy.ndarray  
+            Array of bump counts and reconstructed signals
+        centrbump_array : numpy.ndarray
+            Array of centered bump data
+    """
+    # Handle backward compatibility and configuration
+    if config is None:
+        config = BumpFitsConfig(
+            n_steps=kwargs.get('n_steps', 20000),
+            n_roi=kwargs.get('n_roi', 16),
+            n_bump_max=kwargs.get('n_bump_max', 4),
+            sigma_diff=kwargs.get('sigma_diff', 0.5),
+            ampli_min=kwargs.get('ampli_min', 2.0),
+            kappa_mean=kwargs.get('kappa_mean', 2.5),
+            sig2=kwargs.get('sig2', 1.0),
+            penbump=kwargs.get('penbump', 0.4),
+            jc=kwargs.get('jc', 1.8),
+            beta=kwargs.get('beta', 5.0),
+            random_seed=kwargs.get('random_seed', None)
+        )
+    
+    try:
+        # Set random seed for reproducibility
+        if config.random_seed is not None:
+            np.random.seed(config.random_seed)
+            random.seed(config.random_seed)
             if HAS_NUMBA:
-                if n_roi >= 64:
-                    von_mises_vals = _compute_predicted_intensity_parallel(
-                        pos_array, kappa_array, ampli_array, bump.nbump, n_roi
-                    )
+                _set_seed(config.random_seed)
+
+        # MCMC parameters
+        sigcoup = 2 * np.pi / config.n_roi
+        sigcoup2 = sigcoup**2
+
+        nbt = data.shape[0]
+        flat_data = data.flatten()
+        normed_data = (flat_data / np.median(flat_data)) - 1.0
+        bumps = _mcmc(
+            nbt=nbt,
+            data=normed_data,
+            n_steps=config.n_steps,
+            n_roi=config.n_roi,
+            n_bump_max=config.n_bump_max,
+            sigma_diff=config.sigma_diff,
+            ampli_min=config.ampli_min,
+            kappa_mean=config.kappa_mean,
+            sig2=config.sig2,
+            sigcoup2=sigcoup2,
+            penbump=config.penbump,
+            jc=config.jc,
+            beta=config.beta,
+        )
+
+        # compute total bumps and central bump points
+        total_bumps = sum(bump.nbump for bump in bumps)
+        total_centrbump_points = sum(bump.nbump * config.n_roi for bump in bumps)
+
+        # preallocate arrays
+        fits_array = np.zeros((total_bumps, 4))  # [time, pos, amplitude, kappa]
+        nbump_array = np.zeros((nbt, config.n_roi + 2))  # [time, n_bumps, reconstructed_signal...]
+        centrbump_array = np.zeros((total_centrbump_points, 2))  # [dist, normalized_amplitude]
+
+        # create x_grid for von Mises distribution
+        x_grid = np.arange(config.n_roi) * 2 * np.pi / config.n_roi
+        roi_positions = np.arange(config.n_roi) * 2 * np.pi / config.n_roi
+
+        fits_idx = 0
+        centrbump_idx = 0
+
+        for t, bump in enumerate(bumps):
+            # 1. fills fits_array
+            if bump.nbump > 0:
+                fits_array[fits_idx : fits_idx + bump.nbump, 0] = t
+                fits_array[fits_idx : fits_idx + bump.nbump, 1] = bump.pos[: bump.nbump]
+                fits_array[fits_idx : fits_idx + bump.nbump, 2] = bump.ampli[: bump.nbump]
+                fits_array[fits_idx : fits_idx + bump.nbump, 3] = bump.kappa[: bump.nbump]
+                fits_idx += bump.nbump
+
+            # 2. fills nbump_array
+            nbump_array[t, 0] = t
+            nbump_array[t, 1] = bump.nbump
+
+            # compute von Mises distribution for bumps
+            if bump.nbump > 0:
+                # get bump parameters
+                pos_array = np.array(bump.pos[: bump.nbump])
+                ampli_array = np.array(bump.ampli[: bump.nbump])
+                kappa_array = np.array(bump.kappa[: bump.nbump])
+
+                # Use optimized von Mises computation if available
+                if HAS_NUMBA:
+                    if config.n_roi >= Constants.NUMBA_THRESHOLD:
+                        von_mises_vals = _compute_predicted_intensity_parallel(
+                            pos_array, kappa_array, ampli_array, bump.nbump, config.n_roi
+                        )
+                    else:
+                        von_mises_vals = _compute_predicted_intensity(
+                            pos_array, kappa_array, ampli_array, bump.nbump, config.n_roi
+                        )
+                    nbump_array[t, 2:] = von_mises_vals
                 else:
-                    von_mises_vals = _compute_predicted_intensity(
-                        pos_array, kappa_array, ampli_array, bump.nbump, n_roi
+                    # Fallback to broadcasting computation
+                    diff = x_grid[:, None] - pos_array[None, :]
+                    von_mises_vals = (
+                        ampli_array[None, :]
+                        * np.exp(kappa_array[None, :] * np.cos(diff))
+                        / (2 * np.pi * i0(kappa_array[None, :]))
                     )
-                nbump_array[t, 2:] = von_mises_vals
-            else:
-                # Fallback to broadcasting computation
-                diff = x_grid[:, None] - pos_array[None, :]
-                von_mises_vals = (
-                    ampli_array[None, :]
-                    * np.exp(kappa_array[None, :] * np.cos(diff))
-                    / (2 * np.pi * i0(kappa_array[None, :]))
-                )
-                nbump_array[t, 2:] = np.sum(von_mises_vals, axis=1)
+                    nbump_array[t, 2:] = np.sum(von_mises_vals, axis=1)
 
-        # 3. fills centrbump_array
-        if bump.nbump > 0:
-            data_segment = flat_data[t * n_roi : (t + 1) * n_roi]
+            # 3. fills centrbump_array
+            if bump.nbump > 0:
+                data_segment = flat_data[t * config.n_roi : (t + 1) * config.n_roi]
 
-            # get distances and normalized amplitudes
-            for i in range(bump.nbump):
-                start_idx = centrbump_idx + i * n_roi
-                end_idx = start_idx + n_roi
+                # get distances and normalized amplitudes
+                for i in range(bump.nbump):
+                    start_idx = centrbump_idx + i * config.n_roi
+                    end_idx = start_idx + config.n_roi
 
-                # distance from bump position to ROI positions
-                dist = bump.pos[i] - roi_positions
-                # adjust distances to be within [-pi, pi]
-                dist = np.where(dist > np.pi, dist - 2 * np.pi, dist)
-                dist = np.where(dist < -np.pi, dist + 2 * np.pi, dist)
+                    # distance from bump position to ROI positions
+                    dist = bump.pos[i] - roi_positions
+                    # adjust distances to be within [-pi, pi]
+                    dist = np.where(dist > np.pi, dist - 2 * np.pi, dist)
+                    dist = np.where(dist < -np.pi, dist + 2 * np.pi, dist)
 
-                # normalize amplitude
-                norm_amp = data_segment / bump.ampli[i]
+                    # normalize amplitude
+                    norm_amp = data_segment / bump.ampli[i]
 
-                centrbump_array[start_idx:end_idx, 0] = dist
-                centrbump_array[start_idx:end_idx, 1] = norm_amp
+                    centrbump_array[start_idx:end_idx, 0] = dist
+                    centrbump_array[start_idx:end_idx, 1] = norm_amp
 
-            centrbump_idx += bump.nbump * n_roi
+                centrbump_idx += bump.nbump * config.n_roi
 
-    if save_path is not None:
-        os.makedirs(
-            os.path.dirname(save_path) if os.path.dirname(save_path) else ".", exist_ok=True
-        )
+        if save_path is not None:
+            os.makedirs(
+                os.path.dirname(save_path) if os.path.dirname(save_path) else ".", exist_ok=True
+            )
 
-        np.savez(
-            save_path,
-            fits=fits_array,  # shape: (n_fits, 4) - [time, pos, amplitude, kappa]
-            nbump=nbump_array,  # shape: (n_timepoints, n_roi+2) - [time, n_bumps, reconstructed_signal...]
-            centrbump=centrbump_array,  # shape: (n_points, 2) - [dist, normalized_amplitude]
-        )
+            np.savez(
+                save_path,
+                fits=fits_array,  # shape: (n_fits, 4) - [time, pos, amplitude, kappa]
+                nbump=nbump_array,  # shape: (n_timepoints, n_roi+2) - [time, n_bumps, reconstructed_signal...]
+                centrbump=centrbump_array,  # shape: (n_points, 2) - [dist, normalized_amplitude]
+            )
 
-    return bumps, fits_array, nbump_array, centrbump_array
+        return bumps, fits_array, nbump_array, centrbump_array
+
+    except Exception as e:
+        raise FittingError(f"Failed to fit bumps: {e}") from e
 
 
 def create_1d_bump_animation(
     fits_data,
-    show=False,
+    config: Optional[AnimationConfig] = None,
     save_path=None,
-    max_height_value=0.5,
-    max_width_range=40,
-    npoints=300,
-    nframes=None,
-    fps=5,
-    bump_selection="strongest",
-    show_progress_bar=True,
-    repeat=False,
-    title="1D CANN Bump Animation",
+    **kwargs
 ):
     """
-    Create 1D CANN bump animation using vectorized operations
+    Create 1D CANN bump animation using vectorized operations.
 
     Parameters:
-    -----------
-    fits_data : numpy.ndarray
-        Shape (n_fits, 4) array with columns [time, position, amplitude, kappa]
-    show : bool
-        Whether to display the animation
-    save_path : str, optional
-        Output path for the generated GIF
-    max_height_value : float
-        Maximum height value for bump visualization
-    max_width_range : int
-        Maximum width range for bump visualization
-    npoints : int
-        Number of points for circular representation
-    nframes : int, optional
-        Number of frames to generate (None for all available)
-    fps : int
-        Frames per second for the animation
-    bump_selection : str
-        Selection strategy when multiple bumps exist at one timepoint:
-        - 'strongest': select bump with maximum amplitude
-        - 'first': select first bump
-    show_progress_bar : bool
-        Whether to show progress bar during animation saving
-    repeat : bool
-        Whether the animation should repeat
-    title : str
-        Title for the animation
+        fits_data : numpy.ndarray
+            Shape (n_fits, 4) array with columns [time, position, amplitude, kappa]
+        config : AnimationConfig, optional
+            Configuration object with all animation parameters
+        save_path : str, optional
+            Output path for the generated GIF
+        **kwargs : backward compatibility parameters
 
     Returns:
-    --------
-    matplotlib.animation.FuncAnimation
-        The animation object
+        matplotlib.animation.FuncAnimation
+            The animation object
     """
-
-    # ==== Smoothing functions ====
-    def smooth(x, window=3):
-        """Apply simple moving average smoothing"""
-        return np.convolve(x, np.ones(window) / window, mode="same")
-
-    def smooth_circle(values, window=5):
-        """Apply circular smoothing for periodic data"""
-        pad = window // 2
-        values_ext = np.concatenate([values[-pad:], values, values[:pad]])
-        kernel = np.ones(window) / window
-        smoothed = np.convolve(values_ext, kernel, mode="valid")
-        return smoothed
-
-    # ==== Data validation ====
-    if fits_data is None or len(fits_data) == 0:
-        raise ValueError("No bump data provided")
-
-    if fits_data.ndim != 2 or fits_data.shape[1] != 4:
-        raise ValueError(
-            f"fits_data must be a 2D array with 4 columns, got shape {fits_data.shape}"
+    # Handle backward compatibility and configuration
+    if config is None:
+        config = AnimationConfig(
+            show=kwargs.get('show', False),
+            max_height_value=kwargs.get('max_height_value', 0.5),
+            max_width_range=kwargs.get('max_width_range', 40),
+            npoints=kwargs.get('npoints', 300),
+            nframes=kwargs.get('nframes', None),
+            fps=kwargs.get('fps', 5),
+            bump_selection=kwargs.get('bump_selection', "strongest"),
+            show_progress_bar=kwargs.get('show_progress_bar', True),
+            repeat=kwargs.get('repeat', False),
+            title=kwargs.get('title', "1D CANN Bump Animation")
         )
-
-    # ==== Extract time information ====
-    times = fits_data[:, 0].astype(int)
-    unique_times = np.unique(times)
-
-    if nframes is None or nframes > len(unique_times):
-        nframes = len(unique_times)
-
-    selected_times = unique_times[:nframes]
-
-    # ==== Vectorized data extraction ====
-    # Pre-allocate arrays for better performance
-    positions_raw = np.zeros(nframes)
-    heights_raw = np.zeros(nframes)
-    widths_raw = np.zeros(nframes)
-
-    # Process each timepoint vectorized way
-    for i, t in enumerate(selected_times):
-        # Get all bumps at current timepoint
-        time_mask = times == t
-        if np.any(time_mask):
-            time_data = fits_data[time_mask]
-
-            # Select bump based on strategy
-            if bump_selection == "strongest":
-                best_idx = np.argmax(time_data[:, 2])  # Maximum amplitude
-            else:  # 'first'
-                best_idx = 0
-
-            # Extract bump parameters
-            positions_raw[i] = time_data[best_idx, 1]  # position
-            heights_raw[i] = time_data[best_idx, 2]  # amplitude
-            widths_raw[i] = time_data[best_idx, 3]  # kappa
-        # Note: zeros remain for timepoints without bumps
-
-    # ==== Apply smoothing ====
-    positions = smooth(positions_raw, window=3)
-    heights_raw_smooth = smooth(heights_raw, window=3)
-    widths_raw_smooth = smooth(widths_raw, window=3)
-
-    # ==== Setup parameters ====
-    theta = np.linspace(0, 2 * np.pi, npoints, endpoint=False)
-    base_radius = 1.0
-
-    # ==== Normalize data ranges ====
-    # Height normalization
-    height_range = np.max(heights_raw_smooth) - np.min(heights_raw_smooth)
-    if height_range > 0:
-        min_height, max_height = np.min(heights_raw_smooth), np.max(heights_raw_smooth)
-        heights = np.interp(heights_raw_smooth, (min_height, max_height), (0.1, max_height_value))
-    else:
-        heights = np.full_like(heights_raw_smooth, 0.1)
-
-    # Width normalization
-    width_range = np.max(widths_raw_smooth) - np.min(widths_raw_smooth)
-    if width_range > 0:
-        min_width, max_width = np.min(widths_raw_smooth), np.max(widths_raw_smooth)
-        width_ranges = np.interp(
-            widths_raw_smooth, (min_width, max_width), (2, max_width_range)
-        ).astype(int)
-    else:
-        width_ranges = np.full_like(widths_raw_smooth, max_width_range // 2, dtype=int)
-
-    # ==== Initialize matplotlib animation ====
-    fig, ax = plt.subplots(figsize=(4, 4), dpi=100)
-    (line,) = ax.plot([], [], color="red", linewidth=2)
-
-    def init():
-        """Initialize animation"""
-        ax.set_xlim(-1.8, 1.8)
-        ax.set_ylim(-1.8, 1.8)
-        ax.axis("off")
-        return (line,)
-
-    def update(frame):
-        """Update function for each animation frame"""
-        # Get parameters for current frame
-        pos_angle = positions[frame]
-        height = heights[frame]
-        width_range = width_ranges[frame]
-
-        # Find center position in theta array
-        center_idx = np.argmin(np.abs(theta - pos_angle))
-
-        # Initialize radius array with base radius
-        r = np.ones(npoints) * base_radius
-
-        # Apply Gaussian kernel around bump center
-        max_kernel_size = 60
-        sigma = width_range / 2
-
-        # Vectorized kernel application (could be further optimized)
-        for offset in range(-max_kernel_size, max_kernel_size + 1):
-            dist = abs(offset)
-            gauss_weight = np.exp(-(dist**2) / (2 * sigma**2))
-            if gauss_weight < 0.01:  # Skip negligible contributions
-                continue
-            idx = (center_idx + offset) % npoints
-            r[idx] += height * gauss_weight
-
-        # Apply circular smoothing
-        r = smooth_circle(r, window=5)
-
-        # Convert to Cartesian coordinates
-        x = r * np.cos(theta)
-        y = r * np.sin(theta)
-
-        # Clear and redraw (avoid clearing to improve performance)
-        ax.clear()
-        ax.set_xlim(-1.8, 1.8)
-        ax.set_ylim(-1.8, 1.8)
-        ax.axis("off")
-        ax.set_title(title, fontsize=14, fontweight="bold", pad=20)
-
-        # Draw base circle (reference)
-        inner_x = base_radius * np.cos(theta)
-        inner_y = base_radius * np.sin(theta)
-        ax.plot(inner_x, inner_y, color="gray", linestyle="--", linewidth=1)
-
-        # Draw bump curve
-        ax.plot(x, y, color="red", linewidth=2)
-
-        # Draw bump center marker
-        dot_radius = base_radius * 0.96
-        center_x = dot_radius * np.cos(pos_angle)
-        center_y = dot_radius * np.sin(pos_angle)
-        ax.plot(center_x, center_y, "o", color="black", markersize=6)
-
-        return (line,)
-
-    # ==== Create and save animation ====
-    if save_path is None and not show:
-        raise ValueError("Either save_path or show must be specified")
-
+    
     try:
+        # ==== Smoothing functions ====
+        def smooth(x, window=3):
+            """Apply simple moving average smoothing"""
+            return np.convolve(x, np.ones(window) / window, mode="same")
+
+        def smooth_circle(values, window=5):
+            """Apply circular smoothing for periodic data"""
+            pad = window // 2
+            values_ext = np.concatenate([values[-pad:], values, values[:pad]])
+            kernel = np.ones(window) / window
+            smoothed = np.convolve(values_ext, kernel, mode="valid")
+            return smoothed
+
+        # ==== Data validation ====
+        if fits_data is None or len(fits_data) == 0:
+            raise ValueError("No bump data provided")
+
+        if fits_data.ndim != 2 or fits_data.shape[1] != 4:
+            raise ValueError(
+                f"fits_data must be a 2D array with 4 columns, got shape {fits_data.shape}"
+            )
+
+        # ==== Extract time information ====
+        times = fits_data[:, 0].astype(int)
+        unique_times = np.unique(times)
+
+        nframes = config.nframes
+        if nframes is None or nframes > len(unique_times):
+            nframes = len(unique_times)
+
+        selected_times = unique_times[:nframes]
+
+        # ==== Vectorized data extraction ====
+        # Pre-allocate arrays for better performance
+        positions_raw = np.zeros(nframes)
+        heights_raw = np.zeros(nframes)
+        widths_raw = np.zeros(nframes)
+
+        # Process each timepoint vectorized way
+        for i, t in enumerate(selected_times):
+            # Get all bumps at current timepoint
+            time_mask = times == t
+            if np.any(time_mask):
+                time_data = fits_data[time_mask]
+
+                # Select bump based on strategy
+                if config.bump_selection == "strongest":
+                    best_idx = np.argmax(time_data[:, 2])  # Maximum amplitude
+                else:  # 'first'
+                    best_idx = 0
+
+                # Extract bump parameters
+                positions_raw[i] = time_data[best_idx, 1]  # position
+                heights_raw[i] = time_data[best_idx, 2]  # amplitude
+                widths_raw[i] = time_data[best_idx, 3]  # kappa
+            # Note: zeros remain for timepoints without bumps
+
+        # ==== Apply smoothing ====
+        positions = smooth(positions_raw, window=3)
+        heights_raw_smooth = smooth(heights_raw, window=3)
+        widths_raw_smooth = smooth(widths_raw, window=3)
+
+        # ==== Setup parameters ====
+        theta = np.linspace(0, 2 * np.pi, config.npoints, endpoint=False)
+        base_radius = Constants.BASE_RADIUS
+
+        # ==== Normalize data ranges ====
+        # Height normalization
+        height_range = np.max(heights_raw_smooth) - np.min(heights_raw_smooth)
+        if height_range > 0:
+            min_height, max_height = np.min(heights_raw_smooth), np.max(heights_raw_smooth)
+            heights = np.interp(heights_raw_smooth, (min_height, max_height), (0.1, config.max_height_value))
+        else:
+            heights = np.full_like(heights_raw_smooth, 0.1)
+
+        # Width normalization
+        width_range = np.max(widths_raw_smooth) - np.min(widths_raw_smooth)
+        if width_range > 0:
+            min_width, max_width = np.min(widths_raw_smooth), np.max(widths_raw_smooth)
+            width_ranges = np.interp(
+                widths_raw_smooth, (min_width, max_width), (2, config.max_width_range)
+            ).astype(int)
+        else:
+            width_ranges = np.full_like(widths_raw_smooth, config.max_width_range // 2, dtype=int)
+
+        # ==== Initialize matplotlib animation ====
+        fig, ax = plt.subplots(figsize=Constants.DEFAULT_FIGSIZE, dpi=Constants.DEFAULT_DPI)
+        (line,) = ax.plot([], [], color="red", linewidth=2)
+
+        def init():
+            """Initialize animation"""
+            ax.set_xlim(-1.8, 1.8)
+            ax.set_ylim(-1.8, 1.8)
+            ax.axis("off")
+            return (line,)
+
+        def update(frame):
+            """Update function for each animation frame"""
+            # Get parameters for current frame
+            pos_angle = positions[frame]
+            height = heights[frame]
+            width_range = width_ranges[frame]
+
+            # Find center position in theta array
+            center_idx = np.argmin(np.abs(theta - pos_angle))
+
+            # Initialize radius array with base radius
+            r = np.ones(config.npoints) * base_radius
+
+            # Apply Gaussian kernel around bump center
+            sigma = width_range / 2
+
+            # Vectorized kernel application (could be further optimized)
+            for offset in range(-Constants.MAX_KERNEL_SIZE, Constants.MAX_KERNEL_SIZE + 1):
+                dist = abs(offset)
+                gauss_weight = np.exp(-(dist**2) / (2 * sigma**2))
+                if gauss_weight < 0.01:  # Skip negligible contributions
+                    continue
+                idx = (center_idx + offset) % config.npoints
+                r[idx] += height * gauss_weight
+
+            # Apply circular smoothing
+            r = smooth_circle(r, window=5)
+
+            # Convert to Cartesian coordinates
+            x = r * np.cos(theta)
+            y = r * np.sin(theta)
+
+            # Clear and redraw (avoid clearing to improve performance)
+            ax.clear()
+            ax.set_xlim(-1.8, 1.8)
+            ax.set_ylim(-1.8, 1.8)
+            ax.axis("off")
+            ax.set_title(config.title, fontsize=14, fontweight="bold", pad=20)
+
+            # Draw base circle (reference)
+            inner_x = base_radius * np.cos(theta)
+            inner_y = base_radius * np.sin(theta)
+            ax.plot(inner_x, inner_y, color="gray", linestyle="--", linewidth=1)
+
+            # Draw bump curve
+            ax.plot(x, y, color="red", linewidth=2)
+
+            # Draw bump center marker
+            dot_radius = base_radius * 0.96
+            center_x = dot_radius * np.cos(pos_angle)
+            center_y = dot_radius * np.sin(pos_angle)
+            ax.plot(center_x, center_y, "o", color="black", markersize=6)
+
+            return (line,)
+
+        # ==== Create and save animation ====
+        if save_path is None and not config.show:
+            raise ValueError("Either save_path or show must be specified")
+
         # Create animation with repeat option
-        ani = FuncAnimation(fig, update, frames=nframes, init_func=init, blit=False, repeat=repeat)
+        ani = FuncAnimation(fig, update, frames=nframes, init_func=init, blit=False, repeat=config.repeat)
 
         # Save animation with progress tracking
         if save_path:
-            if show_progress_bar:
+            if config.show_progress_bar:
                 pbar = tqdm(total=nframes, desc=f"Saving animation to {save_path}")
 
                 def progress_callback(current_frame, total_frames):
@@ -400,7 +478,7 @@ def create_1d_bump_animation(
 
                 try:
                     ani.save(
-                        save_path, writer=PillowWriter(fps=fps), progress_callback=progress_callback
+                        save_path, writer=PillowWriter(fps=config.fps), progress_callback=progress_callback
                     )
                     pbar.close()
                     print(f"\nAnimation successfully saved to: {save_path}")
@@ -410,17 +488,19 @@ def create_1d_bump_animation(
                     raise
             else:
                 try:
-                    ani.save(save_path, writer=PillowWriter(fps=fps))
+                    ani.save(save_path, writer=PillowWriter(fps=config.fps))
                     print(f"Animation saved to: {save_path}")
                 except Exception as e:
                     print(f"Error saving animation: {e}")
                     raise
 
-        if show:
+        if config.show:
             plt.show()
 
         return ani
 
+    except Exception as e:
+        raise AnimationError(f"Failed to create animation: {e}") from e
     finally:
         # Ensure we clean up the figure to avoid memory leaks
         plt.close(fig)

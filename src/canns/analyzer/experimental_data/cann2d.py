@@ -40,7 +40,7 @@ class TDAConfig:
     n_points: int = 1200
     metric: str = 'cosine'
     nbs: int = 800
-    maxdim: int = 2
+    maxdim: int = 1
     coeff: int = 47
     show: bool = True
     do_shuffle: bool = False
@@ -56,7 +56,7 @@ class Constants:
     SPEED_CONVERSION_FACTOR = 100
     TIME_CONVERSION_FACTOR = 0.01
     MULTIPROCESSING_CORES = 4
-    
+
 
 # ==================== Custom Exceptions ====================
 class CANN2DError(Exception):
@@ -72,6 +72,7 @@ class DataLoadError(CANN2DError):
 class ProcessingError(CANN2DError):
     """Raised when data processing fails."""
     pass
+
 
 try:
     from numba import jit, njit, prange
@@ -132,27 +133,27 @@ def embed_spike_trains(spike_trains, config: Optional[SpikeEmbeddingConfig] = No
             speed_filter=kwargs.get('speed0', True),
             min_speed=kwargs.get('min_speed', 2.5)
         )
-    
+
     try:
         # Step 1: Extract and filter spike data
         spikes_filtered = _extract_spike_data(spike_trains, config)
-        
+
         # Step 2: Create time bins
         time_bins = _create_time_bins(spike_trains['t'], config)
-        
+
         # Step 3: Bin spike data
         spikes_bin = _bin_spike_data(spikes_filtered, time_bins, config)
-        
+
         # Step 4: Apply temporal smoothing if requested
         if config.smooth:
             spikes_bin = _apply_temporal_smoothing(spikes_bin, config)
-        
+
         # Step 5: Apply speed filtering if requested
         if config.speed_filter:
             return _apply_speed_filtering(spikes_bin, spike_trains, config)
-        
+
         return spikes_bin
-        
+
     except Exception as e:
         raise ProcessingError(f"Failed to embed spike trains: {e}") from e
 
@@ -174,12 +175,12 @@ def _extract_spike_data(spike_trains: Dict[str, Any], config: SpikeEmbeddingConf
         else:
             # Try direct access
             spikes_all = spike_data
-            
+
         t = spike_trains['t']
-        
+
         min_time0 = np.min(t)
         max_time0 = np.max(t)
-        
+
         # Extract spike intervals for each cell
         if isinstance(spikes_all, dict):
             # Dictionary format
@@ -191,7 +192,7 @@ def _extract_spike_data(spike_trains: Dict[str, Any], config: SpikeEmbeddingConf
             # List/array format
             cell_inds = np.arange(len(spikes_all))
             spikes = {}
-            
+
             for i, m in enumerate(cell_inds):
                 s = np.array(spikes_all[m]) if len(spikes_all[m]) > 0 else np.array([])
                 # Filter spikes within time window
@@ -199,9 +200,9 @@ def _extract_spike_data(spike_trains: Dict[str, Any], config: SpikeEmbeddingConf
                     spikes[i] = s[(s >= min_time0) & (s < max_time0)]
                 else:
                     spikes[i] = np.array([])
-        
+
         return spikes
-        
+
     except KeyError as e:
         raise DataLoadError(f"Missing required data key: {e}")
     except Exception as e:
@@ -212,91 +213,91 @@ def _create_time_bins(t: np.ndarray, config: SpikeEmbeddingConfig) -> np.ndarray
     """Create time bins for spike discretization."""
     min_time0 = np.min(t)
     max_time0 = np.max(t)
-    
+
     min_time = min_time0 * config.res
     max_time = max_time0 * config.res
-    
+
     return np.arange(np.floor(min_time), np.ceil(max_time) + 1, config.dt)
 
 
-def _bin_spike_data(spikes: Dict[int, np.ndarray], time_bins: np.ndarray, 
-                   config: SpikeEmbeddingConfig) -> np.ndarray:
+def _bin_spike_data(spikes: Dict[int, np.ndarray], time_bins: np.ndarray,
+                    config: SpikeEmbeddingConfig) -> np.ndarray:
     """Convert spike times to binned spike matrix."""
     t = np.arange(len(time_bins))
     min_time = time_bins[0]
     max_time = time_bins[-1]
-    
+
     spikes_bin = np.zeros((len(time_bins), len(spikes)), dtype=int)
-    
+
     for n in spikes:
         spike_times = np.array(spikes[n] * config.res - min_time, dtype=int)
         # Filter valid spike times
         spike_times = spike_times[
             (spike_times < (max_time - min_time)) & (spike_times > 0)
-        ]
+            ]
         spike_times = np.array(spike_times / config.dt, int)
-        
+
         # Bin spikes
         for j in spike_times:
             if j < len(time_bins):
                 spikes_bin[j, n] += 1
-    
+
     return spikes_bin
 
 
-def _apply_temporal_smoothing(spikes_bin: np.ndarray, 
-                            config: SpikeEmbeddingConfig) -> np.ndarray:
+def _apply_temporal_smoothing(spikes_bin: np.ndarray,
+                              config: SpikeEmbeddingConfig) -> np.ndarray:
     """Apply Gaussian temporal smoothing to spike matrix."""
     # Calculate smoothing parameters
     thresh = config.sigma * 5
     num_thresh = int(thresh / config.dt)
     num2_thresh = int(2 * num_thresh)
     sig2 = 1 / (2 * (config.sigma / config.res) ** 2)
-    
+
     # Create Gaussian kernel
     ker = np.exp(-np.power(np.arange(thresh + 1) / config.res, 2) * sig2)
     kerwhere = np.arange(-num_thresh, num_thresh) * config.dt
-    
+
     # Apply smoothing (simplified version - could be further optimized)
     smoothed = np.zeros((spikes_bin.shape[0], spikes_bin.shape[1]))
-    
+
     # Use scipy's gaussian_filter1d for better performance
     from scipy.ndimage import gaussian_filter1d
     sigma_bins = config.sigma / config.dt
-    
+
     for n in range(spikes_bin.shape[1]):
         smoothed[:, n] = gaussian_filter1d(
-            spikes_bin[:, n].astype(float), 
-            sigma=sigma_bins, 
+            spikes_bin[:, n].astype(float),
+            sigma=sigma_bins,
             mode='constant'
         )
-    
+
     # Normalize
     normalization_factor = 1 / np.sqrt(2 * np.pi * (config.sigma / config.res) ** 2)
     return smoothed * normalization_factor
 
 
-def _apply_speed_filtering(spikes_bin: np.ndarray, spike_trains: Dict[str, Any], 
-                         config: SpikeEmbeddingConfig) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+def _apply_speed_filtering(spikes_bin: np.ndarray, spike_trains: Dict[str, Any],
+                           config: SpikeEmbeddingConfig) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     """Apply speed-based filtering to spike data."""
     try:
         xx, yy, tt_pos, speed = _load_pos(
-            spike_trains['t'], 
-            spike_trains['x'], 
+            spike_trains['t'],
+            spike_trains['x'],
             spike_trains['y'],
             res=config.res,
             dt=config.dt
         )
-        
+
         valid = speed > config.min_speed
-        
+
         return (
             spikes_bin[valid, :],
             xx[valid],
-            yy[valid], 
+            yy[valid],
             tt_pos[valid]
         )
-        
+
     except KeyError as e:
         raise DataLoadError(f"Missing position data for speed filtering: {e}")
     except Exception as e:
@@ -363,7 +364,8 @@ def plot_projection(
     return fig
 
 
-def tda_vis(embed_data: np.ndarray, config: Optional[TDAConfig] = None, **kwargs) -> Tuple[Dict[str, Any], Optional[Dict[int, Any]]]:
+def tda_vis(embed_data: np.ndarray, config: Optional[TDAConfig] = None, **kwargs) -> Tuple[
+    Dict[str, Any], Optional[Dict[int, Any]]]:
     """
     Topological Data Analysis visualization with optional shuffle testing.
     
@@ -390,61 +392,61 @@ def tda_vis(embed_data: np.ndarray, config: Optional[TDAConfig] = None, **kwargs
             n_points=kwargs.get('n_points', 1200),
             metric=kwargs.get('metric', 'cosine'),
             nbs=kwargs.get('nbs', 800),
-            maxdim=kwargs.get('maxdim', 2),
+            maxdim=kwargs.get('maxdim', 1),
             coeff=kwargs.get('coeff', 47),
             show=kwargs.get('show', True),
             do_shuffle=kwargs.get('do_shuffle', False),
             num_shuffles=kwargs.get('num_shuffles', 1000)
         )
-    
+
     try:
         # Compute persistent homology for real data
         print("Computing persistent homology for real data...")
         real_persistence = _compute_real_persistence(embed_data, config)
-        
+
         # Perform shuffle analysis if requested
         shuffle_max = None
         if config.do_shuffle:
             shuffle_max = _perform_shuffle_analysis(embed_data, config)
-        
+
         # Visualization
         _handle_visualization(real_persistence, shuffle_max, config)
-        
+
         return real_persistence, shuffle_max
-        
+
     except Exception as e:
         raise ProcessingError(f"TDA analysis failed: {e}") from e
 
 
 def _compute_real_persistence(embed_data: np.ndarray, config: TDAConfig) -> Dict[str, Any]:
     """Compute persistent homology for real data with progress tracking."""
-    
+
     with tqdm(total=5, desc="Processing real data") as pbar:
         # Step 1: Time point downsampling
         pbar.set_description("Time point downsampling")
         times_cube = _downsample_timepoints(embed_data, config.num_times)
         pbar.update(1)
-        
+
         # Step 2: Select most active time points  
         pbar.set_description("Selecting active time points")
         movetimes = _select_active_timepoints(embed_data, times_cube, config.active_times)
         pbar.update(1)
-        
+
         # Step 3: PCA dimensionality reduction
         pbar.set_description("PCA dimensionality reduction")
         dimred = _apply_pca_reduction(embed_data, movetimes, config.dim)
         pbar.update(1)
-        
+
         # Step 4: Point cloud sampling (denoising)
         pbar.set_description("Point cloud denoising")
         indstemp = _apply_denoising(dimred, config)
         pbar.update(1)
-        
+
         # Step 5: Compute persistent homology
         pbar.set_description("Computing persistent homology")
         real_persistence = _compute_persistence_homology(dimred, indstemp, config)
         pbar.update(1)
-    
+
     return real_persistence
 
 
@@ -470,9 +472,9 @@ def _apply_pca_reduction(embed_data: np.ndarray, movetimes: np.ndarray, dim: int
 def _apply_denoising(dimred: np.ndarray, config: TDAConfig) -> np.ndarray:
     """Apply point cloud denoising."""
     indstemp, *_ = _sample_denoising(
-        dimred, 
-        k=config.k, 
-        num_sample=config.n_points, 
+        dimred,
+        k=config.k,
+        num_sample=config.n_points,
         omega=0.2,  # This could be made configurable
         metric=config.metric
     )
@@ -483,12 +485,12 @@ def _compute_persistence_homology(dimred: np.ndarray, indstemp: np.ndarray, conf
     """Compute persistent homology using ripser."""
     d = _second_build(dimred, indstemp, metric=config.metric, nbs=config.nbs)
     np.fill_diagonal(d, 0)
-    
+
     return ripser(
-        d, 
-        maxdim=config.maxdim, 
-        coeff=config.coeff, 
-        do_cocycles=True, 
+        d,
+        maxdim=config.maxdim,
+        coeff=config.coeff,
+        do_cocycles=True,
         distance_matrix=True
     )
 
@@ -496,7 +498,7 @@ def _compute_persistence_homology(dimred: np.ndarray, indstemp: np.ndarray, conf
 def _perform_shuffle_analysis(embed_data: np.ndarray, config: TDAConfig) -> Dict[int, Any]:
     """Perform shuffle analysis with progress tracking."""
     print(f"\nStarting shuffle analysis with {config.num_shuffles} iterations...")
-    
+
     # Create parameters dict for shuffle analysis
     shuffle_params = {
         'dim': config.dim,
@@ -509,17 +511,17 @@ def _perform_shuffle_analysis(embed_data: np.ndarray, config: TDAConfig) -> Dict
         'maxdim': config.maxdim,
         'coeff': config.coeff
     }
-    
+
     shuffle_max = _run_shuffle_analysis(
-        embed_data, 
+        embed_data,
         num_shuffles=config.num_shuffles,
         num_cores=Constants.MULTIPROCESSING_CORES,
         **shuffle_params
     )
-    
+
     # Print shuffle analysis summary
     _print_shuffle_summary(shuffle_max)
-    
+
     return shuffle_max
 
 
@@ -534,7 +536,8 @@ def _print_shuffle_summary(shuffle_max: Dict[int, Any]) -> None:
                   f"99.9th percentile: {np.percentile(values, 99.9):.4f}")
 
 
-def _handle_visualization(real_persistence: Dict[str, Any], shuffle_max: Optional[Dict[int, Any]], config: TDAConfig) -> None:
+def _handle_visualization(real_persistence: Dict[str, Any], shuffle_max: Optional[Dict[int, Any]],
+                          config: TDAConfig) -> None:
     """Handle visualization based on configuration."""
     if config.show:
         if config.do_shuffle and shuffle_max is not None:
@@ -1110,6 +1113,7 @@ def _second_build(data, indstemp, nbs=800, metric='cosine'):
 
     return d
 
+
 def _run_shuffle_analysis(sspikes, num_shuffles=1000, num_cores=4, **kwargs):
     """Perform shuffle analysis using multiprocessing for parallel computation."""
     max_lifetimes = {0: [], 1: [], 2: []}
@@ -1291,7 +1295,7 @@ if __name__ == "__main__":
 
     real_persistence, shuffle_max = tda_vis(
         embed_data=spikes,
-        maxdim=2,
+        maxdim=1,
         do_shuffle=True,
         num_shuffles=3,
         show=True
