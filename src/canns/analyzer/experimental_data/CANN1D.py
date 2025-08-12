@@ -848,10 +848,21 @@ def mcmc(
 
 
 if __name__ == "__main__":
-    # data = load_roi_data()
-    # bumps, fits, nbump, centrbump = bump_fits(data, n_steps=5000, save_path=os.path.join(os.getcwd(), 'test.npz'))
+    data = load_roi_data()
+    bumps, fits, nbump, centrbump = bump_fits(
+        data,
+        n_steps=5000,
+        n_roi=16,
+        save_path=os.path.join(os.getcwd(), 'test.npz')
+    )
 
-    fits = np.load(os.path.join(os.getcwd(), 'test.npz'))['fits']
-    create_1d_bump_animation(fits, show=True, save_path=os.path.join(os.getcwd(), 'bump_animation.gif'), nframes=100, bump_selection='first')
+    # fits = np.load(os.path.join(os.getcwd(), 'test.npz'))['fits']
+    create_1d_bump_animation(
+        fits,
+        show=True,
+        save_path=os.path.join(os.getcwd(), 'bump_animation.gif'),
+        nframes=100,
+        bump_selection='first'
+    )
 
     # print(bumps)
