@@ -1,11 +1,13 @@
 name: Release and Deploy
 
 on:
-  release:
-    types: [published]
-  push:
-    tags:
-      - 'v*'
+  workflow_dispatch:
+  # Disabled automatic triggers
+  # release:
+  #   types: [published]
+  # push:
+  #   tags:
+  #     - 'v*'
 
 jobs:
   # Build and publish to PyPI
