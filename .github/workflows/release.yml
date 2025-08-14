@@ -36,20 +36,19 @@ jobs:
         python -m build
         # Extract version from built package wheel
         PACKAGE_VERSION=$(python -c "
-import os
-import zipfile
-from pathlib import Path
-
-# Find the wheel file
-wheel_files = list(Path('dist').glob('*.whl'))
-if wheel_files:
-    wheel_file = wheel_files[0]
-    # Extract version from wheel filename
-    # Format: package_name-version-py3-none-any.whl
-    version = wheel_file.name.split('-')[1]
-    print(version)
-else:
-    print('$TAG_VERSION')
+        import os
+        from pathlib import Path
+        
+        # Find the wheel file
+        wheel_files = list(Path('dist').glob('*.whl'))
+        if wheel_files:
+            wheel_file = wheel_files[0]
+            # Extract version from wheel filename
+            # Format: package_name-version-py3-none-any.whl
+            version = wheel_file.name.split('-')[1]
+            print(version)
+        else:
+            print('${TAG_VERSION}')
         ")
         echo "Package version: $PACKAGE_VERSION"
         if [ "$TAG_VERSION" != "$PACKAGE_VERSION" ]; then
