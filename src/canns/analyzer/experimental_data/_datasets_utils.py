@@ -9,13 +9,7 @@ other neurophysiological _datasets.
 from pathlib import Path
 from typing import Any
 
-try:
-    import numpy as np
-
-    HAS_NUMPY = True
-except ImportError:
-    HAS_NUMPY = False
-    np = None
+import numpy as np
 
 from canns import _datasets
 
@@ -48,8 +42,6 @@ def load_roi_data(source: str | Path | None = None) -> np.ndarray | None:
     >>> # Load from local file
     >>> roi_data = load_roi_data('./my_roi_data.txt')
     """
-    if not HAS_NUMPY:
-        raise ImportError("numpy is required to load ROI data")
 
     # Handle different source types
     if source is None:
@@ -129,8 +121,6 @@ def load_grid_data(
     >>> # Load specific default dataset
     >>> grid_data = load_grid_data(dataset_key='grid_2')
     """
-    if not HAS_NUMPY:
-        raise ImportError("numpy is required to load grid data")
 
     # Handle different source types
     if source is None:
@@ -152,7 +142,13 @@ def load_grid_data(
             if "y" in data:
                 result["y"] = data["y"]
 
-            print(f"Loaded {dataset_key}: {len(result['spike'])} neurons")
+            # Handle different spike data formats
+            if hasattr(result["spike"], "item") and isinstance(result["spike"].item(), dict):
+                # Spike data is stored as a dictionary inside numpy array
+                spike_dict = result["spike"].item()
+                print(f"Loaded {dataset_key}: {len(spike_dict)} neurons")
+            else:
+                print(f"Loaded {dataset_key}: {len(result['spike'])} neurons")
             if "x" in result:
                 print(f"Position data available: {len(result['x'])} time points")
 
@@ -229,8 +225,6 @@ def validate_roi_data(data: np.ndarray) -> bool:
     bool
         True if data is valid, False otherwise.
     """
-    if not HAS_NUMPY:
-        return False
 
     if not isinstance(data, np.ndarray):
         print("ROI data must be a numpy array")
@@ -265,8 +259,6 @@ def validate_grid_data(data: dict[str, Any]) -> bool:
     bool
         True if data is valid, False otherwise.
     """
-    if not HAS_NUMPY:
-        return False
 
     if not isinstance(data, dict):
         print("Grid data must be a dictionary")
@@ -350,8 +342,6 @@ def preprocess_spike_data(
     ndarray or None
         Processed spike data, or None if processing fails.
     """
-    if not HAS_NUMPY:
-        raise ImportError("numpy is required for preprocessing")
 
     # Convert to numpy array if needed
     if isinstance(spike_data, list):
@@ -405,8 +395,6 @@ def get_data_summary(data: np.ndarray | dict[str, Any]) -> dict[str, Any]:
     dict
         Summary statistics.
     """
-    if not HAS_NUMPY:
-        raise ImportError("numpy is required for data summary")
 
     summary = {}
 
