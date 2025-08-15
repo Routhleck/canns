@@ -9,6 +9,7 @@ from .cann2d import (
     plot_projection,
     tda_vis,
 )
+from ..visualize import PlotConfig
 
 __all__ = [
     # CANN1D functions
@@ -23,6 +24,7 @@ __all__ = [
     # Configuration classes
     "SpikeEmbeddingConfig",
     "TDAConfig",
+    "PlotConfig",
     # Data utilities
     "load_roi_data",
     "load_grid_data",
