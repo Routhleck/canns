@@ -7,7 +7,7 @@ These tests provide basic verification of the CANN1D bump fitting and animation 
 
 import numpy as np
 import pytest
-from canns.analyzer.experimental_data import bump_fits, create_1d_bump_animation
+from canns.analyzer.experimental_data import bump_fits, create_1d_bump_animation, CANN1DPlotConfig
 from canns.analyzer.experimental_data.cann1d import BumpFitsConfig
 
 
@@ -138,16 +138,35 @@ def test_create_1d_bump_animation():
     }
     
     try:
+        # Test with new config-based approach
+        config = CANN1DPlotConfig.for_bump_animation(
+            fps=5,
+            show=False,
+            figsize=(6, 4),
+            max_height_value=0.6,
+            nframes=n_steps
+        )
+        
         animation = create_1d_bump_animation(
             fitting_results,
-            save_path=None,  # Don't save during test
-            fps=5,
-            show=False,  # Don't display during test
-            figsize=(6, 4)
+            config=config,
+            save_path=None  # Don't save during test
         )
         
         assert animation is not None
-        print("1D bump animation creation successful")
+        print("1D bump animation creation with config successful")
+        
+        # Test backward compatibility
+        animation_old = create_1d_bump_animation(
+            fitting_results,
+            save_path=None,
+            fps=5,
+            show=False,
+            figsize=(6, 4)
+        )
+        
+        assert animation_old is not None
+        print("1D bump animation creation with old-style parameters successful")
         
     except Exception as e:
         print(f"Animation creation test failed: {e}")
@@ -173,11 +192,18 @@ def test_create_1d_bump_animation_with_saving():
         with tempfile.TemporaryDirectory() as temp_dir:
             save_path = os.path.join(temp_dir, "test_animation.gif")
             
+            # Test with new config-based approach
+            config = CANN1DPlotConfig.for_bump_animation(
+                fps=2,
+                show=False,
+                save_path=save_path,
+                nframes=n_steps,
+                show_progress_bar=False  # Disable progress bar for tests
+            )
+            
             animation = create_1d_bump_animation(
                 fitting_results,
-                save_path=save_path,
-                fps=2,  # Very slow for quick generation
-                show=False
+                config=config
             )
             
             # Check if file was created
