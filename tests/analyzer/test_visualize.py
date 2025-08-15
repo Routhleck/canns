@@ -198,12 +198,12 @@ def test_average_firing_rate():
     config_pop = PlotConfigs.average_firing_rate_plot(
         mode='population',
         title='Average Firing Rate (Population)',
-        dt=0.1,
         save_path=output_path_population,
         show=False
     )
     average_firing_rate_plot(
-        firing_rates=rs,
+        spike_train=rs,
+        dt=0.1,
         config=config_pop
     )
 
@@ -211,12 +211,12 @@ def test_average_firing_rate():
     config_neuron = PlotConfigs.average_firing_rate_plot(
         mode='per_neuron',
         title='Average Firing Rate (Per Neuron)',
-        dt=0.1,
         save_path=output_path_per_neuron,
         show=False
     )
     average_firing_rate_plot(
-        firing_rates=rs,
+        spike_train=rs,
+        dt=0.1,
         config=config_neuron
     )
     assert os.path.isfile(output_path_population), f"Output file {output_path_population} was not created."

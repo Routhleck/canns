@@ -90,8 +90,8 @@ class PlotConfigs:
             "figsize": (10, 6),
             "fps": 30,
         }
+        time_steps = kwargs.pop("time_steps_per_second", 1000)  # Remove from kwargs to avoid duplication
         defaults.update(kwargs)
-        time_steps = kwargs.get("time_steps_per_second", 1000)
         return PlotConfig.for_animation(time_steps, **defaults)
     
     @staticmethod
@@ -118,8 +118,8 @@ class PlotConfigs:
             "figsize": (8, 7),
             "fps": 30,
         }
+        time_steps = kwargs.pop("time_steps_per_second", 1000)  # Remove from kwargs to avoid duplication
         defaults.update(kwargs)
-        time_steps = kwargs.get("time_steps_per_second", 1000)
         return PlotConfig.for_animation(time_steps, **defaults)
     
     @staticmethod
@@ -144,8 +144,8 @@ class PlotConfigs:
         return config
     
     @staticmethod
-    def firing_rate_plot(mode:str="per_neuron",**kwargs) -> PlotConfig:
-        """Configuration for firing rate plots."""
+    def average_firing_rate_plot(mode:str="per_neuron",**kwargs) -> PlotConfig:
+        """Configuration for average firing rate plots."""
         defaults = {
             "title": "Average Firing Rate",
             "figsize": (12, 5),
@@ -275,7 +275,7 @@ def energy_landscape_1d_static(
 
 def energy_landscape_1d_animation(
     data_sets: dict[str, tuple[np.ndarray, np.ndarray]],
-    time_steps_per_second: int,
+    time_steps_per_second: int = None,
     config: Optional[PlotConfig] = None,
     # Backward compatibility parameters
     fps: int = 30,
@@ -339,7 +339,10 @@ def energy_landscape_1d_animation(
             show_progress_bar=show_progress_bar,
             kwargs=kwargs
         )
-    
+    else:
+        # Ensure config has time_steps_per_second set
+        if config.time_steps_per_second is None:
+            config.time_steps_per_second = time_steps_per_second
     fig, ax = plt.subplots(figsize=config.figsize)
 
     try:
@@ -860,7 +863,7 @@ def average_firing_rate_plot(
     """
     # Handle backward compatibility and configuration
     if config is None:
-        config = PlotConfigs.firing_rate_plot(
+        config = PlotConfigs.average_firing_rate_plot(
             mode=mode,
             title=title,
             figsize=figsize,
@@ -882,7 +885,7 @@ def average_firing_rate_plot(
         num_timesteps, num_neurons = spike_train.shape
         ax.set_title(config.title, fontsize=16, fontweight="bold")
 
-        if mode == "per_neuron":
+        if config.mode == "per_neuron":
             # --- Average rate for each neuron over time ---
             duration_s = num_timesteps * dt
             total_spikes_per_neuron = np.sum(spike_train, axis=0)
@@ -937,7 +940,7 @@ def average_firing_rate_plot(
 
         else:
             raise ValueError(
-                f"Invalid mode '{mode}'. Choose 'per_neuron', 'population', or 'weighted_average'."
+                f"Invalid mode '{config.mode}'. Choose 'per_neuron', 'population', or 'weighted_average'."
             )
 
         ax.grid(True, linestyle="--", alpha=0.6)
@@ -1064,7 +1067,7 @@ def tuning_curve(
             # Create a label for the legend
             label = f"Neuron {neuron_idx}"
             if config.pref_stim is not None and neuron_idx < len(config.pref_stim):
-                label += f" (pref_stim={pref_stim[neuron_idx]:.2f})"
+                label += f" (pref_stim={config.pref_stim[neuron_idx]:.2f})"
 
             # Plot the curve. Bins that were empty will have a `nan` mean,
             # which matplotlib handles gracefully (it won't plot them).
