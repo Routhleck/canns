@@ -7,7 +7,9 @@ from the experimental data analyzer to analyze 1D CANN bumps.
 """
 
 import numpy as np
-from canns.analyzer.experimental_data import bump_fits, create_1d_bump_animation, load_roi_data
+from canns.analyzer.experimental_data import (
+    bump_fits, create_1d_bump_animation, load_roi_data, CANN1DPlotConfig
+)
 
 
 # Generate sample data for demonstration
@@ -26,16 +28,34 @@ print(f"Analysis complete!")
 print(f"Found {len(fits)} time steps with bump data")
 print(f"Average number of bumps: {np.mean(nbump):.2f}")
 
-# Create animation of the bump evolution
+# Create animation of the bump evolution using new config approach
 print("Creating bump animation...")
 
-create_1d_bump_animation(
-    fits,
+# Using new config-based approach
+config = CANN1DPlotConfig.for_bump_animation(
     show=False,
     save_path="bump_analysis_demo.gif",
     nframes=100,
     fps=10,
-    title="1D CANN Bump Analysis Demo"
+    title="1D CANN Bump Analysis Demo",
+    max_height_value=0.6,
+    show_progress_bar=True
+)
+
+create_1d_bump_animation(
+    fits_data=fits,
+    config=config
 )
 
 print("Animation saved as 'bump_analysis_demo.gif'")
+
+# For comparison, the old-style approach still works:
+# create_1d_bump_animation(
+#     fits,
+#     show=False,
+#     save_path="bump_analysis_demo_old.gif",
+#     nframes=100,
+#     fps=10,
+#     title="1D CANN Bump Analysis Demo (Old Style)"
+# )
+# print("Old-style animation also saved as 'bump_analysis_demo_old.gif'")
