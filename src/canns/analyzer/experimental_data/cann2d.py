@@ -1757,20 +1757,10 @@ def plot_3d_bump_on_torus(
             shade=False,
         )
 
-        # Add time text
-        time_text = ax.text2D(
-            0.05,
-            0.95,
-            "",
-            transform=ax.transAxes,
-            fontsize=12,
-            bbox=dict(facecolor="white", alpha=0.7),
-        )
-
         def animate(frame_idx):
             """Animation update function following visualize.py pattern."""
             if frame_idx >= len(frame_data):
-                return surface,
+                return (surface,)
 
             frame = frame_data[frame_idx]
 
