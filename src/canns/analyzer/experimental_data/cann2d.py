@@ -1726,7 +1726,7 @@ def plot_3d_bump_on_torus(
         X = (X + np.pi / 5) % (2 * np.pi)
         x = (r1 + r2 * np.cos(X)) * np.cos(Y)
         y = (r1 + r2 * np.cos(X)) * np.sin(Y)
-        z = r2 * np.sin(X)
+        z = -r2 * np.sin(X)  # Flip torus surface orientation
 
         frame_data.append({"x": x, "y": y, "z": z, "m": m, "time": start_idx * frame_step})
 
@@ -1866,8 +1866,20 @@ def _get_coords(cocycle, threshold, num_sampled, dists, coeff):
     v1 = np.zeros((num_edges, 2), dtype=int)
     v2 = np.zeros((num_edges, 2), dtype=int)
     for i in range(num_edges):
-        v1[i, :] = [i, np.where(verts == edges[0][i])[0]]
-        v2[i, :] = [i, np.where(verts == edges[1][i])[0]]
+        # Extract scalar indices from np.where results
+        idx1 = np.where(verts == edges[0][i])[0]
+        idx2 = np.where(verts == edges[1][i])[0]
+        
+        # Handle case where np.where returns multiple matches (shouldn't happen in valid data)
+        if len(idx1) > 0:
+            v1[i, :] = [i, idx1[0]]
+        else:
+            raise ValueError(f"No vertex found for edge {edges[0][i]}")
+            
+        if len(idx2) > 0:
+            v2[i, :] = [i, idx2[0]]
+        else:
+            raise ValueError(f"No vertex found for edge {edges[1][i]}")
 
     A[v1[:, 0], v1[:, 1]] = -1
     A[v2[:, 0], v2[:, 1]] = 1
