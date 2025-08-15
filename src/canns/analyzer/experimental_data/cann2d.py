@@ -1,17 +1,27 @@
 import multiprocessing as mp
 import numbers
+import os
 from dataclasses import dataclass
 from typing import Any
 
 import matplotlib.pyplot as plt
 import numpy as np
-from matplotlib import gridspec
+from matplotlib import animation, cm, gridspec
 from numpy.exceptions import AxisError
 from ripser import ripser
-from scipy.ndimage import _nd_image, _ni_support
+from scipy import signal
+from scipy.ndimage import (
+    _nd_image,
+    _ni_support,
+    binary_closing,
+    gaussian_filter,
+    gaussian_filter1d,
+)
 from scipy.ndimage._filters import _invalid_origin
 from scipy.sparse import coo_matrix
+from scipy.sparse.linalg import lsmr
 from scipy.spatial.distance import pdist, squareform
+from scipy.stats import binned_statistic_2d, multivariate_normal
 from sklearn import preprocessing
 from tqdm import tqdm
 
@@ -1453,6 +1463,516 @@ def _plot_barcode_with_shuffle(persistence, shuffle_max):
 
     plt.tight_layout()
     return fig
+
+
+def decode_circular_coordinates(
+    persistence_result: dict[str, Any],
+    spike_data: dict[str, Any],
+    real_ground: bool = True,
+    real_of: bool = True,
+    save_path: str | None = None,
+) -> dict[str, Any]:
+    """
+    Decode circular coordinates (bump positions) from cohomology.
+
+    Parameters:
+        persistence_result : dict containing persistence analysis results with keys:
+            - 'persistence': persistent homology result
+            - 'indstemp': indices of sampled points
+            - 'movetimes': selected time points
+            - 'n_points': number of sampled points
+        spike_data : dict, optional
+            Spike data dictionary containing 'spike', 't', and optionally 'x', 'y'
+        real_ground : bool
+            Whether x, y, t ground truth exists
+        real_of : bool
+            Whether experiment was performed in open field
+        save_path : str, optional
+            Path to save decoding results. If None, saves to 'Results/spikes_decoding.npz'
+
+    Returns:
+        dict : Dictionary containing decoding results with keys:
+            - 'coords': decoded coordinates for all timepoints
+            - 'coordsbox': decoded coordinates for box timepoints
+            - 'times': time indices for coords
+            - 'times_box': time indices for coordsbox
+            - 'centcosall': cosine centroids
+            - 'centsinall': sine centroids
+    """
+    ph_classes = [0, 1]  # Decode the ith most persistent cohomology class
+    num_circ = len(ph_classes)
+    dec_tresh = 0.99
+    coeff = 47
+    
+    # Extract persistence analysis results
+    persistence = persistence_result['persistence']
+    indstemp = persistence_result['indstemp']
+    movetimes = persistence_result['movetimes']
+    n_points = persistence_result['n_points']
+    
+    diagrams = persistence["dgms"]  # the multiset describing the lives of the persistence classes
+    cocycles = persistence["cocycles"][1]  # the cocycle representatives for the 1-dim classes
+    dists_land = persistence["dperm2all"]  # the pairwise distance between the points
+    births1 = diagrams[1][:, 0]  # the time of birth for the 1-dim classes
+    deaths1 = diagrams[1][:, 1]  # the time of death for the 1-dim classes
+    deaths1[np.isinf(deaths1)] = 0
+    lives1 = deaths1 - births1  # the lifetime for the 1-dim classes
+    iMax = np.argsort(lives1)
+    coords1 = np.zeros((num_circ, len(indstemp)))
+    threshold = births1[iMax[-2]] + (deaths1[iMax[-2]] - births1[iMax[-2]]) * dec_tresh
+
+    for c in ph_classes:
+        cocycle = cocycles[iMax[-(c + 1)]]
+        coords1[c, :], inds = _get_coords(cocycle, threshold, len(indstemp), dists_land, coeff)
+
+    if real_ground:  # 用户所提供的数据是否有真实的xyt
+        sspikes, xx, yy, tt = embed_spike_trains(
+            spike_data,
+            config=SpikeEmbeddingConfig(smooth=True, speed_filter=True)
+        )
+    else:
+        sspikes = embed_spike_trains(
+            spike_data,
+            config=SpikeEmbeddingConfig(smooth=True, speed_filter=False)
+        )
+    
+    num_neurons = sspikes.shape[1]
+    centcosall = np.zeros((num_neurons, 2, n_points))
+    centsinall = np.zeros((num_neurons, 2, n_points))
+    dspk = preprocessing.scale(sspikes[movetimes[indstemp], :])
+
+    for neurid in range(num_neurons):
+        spktemp = dspk[:, neurid].copy()
+        centcosall[neurid, :, :] = np.multiply(np.cos(coords1[:, :] * 2 * np.pi), spktemp)
+        centsinall[neurid, :, :] = np.multiply(np.sin(coords1[:, :] * 2 * np.pi), spktemp)
+
+    if real_ground:  # 用户所提供的数据是否有真实的xyt
+        sspikes, xx, yy, tt = embed_spike_trains(
+            spike_data,
+            config=SpikeEmbeddingConfig(smooth=True, speed_filter=True)
+        )
+        spikes, __, __, __ = embed_spike_trains(
+            spike_data,
+            config=SpikeEmbeddingConfig(smooth=False, speed_filter=True)
+        )
+    else:
+        sspikes = embed_spike_trains(
+            spike_data,
+            config=SpikeEmbeddingConfig(smooth=True, speed_filter=False)
+        )
+        spikes = embed_spike_trains(
+            spike_data,
+            config=SpikeEmbeddingConfig(smooth=False, speed_filter=False)
+        )
+
+    times = np.where(np.sum(spikes > 0, 1) >= 1)[0]
+    dspk = preprocessing.scale(sspikes)
+    sspikes = sspikes[times, :]
+    dspk = dspk[times, :]
+
+    a = np.zeros((len(sspikes[:, 0]), 2, num_neurons))
+    for n in range(num_neurons):
+        a[:, :, n] = np.multiply(dspk[:, n : n + 1], np.sum(centcosall[n, :, :], 1))
+
+    c = np.zeros((len(sspikes[:, 0]), 2, num_neurons))
+    for n in range(num_neurons):
+        c[:, :, n] = np.multiply(dspk[:, n : n + 1], np.sum(centsinall[n, :, :], 1))
+
+    mtot2 = np.sum(c, 2)
+    mtot1 = np.sum(a, 2)
+    coords = np.arctan2(mtot2, mtot1) % (2 * np.pi)
+    
+    if real_of:  # 用户的数据是否是来自真实的OF场地
+        coordsbox = coords.copy()
+        times_box = times.copy()
+    else:
+        sspikes, xx, yy, tt = embed_spike_trains(
+            spike_data,
+            config=SpikeEmbeddingConfig(smooth=True, speed_filter=True)
+        )
+        spikes, __, __, __ = embed_spike_trains(
+            spike_data,
+            config=SpikeEmbeddingConfig(smooth=False, speed_filter=True)
+        )
+        dspk = preprocessing.scale(sspikes)
+        times_box = np.where(np.sum(spikes > 0, 1) >= 1)[0]
+        dspk = dspk[times_box, :]
+
+        a = np.zeros((len(times_box), 2, num_neurons))
+        for n in range(num_neurons):
+            a[:, :, n] = np.multiply(dspk[:, n : n + 1], np.sum(centcosall[n, :, :], 1))
+
+        c = np.zeros((len(times_box), 2, num_neurons))
+        for n in range(num_neurons):
+            c[:, :, n] = np.multiply(dspk[:, n : n + 1], np.sum(centsinall[n, :, :], 1))
+
+        mtot2 = np.sum(c, 2)
+        mtot1 = np.sum(a, 2)
+        coordsbox = np.arctan2(mtot2, mtot1) % (2 * np.pi)
+    
+    # Prepare results dictionary
+    results = {
+        'coords': coords,
+        'coordsbox': coordsbox,
+        'times': times,
+        'times_box': times_box,
+        'centcosall': centcosall,
+        'centsinall': centsinall
+    }
+    
+    # Save results
+    if save_path is None:
+        os.makedirs('Results', exist_ok=True)
+        save_path = 'Results/spikes_decoding.npz'
+    
+    os.makedirs(os.path.dirname(save_path), exist_ok=True)
+    np.savez_compressed(save_path, **results)
+    
+    return results
+
+
+def plot_3d_bump_on_torus(
+    decoding_result: dict[str, Any] | str,
+    spike_data: dict[str, Any],
+    save_path: str | None = None,
+    numangsint: int = 51,
+    r1: float = 1.5,
+    r2: float = 1.0,
+    window_size: int = 300,
+    frame_step: int = 5,
+    n_frames: int = 20,
+    fps: int = 5,
+    show_progress: bool = True,
+    show: bool = True,
+    figsize: tuple[int, int] = (8, 8),
+) -> animation.FuncAnimation:
+    """
+    Visualize the movement of the neural activity bump on a torus using matplotlib animation.
+
+    This function follows the canns.analyzer.visualize patterns for animation generation
+    with progress tracking and proper resource cleanup.
+
+    Parameters:
+        decoding_result : dict or str
+            Dictionary containing decoding results with 'coordsbox' and 'times_box' keys,
+            or path to .npz file containing these results
+        spike_data : dict, optional
+            Spike data dictionary containing spike information
+        save_path : str, optional
+            Path to save the animation (e.g., 'animation.gif' or 'animation.mp4')
+        numangsint : int
+            Grid resolution for the torus surface
+        r1 : float
+            Major radius of the torus
+        r2 : float
+            Minor radius of the torus
+        window_size : int
+            Time window (in number of time points) for each frame
+        frame_step : int
+            Step size to slide the time window between frames
+        n_frames : int
+            Total number of frames in the animation
+        fps : int
+            Frames per second for the output animation
+        show_progress : bool
+            Whether to show progress bar during generation
+        show : bool
+            Whether to display the animation
+        figsize : tuple[int, int]
+            Figure size for the animation
+
+    Returns:
+        matplotlib.animation.FuncAnimation : The animation object
+    """
+    # Load decoding results if path is provided
+    if isinstance(decoding_result, str):
+        f = np.load(decoding_result, allow_pickle=True)
+        coords = f["coordsbox"]
+        times = f["times_box"]
+        f.close()
+    else:
+        coords = decoding_result["coordsbox"]
+        times = decoding_result["times_box"]
+
+    spk, *_ = embed_spike_trains(
+        spike_data, config=SpikeEmbeddingConfig(smooth=False, speed_filter=True)
+    )
+
+    # Prepare animation data
+    frame_data = []
+    prev_m = None
+    
+    print("Preparing animation data...")
+    for frame_idx in tqdm(range(n_frames), desc="Processing frames"):
+        start_idx = frame_idx * frame_step
+        end_idx = start_idx + window_size
+        if end_idx > np.max(times):
+            break
+
+        mask = (times >= start_idx) & (times < end_idx)
+        coords_window = coords[mask]
+        if len(coords_window) == 0:
+            continue
+
+        spk_window = spk[times[mask], :]
+        activity = np.sum(spk_window, axis=1)
+
+        m, x_edge, y_edge, _ = binned_statistic_2d(
+            coords_window[:, 0],
+            coords_window[:, 1],
+            activity,
+            statistic="sum",
+            bins=np.linspace(0, 2 * np.pi, numangsint - 1),
+        )
+        m = np.nan_to_num(m)
+        m = _smooth_tuning_map(m, numangsint - 1, sig=4.0, bClose=True)
+        m = gaussian_filter(m, sigma=1.0)
+
+        if prev_m is not None:
+            m = 0.7 * prev_m + 0.3 * m
+        prev_m = m
+
+        # Store processed data for animation
+        X, Y = np.meshgrid(x_edge, y_edge)
+        X = (X + np.pi / 5) % (2 * np.pi)
+        x = (r1 + r2 * np.cos(X)) * np.cos(Y)
+        y = (r1 + r2 * np.cos(X)) * np.sin(Y)
+        z = r2 * np.sin(X)
+        
+        frame_data.append({
+            'x': x, 'y': y, 'z': z, 'm': m,
+            'time': start_idx * frame_step
+        })
+
+    if not frame_data:
+        raise ProcessingError("No valid frames generated for animation")
+
+    # Create figure and animation following visualize.py pattern
+    fig = plt.figure(figsize=figsize)
+    
+    try:
+        ax = fig.add_subplot(111, projection="3d")
+        ax.set_zlim(-2, 2)
+        ax.view_init(-125, 135)
+        ax.axis("off")
+        
+        # Initialize with first frame
+        first_frame = frame_data[0]
+        surface = ax.plot_surface(
+            first_frame['x'], first_frame['y'], first_frame['z'],
+            facecolors=cm.viridis(first_frame['m'] / (np.max(first_frame['m']) + 1e-9)),
+            alpha=1, linewidth=0.1, antialiased=True,
+            rstride=1, cstride=1, shade=False
+        )
+        
+        # Add time text
+        time_text = ax.text2D(
+            0.05, 0.95, "", transform=ax.transAxes,
+            fontsize=12, bbox=dict(facecolor="white", alpha=0.7)
+        )
+
+        def animate(frame_idx):
+            """Animation update function following visualize.py pattern."""
+            if frame_idx >= len(frame_data):
+                return surface, time_text
+                
+            frame = frame_data[frame_idx]
+            
+            # Clear and redraw surface
+            ax.clear()
+            ax.set_zlim(-2, 2)
+            ax.view_init(-125, 135)
+            ax.axis("off")
+            
+            new_surface = ax.plot_surface(
+                frame['x'], frame['y'], frame['z'],
+                facecolors=cm.viridis(frame['m'] / (np.max(frame['m']) + 1e-9)),
+                alpha=1, linewidth=0.1, antialiased=True,
+                rstride=1, cstride=1, shade=False
+            )
+            
+            # Update time text
+            time_text = ax.text2D(
+                0.05, 0.95, f"Frame: {frame_idx+1}/{len(frame_data)}",
+                transform=ax.transAxes, fontsize=12,
+                bbox=dict(facecolor="white", alpha=0.7)
+            )
+            
+            return new_surface, time_text
+
+        # Create animation
+        interval_ms = 1000 / fps
+        ani = animation.FuncAnimation(
+            fig, animate, frames=len(frame_data), 
+            interval=interval_ms, blit=False, repeat=True
+        )
+
+        # Save animation if path provided
+        if save_path:
+            if show_progress:
+                pbar = tqdm(total=len(frame_data), desc=f"Saving animation to {save_path}")
+                
+                def progress_callback(current_frame, total_frames):
+                    pbar.update(1)
+                
+                try:
+                    writer = animation.PillowWriter(fps=fps)
+                    ani.save(save_path, writer=writer, progress_callback=progress_callback)
+                    pbar.close()
+                    print(f"\nAnimation saved to: {save_path}")
+                except Exception as e:
+                    pbar.close()
+                    print(f"\nError saving animation: {e}")
+            else:
+                try:
+                    writer = animation.PillowWriter(fps=fps)
+                    ani.save(save_path, writer=writer)
+                    print(f"Animation saved to: {save_path}")
+                except Exception as e:
+                    print(f"Error saving animation: {e}")
+
+        if show:
+            plt.show()
+
+        return ani
+
+    except Exception as e:
+        plt.close(fig)
+        raise ProcessingError(f"Failed to create torus animation: {e}") from e
+
+
+def _get_coords(cocycle, threshold, num_sampled, dists, coeff):
+    """
+    Reconstruct circular coordinates from cocycle information.
+
+    Parameters:
+        cocycle (ndarray): Persistent cocycle representative.
+        threshold (float): Maximum allowable edge distance.
+        num_sampled (int): Number of sampled points.
+        dists (ndarray): Pairwise distance matrix.
+        coeff (int): Finite field modulus for cohomology.
+
+    Returns:
+        f (ndarray): Circular coordinate values (in [0,1]).
+        verts (ndarray): Indices of used vertices.
+    """
+    zint = np.where(coeff - cocycle[:, 2] < cocycle[:, 2])
+    cocycle[zint, 2] = cocycle[zint, 2] - coeff
+    d = np.zeros((num_sampled, num_sampled))
+    d[np.tril_indices(num_sampled)] = np.nan
+    d[cocycle[:, 1], cocycle[:, 0]] = cocycle[:, 2]
+    d[dists > threshold] = np.nan
+    d[dists == 0] = np.nan
+    edges = np.where(~np.isnan(d))
+    verts = np.array(np.unique(edges))
+    num_edges = np.shape(edges)[1]
+    num_verts = np.size(verts)
+    values = d[edges]
+    A = np.zeros((num_edges, num_verts), dtype=int)
+    v1 = np.zeros((num_edges, 2), dtype=int)
+    v2 = np.zeros((num_edges, 2), dtype=int)
+    for i in range(num_edges):
+        v1[i, :] = [i, np.where(verts == edges[0][i])[0]]
+        v2[i, :] = [i, np.where(verts == edges[1][i])[0]]
+
+    A[v1[:, 0], v1[:, 1]] = -1
+    A[v2[:, 0], v2[:, 1]] = 1
+
+    L = np.ones((num_edges,))
+    Aw = A * np.sqrt(L[:, np.newaxis])
+    Bw = values * np.sqrt(L)
+    f = lsmr(Aw, Bw)[0] % 1
+    return f, verts
+
+
+def _smooth_tuning_map(mtot, numangsint, sig, bClose=True):
+    """
+    Smooth activity map over circular topology (e.g., torus).
+
+    Parameters:
+        mtot (ndarray): Raw activity map matrix.
+        numangsint (int): Grid resolution.
+        sig (float): Smoothing kernel standard deviation.
+        bClose (bool): Whether to assume circular boundary conditions.
+
+    Returns:
+        mtot_out (ndarray): Smoothed map matrix.
+    """
+    numangsint_1 = numangsint - 1
+    mid = int((numangsint_1) / 2)
+    indstemp1 = np.zeros((numangsint_1, numangsint_1), dtype=int)
+    indstemp1[indstemp1 == 0] = np.arange((numangsint_1) ** 2)
+    mid = int((numangsint_1) / 2)
+    mtemp1_3 = mtot.copy()
+    for i in range(numangsint_1):
+        mtemp1_3[i, :] = np.roll(mtemp1_3[i, :], int(i / 2))
+    mtot_out = np.zeros_like(mtot)
+    mtemp1_4 = np.concatenate((mtemp1_3, mtemp1_3, mtemp1_3), 1)
+    mtemp1_5 = np.zeros_like(mtemp1_4)
+    mtemp1_5[:, :mid] = mtemp1_4[:, (numangsint_1)*3-mid:]
+    mtemp1_5[:, mid:] = mtemp1_4[:,:(numangsint_1)*3-mid]
+    if bClose:
+        mtemp1_6 = _smooth_image(
+            np.concatenate((mtemp1_5, mtemp1_4, mtemp1_5)), sigma=sig
+        )
+    else:
+        mtemp1_6 = gaussian_filter(
+            np.concatenate((mtemp1_5, mtemp1_4, mtemp1_5)), sigma=sig
+        )
+    for i in range(numangsint_1):
+        mtot_out[i, :] = mtemp1_6[
+            (numangsint_1) + i,
+            (numangsint_1)
+            + (int(i / 2) + 1) : (numangsint_1) * 2
+            + (int(i / 2) + 1),
+        ]
+    return mtot_out
+
+
+def _smooth_image(img, sigma):
+    """
+    Smooth image using multivariate Gaussian kernel, handling missing (NaN) values.
+
+    Parameters:
+        img (ndarray): Input image matrix.
+        sigma (float): Standard deviation of smoothing kernel.
+
+    Returns:
+        imgC (ndarray): Smoothed image with inpainting around NaNs.
+    """
+    filterSize = max(np.shape(img))
+    grid = np.arange(-filterSize + 1, filterSize, 1)
+    xx, yy = np.meshgrid(grid, grid)
+
+    pos = np.dstack((xx, yy))
+
+    var = multivariate_normal(mean=[0, 0], cov=[[sigma**2, 0], [0, sigma**2]])
+    k = var.pdf(pos)
+    k = k / np.sum(k)
+
+    nans = np.isnan(img)
+    imgA = img.copy()
+    imgA[nans] = 0
+    imgA = signal.convolve2d(imgA, k, mode="valid")
+    imgD = img.copy()
+    imgD[nans] = 0
+    imgD[~nans] = 1
+    radius = 1
+    L = np.arange(-radius, radius + 1)
+    X, Y = np.meshgrid(L, L)
+    dk = np.array((X**2 + Y**2) <= radius**2, dtype=bool)
+    imgE = np.zeros((filterSize + 2, filterSize + 2))
+    imgE[1:-1, 1:-1] = imgD
+    imgE = binary_closing(imgE, iterations=1, structure=dk)
+    imgD = imgE[1:-1, 1:-1]
+
+    imgB = np.divide(
+        signal.convolve2d(imgD, k, mode="valid"),
+        signal.convolve2d(np.ones(np.shape(imgD)), k, mode="valid"),
+    )
+    imgC = np.divide(imgA, imgB)
+    imgC[imgD == 0] = -np.inf
+    return imgC
 
 
 if __name__ == "__main__":
