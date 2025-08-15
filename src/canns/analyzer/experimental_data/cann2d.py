@@ -25,6 +25,9 @@ from scipy.stats import binned_statistic_2d, multivariate_normal
 from sklearn import preprocessing
 from tqdm import tqdm
 
+# Import PlotConfig for unified plotting
+from ..visualize import PlotConfig
+
 
 # ==================== Configuration Classes ====================
 @dataclass
@@ -55,6 +58,65 @@ class TDAConfig:
     show: bool = True
     do_shuffle: bool = False
     num_shuffles: int = 1000
+
+
+@dataclass
+class CANN2DPlotConfig(PlotConfig):
+    """Specialized PlotConfig for CANN2D visualizations."""
+    
+    # 3D projection specific parameters
+    zlabel: str = "Component 3"
+    dpi: int = 300
+    
+    # Torus animation specific parameters  
+    numangsint: int = 51
+    r1: float = 1.5  # Major radius
+    r2: float = 1.0  # Minor radius
+    window_size: int = 300
+    frame_step: int = 5
+    n_frames: int = 20
+    
+    @classmethod
+    def for_projection_3d(cls, **kwargs) -> 'CANN2DPlotConfig':
+        """Create configuration for 3D projection plots."""
+        defaults = {
+            "title": "3D Data Projection",
+            "xlabel": "Component 1", 
+            "ylabel": "Component 2",
+            "zlabel": "Component 3",
+            "figsize": (10, 8),
+            "dpi": 300
+        }
+        defaults.update(kwargs)
+        return cls.for_static_plot(**defaults)
+    
+    @classmethod
+    def for_torus_animation(cls, **kwargs) -> 'CANN2DPlotConfig':
+        """Create configuration for 3D torus bump animations."""
+        defaults = {
+            "title": "3D Bump on Torus",
+            "figsize": (8, 8),
+            "fps": 5,
+            "repeat": True,
+            "show_progress_bar": True,
+            "numangsint": 51,
+            "r1": 1.5,
+            "r2": 1.0,
+            "window_size": 300,
+            "frame_step": 5,
+            "n_frames": 20
+        }
+        defaults.update(kwargs)
+        time_steps = kwargs.get("time_steps_per_second", 1000)
+        config = cls.for_animation(time_steps, **defaults)
+        # Add torus-specific attributes
+        config.numangsint = defaults["numangsint"]
+        config.r1 = defaults["r1"]
+        config.r2 = defaults["r2"]
+        config.window_size = defaults["window_size"]
+        config.frame_step = defaults["frame_step"]
+        config.n_frames = defaults["n_frames"]
+        return config
 
 
 # ==================== Constants ====================
@@ -300,6 +362,7 @@ def _apply_speed_filtering(
 def plot_projection(
     reduce_func,
     embed_data,
+    config: CANN2DPlotConfig | None = None,
     title="Projection (3D)",
     xlabel="Component 1",
     ylabel="Component 2",
@@ -308,6 +371,7 @@ def plot_projection(
     show=True,
     dpi=300,
     figsize=(10, 8),
+    **kwargs
 ):
     """
     Plot a 3D projection of the embedded data.
@@ -315,6 +379,8 @@ def plot_projection(
     Parameters:
         reduce_func (callable): Function to reduce the dimensionality of the data.
         embed_data (ndarray): Data to be projected.
+        config (PlotConfig, optional): Configuration object for unified plotting parameters
+        **kwargs: backward compatibility parameters
         title (str): Title of the plot.
         xlabel (str): Label for the x-axis.
         ylabel (str): Label for the y-axis.
@@ -328,22 +394,36 @@ def plot_projection(
         fig: The created figure object.
     """
 
+    # Handle backward compatibility and configuration
+    if config is None:
+        config = CANN2DPlotConfig.for_projection_3d(
+            title=title,
+            xlabel=xlabel,
+            ylabel=ylabel,
+            zlabel=zlabel,
+            save_path=save_path,
+            show=show,
+            figsize=figsize,
+            dpi=dpi,
+            **kwargs
+        )
+
     reduced_data = reduce_func(embed_data[::5])
 
-    fig = plt.figure(figsize=figsize)
+    fig = plt.figure(figsize=config.figsize)
     ax = fig.add_subplot(111, projection="3d")
     ax.scatter(reduced_data[:, 0], reduced_data[:, 1], reduced_data[:, 2], s=1, alpha=0.5)
 
-    ax.set_title(title)
-    ax.set_xlabel(xlabel)
-    ax.set_ylabel(ylabel)
-    ax.set_zlabel(zlabel)
+    ax.set_title(config.title)
+    ax.set_xlabel(config.xlabel)
+    ax.set_ylabel(config.ylabel)
+    ax.set_zlabel(config.zlabel)
 
-    if save_path is None and show is None:
+    if config.save_path is None and config.show is None:
         raise ValueError("Either save path or show must be provided.")
-    if save_path:
-        plt.savefig(save_path, dpi=dpi)
-    if show:
+    if config.save_path:
+        plt.savefig(config.save_path, dpi=config.dpi)
+    if config.show:
         plt.show()
 
     plt.close(fig)
@@ -1623,6 +1703,7 @@ def decode_circular_coordinates(
 def plot_3d_bump_on_torus(
     decoding_result: dict[str, Any] | str,
     spike_data: dict[str, Any],
+    config: CANN2DPlotConfig | None = None,
     save_path: str | None = None,
     numangsint: int = 51,
     r1: float = 1.5,
@@ -1634,6 +1715,7 @@ def plot_3d_bump_on_torus(
     show_progress: bool = True,
     show: bool = True,
     figsize: tuple[int, int] = (8, 8),
+    **kwargs
 ) -> animation.FuncAnimation:
     """
     Visualize the movement of the neural activity bump on a torus using matplotlib animation.
@@ -1647,6 +1729,9 @@ def plot_3d_bump_on_torus(
             or path to .npz file containing these results
         spike_data : dict, optional
             Spike data dictionary containing spike information
+        config : PlotConfig, optional
+            Configuration object for unified plotting parameters
+        **kwargs : backward compatibility parameters
         save_path : str, optional
             Path to save the animation (e.g., 'animation.gif' or 'animation.mp4')
         numangsint : int
@@ -1673,6 +1758,28 @@ def plot_3d_bump_on_torus(
     Returns:
         matplotlib.animation.FuncAnimation : The animation object
     """
+    # Handle backward compatibility and configuration
+    if config is None:
+        config = CANN2DPlotConfig.for_torus_animation(**kwargs)
+    
+    # Override config with any explicitly passed parameters
+    for key, value in kwargs.items():
+        if hasattr(config, key):
+            setattr(config, key, value)
+    
+    # Extract configuration values
+    save_path = config.save_path if config.save_path else save_path
+    show = config.show
+    figsize = config.figsize
+    fps = config.fps
+    show_progress = config.show_progress_bar
+    numangsint = config.numangsint
+    r1 = config.r1
+    r2 = config.r2
+    window_size = config.window_size
+    frame_step = config.frame_step
+    n_frames = config.n_frames
+
     # Load decoding results if path is provided
     if isinstance(decoding_result, str):
         f = np.load(decoding_result, allow_pickle=True)

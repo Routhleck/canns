@@ -39,6 +39,9 @@ except ImportError:
 
 from canns.analyzer.experimental_data._datasets_utils import load_roi_data
 
+# Import PlotConfig for unified plotting
+from ..visualize import PlotConfig
+
 
 # ==================== Configuration Classes ====================
 @dataclass
@@ -72,6 +75,35 @@ class AnimationConfig:
     show_progress_bar: bool = True
     repeat: bool = False
     title: str = "1D CANN Bump Animation"
+
+
+@dataclass
+class CANN1DPlotConfig(PlotConfig):
+    """Specialized PlotConfig for CANN1D visualizations."""
+    
+    # CANN1D specific animation parameters
+    max_height_value: float = 0.5
+    max_width_range: int = 40
+    npoints: int = 300
+    nframes: int | None = None
+    bump_selection: str = "strongest"
+    
+    @classmethod
+    def for_bump_animation(cls, **kwargs) -> 'CANN1DPlotConfig':
+        """Create configuration for 1D CANN bump animation."""
+        defaults = {
+            "title": "1D CANN Bump Animation",
+            "figsize": Constants.DEFAULT_FIGSIZE,
+            "fps": 5,
+            "repeat": False,
+            "show_progress_bar": True,
+            "max_height_value": 0.5,
+            "max_width_range": 40,
+            "npoints": 300,
+            "bump_selection": "strongest"
+        }
+        defaults.update(kwargs)
+        return cls(**defaults)
 
 
 # ==================== Constants ====================
@@ -273,7 +305,10 @@ def bump_fits(data, config: BumpFitsConfig | None = None, save_path=None, **kwar
 
 
 def create_1d_bump_animation(
-    fits_data, config: AnimationConfig | None = None, save_path=None, **kwargs
+    fits_data, 
+    config: CANN1DPlotConfig | None = None,
+    save_path=None, 
+    **kwargs
 ):
     """
     Create 1D CANN bump animation using vectorized operations.
@@ -293,18 +328,12 @@ def create_1d_bump_animation(
     """
     # Handle backward compatibility and configuration
     if config is None:
-        config = AnimationConfig(
-            show=kwargs.get("show", False),
-            max_height_value=kwargs.get("max_height_value", 0.5),
-            max_width_range=kwargs.get("max_width_range", 40),
-            npoints=kwargs.get("npoints", 300),
-            nframes=kwargs.get("nframes", None),
-            fps=kwargs.get("fps", 5),
-            bump_selection=kwargs.get("bump_selection", "strongest"),
-            show_progress_bar=kwargs.get("show_progress_bar", True),
-            repeat=kwargs.get("repeat", False),
-            title=kwargs.get("title", "1D CANN Bump Animation"),
-        )
+        config = CANN1DPlotConfig.for_bump_animation(**kwargs)
+    
+    # Override config with any explicitly passed parameters
+    for key, value in kwargs.items():
+        if hasattr(config, key):
+            setattr(config, key, value)
 
     try:
         # ==== Smoothing functions ====
