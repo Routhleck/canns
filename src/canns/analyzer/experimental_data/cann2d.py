@@ -265,7 +265,6 @@ def _apply_temporal_smoothing(spikes_bin: np.ndarray, config: SpikeEmbeddingConf
     smoothed = np.zeros((spikes_bin.shape[0], spikes_bin.shape[1]))
 
     # Use scipy's gaussian_filter1d for better performance
-    from scipy.ndimage import gaussian_filter1d
 
     sigma_bins = config.sigma / config.dt
 
@@ -352,9 +351,7 @@ def plot_projection(
     return fig
 
 
-def tda_vis(
-    embed_data: np.ndarray, config: TDAConfig | None = None, **kwargs
-) -> dict[str, Any]:
+def tda_vis(embed_data: np.ndarray, config: TDAConfig | None = None, **kwargs) -> dict[str, Any]:
     """
     Topological Data Analysis visualization with optional shuffle testing.
 
@@ -368,7 +365,7 @@ def tda_vis(
     Returns:
         dict : Dictionary containing:
             - persistence: persistence diagrams from real data
-            - indstemp: indices of sampled points  
+            - indstemp: indices of sampled points
             - movetimes: selected time points
             - n_points: number of sampled points
             - shuffle_max: shuffle analysis results (if do_shuffle=True, otherwise None)
@@ -401,15 +398,15 @@ def tda_vis(
             shuffle_max = _perform_shuffle_analysis(embed_data, config)
 
         # Visualization
-        _handle_visualization(real_persistence['persistence'], shuffle_max, config)
+        _handle_visualization(real_persistence["persistence"], shuffle_max, config)
 
         # Return results as dictionary
         return {
-            'persistence': real_persistence['persistence'],
-            'indstemp': real_persistence['indstemp'], 
-            'movetimes': real_persistence['movetimes'],
-            'n_points': real_persistence['n_points'],
-            'shuffle_max': shuffle_max
+            "persistence": real_persistence["persistence"],
+            "indstemp": real_persistence["indstemp"],
+            "movetimes": real_persistence["movetimes"],
+            "n_points": real_persistence["n_points"],
+            "shuffle_max": shuffle_max,
         }
 
     except Exception as e:
@@ -447,10 +444,10 @@ def _compute_real_persistence(embed_data: np.ndarray, config: TDAConfig) -> dict
 
     # Return all necessary data in dictionary format
     return {
-        'persistence': persistence,
-        'indstemp': indstemp,
-        'movetimes': movetimes,
-        'n_points': config.n_points
+        "persistence": persistence,
+        "indstemp": indstemp,
+        "movetimes": movetimes,
+        "n_points": config.n_points,
     }
 
 
@@ -968,23 +965,23 @@ def _sample_denoising_numba(data, k=10, num_sample=500, omega=0.2, metric="eucli
 
     sigmas, rhos = _smooth_knn_dist(knn_dists, k, local_connectivity=0)
     rows, cols, vals = _compute_membership_strengths(knn_indices, knn_dists, sigmas, rhos)
-    
+
     # Build symmetric adjacency matrix using optimized function
     X_adj = _build_adjacency_matrix_numba(rows, cols, vals, n)
-    
+
     # Greedy sampling using optimized function
     inds, Fs = _greedy_sampling_numba(X_adj, num_sample, omega)
-    
+
     # Build final distance matrix
     d = _build_distance_matrix_numba(X_adj, inds)
-    
+
     return inds, d, Fs
 
 
 @njit(fastmath=True)
 def _build_adjacency_matrix_numba(rows, cols, vals, n):
     """Build symmetric adjacency matrix efficiently with numba.
-    
+
     This matches the scipy sparse matrix operations:
     result = result + transpose - prod_matrix
     where prod_matrix = result.multiply(transpose)
@@ -992,19 +989,19 @@ def _build_adjacency_matrix_numba(rows, cols, vals, n):
     # Initialize matrices
     X = np.zeros((n, n), dtype=np.float64)
     X_T = np.zeros((n, n), dtype=np.float64)
-    
+
     # Build adjacency matrix and its transpose simultaneously
     for i in range(len(rows)):
         X[rows[i], cols[i]] = vals[i]
         X_T[cols[i], rows[i]] = vals[i]  # Transpose
-    
+
     # Apply the symmetrization formula: A = A + A^T - A ⊙ A^T
     # This matches scipy's: result + transpose - prod_matrix
     for i in range(n):
         for j in range(n):
             prod_val = X[i, j] * X_T[i, j]  # Element-wise multiplication
             X[i, j] = X[i, j] + X_T[i, j] - prod_val
-    
+
     return X
 
 
@@ -1016,19 +1013,19 @@ def _greedy_sampling_numba(X, num_sample, omega):
     Fs = np.zeros(num_sample)
     inds = np.zeros(num_sample, dtype=np.int64)
     inds_left = np.ones(n, dtype=np.bool_)
-    
+
     # Initialize with maximum F
     i = np.argmax(F)
     Fs[0] = F[i]
     inds[0] = i
     inds_left[i] = False
-    
+
     # Greedy sampling loop
     for j in range(1, num_sample):
         # Update F values
         for k in range(n):
             F[k] -= omega * X[i, k]
-        
+
         # Find maximum among remaining points (matching numpy logic exactly)
         max_val = -np.inf
         max_idx = -1
@@ -1036,13 +1033,13 @@ def _greedy_sampling_numba(X, num_sample, omega):
             if inds_left[k] and F[k] > max_val:
                 max_val = F[k]
                 max_idx = k
-        
+
         # Record the F value using the selected index (matching external TDAvis)
         i = max_idx
         Fs[j] = F[i]
         inds[j] = i
         inds_left[i] = False
-    
+
     return inds, Fs
 
 
@@ -1051,11 +1048,11 @@ def _build_distance_matrix_numba(X, inds):
     """Build final distance matrix efficiently with numba."""
     num_sample = len(inds)
     d = np.zeros((num_sample, num_sample))
-    
+
     for j in range(num_sample):
         for k in range(num_sample):
             d[j, k] = X[inds[j], inds[k]]
-    
+
     return d
 
 
@@ -1218,7 +1215,7 @@ def _second_build(data, indstemp, nbs=800, metric="cosine"):
     d = result.toarray()
     # Match external TDAvis: direct negative log without epsilon handling
     # Temporarily suppress divide by zero warning to match external behavior
-    with np.errstate(divide='ignore', invalid='ignore'):
+    with np.errstate(divide="ignore", invalid="ignore"):
         d = -np.log(d)
     np.fill_diagonal(d, 0)
 
@@ -1260,7 +1257,7 @@ def _run_shuffle_analysis_multiprocessing(sspikes, num_shuffles=1000, num_cores=
     return max_lifetimes
 
 
-@njit(fastmath=True)  
+@njit(fastmath=True)
 def _fast_pca_transform(data, components):
     """Fast PCA transformation using numba."""
     return np.dot(data, components.T)
@@ -1503,13 +1500,13 @@ def decode_circular_coordinates(
     num_circ = len(ph_classes)
     dec_tresh = 0.99
     coeff = 47
-    
+
     # Extract persistence analysis results
-    persistence = persistence_result['persistence']
-    indstemp = persistence_result['indstemp']
-    movetimes = persistence_result['movetimes']
-    n_points = persistence_result['n_points']
-    
+    persistence = persistence_result["persistence"]
+    indstemp = persistence_result["indstemp"]
+    movetimes = persistence_result["movetimes"]
+    n_points = persistence_result["n_points"]
+
     diagrams = persistence["dgms"]  # the multiset describing the lives of the persistence classes
     cocycles = persistence["cocycles"][1]  # the cocycle representatives for the 1-dim classes
     dists_land = persistence["dperm2all"]  # the pairwise distance between the points
@@ -1527,15 +1524,13 @@ def decode_circular_coordinates(
 
     if real_ground:  # 用户所提供的数据是否有真实的xyt
         sspikes, xx, yy, tt = embed_spike_trains(
-            spike_data,
-            config=SpikeEmbeddingConfig(smooth=True, speed_filter=True)
+            spike_data, config=SpikeEmbeddingConfig(smooth=True, speed_filter=True)
         )
     else:
         sspikes = embed_spike_trains(
-            spike_data,
-            config=SpikeEmbeddingConfig(smooth=True, speed_filter=False)
+            spike_data, config=SpikeEmbeddingConfig(smooth=True, speed_filter=False)
         )
-    
+
     num_neurons = sspikes.shape[1]
     centcosall = np.zeros((num_neurons, 2, n_points))
     centsinall = np.zeros((num_neurons, 2, n_points))
@@ -1548,21 +1543,17 @@ def decode_circular_coordinates(
 
     if real_ground:  # 用户所提供的数据是否有真实的xyt
         sspikes, xx, yy, tt = embed_spike_trains(
-            spike_data,
-            config=SpikeEmbeddingConfig(smooth=True, speed_filter=True)
+            spike_data, config=SpikeEmbeddingConfig(smooth=True, speed_filter=True)
         )
         spikes, __, __, __ = embed_spike_trains(
-            spike_data,
-            config=SpikeEmbeddingConfig(smooth=False, speed_filter=True)
+            spike_data, config=SpikeEmbeddingConfig(smooth=False, speed_filter=True)
         )
     else:
         sspikes = embed_spike_trains(
-            spike_data,
-            config=SpikeEmbeddingConfig(smooth=True, speed_filter=False)
+            spike_data, config=SpikeEmbeddingConfig(smooth=True, speed_filter=False)
         )
         spikes = embed_spike_trains(
-            spike_data,
-            config=SpikeEmbeddingConfig(smooth=False, speed_filter=False)
+            spike_data, config=SpikeEmbeddingConfig(smooth=False, speed_filter=False)
         )
 
     times = np.where(np.sum(spikes > 0, 1) >= 1)[0]
@@ -1581,18 +1572,16 @@ def decode_circular_coordinates(
     mtot2 = np.sum(c, 2)
     mtot1 = np.sum(a, 2)
     coords = np.arctan2(mtot2, mtot1) % (2 * np.pi)
-    
+
     if real_of:  # 用户的数据是否是来自真实的OF场地
         coordsbox = coords.copy()
         times_box = times.copy()
     else:
         sspikes, xx, yy, tt = embed_spike_trains(
-            spike_data,
-            config=SpikeEmbeddingConfig(smooth=True, speed_filter=True)
+            spike_data, config=SpikeEmbeddingConfig(smooth=True, speed_filter=True)
         )
         spikes, __, __, __ = embed_spike_trains(
-            spike_data,
-            config=SpikeEmbeddingConfig(smooth=False, speed_filter=True)
+            spike_data, config=SpikeEmbeddingConfig(smooth=False, speed_filter=True)
         )
         dspk = preprocessing.scale(sspikes)
         times_box = np.where(np.sum(spikes > 0, 1) >= 1)[0]
@@ -1609,25 +1598,25 @@ def decode_circular_coordinates(
         mtot2 = np.sum(c, 2)
         mtot1 = np.sum(a, 2)
         coordsbox = np.arctan2(mtot2, mtot1) % (2 * np.pi)
-    
+
     # Prepare results dictionary
     results = {
-        'coords': coords,
-        'coordsbox': coordsbox,
-        'times': times,
-        'times_box': times_box,
-        'centcosall': centcosall,
-        'centsinall': centsinall
+        "coords": coords,
+        "coordsbox": coordsbox,
+        "times": times,
+        "times_box": times_box,
+        "centcosall": centcosall,
+        "centsinall": centsinall,
     }
-    
+
     # Save results
     if save_path is None:
-        os.makedirs('Results', exist_ok=True)
-        save_path = 'Results/spikes_decoding.npz'
-    
+        os.makedirs("Results", exist_ok=True)
+        save_path = "Results/spikes_decoding.npz"
+
     os.makedirs(os.path.dirname(save_path), exist_ok=True)
     np.savez_compressed(save_path, **results)
-    
+
     return results
 
 
@@ -1701,7 +1690,7 @@ def plot_3d_bump_on_torus(
     # Prepare animation data
     frame_data = []
     prev_m = None
-    
+
     print("Preparing animation data...")
     for frame_idx in tqdm(range(n_frames), desc="Processing frames"):
         start_idx = frame_idx * frame_step
@@ -1738,83 +1727,98 @@ def plot_3d_bump_on_torus(
         x = (r1 + r2 * np.cos(X)) * np.cos(Y)
         y = (r1 + r2 * np.cos(X)) * np.sin(Y)
         z = r2 * np.sin(X)
-        
-        frame_data.append({
-            'x': x, 'y': y, 'z': z, 'm': m,
-            'time': start_idx * frame_step
-        })
+
+        frame_data.append({"x": x, "y": y, "z": z, "m": m, "time": start_idx * frame_step})
 
     if not frame_data:
         raise ProcessingError("No valid frames generated for animation")
 
     # Create figure and animation following visualize.py pattern
     fig = plt.figure(figsize=figsize)
-    
+
     try:
         ax = fig.add_subplot(111, projection="3d")
         ax.set_zlim(-2, 2)
         ax.view_init(-125, 135)
         ax.axis("off")
-        
+
         # Initialize with first frame
         first_frame = frame_data[0]
         surface = ax.plot_surface(
-            first_frame['x'], first_frame['y'], first_frame['z'],
-            facecolors=cm.viridis(first_frame['m'] / (np.max(first_frame['m']) + 1e-9)),
-            alpha=1, linewidth=0.1, antialiased=True,
-            rstride=1, cstride=1, shade=False
+            first_frame["x"],
+            first_frame["y"],
+            first_frame["z"],
+            facecolors=cm.viridis(first_frame["m"] / (np.max(first_frame["m"]) + 1e-9)),
+            alpha=1,
+            linewidth=0.1,
+            antialiased=True,
+            rstride=1,
+            cstride=1,
+            shade=False,
         )
-        
+
         # Add time text
         time_text = ax.text2D(
-            0.05, 0.95, "", transform=ax.transAxes,
-            fontsize=12, bbox=dict(facecolor="white", alpha=0.7)
+            0.05,
+            0.95,
+            "",
+            transform=ax.transAxes,
+            fontsize=12,
+            bbox=dict(facecolor="white", alpha=0.7),
         )
 
         def animate(frame_idx):
             """Animation update function following visualize.py pattern."""
             if frame_idx >= len(frame_data):
-                return surface, time_text
-                
+                return surface,
+
             frame = frame_data[frame_idx]
-            
+
             # Clear and redraw surface
             ax.clear()
             ax.set_zlim(-2, 2)
             ax.view_init(-125, 135)
             ax.axis("off")
-            
+
             new_surface = ax.plot_surface(
-                frame['x'], frame['y'], frame['z'],
-                facecolors=cm.viridis(frame['m'] / (np.max(frame['m']) + 1e-9)),
-                alpha=1, linewidth=0.1, antialiased=True,
-                rstride=1, cstride=1, shade=False
+                frame["x"],
+                frame["y"],
+                frame["z"],
+                facecolors=cm.viridis(frame["m"] / (np.max(frame["m"]) + 1e-9)),
+                alpha=1,
+                linewidth=0.1,
+                antialiased=True,
+                rstride=1,
+                cstride=1,
+                shade=False,
             )
-            
+
             # Update time text
             time_text = ax.text2D(
-                0.05, 0.95, f"Frame: {frame_idx+1}/{len(frame_data)}",
-                transform=ax.transAxes, fontsize=12,
-                bbox=dict(facecolor="white", alpha=0.7)
+                0.05,
+                0.95,
+                f"Frame: {frame_idx + 1}/{len(frame_data)}",
+                transform=ax.transAxes,
+                fontsize=12,
+                bbox=dict(facecolor="white", alpha=0.7),
             )
-            
+
             return new_surface, time_text
 
         # Create animation
         interval_ms = 1000 / fps
         ani = animation.FuncAnimation(
-            fig, animate, frames=len(frame_data), 
-            interval=interval_ms, blit=False, repeat=True
+            fig, animate, frames=len(frame_data), interval=interval_ms, blit=False, repeat=True
         )
 
         # Save animation if path provided
         if save_path:
             if show_progress:
                 pbar = tqdm(total=len(frame_data), desc=f"Saving animation to {save_path}")
-                
+
                 def progress_callback(current_frame, total_frames):
                     pbar.update(1)
-                
+
                 try:
                     writer = animation.PillowWriter(fps=fps)
                     ani.save(save_path, writer=writer, progress_callback=progress_callback)
@@ -1909,22 +1913,16 @@ def _smooth_tuning_map(mtot, numangsint, sig, bClose=True):
     mtot_out = np.zeros_like(mtot)
     mtemp1_4 = np.concatenate((mtemp1_3, mtemp1_3, mtemp1_3), 1)
     mtemp1_5 = np.zeros_like(mtemp1_4)
-    mtemp1_5[:, :mid] = mtemp1_4[:, (numangsint_1)*3-mid:]
-    mtemp1_5[:, mid:] = mtemp1_4[:,:(numangsint_1)*3-mid]
+    mtemp1_5[:, :mid] = mtemp1_4[:, (numangsint_1) * 3 - mid :]
+    mtemp1_5[:, mid:] = mtemp1_4[:, : (numangsint_1) * 3 - mid]
     if bClose:
-        mtemp1_6 = _smooth_image(
-            np.concatenate((mtemp1_5, mtemp1_4, mtemp1_5)), sigma=sig
-        )
+        mtemp1_6 = _smooth_image(np.concatenate((mtemp1_5, mtemp1_4, mtemp1_5)), sigma=sig)
     else:
-        mtemp1_6 = gaussian_filter(
-            np.concatenate((mtemp1_5, mtemp1_4, mtemp1_5)), sigma=sig
-        )
+        mtemp1_6 = gaussian_filter(np.concatenate((mtemp1_5, mtemp1_4, mtemp1_5)), sigma=sig)
     for i in range(numangsint_1):
         mtot_out[i, :] = mtemp1_6[
             (numangsint_1) + i,
-            (numangsint_1)
-            + (int(i / 2) + 1) : (numangsint_1) * 2
-            + (int(i / 2) + 1),
+            (numangsint_1) + (int(i / 2) + 1) : (numangsint_1) * 2 + (int(i / 2) + 1),
         ]
     return mtot_out
 
@@ -1999,6 +1997,4 @@ if __name__ == "__main__":
     #     embed_data=spikes, maxdim=2, do_shuffle=False, show=True
     # )
 
-    results = tda_vis(
-        embed_data=spikes, maxdim=1, do_shuffle=True, num_shuffles=10, show=True
-    )
+    results = tda_vis(embed_data=spikes, maxdim=1, do_shuffle=True, num_shuffles=10, show=True)
