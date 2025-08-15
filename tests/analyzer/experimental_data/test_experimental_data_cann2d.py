@@ -11,6 +11,7 @@ import pytest
 from canns.analyzer.experimental_data import (
     SpikeEmbeddingConfig,
     TDAConfig,
+    CANN2DPlotConfig,
     embed_spike_trains,
     tda_vis,
     decode_circular_coordinates,
@@ -229,18 +230,37 @@ def test_plot_3d_bump_on_torus():
     embed_data = create_mock_spike_data(num_neurons=10, num_timepoints=200)
     
     try:
-        ani = plot_3d_bump_on_torus(
-            decoding_result=decoding_result,
-            embed_data=embed_data,
-            save_path=None,  # Don't save during test
+        # Test with new config-based approach
+        config = CANN2DPlotConfig.for_torus_animation(
             n_frames=3,  # Very few frames for speed
             window_size=20,
             show=False,  # Don't display during test
-            show_progress=False
+            show_progress_bar=False,
+            fps=2
+        )
+        
+        ani = plot_3d_bump_on_torus(
+            decoding_result=decoding_result,
+            spike_data=embed_data,
+            config=config
         )
         
         assert ani is not None
-        print("3D torus animation creation works")
+        print("3D torus animation creation with config works")
+        
+        # Test backward compatibility
+        ani_old = plot_3d_bump_on_torus(
+            decoding_result=decoding_result,
+            spike_data=embed_data,
+            save_path=None,
+            n_frames=3,
+            window_size=20,
+            show=False,
+            show_progress=False
+        )
+        
+        assert ani_old is not None
+        print("3D torus animation creation with old-style parameters works")
         
     except Exception as e:
         print(f"Torus animation test failed: {e}")

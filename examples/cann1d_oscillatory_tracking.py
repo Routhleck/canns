@@ -1,6 +1,6 @@
 import brainstate
 
-from canns.analyzer.visualize import energy_landscape_1d_animation
+from canns.analyzer.visualize import energy_landscape_1d_animation, PlotConfigs
 from canns.models.basic import CANN1D, CANN1D_SFA
 from canns.task.tracking import SmoothTracking1D
 
@@ -26,8 +26,9 @@ us, inps = brainstate.compile.for_loop(
     task_st.data,
     pbar=brainstate.compile.ProgressBar(10)
 )
-energy_landscape_1d_animation(
-    {'u': (cann.x, us), 'Iext': (cann.x, inps)},
+
+# Using new config-based approach
+config = PlotConfigs.energy_landscape_1d_animation(
     time_steps_per_second=100,
     fps=20,
     title='Smooth Tracking 1D',
@@ -35,5 +36,23 @@ energy_landscape_1d_animation(
     ylabel='Activity',
     repeat=True,
     save_path='test_smooth_tracking_1d.gif',
-    show=False,
+    show=False
 )
+
+energy_landscape_1d_animation(
+    data_sets={'u': (cann.x, us), 'Iext': (cann.x, inps)},
+    config=config
+)
+
+# For comparison, the old-style approach still works:
+# energy_landscape_1d_animation(
+#     {'u': (cann.x, us), 'Iext': (cann.x, inps)},
+#     time_steps_per_second=100,
+#     fps=20,
+#     title='Smooth Tracking 1D (Old Style)',
+#     xlabel='State',
+#     ylabel='Activity',
+#     repeat=True,
+#     save_path='test_smooth_tracking_1d_old.gif',
+#     show=False,
+# )

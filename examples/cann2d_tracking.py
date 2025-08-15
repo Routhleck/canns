@@ -3,7 +3,7 @@ import brainstate.compile
 import brainunit as u
 import jax
 
-from canns.analyzer.visualize import energy_landscape_2d_animation
+from canns.analyzer.visualize import energy_landscape_2d_animation, PlotConfigs
 from canns.models.basic import CANN2D
 from canns.task.tracking import SmoothTracking2D
 
@@ -32,8 +32,8 @@ cann_us, cann_rs, inps = bst.compile.for_loop(
     pbar=brainstate.compile.ProgressBar(10)
 )
 
-energy_landscape_2d_animation(
-    zs_data=cann_us,
+# Using new config-based approach
+config = PlotConfigs.energy_landscape_2d_animation(
     time_steps_per_second=100,
     fps=20,
     title='CANN2D Encoding',
@@ -42,5 +42,24 @@ energy_landscape_2d_animation(
     clabel='Activity',
     repeat=True,
     save_path='CANN2D_encoding.gif',
-    show=False,
+    show=False
 )
+
+energy_landscape_2d_animation(
+    zs_data=cann_us,
+    config=config
+)
+
+# For comparison, the old-style approach still works:
+# energy_landscape_2d_animation(
+#     zs_data=cann_us,
+#     time_steps_per_second=100,
+#     fps=20,
+#     title='CANN2D Encoding (Old Style)',
+#     xlabel='State X',
+#     ylabel='State Y',
+#     clabel='Activity',
+#     repeat=True,
+#     save_path='CANN2D_encoding_old.gif',
+#     show=False,
+# )

@@ -1,7 +1,7 @@
 import brainstate
 import numpy as np
 
-from canns.analyzer.visualize import tuning_curve, energy_landscape_1d_animation
+from canns.analyzer.visualize import tuning_curve, energy_landscape_1d_animation, PlotConfigs
 from canns.models.basic import CANN1D, CANN1D_SFA
 from canns.task.tracking import SmoothTracking1D
 
@@ -28,8 +28,8 @@ rs, inps = brainstate.compile.for_loop(
     pbar=brainstate.compile.ProgressBar(10)
 )
 
-# energy_landscape_1d_animation(
-#     {'u': (cann.x, rs), 'Iext': (cann.x, inps)},
+# Example of using config-based approach for energy landscape animation
+# config_anim = PlotConfigs.energy_landscape_1d_animation(
 #     time_steps_per_second=100,
 #     fps=20,
 #     title='Smooth Tracking 1D',
@@ -37,22 +37,47 @@ rs, inps = brainstate.compile.for_loop(
 #     ylabel='Activity',
 #     repeat=True,
 #     save_path='smooth_tracking_1d.gif',
-#     show=False,
+#     show=False
+# )
+# energy_landscape_1d_animation(
+#     data_sets={'u': (cann.x, rs), 'Iext': (cann.x, inps)},
+#     config=config_anim
 # )
 
 neuron_indices_to_plot = [128, 256, 384]
-tuning_curve(
-    stimulus=task_st.Iext_sequence.squeeze(),
-    firing_rates=rs,
-    neuron_indices=neuron_indices_to_plot,
-    pref_stim=cann.x,
+
+# Using new config-based approach
+config = PlotConfigs.tuning_curve(
     num_bins=50,
+    pref_stim=cann.x,
     title='Tuning Curves of Selected Neurons',
     xlabel='Stimulus Position (rad)',
     ylabel='Average Firing Rate',
     show=True,
     save_path=None,
-    linewidth=2,
-    marker='o',
-    markersize=4,
+    kwargs={'linewidth': 2, 'marker': 'o', 'markersize': 4}
 )
+
+tuning_curve(
+    stimulus=task_st.Iext_sequence.squeeze(),
+    firing_rates=rs,
+    neuron_indices=neuron_indices_to_plot,
+    config=config
+)
+
+# For comparison, the old-style approach still works:
+# tuning_curve(
+#     stimulus=task_st.Iext_sequence.squeeze(),
+#     firing_rates=rs,
+#     neuron_indices=neuron_indices_to_plot,
+#     pref_stim=cann.x,
+#     num_bins=50,
+#     title='Tuning Curves of Selected Neurons (Old Style)',
+#     xlabel='Stimulus Position (rad)',
+#     ylabel='Average Firing Rate',
+#     show=False,  # Set to False to avoid duplicate display
+#     save_path=None,
+#     linewidth=2,
+#     marker='o',
+#     markersize=4,
+# )
