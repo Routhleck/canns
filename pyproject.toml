@@ -43,7 +43,6 @@ dependencies = [
     "furo>=2025.7.19",
     "notebook>=7.4.4",
     "ratinabox>=1.15.3",
-    "ripser>=0.6.12",
     "tqdm",
 ]
 
