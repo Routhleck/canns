@@ -1,3 +1,4 @@
+import logging
 import multiprocessing as mp
 import numbers
 import os
@@ -8,7 +9,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib import animation, cm, gridspec
 from numpy.exceptions import AxisError
-from ripser import ripser
+from canns_ripser import ripser
+# from ripser import ripser
 from scipy import signal
 from scipy.ndimage import (
     _nd_image,
@@ -58,6 +60,7 @@ class TDAConfig:
     show: bool = True
     do_shuffle: bool = False
     num_shuffles: int = 1000
+    progress_bar: bool = True
 
 
 @dataclass
@@ -465,6 +468,7 @@ def tda_vis(embed_data: np.ndarray, config: TDAConfig | None = None, **kwargs) -
             show=kwargs.get("show", True),
             do_shuffle=kwargs.get("do_shuffle", False),
             num_shuffles=kwargs.get("num_shuffles", 1000),
+            progress_bar=kwargs.get("progress_bar", True),
         )
 
     try:
@@ -496,31 +500,29 @@ def tda_vis(embed_data: np.ndarray, config: TDAConfig | None = None, **kwargs) -
 def _compute_real_persistence(embed_data: np.ndarray, config: TDAConfig) -> dict[str, Any]:
     """Compute persistent homology for real data with progress tracking."""
 
-    with tqdm(total=5, desc="Processing real data") as pbar:
-        # Step 1: Time point downsampling
-        pbar.set_description("Time point downsampling")
-        times_cube = _downsample_timepoints(embed_data, config.num_times)
-        pbar.update(1)
+    logging.info("Processing real data - Starting TDA analysis (5 steps)")
+    
+    # Step 1: Time point downsampling
+    logging.info("Step 1/5: Time point downsampling")
+    times_cube = _downsample_timepoints(embed_data, config.num_times)
 
-        # Step 2: Select most active time points
-        pbar.set_description("Selecting active time points")
-        movetimes = _select_active_timepoints(embed_data, times_cube, config.active_times)
-        pbar.update(1)
+    # Step 2: Select most active time points
+    logging.info("Step 2/5: Selecting active time points")
+    movetimes = _select_active_timepoints(embed_data, times_cube, config.active_times)
 
-        # Step 3: PCA dimensionality reduction
-        pbar.set_description("PCA dimensionality reduction")
-        dimred = _apply_pca_reduction(embed_data, movetimes, config.dim)
-        pbar.update(1)
+    # Step 3: PCA dimensionality reduction
+    logging.info("Step 3/5: PCA dimensionality reduction")
+    dimred = _apply_pca_reduction(embed_data, movetimes, config.dim)
 
-        # Step 4: Point cloud sampling (denoising)
-        pbar.set_description("Point cloud denoising")
-        indstemp = _apply_denoising(dimred, config)
-        pbar.update(1)
+    # Step 4: Point cloud sampling (denoising)
+    logging.info("Step 4/5: Point cloud denoising")
+    indstemp = _apply_denoising(dimred, config)
 
-        # Step 5: Compute persistent homology
-        pbar.set_description("Computing persistent homology")
-        persistence = _compute_persistence_homology(dimred, indstemp, config)
-        pbar.update(1)
+    # Step 5: Compute persistent homology
+    logging.info("Step 5/5: Computing persistent homology")
+    persistence = _compute_persistence_homology(dimred, indstemp, config)
+    
+    logging.info("TDA analysis completed successfully")
 
     # Return all necessary data in dictionary format
     return {
@@ -573,7 +575,12 @@ def _compute_persistence_homology(
     np.fill_diagonal(d, 0)
 
     return ripser(
-        d, maxdim=config.maxdim, coeff=config.coeff, do_cocycles=True, distance_matrix=True
+        d,
+        maxdim=config.maxdim,
+        coeff=config.coeff,
+        do_cocycles=True,
+        distance_matrix=True,
+        progress_bar=config.progress_bar
     )
 
 
@@ -598,6 +605,7 @@ def _perform_shuffle_analysis(embed_data: np.ndarray, config: TDAConfig) -> dict
         embed_data,
         num_shuffles=config.num_shuffles,
         num_cores=Constants.MULTIPROCESSING_CORES,
+        progress_bar=config.progress_bar,
         **shuffle_params,
     )
 
@@ -907,6 +915,7 @@ def _compute_persistence(
     nbs=800,
     maxdim=1,
     coeff=47,
+    progress_bar=True,
 ):
     # Time point downsampling
     times_cube = np.arange(0, sspikes.shape[0], num_times)
@@ -927,7 +936,7 @@ def _compute_persistence(
     np.fill_diagonal(d, 0)
 
     # Compute persistent homology
-    persistence = ripser(d, maxdim=maxdim, coeff=coeff, do_cocycles=True, distance_matrix=True)
+    persistence = ripser(d, maxdim=maxdim, coeff=coeff, do_cocycles=True, distance_matrix=True, progress_bar=progress_bar)
 
     return persistence
 
@@ -1302,32 +1311,28 @@ def _second_build(data, indstemp, nbs=800, metric="cosine"):
     return d
 
 
-def _run_shuffle_analysis(sspikes, num_shuffles=1000, num_cores=4, **kwargs):
+def _run_shuffle_analysis(sspikes, num_shuffles=1000, num_cores=4, progress_bar=True, **kwargs):
     """Perform shuffle analysis with optimized computation."""
-    return _run_shuffle_analysis_multiprocessing(sspikes, num_shuffles, num_cores, **kwargs)
+    return _run_shuffle_analysis_multiprocessing(sspikes, num_shuffles, num_cores, progress_bar, **kwargs)
 
 
-def _run_shuffle_analysis_multiprocessing(sspikes, num_shuffles=1000, num_cores=4, **kwargs):
+def _run_shuffle_analysis_multiprocessing(sspikes, num_shuffles=1000, num_cores=4, progress_bar=True, **kwargs):
     """Original multiprocessing implementation for fallback."""
     max_lifetimes = {0: [], 1: [], 2: []}
 
     # Estimate runtime with a test iteration
-    print("Running test iteration to estimate runtime...")
+    logging.info("Running test iteration to estimate runtime...")
 
     _ = _process_single_shuffle((0, sspikes, kwargs))
 
     # Prepare task list
     tasks = [(i, sspikes, kwargs) for i in range(num_shuffles)]
+    logging.info(f"Starting shuffle analysis with {num_shuffles} iterations using {num_cores} cores...")
 
     # Use multiprocessing pool for parallel processing
     with mp.Pool(processes=num_cores) as pool:
-        results = list(
-            tqdm(
-                pool.imap(_process_single_shuffle, tasks),
-                total=num_shuffles,
-                desc="Running shuffle analysis",
-            )
-        )
+        results = list(pool.imap(_process_single_shuffle, tasks))
+        logging.info("Shuffle analysis completed")
 
     # Collect results
     for res in results:
@@ -1798,7 +1803,6 @@ def plot_3d_bump_on_torus(
     frame_data = []
     prev_m = None
 
-    print("Preparing animation data...")
     for frame_idx in tqdm(range(n_frames), desc="Processing frames"):
         start_idx = frame_idx * frame_step
         end_idx = start_idx + window_size
@@ -2102,8 +2106,8 @@ if __name__ == "__main__":
     # reduce_func = reducer.fit_transform
     #
     # plot_projection(reduce_func=reduce_func, embed_data=spikes, show=True)
-    # results = tda_vis(
-    #     embed_data=spikes, maxdim=2, do_shuffle=False, show=True
-    # )
+    results = tda_vis(
+        embed_data=spikes, maxdim=1, do_shuffle=False, show=True
+    )
 
-    results = tda_vis(embed_data=spikes, maxdim=1, do_shuffle=True, num_shuffles=10, show=True)
+    # results = tda_vis(embed_data=spikes, maxdim=1, do_shuffle=True, num_shuffles=10, show=True)

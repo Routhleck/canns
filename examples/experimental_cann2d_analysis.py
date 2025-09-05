@@ -60,9 +60,11 @@ plot_projection(
 tda_config = TDAConfig(
     maxdim=1,
     do_shuffle=False,
+    # num_shuffles=10,
     show=True,
     dim=6,
-    n_points=1200
+    n_points=1200,
+    progress_bar=True,
 )
 
 persistence_result = tda_vis(
