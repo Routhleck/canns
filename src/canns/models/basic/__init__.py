@@ -2,4 +2,12 @@ from .cann import CANN1D as CANN1D
 from .cann import CANN1D_SFA as CANN1D_SFA
 from .cann import CANN2D as CANN2D
 from .cann import CANN2D_SFA as CANN2D_SFA
+from .grid_cell import GridCell1D as GridCell1D
+from .grid_cell import GridCell1D_CAN as GridCell1D_CAN
+from .grid_cell import GridCell2D as GridCell2D
+from .grid_cell import GridCell2D_CAN as GridCell2D_CAN
 from .hierarchical_model import HierarchicalNetwork as HierarchicalNetwork
+from .place_cell import PlaceCell1D as PlaceCell1D
+from .place_cell import PlaceCell1D_Theta as PlaceCell1D_Theta
+from .place_cell import PlaceCell2D as PlaceCell2D
+from .place_cell import PlaceCell2D_Theta as PlaceCell2D_Theta
