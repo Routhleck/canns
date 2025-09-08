@@ -176,7 +176,7 @@ class PlaceCell1D_Theta(BasePlaceCell1D):
     is modulated by both spatial location and theta phase.
 
     Reference:
-        O'Keefe, J., & Recce, M. L. (1993). Phase relationship between hippocampal 
+        O'Keefe, J., & Recce, M. L. (1993). Phase relationship between hippocampal
         place units and the EEG theta rhythm. Hippocampus, 3(3), 317-330.
     """
 
