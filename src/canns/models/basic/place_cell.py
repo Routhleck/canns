@@ -176,8 +176,8 @@ class PlaceCell1D_Theta(BasePlaceCell1D):
     is modulated by both spatial location and theta phase.
 
     Reference:
-        Climer, J. R., Newman, E. L., & Hasselmo, M. E. (2013).
-        Phase coding by grid cells in unconstrained environments.
+        O'Keefe, J., & Recce, M. L. (1993). Phase relationship between hippocampal 
+        place units and the EEG theta rhythm. Hippocampus, 3(3), 317-330.
     """
 
     def __init__(
