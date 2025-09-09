@@ -1,2 +1,3 @@
-from . import path_integration as path_integration
-from . import tracking as tracking
+from . import spatial_navigation, tracking
+
+__all__ = ["spatial_navigation", "tracking"]
