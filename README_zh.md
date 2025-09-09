@@ -306,11 +306,11 @@ tuning_curve(
 ```python
 import brainstate
 from canns.models.basic import HierarchicalNetwork
-from canns.task.path_integration import PathIntegrationTask
+from canns.task.spatial_navigation import SpatialNavigationTask
 
 # 创建路径积分任务
 brainstate.environ.set(dt=0.1)
-task_pi = PathIntegrationTask(
+task_pi = SpatialNavigationTask(
     width=5, height=5,
     speed_mean=0.16, speed_std=0.016,
     duration=1000.0, dt=0.1,
@@ -322,13 +322,15 @@ task_pi.get_data()
 hierarchical_net = HierarchicalNetwork(num_module=5, num_place=30)
 hierarchical_net.init_state()
 
+
 # 运行路径积分
 def run_step(t, vel, loc):
     hierarchical_net(velocity=vel, loc=loc, loc_input_stre=0.)
-    return (hierarchical_net.band_x_fr.value, 
+    return (hierarchical_net.band_x_fr.value,
             hierarchical_net.band_y_fr.value,
-            hierarchical_net.grid_fr.value, 
+            hierarchical_net.grid_fr.value,
             hierarchical_net.place_fr.value)
+
 
 results = brainstate.compile.for_loop(
     run_step,

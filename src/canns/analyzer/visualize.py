@@ -1,7 +1,7 @@
 import sys
 from collections.abc import Iterable
 from dataclasses import dataclass
-from typing import Any, Dict, Optional, Tuple
+from typing import Any
 
 import numpy as np
 from matplotlib import animation
@@ -14,52 +14,53 @@ from tqdm import tqdm
 @dataclass
 class PlotConfig:
     """Unified configuration class for all plotting functions in canns.analyzer module.
-    
+
     This class standardizes parameters across static and dynamic plotting functions,
     providing a consistent interface while maintaining backward compatibility.
     """
+
     # Basic plot configuration
     title: str = ""
     xlabel: str = ""
     ylabel: str = ""
-    figsize: Tuple[int, int] = (10, 6)
+    figsize: tuple[int, int] = (10, 6)
     grid: bool = False
-    save_path: Optional[str] = None
+    save_path: str | None = None
     show: bool = True
-    
+
     # Animation-specific configuration
-    time_steps_per_second: Optional[int] = None
+    time_steps_per_second: int | None = None
     fps: int = 30
     repeat: bool = True
     show_progress_bar: bool = True
-    
+
     # Specialized plot configuration
     show_legend: bool = True
     color: str = "black"
     clabel: str = "Value"  # Color bar label for 2D plots
-    
+
     # Additional matplotlib parameters
-    kwargs: Optional[Dict[str, Any]] = None
-    
+    kwargs: dict[str, Any] | None = None
+
     def __post_init__(self):
         if self.kwargs is None:
             self.kwargs = {}
-    
+
     @classmethod
-    def for_static_plot(cls, **kwargs) -> 'PlotConfig':
+    def for_static_plot(cls, **kwargs) -> "PlotConfig":
         """Create configuration optimized for static plots."""
         config = cls(**kwargs)
         # Static plots don't need animation parameters
         config.time_steps_per_second = None
         return config
-    
-    @classmethod 
-    def for_animation(cls, time_steps_per_second: int, **kwargs) -> 'PlotConfig':
+
+    @classmethod
+    def for_animation(cls, time_steps_per_second: int, **kwargs) -> "PlotConfig":
         """Create configuration optimized for animations."""
         config = cls(time_steps_per_second=time_steps_per_second, **kwargs)
         return config
-    
-    def to_matplotlib_kwargs(self) -> Dict[str, Any]:
+
+    def to_matplotlib_kwargs(self) -> dict[str, Any]:
         """Extract matplotlib-compatible keyword arguments."""
         return self.kwargs.copy() if self.kwargs else {}
 
@@ -67,33 +68,35 @@ class PlotConfig:
 # ==================== Pre-configured Plot Configs ====================
 class PlotConfigs:
     """Collection of commonly used plot configurations."""
-    
+
     @staticmethod
     def energy_landscape_1d_static(**kwargs) -> PlotConfig:
         """Configuration for 1D energy landscape static plots."""
         defaults = {
             "title": "1D Energy Landscape",
-            "xlabel": "Collective Variable / State", 
+            "xlabel": "Collective Variable / State",
             "ylabel": "Energy",
             "figsize": (10, 6),
         }
         defaults.update(kwargs)
         return PlotConfig.for_static_plot(**defaults)
-    
+
     @staticmethod
     def energy_landscape_1d_animation(**kwargs) -> PlotConfig:
         """Configuration for 1D energy landscape animations."""
         defaults = {
             "title": "Evolving 1D Energy Landscape",
             "xlabel": "Collective Variable / State",
-            "ylabel": "Energy", 
+            "ylabel": "Energy",
             "figsize": (10, 6),
             "fps": 30,
         }
-        time_steps = kwargs.pop("time_steps_per_second", 1000)  # Remove from kwargs to avoid duplication
+        time_steps = kwargs.pop(
+            "time_steps_per_second", 1000
+        )  # Remove from kwargs to avoid duplication
         defaults.update(kwargs)
         return PlotConfig.for_animation(time_steps, **defaults)
-    
+
     @staticmethod
     def energy_landscape_2d_static(**kwargs) -> PlotConfig:
         """Configuration for 2D energy landscape static plots."""
@@ -106,26 +109,28 @@ class PlotConfigs:
         }
         defaults.update(kwargs)
         return PlotConfig.for_static_plot(**defaults)
-    
+
     @staticmethod
     def energy_landscape_2d_animation(**kwargs) -> PlotConfig:
         """Configuration for 2D energy landscape animations."""
         defaults = {
-            "title": "Evolving 2D Landscape", 
+            "title": "Evolving 2D Landscape",
             "xlabel": "X-Index",
             "ylabel": "Y-Index",
             "clabel": "Value",
             "figsize": (8, 7),
             "fps": 30,
         }
-        time_steps = kwargs.pop("time_steps_per_second", 1000)  # Remove from kwargs to avoid duplication
+        time_steps = kwargs.pop(
+            "time_steps_per_second", 1000
+        )  # Remove from kwargs to avoid duplication
         defaults.update(kwargs)
         return PlotConfig.for_animation(time_steps, **defaults)
-    
+
     @staticmethod
     def raster_plot(mode: str = "block", **kwargs) -> PlotConfig:
         """Configuration for raster plots.
-        
+
         Args:
             mode: Plot mode ('scatter' or 'block')
             **kwargs: Additional parameters
@@ -133,7 +138,7 @@ class PlotConfigs:
         defaults = {
             "title": "Raster Plot",
             "xlabel": "Time Step",
-            "ylabel": "Neuron Index", 
+            "ylabel": "Neuron Index",
             "figsize": (12, 6),
             "color": "black",
         }
@@ -142,9 +147,9 @@ class PlotConfigs:
 
         config.mode = mode
         return config
-    
+
     @staticmethod
-    def average_firing_rate_plot(mode:str="per_neuron",**kwargs) -> PlotConfig:
+    def average_firing_rate_plot(mode: str = "per_neuron", **kwargs) -> PlotConfig:
         """Configuration for average firing rate plots."""
         defaults = {
             "title": "Average Firing Rate",
@@ -154,12 +159,10 @@ class PlotConfigs:
         config = PlotConfig.for_static_plot(**defaults)
         config.mode = mode
         return config
-    
+
     @staticmethod
     def tuning_curve(
-        num_bins: int = 50,
-        pref_stim: Optional[np.ndarray] = None,
-        **kwargs
+        num_bins: int = 50, pref_stim: np.ndarray | None = None, **kwargs
     ) -> PlotConfig:
         """Configuration for tuning curve plots."""
         defaults = {
@@ -175,15 +178,16 @@ class PlotConfigs:
         config.pref_stim = pref_stim
         return config
 
+
 # --- CANN Model related visualization method ---
 
 
 def energy_landscape_1d_static(
     data_sets: dict[str, tuple[np.ndarray, np.ndarray]],
-    config: Optional[PlotConfig] = None,
+    config: PlotConfig | None = None,
     # Backward compatibility parameters
     title: str = "1D Energy Landscape",
-    xlabel: str = "Collective Variable / State", 
+    xlabel: str = "Collective Variable / State",
     ylabel: str = "Energy",
     show_legend: bool = True,
     figsize: tuple[int, int] = (10, 6),
@@ -233,9 +237,9 @@ def energy_landscape_1d_static(
             grid=grid,
             save_path=save_path,
             show=show,
-            kwargs=kwargs
+            kwargs=kwargs,
         )
-    
+
     # --- Create the figure and axes ---
     fig, ax = plt.subplots(figsize=config.figsize)
 
@@ -276,7 +280,7 @@ def energy_landscape_1d_static(
 def energy_landscape_1d_animation(
     data_sets: dict[str, tuple[np.ndarray, np.ndarray]],
     time_steps_per_second: int = None,
-    config: Optional[PlotConfig] = None,
+    config: PlotConfig | None = None,
     # Backward compatibility parameters
     fps: int = 30,
     title: str = "Evolving 1D Energy Landscape",
@@ -337,7 +341,7 @@ def energy_landscape_1d_animation(
             save_path=save_path,
             show=show,
             show_progress_bar=show_progress_bar,
-            kwargs=kwargs
+            kwargs=kwargs,
         )
     else:
         # Ensure config has time_steps_per_second set
@@ -379,7 +383,9 @@ def energy_landscape_1d_animation(
         # --- Plot the Initial Frame ---
         initial_sim_index = sim_indices_to_render[0]
         for label, (x_data, ys_data) in data_sets.items():
-            (line,) = ax.plot(x_data, ys_data[initial_sim_index, :], label=label, **config.to_matplotlib_kwargs())
+            (line,) = ax.plot(
+                x_data, ys_data[initial_sim_index, :], label=label, **config.to_matplotlib_kwargs()
+            )
             lines[label] = line
 
         # Configure plot appearance
@@ -420,7 +426,12 @@ def energy_landscape_1d_animation(
         # --- Create and Return the Animation ---
         interval_ms = 1000 / fps
         ani = animation.FuncAnimation(
-            fig, animate, frames=num_video_frames, interval=interval_ms, blit=True, repeat=config.repeat
+            fig,
+            animate,
+            frames=num_video_frames,
+            interval=interval_ms,
+            blit=True,
+            repeat=config.repeat,
         )
 
         # --- Save or Show the Animation ---
@@ -503,9 +514,8 @@ def energy_landscape_2d_static(
             grid=grid,
             save_path=save_path,
             show=show,
-            kwargs=kwargs
+            kwargs=kwargs,
         )
-
 
     if z_data.ndim != 2:
         raise ValueError(f"Input z_data must be a 2D array, but got shape {z_data.shape}")
@@ -594,9 +604,9 @@ def energy_landscape_2d_animation(
             save_path=save_path,
             show=show,
             show_progress_bar=show_progress_bar,
-            kwargs=kwargs
+            kwargs=kwargs,
         )
-    
+
     if config.time_steps_per_second is None:
         raise ValueError("time_steps_per_second is required")
 
@@ -660,7 +670,12 @@ def energy_landscape_2d_animation(
         # --- Create and Return the Animation ---
         interval_ms = 1000 / config.fps
         ani = animation.FuncAnimation(
-            fig, animate, frames=num_video_frames, interval=interval_ms, blit=True, repeat=config.repeat
+            fig,
+            animate,
+            frames=num_video_frames,
+            interval=interval_ms,
+            blit=True,
+            repeat=config.repeat,
         )
 
         # --- Save or Show the Animation ---
@@ -746,17 +761,19 @@ def raster_plot(
             color=color,
             save_path=save_path,
             show=show,
-            kwargs=kwargs
+            kwargs=kwargs,
         )
     else:
         # If config is provided but doesn't have mode, add it
-        if not hasattr(config, 'mode'):
+        if not hasattr(config, "mode"):
             config.mode = mode
 
     if spike_train.ndim != 2:
         raise ValueError(f"Input spike_train must be a 2D array, but got shape {spike_train.shape}")
     assert spike_train.size > 0, "Input spike_train must not be empty."
-    assert config.mode in ("block", "scatter"), f"Invalid mode '{config.mode}'. Choose 'scatter' or 'block'."
+    assert config.mode in ("block", "scatter"), (
+        f"Invalid mode '{config.mode}'. Choose 'scatter' or 'block'."
+    )
 
     fig, ax = plt.subplots(figsize=config.figsize)
 
@@ -798,7 +815,13 @@ def raster_plot(
             # Use imshow to create the block plot.
             # `interpolation='none'` ensures sharp, non-blurry blocks.
             # `aspect='auto'` allows the blocks to be non-square to fill the space.
-            ax.imshow(data_to_show, aspect="auto", interpolation="none", cmap=cmap, **config.to_matplotlib_kwargs())
+            ax.imshow(
+                data_to_show,
+                aspect="auto",
+                interpolation="none",
+                cmap=cmap,
+                **config.to_matplotlib_kwargs(),
+            )
 
             # Set the ticks to be at the center of the neurons
             ax.set_yticks(np.arange(spike_train.shape[1]))
@@ -864,16 +887,11 @@ def average_firing_rate_plot(
     # Handle backward compatibility and configuration
     if config is None:
         config = PlotConfigs.average_firing_rate_plot(
-            mode=mode,
-            title=title,
-            figsize=figsize,
-            save_path=save_path,
-            show=show,
-            kwargs=kwargs
+            mode=mode, title=title, figsize=figsize, save_path=save_path, show=show, kwargs=kwargs
         )
     else:
         # If config is provided but doesn't have mode, add it
-        if not hasattr(config, 'mode'):
+        if not hasattr(config, "mode"):
             config.mode = mode
 
     if spike_train.ndim != 2:
@@ -1015,15 +1033,15 @@ def tuning_curve(
             figsize=figsize,
             save_path=save_path,
             show=show,
-            kwargs=kwargs
+            kwargs=kwargs,
         )
     else:
         # If config is provided but doesn't have mode, add it
-        if not hasattr(config, 'num_bins'):
+        if not hasattr(config, "num_bins"):
             config.num_bins = num_bins
-        if not hasattr(config, 'pref_stim'):
+        if not hasattr(config, "pref_stim"):
             config.pref_stim = pref_stim
-    
+
     # --- 1. Input Validation and Preparation ---
     if stimulus.ndim != 1:
         raise ValueError(f"stimulus must be a 1D array, but has {stimulus.ndim} dimensions.")
@@ -1095,3 +1113,4 @@ def tuning_curve(
 
 # TODO: Implement phase_plane_plot (NEED DISCUSSION)
 def phase_plane_plot(): ...
+
