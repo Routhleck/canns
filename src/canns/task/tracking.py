@@ -1,3 +1,4 @@
+import inspect
 from collections.abc import Sequence
 
 import brainunit as u
@@ -5,7 +6,7 @@ import numpy as np
 from tqdm import tqdm
 
 from ..models.basic.cann import BaseCANN, BaseCANN1D, BaseCANN2D
-from ..typing import Iext_type, time_type
+from ..typing import Iext_pair_type, Iext_type, time_type
 from ._base import Task
 
 __all__ = [
@@ -76,14 +77,53 @@ class TrackingTask(Task):
         if self.duration is None or not isinstance(self.duration, Sequence):
             raise ValueError("Configuration must include 'duration' as a sequence of time values.")
 
-        # cann_instance
+        # cann_instance (now supports Place Cell and Grid Cell models too)
         cann_instance = config.get("cann_instance", None)
-        if cann_instance is None or not isinstance(cann_instance, BaseCANN):
+        if cann_instance is None:
+            raise ValueError("Configuration must include 'cann_instance' as a model instance.")
+
+        # Check if instance has required interface methods
+        if not hasattr(cann_instance, "get_stimulus_by_pos"):
             raise ValueError(
-                "Configuration must include 'cann_instance' as an instance of BaseCANN."
+                "Model instance must have 'get_stimulus_by_pos' method. "
+                "This includes CANN models, Place Cell models, and Grid Cell models."
+            )
+
+        # For backward compatibility, still check BaseCANN but allow others
+        if not (isinstance(cann_instance, BaseCANN) or hasattr(cann_instance, "shape")):
+            raise ValueError(
+                "Model instance must be a BaseCANN or have compatible interface "
+                "(shape attribute and get_stimulus_by_pos method)."
             )
         self.shape = cann_instance.shape
         self.get_stimulus_by_pos = cann_instance.get_stimulus_by_pos
+
+        # Analyze model interface for theta modulation support
+        self._analyze_model_interface(cann_instance)
+
+    def _analyze_model_interface(self, cann_instance):
+        """
+        Analyze the model's get_stimulus_by_pos method to determine if it requires time input.
+        This enables automatic support for theta-modulated models without breaking compatibility.
+
+        Args:
+            cann_instance: The model instance to analyze.
+        """
+        try:
+            # Inspect the method signature to check parameter count
+            sig = inspect.signature(cann_instance.get_stimulus_by_pos)
+            # Regular models have 1 parameter (pos), theta models have 2 (pos, time)
+            param_count = len(sig.parameters)
+            has_theta_attributes = hasattr(cann_instance, "theta_freq") and hasattr(
+                cann_instance, "theta_amp"
+            )
+
+            # Model needs time input if it has more than 1 parameter AND theta attributes
+            self.needs_time_input = param_count > 1 and has_theta_attributes
+        except Exception:
+            # Fallback: check for theta-related attributes only
+            # Theta-modulated models typically have theta_freq attribute
+            self.needs_time_input = hasattr(cann_instance, "theta_freq")
 
     def _make_Iext_sequence(self):
         """
@@ -111,18 +151,30 @@ class TrackingTask(Task):
         """
         Generates the task data by creating a sequence of external inputs
         based on the provided `Iext` and `duration` parameters.
+
+        Automatically handles both regular models and theta-modulated models
+        by intelligently passing time parameters when needed.
         """
         self.Iext_sequence = self._make_Iext_sequence()
 
         shape = (len(self.Iext_sequence), *self.shape)
         data = np.zeros(shape, dtype=float)
 
+        # Initialize time tracking for theta-modulated models
+        current_time = 0.0
+
         for i, pos in tqdm(
             enumerate(self.Iext_sequence),
             desc=f"<{type(self).__name__}> Generating Task data",
             disable=not progress_bar,
         ):
-            data[i] = self.get_stimulus_by_pos(pos)
+            if self.needs_time_input:
+                # Theta-modulated model: pass both position and time
+                data[i] = self.get_stimulus_by_pos(pos, current_time)
+                current_time += self.time_step
+            else:
+                # Regular model: pass only position
+                data[i] = self.get_stimulus_by_pos(pos)
 
         self.data = data
 
@@ -495,7 +547,7 @@ class PopulationCoding2D(PopulationCoding):
         cann_instance: BaseCANN2D,
         before_duration: time_type,
         after_duration: time_type,
-        Iext: Iext_type,
+        Iext: Iext_pair_type,
         duration: time_type,
         time_step: time_type = 0.1,
     ):
@@ -537,7 +589,7 @@ class TemplateMatching2D(TemplateMatching):
     def __init__(
         self,
         cann_instance: BaseCANN2D,
-        Iext: Iext_type,
+        Iext: Iext_pair_type,
         duration: time_type,
         time_step: time_type = 0.1,
     ):
@@ -546,7 +598,7 @@ class TemplateMatching2D(TemplateMatching):
 
         Args:
             cann_instance (BaseCANN2D): An instance of the 2D CANN model.
-            Iext (float | Quantity): The position of the external input.
+            Iext (tuple[float, float] | Quantity): The 2D position of the external input.
             duration (float | Quantity): The duration for which the noisy stimulus is presented.
             time_step (float | Quantity, optional): The simulation time step. Defaults to 0.1.
         """
@@ -570,7 +622,7 @@ class SmoothTracking2D(SmoothTracking):
     def __init__(
         self,
         cann_instance: BaseCANN2D,
-        Iext: Sequence[Iext_type],
+        Iext: Sequence[Iext_pair_type],
         duration: Sequence[time_type],
         time_step: time_type = 0.1,
     ):
@@ -579,7 +631,7 @@ class SmoothTracking2D(SmoothTracking):
 
         Args:
             cann_instance (BaseCANN2D): An instance of the 2D CANN model.
-            Iext (Sequence[float | Quantity]): A sequence of keypoint positions for the input.
+            Iext (Sequence[tuple[float, float] | Quantity]): A sequence of 2D keypoint positions for the input.
             duration (Sequence[float | Quantity]): The duration of each segment of smooth movement.
             time_step (float | Quantity, optional): The simulation time step. Defaults to 0.1.
         """

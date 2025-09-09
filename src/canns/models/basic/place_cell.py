@@ -122,6 +122,18 @@ class BasePlaceCell1D(BasePlaceCell):
         Returns:
             Array: Gaussian-shaped input for each place cell.
         """
+        return self._compute_spatial_input(pos)
+
+    def _compute_spatial_input(self, pos):
+        """
+        Computes the spatial component of place cell input.
+
+        Args:
+            pos (float): The current position along the track.
+
+        Returns:
+            Array: Gaussian-shaped spatial input for each place cell.
+        """
         # Calculate distance from current position to each place field center
         distances = u.math.abs(pos - self.x_centers)
         # Generate Gaussian input profile
@@ -151,16 +163,14 @@ class PlaceCell1D(BasePlaceCell1D):
         # Spatial input based on current position
         self.inp = brainstate.State(u.math.zeros(self.varshape))
 
-    def update(self, pos_input):
+    def update(self, inp):
         """
-        Updates place cell activity based on current position.
+        Updates place cell activity based on external input.
 
         Args:
-            pos_input (float): Current position along the track.
+            inp (Array): External spatial input to the place cell population.
         """
-        # Get place-specific input
-        spatial_input = self.get_stimulus_by_pos(pos_input)
-        self.inp.value = spatial_input
+        self.inp.value = inp
 
         # Update membrane potential with leaky integration
         self.u.value += (-self.u.value + self.inp.value) / self.tau * brainstate.environ.get_dt()
@@ -216,28 +226,58 @@ class PlaceCell1D_Theta(BasePlaceCell1D):
         # --- Inputs ---
         self.inp = brainstate.State(u.math.zeros(self.varshape))
 
-    def update(self, pos_input, time_input):
+    def update(self, inp):
         """
-        Updates place cell activity with theta modulation.
+        Updates place cell activity based on external input.
 
         Args:
-            pos_input (float): Current position along the track.
-            time_input (float): Current time for theta rhythm.
+            inp (Array): External spatial input to the place cell population.
         """
-        # Get spatial input
-        spatial_input = self.get_stimulus_by_pos(pos_input)
-
-        # Add theta modulation
-        theta_modulation = 1.0 + self.theta_amp * u.math.cos(
-            2 * u.math.pi * self.theta_freq * time_input + self.theta_phase.value
-        )
-        self.inp.value = spatial_input * theta_modulation
+        self.inp.value = inp
 
         # Update membrane potential
         self.u.value += (-self.u.value + self.inp.value) / self.tau * brainstate.environ.get_dt()
 
         # Compute firing rate
         self.r.value = u.math.maximum(0.0, self.u.value)
+
+    def get_stimulus_by_pos(self, pos, time=None):
+        """
+        Generates place-specific input with optional theta modulation.
+
+        Args:
+            pos (float): Current position along the track.
+            time (float, optional): Current time for theta rhythm modulation.
+
+        Returns:
+            Array: Gaussian-shaped input with optional theta modulation for each place cell.
+        """
+        # Compute spatial component
+        spatial_input = self._compute_spatial_input(pos)
+
+        if time is not None:
+            # Apply theta modulation when time is provided
+            theta_modulation = 1.0 + self.theta_amp * u.math.cos(
+                2 * u.math.pi * self.theta_freq * time + self.theta_phase.value
+            )
+            return spatial_input * theta_modulation
+        else:
+            # Return spatial input only when no time is provided
+            return spatial_input
+
+    def get_stimulus_with_theta(self, pos_input, time_input):
+        """
+        Generates place-specific input with theta modulation based on position and time.
+
+        Args:
+            pos_input (float): Current position along the track.
+            time_input (float): Current time for theta rhythm.
+
+        Returns:
+            Array: Theta-modulated Gaussian input for each place cell.
+        """
+        # Delegate to the unified get_stimulus_by_pos method
+        return self.get_stimulus_by_pos(pos_input, time_input)
 
 
 class BasePlaceCell2D(BasePlaceCell):
@@ -303,6 +343,18 @@ class BasePlaceCell2D(BasePlaceCell):
         Returns:
             Array: 2D array of place cell inputs.
         """
+        return self._compute_spatial_input(pos)
+
+    def _compute_spatial_input(self, pos):
+        """
+        Computes the spatial component of 2D place cell input.
+
+        Args:
+            pos (Array): Current position [x, y].
+
+        Returns:
+            Array: 2D Gaussian-shaped spatial input for each place cell.
+        """
         pos = u.math.asarray(pos)
         assert pos.shape == (2,), "Input position must be a 2D coordinate [x, y]."
 
@@ -334,16 +386,14 @@ class PlaceCell2D(BasePlaceCell2D):
         # --- Inputs ---
         self.inp = brainstate.State(u.math.zeros((self.length, self.length)))
 
-    def update(self, pos_input):
+    def update(self, inp):
         """
-        Updates 2D place cell activity based on current position.
+        Updates 2D place cell activity based on external input.
 
         Args:
-            pos_input (Array): Current position [x, y].
+            inp (Array): External spatial input to the 2D place cell population.
         """
-        # Get spatial input
-        spatial_input = self.get_stimulus_by_pos(pos_input)
-        self.inp.value = spatial_input
+        self.inp.value = inp
 
         # Update membrane potential
         self.u.value += (-self.u.value + self.inp.value) / self.tau * brainstate.environ.get_dt()
@@ -396,25 +446,55 @@ class PlaceCell2D_Theta(BasePlaceCell2D):
         # --- Inputs ---
         self.inp = brainstate.State(u.math.zeros((self.length, self.length)))
 
-    def update(self, pos_input, time_input):
+    def update(self, inp):
         """
-        Updates 2D place cell activity with theta modulation.
+        Updates 2D place cell activity based on external input.
 
         Args:
-            pos_input (Array): Current position [x, y].
-            time_input (float): Current time for theta rhythm.
+            inp (Array): External spatial input to the 2D place cell population.
         """
-        # Get spatial input
-        spatial_input = self.get_stimulus_by_pos(pos_input)
-
-        # Add theta modulation
-        theta_modulation = 1.0 + self.theta_amp * u.math.cos(
-            2 * u.math.pi * self.theta_freq * time_input + self.theta_phase.value
-        )
-        self.inp.value = spatial_input * theta_modulation
+        self.inp.value = inp
 
         # Update membrane potential
         self.u.value += (-self.u.value + self.inp.value) / self.tau * brainstate.environ.get_dt()
 
         # Compute firing rate
         self.r.value = u.math.maximum(0.0, self.u.value)
+
+    def get_stimulus_by_pos(self, pos, time=None):
+        """
+        Generates 2D place-specific input with optional theta modulation.
+
+        Args:
+            pos (Array): Current position [x, y].
+            time (float, optional): Current time for theta rhythm modulation.
+
+        Returns:
+            Array: 2D Gaussian input with optional theta modulation for each place cell.
+        """
+        # Compute spatial component
+        spatial_input = self._compute_spatial_input(pos)
+
+        if time is not None:
+            # Apply theta modulation when time is provided
+            theta_modulation = 1.0 + self.theta_amp * u.math.cos(
+                2 * u.math.pi * self.theta_freq * time + self.theta_phase.value
+            )
+            return spatial_input * theta_modulation
+        else:
+            # Return spatial input only when no time is provided
+            return spatial_input
+
+    def get_stimulus_with_theta(self, pos_input, time_input):
+        """
+        Generates 2D place-specific input with theta modulation based on position and time.
+
+        Args:
+            pos_input (Array): Current position [x, y].
+            time_input (float): Current time for theta rhythm.
+
+        Returns:
+            Array: Theta-modulated 2D Gaussian input for each place cell.
+        """
+        # Delegate to the unified get_stimulus_by_pos method
+        return self.get_stimulus_by_pos(pos_input, time_input)
