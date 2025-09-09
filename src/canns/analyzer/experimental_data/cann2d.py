@@ -7,9 +7,10 @@ from typing import Any
 
 import matplotlib.pyplot as plt
 import numpy as np
+from canns_ripser import ripser
 from matplotlib import animation, cm, gridspec
 from numpy.exceptions import AxisError
-from canns_ripser import ripser
+
 # from ripser import ripser
 from scipy import signal
 from scipy.ndimage import (
@@ -66,35 +67,35 @@ class TDAConfig:
 @dataclass
 class CANN2DPlotConfig(PlotConfig):
     """Specialized PlotConfig for CANN2D visualizations."""
-    
+
     # 3D projection specific parameters
     zlabel: str = "Component 3"
     dpi: int = 300
-    
-    # Torus animation specific parameters  
+
+    # Torus animation specific parameters
     numangsint: int = 51
     r1: float = 1.5  # Major radius
     r2: float = 1.0  # Minor radius
     window_size: int = 300
     frame_step: int = 5
     n_frames: int = 20
-    
+
     @classmethod
-    def for_projection_3d(cls, **kwargs) -> 'CANN2DPlotConfig':
+    def for_projection_3d(cls, **kwargs) -> "CANN2DPlotConfig":
         """Create configuration for 3D projection plots."""
         defaults = {
             "title": "3D Data Projection",
-            "xlabel": "Component 1", 
+            "xlabel": "Component 1",
             "ylabel": "Component 2",
             "zlabel": "Component 3",
             "figsize": (10, 8),
-            "dpi": 300
+            "dpi": 300,
         }
         defaults.update(kwargs)
         return cls.for_static_plot(**defaults)
-    
+
     @classmethod
-    def for_torus_animation(cls, **kwargs) -> 'CANN2DPlotConfig':
+    def for_torus_animation(cls, **kwargs) -> "CANN2DPlotConfig":
         """Create configuration for 3D torus bump animations."""
         defaults = {
             "title": "3D Bump on Torus",
@@ -107,7 +108,7 @@ class CANN2DPlotConfig(PlotConfig):
             "r2": 1.0,
             "window_size": 300,
             "frame_step": 5,
-            "n_frames": 20
+            "n_frames": 20,
         }
         defaults.update(kwargs)
         time_steps = kwargs.get("time_steps_per_second", 1000)
@@ -374,7 +375,7 @@ def plot_projection(
     show=True,
     dpi=300,
     figsize=(10, 8),
-    **kwargs
+    **kwargs,
 ):
     """
     Plot a 3D projection of the embedded data.
@@ -408,7 +409,7 @@ def plot_projection(
             show=show,
             figsize=figsize,
             dpi=dpi,
-            **kwargs
+            **kwargs,
         )
 
     reduced_data = reduce_func(embed_data[::5])
@@ -501,7 +502,7 @@ def _compute_real_persistence(embed_data: np.ndarray, config: TDAConfig) -> dict
     """Compute persistent homology for real data with progress tracking."""
 
     logging.info("Processing real data - Starting TDA analysis (5 steps)")
-    
+
     # Step 1: Time point downsampling
     logging.info("Step 1/5: Time point downsampling")
     times_cube = _downsample_timepoints(embed_data, config.num_times)
@@ -521,7 +522,7 @@ def _compute_real_persistence(embed_data: np.ndarray, config: TDAConfig) -> dict
     # Step 5: Compute persistent homology
     logging.info("Step 5/5: Computing persistent homology")
     persistence = _compute_persistence_homology(dimred, indstemp, config)
-    
+
     logging.info("TDA analysis completed successfully")
 
     # Return all necessary data in dictionary format
@@ -580,7 +581,7 @@ def _compute_persistence_homology(
         coeff=config.coeff,
         do_cocycles=True,
         distance_matrix=True,
-        progress_bar=config.progress_bar
+        progress_bar=config.progress_bar,
     )
 
 
@@ -936,7 +937,14 @@ def _compute_persistence(
     np.fill_diagonal(d, 0)
 
     # Compute persistent homology
-    persistence = ripser(d, maxdim=maxdim, coeff=coeff, do_cocycles=True, distance_matrix=True, progress_bar=progress_bar)
+    persistence = ripser(
+        d,
+        maxdim=maxdim,
+        coeff=coeff,
+        do_cocycles=True,
+        distance_matrix=True,
+        progress_bar=progress_bar,
+    )
 
     return persistence
 
@@ -1313,10 +1321,14 @@ def _second_build(data, indstemp, nbs=800, metric="cosine"):
 
 def _run_shuffle_analysis(sspikes, num_shuffles=1000, num_cores=4, progress_bar=True, **kwargs):
     """Perform shuffle analysis with optimized computation."""
-    return _run_shuffle_analysis_multiprocessing(sspikes, num_shuffles, num_cores, progress_bar, **kwargs)
+    return _run_shuffle_analysis_multiprocessing(
+        sspikes, num_shuffles, num_cores, progress_bar, **kwargs
+    )
 
 
-def _run_shuffle_analysis_multiprocessing(sspikes, num_shuffles=1000, num_cores=4, progress_bar=True, **kwargs):
+def _run_shuffle_analysis_multiprocessing(
+    sspikes, num_shuffles=1000, num_cores=4, progress_bar=True, **kwargs
+):
     """Original multiprocessing implementation for fallback."""
     max_lifetimes = {0: [], 1: [], 2: []}
 
@@ -1327,7 +1339,9 @@ def _run_shuffle_analysis_multiprocessing(sspikes, num_shuffles=1000, num_cores=
 
     # Prepare task list
     tasks = [(i, sspikes, kwargs) for i in range(num_shuffles)]
-    logging.info(f"Starting shuffle analysis with {num_shuffles} iterations using {num_cores} cores...")
+    logging.info(
+        f"Starting shuffle analysis with {num_shuffles} iterations using {num_cores} cores..."
+    )
 
     # Use multiprocessing pool for parallel processing
     with mp.Pool(processes=num_cores) as pool:
@@ -1720,7 +1734,7 @@ def plot_3d_bump_on_torus(
     show_progress: bool = True,
     show: bool = True,
     figsize: tuple[int, int] = (8, 8),
-    **kwargs
+    **kwargs,
 ) -> animation.FuncAnimation:
     """
     Visualize the movement of the neural activity bump on a torus using matplotlib animation.
@@ -1766,12 +1780,12 @@ def plot_3d_bump_on_torus(
     # Handle backward compatibility and configuration
     if config is None:
         config = CANN2DPlotConfig.for_torus_animation(**kwargs)
-    
+
     # Override config with any explicitly passed parameters
     for key, value in kwargs.items():
         if hasattr(config, key):
             setattr(config, key, value)
-    
+
     # Extract configuration values
     save_path = config.save_path if config.save_path else save_path
     show = config.show
@@ -1980,13 +1994,13 @@ def _get_coords(cocycle, threshold, num_sampled, dists, coeff):
         # Extract scalar indices from np.where results
         idx1 = np.where(verts == edges[0][i])[0]
         idx2 = np.where(verts == edges[1][i])[0]
-        
+
         # Handle case where np.where returns multiple matches (shouldn't happen in valid data)
         if len(idx1) > 0:
             v1[i, :] = [i, idx1[0]]
         else:
             raise ValueError(f"No vertex found for edge {edges[0][i]}")
-            
+
         if len(idx2) > 0:
             v2[i, :] = [i, idx2[0]]
         else:
@@ -2106,8 +2120,6 @@ if __name__ == "__main__":
     # reduce_func = reducer.fit_transform
     #
     # plot_projection(reduce_func=reduce_func, embed_data=spikes, show=True)
-    results = tda_vis(
-        embed_data=spikes, maxdim=1, do_shuffle=False, show=True
-    )
+    results = tda_vis(embed_data=spikes, maxdim=1, do_shuffle=False, show=True)
 
     # results = tda_vis(embed_data=spikes, maxdim=1, do_shuffle=True, num_shuffles=10, show=True)

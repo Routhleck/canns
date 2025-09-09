@@ -80,16 +80,16 @@ class AnimationConfig:
 @dataclass
 class CANN1DPlotConfig(PlotConfig):
     """Specialized PlotConfig for CANN1D visualizations."""
-    
+
     # CANN1D specific animation parameters
     max_height_value: float = 0.5
     max_width_range: int = 40
     npoints: int = 300
     nframes: int | None = None
     bump_selection: str = "strongest"
-    
+
     @classmethod
-    def for_bump_animation(cls, **kwargs) -> 'CANN1DPlotConfig':
+    def for_bump_animation(cls, **kwargs) -> "CANN1DPlotConfig":
         """Create configuration for 1D CANN bump animation."""
         defaults = {
             "title": "1D CANN Bump Animation",
@@ -100,7 +100,7 @@ class CANN1DPlotConfig(PlotConfig):
             "max_height_value": 0.5,
             "max_width_range": 40,
             "npoints": 300,
-            "bump_selection": "strongest"
+            "bump_selection": "strongest",
         }
         defaults.update(kwargs)
         return cls(**defaults)
@@ -305,10 +305,7 @@ def bump_fits(data, config: BumpFitsConfig | None = None, save_path=None, **kwar
 
 
 def create_1d_bump_animation(
-    fits_data, 
-    config: CANN1DPlotConfig | None = None,
-    save_path=None, 
-    **kwargs
+    fits_data, config: CANN1DPlotConfig | None = None, save_path=None, **kwargs
 ):
     """
     Create 1D CANN bump animation using vectorized operations.
@@ -329,7 +326,7 @@ def create_1d_bump_animation(
     # Handle backward compatibility and configuration
     if config is None:
         config = CANN1DPlotConfig.for_bump_animation(**kwargs)
-    
+
     # Override config with any explicitly passed parameters
     for key, value in kwargs.items():
         if hasattr(config, key):

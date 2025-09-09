@@ -11,7 +11,7 @@ from tqdm import tqdm
 
 from ._base import Task
 
-__all__ = ["map2pi", "PathIntegrationTask"]
+__all__ = ["map2pi", "SpatialNavigationTask"]
 
 
 def map2pi(a):
@@ -21,9 +21,9 @@ def map2pi(a):
 
 
 @dataclass
-class PathIntegrationData:
+class SpatialNavigationData:
     """
-    A dataclass to hold the inputs for the path integration task.
+    A dataclass to hold the inputs for the spatial navigation task.
     It contains the position, velocity, speed, heading angle, and rotational velocity of the agent.
     """
 
@@ -34,10 +34,10 @@ class PathIntegrationData:
     rot_vel: np.ndarray
 
 
-class PathIntegrationTask(Task):
+class SpatialNavigationTask(Task):
     """
-    A base class for path integration tasks, inheriting from BaseTask.
-    This class is intended to be extended for specific path integration tasks.
+    A base class for spatial navigation tasks, inheriting from BaseTask.
+    This class is intended to be extended for specific spatial navigation tasks.
     """
 
     def __init__(
@@ -51,7 +51,7 @@ class PathIntegrationTask(Task):
         start_pos=(2.5, 2.5),
         progress_bar=True,
     ):
-        super().__init__(data_class=PathIntegrationData)
+        super().__init__(data_class=SpatialNavigationData)
 
         # --- task settings ---
         # time settings
@@ -116,7 +116,7 @@ class PathIntegrationTask(Task):
         rot_vel = np.zeros_like(hd_angle)
         rot_vel[1:] = map2pi(np.diff(hd_angle))
 
-        self.data = PathIntegrationData(
+        self.data = SpatialNavigationData(
             position=position, velocity=velocity, speed=speed, hd_angle=hd_angle, rot_vel=rot_vel
         )
 
@@ -143,12 +143,12 @@ class PathIntegrationTask(Task):
         finally:
             plt.close(fig)
 
-    def get_empty_trajectory(self) -> PathIntegrationData:
+    def get_empty_trajectory(self) -> SpatialNavigationData:
         """
         Returns an empty trajectory data structure with the same shape as the generated trajectory.
         This is useful for initializing the trajectory data structure without any actual data.
         """
-        return PathIntegrationData(
+        return SpatialNavigationData(
             position=np.zeros((self.total_steps, 2)),
             velocity=np.zeros((self.total_steps, 2)),
             speed=np.zeros(self.total_steps),
