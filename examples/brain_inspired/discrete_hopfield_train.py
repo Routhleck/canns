@@ -1,13 +1,11 @@
 import numpy as np
 import skimage.data
 from matplotlib import pyplot as plt
-from skimage import data
 from skimage.color import rgb2gray
 from skimage.filters import threshold_mean
 from skimage.transform import resize
-from tqdm import tqdm
 
-from canns.models import DiscreteHopfieldNetwork
+from canns.models import AmariHopfieldNetwork
 from canns.trainer import HebbianTrainer
 
 np.random.seed(42)
@@ -35,8 +33,8 @@ def preprocess_image(img, w=128, h=128):
 
 data_list = [preprocess_image(d) for d in data_list]
 
-# Create Discrete Hopfield Network Model
-model = DiscreteHopfieldNetwork(num_neurons=data_list[0].shape[0], asyn=False)
+# Create Amari Hopfield Network Model (discrete mode by default)
+model = AmariHopfieldNetwork(num_neurons=data_list[0].shape[0], asyn=False, activation="sign")
 model.init_state()
 trainer = HebbianTrainer(model)
 trainer.train(data_list)
@@ -52,9 +50,8 @@ def get_corrupted_input(input, corruption_level):
 
 tests = [get_corrupted_input(d, 0.3) for d in data_list]
 
-predicted = []
-for test in tqdm(tests):
-    predicted.append(trainer.predict(test))
+# Use the new predict_batch method for better progress reporting
+predicted = trainer.predict_batch(tests)
 
 # display predict results
 def plot(data, test, predicted, figsize=(5, 6)):

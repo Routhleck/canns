@@ -6,7 +6,17 @@ including brain-inspired learning algorithms and traditional optimization method
 """
 
 from .hebbian import HebbianTrainer
+from .progress import (
+    ProgressReporter,
+    SilentProgressReporter,
+    TqdmProgressReporter,
+    create_progress_reporter,
+)
 
 __all__ = [
     "HebbianTrainer",
+    "ProgressReporter",
+    "SilentProgressReporter",
+    "TqdmProgressReporter",
+    "create_progress_reporter",
 ]

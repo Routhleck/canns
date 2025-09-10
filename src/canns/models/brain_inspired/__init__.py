@@ -7,7 +7,7 @@ Hebbian learning, and other brain-inspired mechanisms.
 """
 
 from ._base import BrainInspiredGroup, BrainInspiredModel
-from .hopfield import AmariHopfieldNetwork, DiscreteHopfieldNetwork
+from .hopfield import AmariHopfieldNetwork
 
 __all__ = [
     # Base classes
@@ -15,5 +15,4 @@ __all__ = [
     "BrainInspiredGroup",
     # Specific models
     "AmariHopfieldNetwork",
-    "DiscreteHopfieldNetwork",
 ]

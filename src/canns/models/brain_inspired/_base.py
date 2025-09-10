@@ -18,9 +18,7 @@ class BrainInspiredModel(BasicModel):
         )
 
     def predict(self, pattern):
-        raise NotImplementedError(
-            f"{self.__class__.__name__} does not implement `predict`"
-        )
+        raise NotImplementedError(f"{self.__class__.__name__} does not implement `predict`")
 
 
 class BrainInspiredGroup(BasicModelGroup):
