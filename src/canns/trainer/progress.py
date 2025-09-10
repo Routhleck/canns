@@ -118,7 +118,7 @@ class TqdmProgressReporter(ProgressReporter):
         # Handle nested progress bars - improve display
         if self.nested and self._active_bars:
             tqdm_kwargs["leave"] = False
-            # Add position to stack nested bars properly  
+            # Add position to stack nested bars properly
             tqdm_kwargs["position"] = len(self._active_bars)
             # Reduce refresh rate for nested bars to avoid conflicts
             if "miniters" not in tqdm_kwargs:

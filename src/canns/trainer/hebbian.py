@@ -1,5 +1,4 @@
 from ..models import BrainInspiredModel
-from ..models.brain_inspired.hopfield import AmariHopfieldNetwork
 from .progress import create_progress_reporter
 
 __all__ = ["HebbianTrainer"]
@@ -73,7 +72,10 @@ class HebbianTrainer:
 
         if show_progress and not compiled:
             # Configure progress bar for better nesting
-            has_active_bars = hasattr(self.progress_reporter, '_active_bars') and len(self.progress_reporter._active_bars) > 0
+            has_active_bars = (
+                hasattr(self.progress_reporter, "_active_bars")
+                and len(self.progress_reporter._active_bars) > 0
+            )
             pbar_kwargs = {"ncols": 80, "leave": False} if has_active_bars else {}
             pbar = self.progress_reporter.start_task("Converging", total=num_iter, **pbar_kwargs)
 
@@ -81,7 +83,7 @@ class HebbianTrainer:
                 # Update with simpler format to avoid clutter
                 status_icon = "✓" if converged else "→"
                 energy_str = f"{energy:.0f}" if abs(energy) > 1000 else f"{energy:.3f}"
-                
+
                 self.progress_reporter.update(
                     pbar,
                     1,

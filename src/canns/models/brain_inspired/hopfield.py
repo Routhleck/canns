@@ -10,14 +10,13 @@ from ._base import BrainInspiredModel
 __all__ = ["AmariHopfieldNetwork"]
 
 
-
 class AmariHopfieldNetwork(BrainInspiredModel):
     """
     Amari-Hopfield Network implementation supporting both discrete and continuous dynamics.
 
     This class implements Hopfield networks with flexible activation functions,
-    supporting both discrete binary states and continuous dynamics. The network 
-    performs pattern completion through energy minimization using asynchronous 
+    supporting both discrete binary states and continuous dynamics. The network
+    performs pattern completion through energy minimization using asynchronous
     or synchronous updates.
 
     The network energy function:
@@ -60,7 +59,7 @@ class AmariHopfieldNetwork(BrainInspiredModel):
         self.asyn = asyn
         self.threshold = threshold
         self.temperature = temperature
-        
+
         # Set activation function based on type
         self.activation = self._get_activation_fn(activation)
 
