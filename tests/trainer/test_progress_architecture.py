@@ -2,7 +2,7 @@
 
 import pytest
 import numpy as np
-from canns.models import AmariHopfieldNetwork
+from canns.models.brain_inspired import AmariHopfieldNetwork
 from canns.trainer import HebbianTrainer, create_progress_reporter
 
 
@@ -52,7 +52,7 @@ class TestBackwardCompatibility:
             np.array([-1, 1, -1, 1])
         ]
         
-        model = DiscreteHopfieldNetwork(num_neurons=4)
+        model = AmariHopfieldNetwork(num_neurons=4)
         model.init_state()
         trainer = HebbianTrainer(model, progress_mode="silent")
         trainer.train(patterns)
@@ -76,7 +76,7 @@ class TestNewFeatures:
             np.array([1, -1, 1, -1, 1, -1]),
             np.array([-1, 1, -1, 1, -1, 1])
         ]
-        self.model = DiscreteHopfieldNetwork(num_neurons=6)
+        self.model = AmariHopfieldNetwork(num_neurons=6)
         self.model.init_state()
     
     def test_silent_trainer(self):
@@ -169,7 +169,7 @@ class TestModelModes:
     
     def setup_method(self):
         """Set up test model."""
-        self.model = DiscreteHopfieldNetwork(num_neurons=4)
+        self.model = AmariHopfieldNetwork(num_neurons=4)
         self.model.init_state()
         self.pattern = np.array([1, -1, 1, -1])
         self.model.apply_hebbian_learning([self.pattern])
@@ -218,7 +218,7 @@ class TestIntegration:
             np.random.choice([-1, 1], size=16)
         ]
         
-        model = DiscreteHopfieldNetwork(num_neurons=16)
+        model = AmariHopfieldNetwork(num_neurons=16)
         model.init_state()
         
         # Test with different trainer configurations
@@ -246,7 +246,7 @@ class TestIntegration:
     
     def test_error_handling(self):
         """Test error handling in various scenarios."""
-        model = DiscreteHopfieldNetwork(num_neurons=4)
+        model = AmariHopfieldNetwork(num_neurons=4)
         model.init_state()
         
         # Test invalid progress mode
