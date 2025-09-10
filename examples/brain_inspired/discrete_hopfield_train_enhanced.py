@@ -15,7 +15,7 @@ from skimage.color import rgb2gray
 from skimage.filters import threshold_mean
 from skimage.transform import resize
 
-from canns.models import AmariHopfieldNetwork
+from canns.models.brain_inspired import AmariHopfieldNetwork
 from canns.trainer import HebbianTrainer
 
 np.random.seed(42)
