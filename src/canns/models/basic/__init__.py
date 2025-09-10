@@ -1,5 +1,10 @@
-from .cann import CANN1D as CANN1D
-from .cann import CANN1D_SFA as CANN1D_SFA
-from .cann import CANN2D as CANN2D
-from .cann import CANN2D_SFA as CANN2D_SFA
-from .hierarchical_model import HierarchicalNetwork as HierarchicalNetwork
+from .cann import CANN1D, CANN1D_SFA, CANN2D, CANN2D_SFA
+from .hierarchical_model import HierarchicalNetwork
+
+__all__ = [
+    "CANN1D",
+    "CANN1D_SFA",
+    "CANN2D",
+    "CANN2D_SFA",
+    "HierarchicalNetwork",
+]
