@@ -1,4 +1,4 @@
-from ..models import BrainInspiredModel
+from ..models.brain_inspired import BrainInspiredModel
 from .progress import create_progress_reporter
 
 __all__ = ["HebbianTrainer"]
