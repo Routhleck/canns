@@ -220,11 +220,11 @@ class HebbianTrainer:
         Returns:
             Predicted pattern
         """
-        # Use defaults if not specified
-        if compiled is None:
-            compiled = self.compiled_prediction
+        # Always use compiled path; ignore `compiled` and iteration progress flags.
+        # Keep parameters for backward compatibility.
+        compiled = True
         if show_progress is None:
-            show_progress = self.show_iteration_progress
+            show_progress = False
 
         # Create progress bar callback if needed
         bar_callback = None
@@ -280,14 +280,9 @@ class HebbianTrainer:
             if bar_callback is not None:
                 bar_callback(iteration, energy, converged, energy_change)
 
-        # Run
+        # Run (always compiled path)
         try:
-            if compiled and progress_callback is None:
-                result = self._predict_generic_compiled(num_iter, state_param)
-            else:
-                result = self._predict_generic_uncompiled(
-                    num_iter, combined_callback, convergence_threshold, state_param
-                )
+            result = self._predict_generic_compiled(num_iter, state_param)
         finally:
             if pbar is not None:
                 pbar.close()
@@ -423,11 +418,9 @@ class HebbianTrainer:
         Returns:
             List of predicted patterns
         """
-        # Use defaults if not specified
-        if compiled is None:
-            compiled = self.compiled_prediction
-        if show_iteration_progress is None:
-            show_iteration_progress = self.show_iteration_progress
+        # Always use compiled path (ignore flags)
+        compiled = True
+        show_iteration_progress = False
 
         results = []
 

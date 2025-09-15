@@ -41,7 +41,7 @@ data_list = [camera, astronaut, horse, coffee]
 # Create model and unified trainer (discrete mode by default)
 model = AmariHopfieldNetwork(num_neurons=data_list[0].shape[0], asyn=False, activation="sign")
 model.init_state()
-trainer = HebbianTrainer(model, compiled_prediction=True)
+trainer = HebbianTrainer(model)
 trainer.train(data_list)
 
 # Generate testset
@@ -56,7 +56,7 @@ def get_corrupted_input(input, corruption_level):
 tests = [get_corrupted_input(d, 0.3) for d in data_list]
 
 # Predict corrupted patterns (compiled for speed, show sample-level progress)
-predicted = trainer.predict_batch(tests, compiled=True, show_sample_progress=True)
+predicted = trainer.predict_batch(tests, show_sample_progress=True)
 
 # display predict results
 def plot(data, test, predicted, figsize=(5, 6)):
