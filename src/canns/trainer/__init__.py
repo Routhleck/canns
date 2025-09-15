@@ -1,22 +1,11 @@
 """
-Training modules for CANNS models.
+Training utilities for CANNS models.
 
-This module provides training utilities for different types of neural network models,
-including brain-inspired learning algorithms and traditional optimization methods.
+Currently exposes a unified ``HebbianTrainer`` with built-in progress reporting.
 """
 
 from .hebbian import HebbianTrainer
-from .progress import (
-    ProgressReporter,
-    SilentProgressReporter,
-    TqdmProgressReporter,
-    create_progress_reporter,
-)
 
 __all__ = [
     "HebbianTrainer",
-    "ProgressReporter",
-    "SilentProgressReporter",
-    "TqdmProgressReporter",
-    "create_progress_reporter",
 ]

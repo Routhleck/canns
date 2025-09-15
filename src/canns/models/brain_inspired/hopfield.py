@@ -3,7 +3,6 @@ import brainunit as u
 import jax
 import jax.numpy as jnp
 import numpy as np
-from tqdm import tqdm
 
 from ._base import BrainInspiredModel
 
@@ -105,113 +104,46 @@ class AmariHopfieldNetwork(BrainInspiredModel):
         # update s
         self.s.value = self.activation(self.W.value @ self.s.value - self.threshold)
 
-    def apply_hebbian_learning(self, train_data):
-        num_data = len(train_data)
-        rho = np.sum([np.sum(t) for t in train_data]) / (num_data * self.num_neurons)
+    # Hebbian learning is handled by HebbianTrainer; no model-specific method needed.
 
-        for i in tqdm(range(num_data), desc="Learning patterns"):
-            t = train_data[i] - rho
-            self.W.value += u.math.outer(t, t)
-
-        # make diagonal element of W into 0
-        diagW = u.math.diag(u.math.diag(self.W.value))
-        self.W.value -= diagW
-        self.W.value /= num_data
-
-    def predict(
-        self, data, num_iter=20, compiled=True, progress_callback=None, convergence_threshold=1e-10
-    ):
-        """
-        Predict using the Hopfield network with energy-based convergence.
+    def resize(self, num_neurons: int, preserve_submatrix: bool = True):
+        """Resize the network dimension and state/weights.
 
         Args:
-            data: Initial pattern, shape (n_neurons,)
-            num_iter: Maximum number of iterations
-            compiled: If True, use compiled while_loop (faster, no progress).
-                     If False, use Python loop (slower, with progress)
-            progress_callback: Optional callback function called each iteration with
-                             (iteration, energy, converged) tuple
-            convergence_threshold: Energy change threshold for convergence detection
-
-        Returns:
-            Final converged pattern
+            num_neurons: New neuron count (N)
+            preserve_submatrix: If True, copy the top-left min(old, N) block of W into
+                the new matrix; otherwise reinitialize W with zeros.
         """
-        # Initialize state with input data - use float32 for consistency
-        self.s.value = jnp.array(data, dtype=jnp.float32)
+        old_n = getattr(self, "num_neurons", None)
+        old_W = getattr(self, "W", None)
+        old_s = getattr(self, "s", None)
 
-        if compiled and progress_callback is None:
-            # Use compiled version for maximum performance
-            return self._predict_compiled(num_iter)
+        self.num_neurons = int(num_neurons)
+
+        # Prepare new arrays
+        N = self.num_neurons
+        new_W = jnp.zeros((N, N), dtype=jnp.float32)
+        if preserve_submatrix and old_n is not None and old_W is not None and hasattr(old_W, "value"):
+            m = min(old_n, N)
+            new_W = new_W.at[:m, :m].set(jnp.asarray(old_W.value)[:m, :m])
+        # Zero diagonal for stability
+        new_W = new_W - jnp.diag(jnp.diag(new_W))
+
+        new_s = jnp.ones((N,), dtype=jnp.float32)
+
+        # Assign back
+        if old_W is not None and hasattr(old_W, "value"):
+            old_W.value = new_W
         else:
-            # Use uncompiled version with progress reporting
-            return self._predict_uncompiled(num_iter, progress_callback, convergence_threshold)
+            # In case resize called before init_state
+            self.W = brainstate.ParamState(new_W)
 
-    def _predict_compiled(self, num_iter):
-        """Compiled prediction using while_loop (high performance)."""
-        # Compute initial energy - ensure it's float32 for consistency
-        initial_energy = jnp.float32(self.energy)
+        if old_s is not None and hasattr(old_s, "value"):
+            old_s.value = new_s
+        else:
+            self.s = brainstate.HiddenState(new_s)
 
-        def cond_fn(carry):
-            """Continue while not converged and under max iterations."""
-            s, prev_energy, iteration = carry
-            return iteration < num_iter
-
-        def body_fn(carry):
-            """Single step of the network update."""
-            s, prev_energy, iteration = carry
-
-            # Set current state
-            self.s.value = s
-
-            # Call the update method (handles sync/async automatically)
-            self.update(prev_energy)
-
-            # Get new state and energy - all float32 for consistency
-            new_s = jnp.array(self.s.value, dtype=jnp.float32)
-            new_energy = jnp.float32(self.energy)
-
-            # Note: Energy convergence check could be implemented here
-            # but while_loop doesn't support early exit, so we rely on max_iter
-            return new_s, new_energy, iteration + 1
-
-        # Initial carry: (state, energy, iteration) - all consistent types
-        initial_carry = (jnp.array(self.s.value, dtype=jnp.float32), initial_energy, 0)
-
-        # Run compiled while loop
-        final_s, final_energy, final_iter = brainstate.compile.while_loop(
-            cond_fn,
-            body_fn,
-            initial_carry,
-        )
-
-        return final_s
-
-    def _predict_uncompiled(self, num_iter, progress_callback, convergence_threshold):
-        """Uncompiled prediction with progress reporting and early stopping."""
-        prev_energy = float(self.energy)
-
-        for iteration in range(num_iter):
-            # Call the update method
-            self.update(prev_energy)
-
-            # Compute new energy
-            current_energy = float(self.energy)
-
-            # Check for convergence
-            energy_change = abs(current_energy - prev_energy)
-            converged = energy_change < convergence_threshold
-
-            # Call progress callback if provided
-            if progress_callback is not None:
-                progress_callback(iteration + 1, current_energy, converged, energy_change)
-
-            # Early stopping if converged
-            if converged:
-                break
-
-            prev_energy = current_energy
-
-        return self.s.value
+    # Predict methods intentionally removed: use HebbianTrainer.predict for unified API.
 
     @property
     def energy(self):
