@@ -1,3 +1,12 @@
+"""
+Discrete Hopfield training on real images from scikit-image.
+
+This example demonstrates:
+- Generic Hebbian training (trainer.train)
+- Batch prediction (trainer.predict_batch)
+- Simple progress reporting
+"""
+
 import numpy as np
 import skimage.data
 from matplotlib import pyplot as plt
@@ -10,33 +19,29 @@ from canns.trainer import HebbianTrainer
 
 np.random.seed(42)
 
-# load data
-camera = skimage.data.camera()
-astronaut = rgb2gray(skimage.data.astronaut())
-horse = skimage.data.horse()
-coffee = rgb2gray(skimage.data.coffee())
-
-# merge data
-data_list = [camera, astronaut, horse, coffee]
-
-def preprocess_image(img, w=128, h=128):
-    # resize image
-    img = resize(img, (w, h), mode='reflect')
-
-    # thresholding
+def preprocess_image(img, w=128, h=128) -> np.ndarray:
+    """Resize, grayscale (if needed), threshold to binary, then map to {-1,+1}."""
+    if img.ndim == 3:
+        img = rgb2gray(img)
+    img = resize(img, (w, h), anti_aliasing=True)
+    img = img.astype(np.float32, copy=False)
     thresh = threshold_mean(img)
     binary = img > thresh
-    shift = 2 * (binary * 1) - 1 # bool to int
+    shift = np.where(binary, 1.0, -1.0).astype(np.float32)
+    return shift.reshape(w * h)
 
-    # reshape
-    return np.reshape(shift, w*h)
+# Training data from skimage
+camera = preprocess_image(skimage.data.camera())
+astronaut = preprocess_image(skimage.data.astronaut())
+horse = preprocess_image(skimage.data.horse().astype(np.float32))
+coffee = preprocess_image(skimage.data.coffee())
 
-data_list = [preprocess_image(d) for d in data_list]
+data_list = [camera, astronaut, horse, coffee]
 
-# Create Amari Hopfield Network Model (discrete mode by default)
+# Create model and unified trainer (discrete mode by default)
 model = AmariHopfieldNetwork(num_neurons=data_list[0].shape[0], asyn=False, activation="sign")
 model.init_state()
-trainer = HebbianTrainer(model)
+trainer = HebbianTrainer(model, compiled_prediction=True)
 trainer.train(data_list)
 
 # Generate testset
@@ -50,8 +55,8 @@ def get_corrupted_input(input, corruption_level):
 
 tests = [get_corrupted_input(d, 0.3) for d in data_list]
 
-# Use the new predict_batch method for better progress reporting
-predicted = trainer.predict_batch(tests)
+# Predict corrupted patterns (compiled for speed, show sample-level progress)
+predicted = trainer.predict_batch(tests, compiled=True, show_sample_progress=True)
 
 # display predict results
 def plot(data, test, predicted, figsize=(5, 6)):
@@ -71,11 +76,11 @@ def plot(data, test, predicted, figsize=(5, 6)):
             axarr[i, 1].set_title("Input data")
             axarr[i, 2].set_title('Output data')
 
-        axarr[i, 0].imshow(data[i])
+        axarr[i, 0].imshow(data[i], cmap='gray')
         axarr[i, 0].axis('off')
-        axarr[i, 1].imshow(test[i])
+        axarr[i, 1].imshow(test[i], cmap='gray')
         axarr[i, 1].axis('off')
-        axarr[i, 2].imshow(predicted[i])
+        axarr[i, 2].imshow(predicted[i], cmap='gray')
         axarr[i, 2].axis('off')
 
     plt.tight_layout()
