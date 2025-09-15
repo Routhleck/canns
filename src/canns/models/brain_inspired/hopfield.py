@@ -92,12 +92,21 @@ class AmariHopfieldNetwork(BrainInspiredModel):
             self._synchronous_update()
 
     def _asynchronous_update(self):
-        """Asynchronous update - one neuron at a time."""
-        random_indices = jax.random.permutation(brainstate.random.get_key(), self.num_neurons)
-        for idx in random_indices:
-            self.s.value.at[idx] = self.activation(
-                self.W.value[idx].T @ self.s.value - self.threshold
-            )
+        """Asynchronous update - one neuron at a time.
+
+        Implemented with JAX-friendly primitives so it can be used in compiled
+        prediction loops. Avoid Python-side mutation of traced indices.
+        """
+        key = brainstate.random.get_key()
+        idxs = jax.random.permutation(key, self.num_neurons)
+
+        def body(i, s):
+            idx = idxs[i]
+            # Update a single randomly-chosen neuron based on current state s
+            val = self.activation(self.W.value[idx].T @ s - self.threshold)
+            return s.at[idx].set(val)
+
+        self.s.value = jax.lax.fori_loop(0, self.num_neurons, body, self.s.value)
 
     def _synchronous_update(self):
         """Synchronous update - all neurons simultaneously."""
@@ -151,9 +160,10 @@ class AmariHopfieldNetwork(BrainInspiredModel):
         Compute the energy of the network state.
         """
         state = self.s.value
-
-        # Energy: E = -0.5 * Σ_ij W_ij * s_i * s_j
-        return -0.5 * jnp.dot(state, jnp.dot(self.W.value, state))
+        # Energy with threshold term: E = -0.5 * s^T W s + Σ_i s_i * threshold
+        quad = -0.5 * jnp.dot(state, jnp.dot(self.W.value, state))
+        thr = jnp.float32(self.threshold) * jnp.sum(state)
+        return quad + thr
 
     @property
     def storage_capacity(self):
