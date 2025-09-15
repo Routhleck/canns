@@ -160,9 +160,10 @@ class AmariHopfieldNetwork(BrainInspiredModel):
         Compute the energy of the network state.
         """
         state = self.s.value
-
-        # Energy: E = -0.5 * Σ_ij W_ij * s_i * s_j
-        return -0.5 * jnp.dot(state, jnp.dot(self.W.value, state))
+        # Energy with threshold term: E = -0.5 * s^T W s + Σ_i s_i * threshold
+        quad = -0.5 * jnp.dot(state, jnp.dot(self.W.value, state))
+        thr = jnp.float32(self.threshold) * jnp.sum(state)
+        return quad + thr
 
     @property
     def storage_capacity(self):
