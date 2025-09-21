@@ -132,7 +132,12 @@ class AmariHopfieldNetwork(BrainInspiredModel):
         # Prepare new arrays
         N = self.num_neurons
         new_W = jnp.zeros((N, N), dtype=jnp.float32)
-        if preserve_submatrix and old_n is not None and old_W is not None and hasattr(old_W, "value"):
+        if (
+            preserve_submatrix
+            and old_n is not None
+            and old_W is not None
+            and hasattr(old_W, "value")
+        ):
             m = min(old_n, N)
             new_W = new_W.at[:m, :m].set(jnp.asarray(old_W.value)[:m, :m])
         # Zero diagonal for stability
