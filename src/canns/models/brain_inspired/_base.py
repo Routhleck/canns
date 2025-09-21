@@ -22,7 +22,7 @@ class BrainInspiredModel(BasicModel):
       2) an ``energy`` property to compute current energy (scalar-like),
       3) a state vector attribute (default ``s``) with ``.value`` as 1D array used as
          the prediction state; override ``predict_state_attr`` to change the name.
-    
+
     Optional resizing
     - Models may implement ``resize(num_neurons: int, preserve_submatrix: bool = True)`` to
       allow trainers to change neuron dimensionality on the fly (e.g., when training with
@@ -73,7 +73,9 @@ class BrainInspiredModel(BasicModel):
         """
         raise NotImplementedError(f"{self.__class__.__name__} does not implement `energy`")
 
-    def resize(self, num_neurons: int, preserve_submatrix: bool = True):  # pragma: no cover - optional
+    def resize(
+        self, num_neurons: int, preserve_submatrix: bool = True
+    ):  # pragma: no cover - optional
         """
         Optional method to resize model state/parameters to ``num_neurons``.
 

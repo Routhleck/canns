@@ -7,12 +7,58 @@ from brainstate.nn import exp_euler_step
 from ._base import BasicModel
 
 
+def calculate_theta_modulation(
+    time_step: int,
+    linear_gain: float,
+    ang_gain: float,
+    theta_strength_hd: float = 0.0,
+    theta_strength_gc: float = 0.0,
+    theta_cycle_len: float = 100.0,
+    dt: float = None,
+) -> tuple[float, float, float]:
+    """
+    Calculate theta oscillation phase and modulation factors for direction and grid cell networks.
+
+    Args:
+        time_step: Current time step index
+        linear_gain: Normalized linear speed gain [0,1]
+        ang_gain: Normalized angular speed gain [-1,1]
+        theta_strength_hd: Theta modulation strength for head direction cells
+        theta_strength_gc: Theta modulation strength for grid cells
+        theta_cycle_len: Length of theta cycle in time units
+        dt: Time step size (if None, uses brainstate.environ.get_dt())
+
+    Returns:
+        tuple: (theta_phase, theta_modulation_hd, theta_modulation_gc)
+            - theta_phase: Current theta phase [-π, π]
+            - theta_modulation_hd: Theta modulation for direction cells
+            - theta_modulation_gc: Theta modulation for grid cells
+    """
+    if dt is None:
+        dt = brainstate.environ.get_dt()
+
+    # Calculate current time and theta phase
+    t = time_step * dt
+    theta_phase = u.math.mod(t, theta_cycle_len) / theta_cycle_len
+    theta_phase = theta_phase * 2 * u.math.pi - u.math.pi
+
+    # Calculate theta modulation for both networks
+    # HD network: theta modulation scales with angular speed
+    theta_modulation_hd = 1 + theta_strength_hd * (0.5 + ang_gain) * u.math.cos(theta_phase)
+
+    # GC network: theta modulation scales with linear speed
+    theta_modulation_gc = 1 + theta_strength_gc * (0.5 + linear_gain) * u.math.cos(theta_phase)
+
+    return theta_phase, theta_modulation_hd, theta_modulation_gc
+
+
 class DirectionCellNetwork(BasicModel):
     """
     1D continuous-attractor direction cell network
     References:
         Ji, Z., Lomi, E., Jeffery, K., Mitchell, A. S., & Burgess, N. (2025). Phase Precession Relative to Turning Angle in Theta‐Modulated Head Direction Cells. Hippocampus, 35(2), e70008.
     """
+
     def __init__(
         self,
         num: int,
@@ -88,7 +134,6 @@ class DirectionCellNetwork(BasicModel):
         u_sq = u.math.square(self.u.value)
         self.r.value = self.g * u_sq / (1.0 + self.k * u.math.sum(u_sq))
 
-
     @staticmethod
     def handle_periodic_condition(A):
         B = u.math.where(A > u.math.pi, A - 2 * u.math.pi, A)
@@ -110,13 +155,16 @@ class DirectionCellNetwork(BasicModel):
                 / (u.math.sqrt(2 * u.math.pi) * self.a)
             )
             return Jxx
+
         return get_J(self.x)
 
     @staticmethod
     def get_bump_center(r, x):
         exppos = u.math.exp(1j * x)
         center = u.math.angle(u.math.sum(exppos * r.value))
-        return center.reshape(-1,)
+        return center.reshape(
+            -1,
+        )
 
     def input_bump(self, head_direction):
         return self.A * u.math.exp(
@@ -138,21 +186,17 @@ class GridCellNetwork(BasicModel):
         # dynamics
         tau: float = 10.0,
         tau_v: float = 100.0,
-
         noise_strength: float = 0.1,  # activity noise
         conn_noise: float = 0.0,  # connectivity noise
         k: float = 1.0,
         adaptation_strength: float = 15.0,  # (mbar)
-
         # connectivity / input
         a: float = 0.8,
         A: float = 3.0,
         J0: float = 5.0,
         g: float = 1000.0,  # scale the firing rate to make it reasonable, no biological meaning
-
         # controlling grid spacing, larger means smaller spacing
         mapping_ratio: float = 1,
-
         # cntrolling offset length from conjunctive gc layer to gc layer, this is the key to drive the bump to move
         phase_offset: float = 1.0 / 20,  # relative to -pi~pi range
     ):
@@ -182,8 +226,9 @@ class GridCellNetwork(BasicModel):
         # coordinate transforms (hex -> rect)
         # Note that coor_transform is to map a parallelogram with a 60-degree angle back to a square
         # The logic is to partition the 2D space into parallelograms, each of which contains one lattice of grid cells, and repeat the parallelogram to tile the whole space
-        self.coor_transform = u.math.array([[1.0, -1.0 / u.math.sqrt(3.0)],
-                                            [0.0,  2.0 / u.math.sqrt(3.0)]])
+        self.coor_transform = u.math.array(
+            [[1.0, -1.0 / u.math.sqrt(3.0)], [0.0, 2.0 / u.math.sqrt(3.0)]]
+        )
 
         # inverse, which is u.math.array([[1.0, 1.0 / 2],[0.0,  u.math.sqrt(3.0) / 2]])
         # Note that coor_transform_inv is to map a square to a parallelogram with a 60-degree angle
@@ -236,8 +281,9 @@ class GridCellNetwork(BasicModel):
         # consider the periodic boundary condition
         d = self.handle_periodic_condition(d)
         # transform to lattice axes
-        dist = (u.math.matmul(self.coor_transform_inv,
-                          d.T)).T  # This means the bump on the parallelogram lattice is a Gaussian, while in the square space it is a twisted Gaussian
+        dist = (
+            u.math.matmul(self.coor_transform_inv, d.T)
+        ).T  # This means the bump on the parallelogram lattice is a Gaussian, while in the square space it is a twisted Gaussian
         return u.math.sqrt(dist[:, 0] ** 2 + dist[:, 1] ** 2)
 
     def handle_periodic_condition(self, d):
@@ -259,9 +305,10 @@ class GridCellNetwork(BasicModel):
         return cc_tranformed
 
     def update(self, animal_posistion, direction_activity, theta_modulation):
-
         # get bump activity in real space info from network activity on the manifold ---
-        center_phase, center_position, gc_bump = self.get_unique_activity_bump(self.r.value, animal_posistion)
+        center_phase, center_position, gc_bump = self.get_unique_activity_bump(
+            self.r.value, animal_posistion
+        )
         self.center_phase.value = center_phase
         self.center_position.value = center_position
         self.gc_bump.value = gc_bump
@@ -269,7 +316,9 @@ class GridCellNetwork(BasicModel):
         # get external input to grid cell layer from conjunctive grid cell layer
         # note that this conjunctive input will be theta modulated. When speed is high, theta modulation is high, thus input is stronger
         # This is how we get longer theta sweeps when speed is high
-        conj_input = self.calculate_input_from_conjgc(animal_posistion, direction_activity, theta_modulation)
+        conj_input = self.calculate_input_from_conjgc(
+            animal_posistion, direction_activity, theta_modulation
+        )
         self.conj_input.value = conj_input
 
         # recurrent + noise
@@ -311,14 +360,18 @@ class GridCellNetwork(BasicModel):
         # find bump center in phase space
         exppos_x = u.math.exp(1j * self.x_grid)
         exppos_y = u.math.exp(1j * self.y_grid)
-        activity_masked = u.math.where(network_activity > u.math.max(network_activity) * 0.1, network_activity, 0.0)
+        activity_masked = u.math.where(
+            network_activity > u.math.max(network_activity) * 0.1, network_activity, 0.0
+        )
 
         center_phase = u.math.zeros((2,))
         center_phase = center_phase.at[0].set(u.math.angle(u.math.sum(exppos_x * activity_masked)))
         center_phase = center_phase.at[1].set(u.math.angle(u.math.sum(exppos_y * activity_masked)))
 
         # --- map back to real space, snap to nearest candidate ---
-        center_pos_residual = u.math.matmul(self.coor_transform_inv, center_phase) / self.mapping_ratio
+        center_pos_residual = (
+            u.math.matmul(self.coor_transform_inv, center_phase) / self.mapping_ratio
+        )
         candidate_pos_all = self.candidate_centers + center_pos_residual
         distances = u.math.linalg.norm(candidate_pos_all - animal_posistion, axis=1)
         center_position = candidate_pos_all[u.math.argmin(distances)]
@@ -340,7 +393,9 @@ class GridCellNetwork(BasicModel):
         # lagvec = -u.math.array([u.math.cos(head_direction), u.math.sin(head_direction)]) * self.params.phase_offset * 1.4
         # offset = u.math.array([u.math.cos(direction_bin), u.math.sin(direction_bin)]) * self.params.phase_offset + lagvec.reshape(-1, 1)
 
-        offset = u.math.array([u.math.cos(direction_bin), u.math.sin(direction_bin)]) * self.phase_offset
+        offset = (
+            u.math.array([u.math.cos(direction_bin), u.math.sin(direction_bin)]) * self.phase_offset
+        )
 
         center_conj = self.position2phase(animal_pos.reshape(-1, 1) + offset.reshape(-1, num_dc))
 
@@ -350,11 +405,14 @@ class GridCellNetwork(BasicModel):
             conj_input = conj_input.at[i].set(self.A * u.math.exp(-0.5 * u.math.square(d / self.a)))
 
         # weighting by direction bump activity: keep top one-third (by max) then normalize, I thinking using all direction_activity should also be fine
-        weight = u.math.where(direction_activity > u.math.max(direction_activity) / 3.0, direction_activity, 0.0)
+        weight = u.math.where(
+            direction_activity > u.math.max(direction_activity) / 3.0, direction_activity, 0.0
+        )
         weight = weight / (u.math.sum(weight) + 1e-12)  # avoid div-by-zero, dim: (num_dc,)
 
-        return (u.math.matmul(conj_input.T, weight).reshape(
-            -1) * theta_modulation)  # dim: (num_gc, num_dc) x (num_dc,) -> (num_gc,)
+        return (
+            u.math.matmul(conj_input.T, weight).reshape(-1) * theta_modulation
+        )  # dim: (num_gc, num_dc) x (num_dc,) -> (num_gc,)
 
     def position2phase(self, position):
         """
@@ -365,4 +423,3 @@ class GridCellNetwork(BasicModel):
         px = u.math.mod(phase[0], 2.0 * u.math.pi) - u.math.pi
         py = u.math.mod(phase[1], 2.0 * u.math.pi) - u.math.pi
         return u.math.array([px, py])
-
