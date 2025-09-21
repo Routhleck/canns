@@ -1,12 +1,12 @@
 from __future__ import annotations
 
-from typing import Iterable, Callable, Optional
+from collections.abc import Callable, Iterable
 
-import jax.numpy as jnp
 import brainstate
+import jax.numpy as jnp
+from tqdm import tqdm  # type: ignore
 
 from ..models.brain_inspired import BrainInspiredModel
-from tqdm import tqdm  # type: ignore
 
 __all__ = ["HebbianTrainer"]
 
@@ -109,7 +109,7 @@ class HebbianTrainer:
         weight_attr = self.weight_attr
         if weight_attr is None and hasattr(self.model, "weight_attr"):
             try:
-                weight_attr = getattr(self.model, "weight_attr")  # could be property/str
+                weight_attr = self.model.weight_attr  # could be property/str
                 if callable(weight_attr):
                     weight_attr = weight_attr()
             except Exception:
@@ -124,7 +124,12 @@ class HebbianTrainer:
             param = getattr(self.model, weight_attr, None)
             if param is not None and hasattr(param, "value"):
                 W = param.value
-                if W is not None and hasattr(W, "shape") and len(W.shape) == 2 and W.shape[0] == W.shape[1]:
+                if (
+                    W is not None
+                    and hasattr(W, "shape")
+                    and len(W.shape) == 2
+                    and W.shape[0] == W.shape[1]
+                ):
                     self._apply_generic_hebbian(patterns, param)
                     used_generic = True
 
@@ -205,7 +210,7 @@ class HebbianTrainer:
         compiled: bool | None = None,
         show_progress: bool | None = None,
         convergence_threshold: float = 1e-10,
-        progress_callback: Optional[Callable[[int, float, bool, float], None]] = None,
+        progress_callback: Callable[[int, float, bool, float], None] | None = None,
     ):
         """
         Predict a single pattern.
@@ -264,7 +269,12 @@ class HebbianTrainer:
         # Initialize state
         # Ensure dimensionality matches pattern
         n = int(jnp.asarray(pattern).shape[0])
-        self._ensure_model_dim(n, self.weight_attr if self.weight_attr is not None else getattr(self.model, "weight_attr", None))
+        self._ensure_model_dim(
+            n,
+            self.weight_attr
+            if self.weight_attr is not None
+            else getattr(self.model, "weight_attr", None),
+        )
         # Refresh state_param after potential resize
         state_attr = self._resolve_state_attr()
         state_param = getattr(self.model, state_attr, None)
@@ -330,7 +340,7 @@ class HebbianTrainer:
         # Model-provided hint
         if hasattr(self.model, "predict_state_attr"):
             try:
-                attr = getattr(self.model, "predict_state_attr")
+                attr = self.model.predict_state_attr
                 if callable(attr):
                     attr = attr()
                 if isinstance(attr, str):
