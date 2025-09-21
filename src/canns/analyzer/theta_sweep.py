@@ -10,9 +10,9 @@ import multiprocessing as mp
 import platform
 import sys
 import warnings
+from collections.abc import Iterable
 from concurrent.futures import ProcessPoolExecutor
 from dataclasses import dataclass
-from typing import Iterable
 
 import matplotlib.patheffects as mpatheffects
 import numpy as np
@@ -121,7 +121,9 @@ def _prepare_theta_sweep_animation_data(
     direction4ani = direction_np[::n_step]
     dc_activity4ani = dc_activity_np[::n_step, :].astype(np.float32, copy=False)
 
-    grid_cell_activity = gc_activity_np.reshape(-1, gc_network.num_gc_1side, gc_network.num_gc_1side)
+    grid_cell_activity = gc_activity_np.reshape(
+        -1, gc_network.num_gc_1side, gc_network.num_gc_1side
+    )
     gc_bump4ani = grid_cell_activity[::n_step, :, :].astype(np.float32, copy=True)
 
     edge_margin = 3
@@ -163,7 +165,6 @@ def _prepare_theta_sweep_animation_data(
     tile_centers = np.array([candidate_centers[i, j] for i in tile_is for j in tile_js])
     points_all = (points_base[None, :, :] + tile_centers[:, None, :]).reshape(-1, 2)
 
-    M = points_base.shape[0]
     K = tile_centers.shape[0] if tile_centers.size else 1
     if K > 1:
         gc_real_flat = np.tile(gc_manifold_flat, (1, K))
@@ -277,7 +278,9 @@ def _theta_sweep_frame_to_image(
         vmax=data.vmax,
         alpha=render_options.alpha,
     )
-    ax_realgc.plot(data.position4ani[:, 0], data.position4ani[:, 1], color="#F18D00", lw=1, alpha=0.8)
+    ax_realgc.plot(
+        data.position4ani[:, 0], data.position4ani[:, 1], color="#F18D00", lw=1, alpha=0.8
+    )
     ax_realgc.plot(
         data.position4ani[frame_idx, 0],
         data.position4ani[frame_idx, 1],
@@ -321,9 +324,7 @@ def _render_theta_sweep_animation_with_imageio(
 
     path_str = str(save_path)
     if not path_str.lower().endswith(".gif"):
-        raise ValueError(
-            "imageio backend currently supports only GIF outputs (use .gif extension)"
-        )
+        raise ValueError("imageio backend currently supports only GIF outputs (use .gif extension)")
 
     writer_kwargs = {"duration": 1.0 / data.fps, "loop": 0}
 
@@ -346,6 +347,7 @@ def _render_theta_sweep_animation_with_imageio(
                 "Detected JAX in current process; switching theta sweep rendering to 'spawn' "
                 "start method to avoid fork deadlocks.",
                 RuntimeWarning,
+                stacklevel=2,
             )
             start_method = "spawn"
         try:
@@ -356,6 +358,7 @@ def _render_theta_sweep_animation_with_imageio(
                 f"Multiprocessing start method '{start_method}' is unavailable; "
                 "falling back to sequential rendering.",
                 RuntimeWarning,
+                stacklevel=2,
             )
         else:
             if start_method == "spawn" and auto_start_method:
@@ -363,6 +366,7 @@ def _render_theta_sweep_animation_with_imageio(
                     "Theta sweep frames will be rendered using 'spawn'. Large arrays will be pickled "
                     "per worker; monitor memory usage.",
                     RuntimeWarning,
+                    stacklevel=2,
                 )
 
     try:
@@ -390,7 +394,6 @@ def _render_theta_sweep_animation_with_imageio(
     finally:
         if progress_bar is not None:
             progress_bar.close()
-
 
 
 def plot_population_activity_with_theta(
@@ -637,7 +640,9 @@ def plot_grid_cell_manifold(
                 extra_cbar_kwargs = {}
 
             divider = make_axes_locatable(ax)
-            cax = divider.append_axes("right", size=default_cbar_opts["size"], pad=default_cbar_opts["pad"])
+            cax = divider.append_axes(
+                "right", size=default_cbar_opts["size"], pad=default_cbar_opts["pad"]
+            )
             cbar = fig.colorbar(scatter, cax=cax, **extra_cbar_kwargs)
             if default_cbar_opts["label"]:
                 cbar.set_label(default_cbar_opts["label"], fontsize=12)
@@ -762,6 +767,7 @@ def create_theta_sweep_animation(
             warnings.warn(
                 "Falling back to Matplotlib backend because imageio is not installed.",
                 RuntimeWarning,
+                stacklevel=2,
             )
         else:
             backend = "imageio"
@@ -769,7 +775,9 @@ def create_theta_sweep_animation(
 
     if backend == "imageio" and not config.save_path:
         if auto_backend:
-            _emit_info("Auto-selected imageio backend requires save_path; falling back to Matplotlib.")
+            _emit_info(
+                "Auto-selected imageio backend requires save_path; falling back to Matplotlib."
+            )
             backend = "matplotlib"
         else:
             raise ValueError(
@@ -799,6 +807,7 @@ def create_theta_sweep_animation(
             warnings.warn(
                 f"Requested start method '{start_method}' is unavailable; choosing automatically instead.",
                 RuntimeWarning,
+                stacklevel=2,
             )
             start_method = None
 
@@ -827,6 +836,7 @@ def create_theta_sweep_animation(
                 "Parallel rendering requested but no multiprocessing start method is available; "
                 "falling back to sequential rendering.",
                 RuntimeWarning,
+                stacklevel=2,
             )
             workers = 0
 
@@ -1052,7 +1062,9 @@ def create_theta_sweep_animation(
 
     # Create animation with blit for maximum speed
     interval_ms = 1000 // config.fps
-    ani = FuncAnimation(fig, update, frames=data.frames, interval=interval_ms, blit=True, repeat=True)
+    ani = FuncAnimation(
+        fig, update, frames=data.frames, interval=interval_ms, blit=True, repeat=True
+    )
 
     fig.subplots_adjust(left=0.05, right=0.98, top=0.9, bottom=0.12, wspace=0.35)
 
