@@ -7,11 +7,12 @@ import jax.numpy as jnp
 from tqdm import tqdm  # type: ignore
 
 from ..models.brain_inspired import BrainInspiredModel
+from ._base import Trainer
 
 __all__ = ["HebbianTrainer"]
 
 
-class HebbianTrainer:
+class HebbianTrainer(Trainer):
     """
     Generic Hebbian trainer with progress reporting.
 
@@ -70,9 +71,11 @@ class HebbianTrainer:
             prefer_generic: If True, use trainer's generic Hebbian rule when possible; otherwise
                 call the model's own implementation if available.
         """
-        self.model = model
-        self.show_iteration_progress = show_iteration_progress
-        self.compiled_prediction = compiled_prediction
+        super().__init__(
+            model=model,
+            show_iteration_progress=show_iteration_progress,
+            compiled_prediction=compiled_prediction,
+        )
         # Generic Hebbian config
         self.weight_attr = weight_attr
         self.subtract_mean = subtract_mean
@@ -461,15 +464,3 @@ class HebbianTrainer:
                 sample_pbar.close()
 
         return results
-
-    def configure_progress(
-        self,
-        *,
-        show_iteration_progress: bool | None = None,
-        compiled_prediction: bool | None = None,
-    ):
-        """Update progress-related flags without changing behavior."""
-        if show_iteration_progress is not None:
-            self.show_iteration_progress = show_iteration_progress
-        if compiled_prediction is not None:
-            self.compiled_prediction = compiled_prediction
