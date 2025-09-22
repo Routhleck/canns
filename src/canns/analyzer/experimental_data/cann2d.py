@@ -29,7 +29,7 @@ from sklearn import preprocessing
 from tqdm import tqdm
 
 # Import PlotConfig for unified plotting
-from ..visualize import PlotConfig
+from ..plotting import PlotConfig
 
 
 # ==================== Configuration Classes ====================
@@ -1739,7 +1739,7 @@ def plot_3d_bump_on_torus(
     """
     Visualize the movement of the neural activity bump on a torus using matplotlib animation.
 
-    This function follows the canns.analyzer.visualize patterns for animation generation
+    This function follows the canns.analyzer.plotting patterns for animation generation
     with progress tracking and proper resource cleanup.
 
     Parameters:
@@ -1858,7 +1858,7 @@ def plot_3d_bump_on_torus(
     if not frame_data:
         raise ProcessingError("No valid frames generated for animation")
 
-    # Create figure and animation following visualize.py pattern
+    # Create figure and animation following plotting package pattern
     fig = plt.figure(figsize=figsize)
 
     try:
@@ -1883,7 +1883,7 @@ def plot_3d_bump_on_torus(
         )
 
         def animate(frame_idx):
-            """Animation update function following visualize.py pattern."""
+            """Animation update function following plotting package pattern."""
             if frame_idx >= len(frame_data):
                 return (surface,)
 

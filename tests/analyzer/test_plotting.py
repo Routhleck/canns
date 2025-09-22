@@ -3,10 +3,16 @@ import os
 import brainstate
 import numpy as np
 
-from canns.analyzer.visualize import (
-    energy_landscape_1d_animation, energy_landscape_2d_animation,
-    energy_landscape_1d_static, energy_landscape_2d_static, raster_plot, 
-    average_firing_rate_plot, tuning_curve, PlotConfig, PlotConfigs
+from canns.analyzer.plotting import (
+    PlotConfig,
+    PlotConfigs,
+    average_firing_rate_plot,
+    energy_landscape_1d_animation,
+    energy_landscape_1d_static,
+    energy_landscape_2d_animation,
+    energy_landscape_2d_static,
+    raster_plot,
+    tuning_curve,
 )
 from canns.analyzer.utils import firing_rate_to_spike_train, normalize_firing_rates
 from canns.task.tracking import PopulationCoding1D, PopulationCoding2D, SmoothTracking1D
