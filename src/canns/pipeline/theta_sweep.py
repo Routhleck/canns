@@ -13,11 +13,11 @@ import brainstate
 import brainunit as u
 import numpy as np
 
+from ..analyzer.plotting import PlotConfig
 from ..analyzer.theta_sweep import (
     create_theta_sweep_animation,
     plot_population_activity_with_theta,
 )
-from ..analyzer.visualize import PlotConfig
 from ..models.basic.theta_sweep_model import (
     DirectionCellNetwork,
     GridCellNetwork,
@@ -368,7 +368,6 @@ class ThetaSweepPipeline(Pipeline):
         )
         plot_outputs["population_activity"] = str(output_path / "population_activity.png")
 
-
         return plot_outputs
 
     def _generate_animation(
@@ -387,10 +386,12 @@ class ThetaSweepPipeline(Pipeline):
         if verbose:
             print("🎬 Creating theta sweep animation...")
             import sys
+
             sys.stdout.flush()  # Ensure message is printed before animation starts
-            
+
         # Brief pause to ensure message ordering
         import time
+
         time.sleep(0.01)
 
         create_theta_sweep_animation(

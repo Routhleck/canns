@@ -17,7 +17,7 @@ from canns.analyzer.theta_sweep import (
     plot_grid_cell_manifold,
     plot_population_activity_with_theta,
 )
-from canns.analyzer.visualize import PlotConfig
+from canns.analyzer.plotting import PlotConfigs
 from canns.models.basic.theta_sweep_model import (
     DirectionCellNetwork,
     GridCellNetwork,
@@ -131,7 +131,7 @@ def main() -> None:
     ) = results
 
     print("Plotting population activity with theta modulation...")
-    config_pop = PlotConfig(
+    config_pop = PlotConfigs.theta_population_activity_static(
         title="Direction Cell Population Activity with Theta",
         xlabel="Time (s)",
         ylabel="Direction (°)",
@@ -154,7 +154,7 @@ def main() -> None:
     grid_cell_activity = gc_netactivity.reshape(-1, gc_net.num_gc_1side, gc_net.num_gc_1side)
     frame_idx = 900
 
-    config_manifold = PlotConfig(
+    config_manifold = PlotConfigs.grid_cell_manifold_static(
         title="Grid Cell Activity on Twisted Torus Manifold",
         figsize=(6, 5),
         show=True,
@@ -167,7 +167,7 @@ def main() -> None:
     )
 
     print("Creating theta sweep animation...")
-    config_animation = PlotConfig(
+    config_animation = PlotConfigs.theta_sweep_animation(
         figsize=(12, 3),
         fps=10,
         save_path="theta_sweep_animation.gif",
