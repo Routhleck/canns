@@ -3,7 +3,7 @@ import brainstate.compile
 import brainunit as u
 import jax
 
-from canns.analyzer.visualize import energy_landscape_2d_animation, PlotConfigs
+from canns.analyzer.plotting import PlotConfigs, energy_landscape_2d_animation
 from canns.models.basic import CANN2D
 from canns.task.tracking import SmoothTracking2D
 

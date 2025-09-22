@@ -40,7 +40,7 @@ except ImportError:
 from canns.analyzer.experimental_data._datasets_utils import load_roi_data
 
 # Import PlotConfig for unified plotting
-from ..visualize import PlotConfig
+from ..plotting import PlotConfig
 
 
 # ==================== Configuration Classes ====================
