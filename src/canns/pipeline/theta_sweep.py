@@ -24,9 +24,10 @@ from ..models.basic.theta_sweep_model import (
     calculate_theta_modulation,
 )
 from ..task.spatial_navigation import SpatialNavigationTask
+from ._base import Pipeline
 
 
-class ThetaSweepPipeline:
+class ThetaSweepPipeline(Pipeline):
     """
     High-level pipeline for theta sweep analysis of external trajectory data.
 
@@ -71,6 +72,7 @@ class ThetaSweepPipeline:
             theta_params: Parameters for theta modulation. If None, uses defaults
             spatial_nav_params: Additional parameters for SpatialNavigationTask. If None, uses defaults
         """
+        super().__init__()
         # Store trajectory data
         self.trajectory_data = np.array(trajectory_data)
         self.times = np.array(times) if times is not None else None
@@ -101,7 +103,6 @@ class ThetaSweepPipeline:
         self.spatial_nav_task = None
         self.direction_network = None
         self.grid_network = None
-        self.results = None
 
     def _validate_trajectory_data(self):
         """Validate input trajectory data."""
@@ -294,12 +295,12 @@ class ThetaSweepPipeline:
         Returns:
             Dictionary containing paths to generated files and analysis data
         """
+        self.reset()
         if verbose:
             print("🚀 Starting Theta Sweep Pipeline...")
 
         # Create output directory
-        output_path = Path(output_dir)
-        output_path.mkdir(parents=True, exist_ok=True)
+        output_path = self.prepare_output_dir(output_dir)
 
         # Setup pipeline components
         if verbose:
@@ -329,8 +330,7 @@ class ThetaSweepPipeline:
             print("✅ Pipeline completed successfully!")
             print(f"📁 Results saved to: {output_path.absolute()}")
 
-        self.results = outputs
-        return outputs
+        return self.set_results(outputs)
 
     def _generate_plots(self, output_path: Path, show_plots: bool, verbose: bool) -> dict[str, str]:
         """Generate analysis plots."""
