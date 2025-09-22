@@ -314,45 +314,47 @@ class SpatialNavigationTask(Task):
             """Apply moving average smoothing to data"""
             if window_size <= 1 or len(data) < window_size:
                 return data
-            
+
             # Use convolution for moving average
             kernel = np.ones(window_size) / window_size
-            
+
             # Handle NaN values by padding
             valid_mask = ~np.isnan(data)
             if not np.any(valid_mask):
                 return data
-            
+
             # For simplicity, use simple moving average
-            smoothed = np.convolve(data, kernel, mode='same')
-            
+            smoothed = np.convolve(data, kernel, mode="same")
+
             # Handle edges by using smaller windows
             half_window = window_size // 2
             for i in range(half_window):
                 start_idx = max(0, i - half_window)
                 end_idx = min(len(data), i + half_window + 1)
                 smoothed[i] = np.nanmean(data[start_idx:end_idx])
-                
+
                 start_idx = max(0, len(data) - i - half_window - 1)
                 end_idx = min(len(data), len(data) - i + half_window)
                 smoothed[len(data) - i - 1] = np.nanmean(data[start_idx:end_idx])
-            
+
             return smoothed
 
         def smooth_circular_data(angles, window_size):
             """Apply smoothing to circular data (angles) handling wrapping"""
             if window_size <= 1 or len(angles) < window_size:
                 return angles
-            
+
             # Convert to complex representation for circular averaging
             complex_angles = np.exp(1j * angles)
-            
+
             # Smooth in complex domain
-            smoothed_complex = smooth_data(complex_angles.real, window_size) + 1j * smooth_data(complex_angles.imag, window_size)
-            
+            smoothed_complex = smooth_data(complex_angles.real, window_size) + 1j * smooth_data(
+                complex_angles.imag, window_size
+            )
+
             # Convert back to angles
             smoothed_angles = np.angle(smoothed_complex)
-            
+
             return smoothed_angles
 
         fig, axs = plt.subplots(1, 3, figsize=figsize, width_ratios=[1, 2, 2])
@@ -360,27 +362,39 @@ class SpatialNavigationTask(Task):
         try:
             # Plot 1: Trajectory with time-based coloring
             ax = axs[0]
-            
+
             # Create time-based color mapping
             time_array = self.run_steps * self.dt
             scatter = ax.scatter(
-                self.data.position[:, 0], 
-                self.data.position[:, 1], 
-                c=time_array, 
-                cmap='viridis', 
-                s=1, 
+                self.data.position[:, 0],
+                self.data.position[:, 1],
+                c=time_array,
+                cmap="viridis",
+                s=1,
                 alpha=0.7,
-                **kwargs
+                **kwargs,
             )
-            
+
             # Add start and end markers
-            ax.plot(self.data.position[0, 0], self.data.position[0, 1], 'go', markersize=8, label='Start')
-            ax.plot(self.data.position[-1, 0], self.data.position[-1, 1], 'ro', markersize=8, label='End')
-            
+            ax.plot(
+                self.data.position[0, 0],
+                self.data.position[0, 1],
+                "go",
+                markersize=8,
+                label="Start",
+            )
+            ax.plot(
+                self.data.position[-1, 0],
+                self.data.position[-1, 1],
+                "ro",
+                markersize=8,
+                label="End",
+            )
+
             # Add colorbar for time
             cbar = plt.colorbar(scatter, ax=ax)
-            cbar.set_label('Time (s)', fontsize=10)
-            
+            cbar.set_label("Time (s)", fontsize=10)
+
             ax.set_xlim(0, self.width)
             ax.set_ylim(0, self.height)
             ax.set_aspect("equal", adjustable="box")
@@ -389,23 +403,33 @@ class SpatialNavigationTask(Task):
             ax.set_title("Animal Trajectory")
             ax.set_xlabel("X Position")
             ax.set_ylabel("Y Position")
-            ax.legend(fontsize=8, loc='upper right')
+            ax.legend(fontsize=8, loc="upper right")
 
             # Plot 2: Speed over time
             ax = axs[1]
             sns.despine(ax=ax)
             time_array = self.run_steps * self.dt
-            
+
             # Plot original data (if smoothing is enabled)
             if smooth_window > 1:
-                ax.plot(time_array, self.data.speed, lw=0.5, color="#009FB9", alpha=0.3, label="Raw", **kwargs)
+                ax.plot(
+                    time_array,
+                    self.data.speed,
+                    lw=0.5,
+                    color="#009FB9",
+                    alpha=0.3,
+                    label="Raw",
+                    **kwargs,
+                )
                 # Plot smoothed data
                 smoothed_speed = smooth_data(self.data.speed, smooth_window)
-                ax.plot(time_array, smoothed_speed, lw=2, color="#009FB9", label="Smoothed", **kwargs)
+                ax.plot(
+                    time_array, smoothed_speed, lw=2, color="#009FB9", label="Smoothed", **kwargs
+                )
                 ax.legend(fontsize=8)
             else:
                 ax.plot(time_array, self.data.speed, lw=1, color="#009FB9", **kwargs)
-            
+
             ax.set_xlabel("Time (s)")
             ax.set_ylabel("Speed (m/s)")
             title = f"Movement Speed{f' (smoothed, window={smooth_window})' if smooth_window > 1 else ''}"
@@ -417,27 +441,42 @@ class SpatialNavigationTask(Task):
 
             # Handle direction wrapping for plotting
             direction = self.data.hd_angle
-            
+
             if smooth_window > 1:
                 # Plot original data
                 jumps = np.where(np.abs(np.diff(direction)) > np.pi)[0]
                 direction_plot = direction.copy()
                 direction_plot[jumps + 1] = np.nan
-                ax.plot(time_array, direction_plot, lw=0.5, color="#009FB9", alpha=0.3, label="Raw", **kwargs)
-                
+                ax.plot(
+                    time_array,
+                    direction_plot,
+                    lw=0.5,
+                    color="#009FB9",
+                    alpha=0.3,
+                    label="Raw",
+                    **kwargs,
+                )
+
                 # Plot smoothed data
                 smoothed_direction = smooth_circular_data(direction, smooth_window)
                 jumps_smooth = np.where(np.abs(np.diff(smoothed_direction)) > np.pi)[0]
                 smoothed_direction_plot = smoothed_direction.copy()
                 smoothed_direction_plot[jumps_smooth + 1] = np.nan
-                ax.plot(time_array, smoothed_direction_plot, lw=2, color="#009FB9", label="Smoothed", **kwargs)
+                ax.plot(
+                    time_array,
+                    smoothed_direction_plot,
+                    lw=2,
+                    color="#009FB9",
+                    label="Smoothed",
+                    **kwargs,
+                )
                 ax.legend(fontsize=8)
             else:
                 jumps = np.where(np.abs(np.diff(direction)) > np.pi)[0]
                 direction_plot = direction.copy()
                 direction_plot[jumps + 1] = np.nan
                 ax.plot(time_array, direction_plot, lw=1, color="#009FB9", **kwargs)
-            
+
             ax.set_xlabel("Time (s)")
             ax.set_ylabel("Direction (rad)")
             title = f"Head Direction{f' (smoothed, window={smooth_window})' if smooth_window > 1 else ''}"
