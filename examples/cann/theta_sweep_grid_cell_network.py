@@ -30,7 +30,7 @@ def main() -> None:
     # Set up simulation parameters
     np.random.seed(10)
     Env_size = 1.5
-    simulate_time = 0.1
+    simulate_time = 2.0
     dt = 0.001
     brainstate.environ.set(dt=1.0)
 
