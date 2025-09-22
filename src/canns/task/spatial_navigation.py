@@ -290,6 +290,7 @@ class SpatialNavigationTask(Task):
         show: bool = True,
         save_path: str | None = None,
         figsize: tuple[int, int] = (12, 3),
+        smooth_window: int = 50,
         **kwargs,
     ):
         """
@@ -299,6 +300,7 @@ class SpatialNavigationTask(Task):
             show: Whether to display the plot
             save_path: Path to save the figure
             figsize: Figure size (width, height)
+            smooth_window: Window size for smoothing speed and direction plots (set to 0 to disable smoothing)
             **kwargs: Additional matplotlib parameters
         """
         if self.data is None:
@@ -308,14 +310,77 @@ class SpatialNavigationTask(Task):
         if self.data.ang_velocity is None:
             self.calculate_theta_sweep_data()
 
+        def smooth_data(data, window_size):
+            """Apply moving average smoothing to data"""
+            if window_size <= 1 or len(data) < window_size:
+                return data
+            
+            # Use convolution for moving average
+            kernel = np.ones(window_size) / window_size
+            
+            # Handle NaN values by padding
+            valid_mask = ~np.isnan(data)
+            if not np.any(valid_mask):
+                return data
+            
+            # For simplicity, use simple moving average
+            smoothed = np.convolve(data, kernel, mode='same')
+            
+            # Handle edges by using smaller windows
+            half_window = window_size // 2
+            for i in range(half_window):
+                start_idx = max(0, i - half_window)
+                end_idx = min(len(data), i + half_window + 1)
+                smoothed[i] = np.nanmean(data[start_idx:end_idx])
+                
+                start_idx = max(0, len(data) - i - half_window - 1)
+                end_idx = min(len(data), len(data) - i + half_window)
+                smoothed[len(data) - i - 1] = np.nanmean(data[start_idx:end_idx])
+            
+            return smoothed
+
+        def smooth_circular_data(angles, window_size):
+            """Apply smoothing to circular data (angles) handling wrapping"""
+            if window_size <= 1 or len(angles) < window_size:
+                return angles
+            
+            # Convert to complex representation for circular averaging
+            complex_angles = np.exp(1j * angles)
+            
+            # Smooth in complex domain
+            smoothed_complex = smooth_data(complex_angles.real, window_size) + 1j * smooth_data(complex_angles.imag, window_size)
+            
+            # Convert back to angles
+            smoothed_angles = np.angle(smoothed_complex)
+            
+            return smoothed_angles
+
         fig, axs = plt.subplots(1, 3, figsize=figsize, width_ratios=[1, 2, 2])
 
         try:
-            # Plot 1: Trajectory
+            # Plot 1: Trajectory with time-based coloring
             ax = axs[0]
-            ax.plot(
-                self.data.position[:, 0], self.data.position[:, 1], lw=1, color="black", **kwargs
+            
+            # Create time-based color mapping
+            time_array = self.run_steps * self.dt
+            scatter = ax.scatter(
+                self.data.position[:, 0], 
+                self.data.position[:, 1], 
+                c=time_array, 
+                cmap='viridis', 
+                s=1, 
+                alpha=0.7,
+                **kwargs
             )
+            
+            # Add start and end markers
+            ax.plot(self.data.position[0, 0], self.data.position[0, 1], 'go', markersize=8, label='Start')
+            ax.plot(self.data.position[-1, 0], self.data.position[-1, 1], 'ro', markersize=8, label='End')
+            
+            # Add colorbar for time
+            cbar = plt.colorbar(scatter, ax=ax)
+            cbar.set_label('Time (s)', fontsize=10)
+            
             ax.set_xlim(0, self.width)
             ax.set_ylim(0, self.height)
             ax.set_aspect("equal", adjustable="box")
@@ -324,15 +389,27 @@ class SpatialNavigationTask(Task):
             ax.set_title("Animal Trajectory")
             ax.set_xlabel("X Position")
             ax.set_ylabel("Y Position")
+            ax.legend(fontsize=8, loc='upper right')
 
             # Plot 2: Speed over time
             ax = axs[1]
             sns.despine(ax=ax)
             time_array = self.run_steps * self.dt
-            ax.plot(time_array, self.data.speed, lw=1, color="#009FB9", **kwargs)
+            
+            # Plot original data (if smoothing is enabled)
+            if smooth_window > 1:
+                ax.plot(time_array, self.data.speed, lw=0.5, color="#009FB9", alpha=0.3, label="Raw", **kwargs)
+                # Plot smoothed data
+                smoothed_speed = smooth_data(self.data.speed, smooth_window)
+                ax.plot(time_array, smoothed_speed, lw=2, color="#009FB9", label="Smoothed", **kwargs)
+                ax.legend(fontsize=8)
+            else:
+                ax.plot(time_array, self.data.speed, lw=1, color="#009FB9", **kwargs)
+            
             ax.set_xlabel("Time (s)")
             ax.set_ylabel("Speed (m/s)")
-            ax.set_title("Movement Speed")
+            title = f"Movement Speed{f' (smoothed, window={smooth_window})' if smooth_window > 1 else ''}"
+            ax.set_title(title)
 
             # Plot 3: Direction over time (handle wrapping)
             ax = axs[2]
@@ -340,14 +417,31 @@ class SpatialNavigationTask(Task):
 
             # Handle direction wrapping for plotting
             direction = self.data.hd_angle
-            jumps = np.where(np.abs(np.diff(direction)) > np.pi)[0]
-            direction_plot = direction.copy()
-            direction_plot[jumps + 1] = np.nan
-
-            ax.plot(time_array, direction_plot, lw=1, color="#009FB9", **kwargs)
+            
+            if smooth_window > 1:
+                # Plot original data
+                jumps = np.where(np.abs(np.diff(direction)) > np.pi)[0]
+                direction_plot = direction.copy()
+                direction_plot[jumps + 1] = np.nan
+                ax.plot(time_array, direction_plot, lw=0.5, color="#009FB9", alpha=0.3, label="Raw", **kwargs)
+                
+                # Plot smoothed data
+                smoothed_direction = smooth_circular_data(direction, smooth_window)
+                jumps_smooth = np.where(np.abs(np.diff(smoothed_direction)) > np.pi)[0]
+                smoothed_direction_plot = smoothed_direction.copy()
+                smoothed_direction_plot[jumps_smooth + 1] = np.nan
+                ax.plot(time_array, smoothed_direction_plot, lw=2, color="#009FB9", label="Smoothed", **kwargs)
+                ax.legend(fontsize=8)
+            else:
+                jumps = np.where(np.abs(np.diff(direction)) > np.pi)[0]
+                direction_plot = direction.copy()
+                direction_plot[jumps + 1] = np.nan
+                ax.plot(time_array, direction_plot, lw=1, color="#009FB9", **kwargs)
+            
             ax.set_xlabel("Time (s)")
             ax.set_ylabel("Direction (rad)")
-            ax.set_title("Head Direction")
+            title = f"Head Direction{f' (smoothed, window={smooth_window})' if smooth_window > 1 else ''}"
+            ax.set_title(title)
 
             # Add y-tick labels for clarity
             ax.set_yticks([-np.pi, -np.pi / 2, 0, np.pi / 2, np.pi])
@@ -382,3 +476,160 @@ class SpatialNavigationTask(Task):
             linear_speed_gains=np.zeros(self.total_steps),
             ang_speed_gains=np.zeros(self.total_steps),
         )
+
+    def import_data(
+        self,
+        position_data: np.ndarray,
+        times: np.ndarray = None,
+        dt: float = None,
+        head_direction: np.ndarray = None,
+        initial_pos: np.ndarray = None,
+    ) -> None:
+        """
+        Import external position coordinates and calculate derived features.
+
+        This method allows importing external trajectory data (e.g., from experimental
+        recordings or other simulations) instead of using the built-in random motion model.
+        The imported data will be processed to calculate velocity, speed, movement direction,
+        head direction, and rotational velocity.
+
+        Args:
+            position_data (np.ndarray): Array of position coordinates with shape (n_steps, 2)
+                                       for 2D trajectories or (n_steps, 1) for 1D trajectories.
+            times (np.ndarray, optional): Array of time points corresponding to position_data.
+                                         If None, uniform time steps with dt will be assumed.
+            dt (float, optional): Time step between consecutive positions. If None, uses
+                                 self.dt. Required if times is None.
+            head_direction (np.ndarray, optional): Array of head direction angles in radians
+                                                  with shape (n_steps,). If None, head direction
+                                                  will be derived from movement direction.
+            initial_pos (np.ndarray, optional): Initial position for the agent. If None,
+                                               uses the first position from position_data.
+
+        Raises:
+            ValueError: If position_data has invalid dimensions or if required parameters
+                       are missing.
+
+        Example:
+            ```python
+            # Import experimental trajectory data
+            positions = np.array([[0, 0], [0.1, 0.05], [0.2, 0.1], ...])  # shape: (n_steps, 2)
+            times = np.array([0, 0.1, 0.2, ...])  # shape: (n_steps,)
+
+            task = SpatialNavigationTask(...)
+            task.import_data(position_data=positions, times=times)
+
+            # Or with uniform time steps
+            task.import_data(position_data=positions, dt=0.1)
+            ```
+        """
+        # Input validation
+        if not isinstance(position_data, np.ndarray):
+            raise ValueError("position_data must be a numpy array")
+
+        if position_data.ndim != 2:
+            raise ValueError("position_data must be a 2D array with shape (n_steps, n_dims)")
+
+        n_steps, n_dims = position_data.shape
+
+        if n_dims not in [1, 2]:
+            raise ValueError("position_data must have 1 or 2 spatial dimensions")
+
+        expected_dims = 2 if self.dimensionality == "2D" else 1
+        if expected_dims != n_dims:
+            raise ValueError(
+                f"position_data dimensions ({n_dims}) must match task dimensionality ({self.dimensionality})"
+            )
+
+        if n_steps < 2:
+            raise ValueError("position_data must contain at least 2 time steps")
+
+        # Handle time array
+        if times is None:
+            if dt is None:
+                dt = self.dt
+            times = np.arange(n_steps) * dt
+        else:
+            if not isinstance(times, np.ndarray):
+                raise ValueError("times must be a numpy array")
+            if times.shape[0] != n_steps:
+                raise ValueError("times array length must match position_data length")
+            if dt is None:
+                dt = np.mean(np.diff(times)) if len(times) > 1 else self.dt
+
+        # Set up environment and agent if not already done (but don't use RatInABox processing)
+        if not hasattr(self, "env") or self.env is None:
+            self.env = Environment(params=self.env_params)
+
+        if not hasattr(self, "agent") or self.agent is None:
+            self.agent = Agent(Environment=self.env, params=copy.deepcopy(self.agent_params))
+
+        # Set initial position
+        if initial_pos is None:
+            initial_pos = position_data[0]
+        self.agent.pos = np.array(initial_pos)
+        self.agent.dt = dt
+
+        # Note: We skip agent.import_trajectory() to avoid RatInABox's internal processing
+        # which can modify our clean imported data
+
+        # Calculate derived features
+        position = position_data.copy()
+
+        # Calculate velocity from position differences
+        velocity = np.zeros_like(position)
+        if n_steps > 1:
+            time_diffs = np.diff(times)
+            pos_diffs = np.diff(position, axis=0)
+            velocity[1:] = pos_diffs / time_diffs[:, np.newaxis]
+            velocity[0] = velocity[1]  # Use second velocity for first step
+
+        # Calculate speed
+        speed = np.linalg.norm(velocity, axis=1)
+
+        # Calculate movement direction from velocity
+        if n_dims == 2:
+            movement_direction = np.where(
+                speed == 0, 0, np.angle(velocity[:, 0] + velocity[:, 1] * 1j)
+            )
+        else:  # 1D case
+            movement_direction = np.where(speed == 0, 0, np.where(velocity[:, 0] >= 0, 0, np.pi))
+
+        # Handle head direction
+        if head_direction is None:
+            # Use movement direction as head direction if not provided
+            hd_angle = movement_direction.copy()
+            # For stationary points, maintain previous head direction
+            for i in range(1, len(hd_angle)):
+                if speed[i] == 0:
+                    hd_angle[i] = hd_angle[i - 1]
+        else:
+            if not isinstance(head_direction, np.ndarray):
+                raise ValueError("head_direction must be a numpy array")
+            if head_direction.shape[0] != n_steps:
+                raise ValueError("head_direction array length must match position_data length")
+            hd_angle = head_direction.copy()
+
+        # Calculate rotational velocity
+        rot_vel = np.zeros_like(hd_angle)
+        if n_steps > 1:
+            rot_vel[1:] = map2pi(np.diff(hd_angle))
+
+        # Update total_steps to match imported data
+        self.total_steps = n_steps
+        self.run_steps = np.arange(self.total_steps)
+
+        # Create SpatialNavigationData object
+        self.data = SpatialNavigationData(
+            position=position,
+            velocity=velocity,
+            speed=speed,
+            movement_direction=movement_direction,
+            hd_angle=hd_angle,
+            rot_vel=rot_vel,
+        )
+
+        print(f"Successfully imported trajectory data with {n_steps} time steps")
+        print(f"Spatial dimensions: {n_dims}D")
+        print(f"Time range: {times[0]:.3f} to {times[-1]:.3f} s")
+        print(f"Mean speed: {np.mean(speed):.3f} units/s")
