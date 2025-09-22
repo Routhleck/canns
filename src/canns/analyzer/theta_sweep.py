@@ -22,7 +22,7 @@ from matplotlib.animation import FuncAnimation
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 from tqdm import tqdm
 
-from .visualize import PlotConfig
+from .plotting import PlotConfig
 
 
 @dataclass(slots=True)
@@ -1068,7 +1068,7 @@ def create_theta_sweep_animation(
 
     fig.subplots_adjust(left=0.05, right=0.98, top=0.9, bottom=0.12, wspace=0.35)
 
-    # Save and/or show animation with progress bar (following visualize.py pattern)
+    # Save and/or show animation with progress bar (following plotting utilities pattern)
     if config.save_path:
         # Use FFMpegWriter for better performance than PillowWriter
         if config.save_path.endswith(".mp4"):

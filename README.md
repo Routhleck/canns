@@ -106,7 +106,7 @@ pip install canns[tpu]
 import brainstate
 from canns.models.basic import CANN1D
 from canns.task.tracking import SmoothTracking1D
-from canns.analyzer.visualize import energy_landscape_1d_animation
+from canns.analyzer.plotting import energy_landscape_1d_animation
 
 # Set computation environment
 brainstate.environ.set(dt=0.1)
@@ -193,7 +193,7 @@ canns/
 
 ```python
 import brainstate
-from canns.analyzer.visualize import energy_landscape_1d_animation
+from canns.analyzer.plotting import energy_landscape_1d_animation
 from canns.models.basic import CANN1D
 from canns.task.tracking import SmoothTracking1D
 
@@ -233,7 +233,7 @@ energy_landscape_1d_animation(
 
 ```python
 import brainstate as bst
-from canns.analyzer.visualize import energy_landscape_2d_animation
+from canns.analyzer.plotting import energy_landscape_2d_animation
 from canns.models.basic import CANN2D
 from canns.task.tracking import SmoothTracking2D
 
@@ -272,7 +272,7 @@ energy_landscape_2d_animation(
 
 ```python
 import numpy as np
-from canns.analyzer.visualize import tuning_curve
+from canns.analyzer.plotting import tuning_curve
 from canns.models.basic import CANN1D
 
 # Create circular CANN for orientation

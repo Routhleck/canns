@@ -1,7 +1,7 @@
 import brainstate
 import numpy as np
 
-from canns.analyzer.visualize import tuning_curve, energy_landscape_1d_animation, PlotConfigs
+from canns.analyzer.plotting import PlotConfigs, energy_landscape_1d_animation, tuning_curve
 from canns.models.basic import CANN1D, CANN1D_SFA
 from canns.task.tracking import SmoothTracking1D
 

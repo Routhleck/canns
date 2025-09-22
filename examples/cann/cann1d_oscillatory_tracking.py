@@ -1,6 +1,6 @@
 import brainstate
 
-from canns.analyzer.visualize import energy_landscape_1d_animation, PlotConfigs
+from canns.analyzer.plotting import PlotConfigs, energy_landscape_1d_animation
 from canns.models.basic import CANN1D, CANN1D_SFA
 from canns.task.tracking import SmoothTracking1D
 
