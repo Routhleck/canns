@@ -53,7 +53,30 @@ def energy_landscape_1d_static(
     show: bool = True,
     **kwargs: Any,
 ):
-    """Plot static 1D energy landscapes for one or more datasets."""
+    """Plot a 1D static energy landscape using Matplotlib.
+
+    This mirrors the long-form description from the pre-reorganisation module so
+    existing documentation references stay accurate. The function accepts a
+    dictionary of datasets, plotting each curve on the same set of axes while
+    honouring the ``PlotConfig`` defaults callers relied on previously.
+
+    Args:
+        data_sets: Mapping of series labels to ``(x, y)`` tuples representing
+            the energy curve to draw.
+        config: Optional :class:`PlotConfig` carrying shared styling.
+        title: Plot title when no config override is supplied.
+        xlabel: X-axis label when no config override is supplied.
+        ylabel: Y-axis label when no config override is supplied.
+        show_legend: Whether to display the legend for labelled curves.
+        figsize: Figure size forwarded to Matplotlib when creating the axes.
+        grid: Whether to enable a grid background.
+        save_path: Optional path for persisting the plot to disk.
+        show: Whether to display the generated figure.
+        **kwargs: Additional keyword arguments forwarded to ``ax.plot``.
+
+    Returns:
+        Tuple[plt.Figure, plt.Axes]: The created figure and axes handles.
+    """
 
     config = _ensure_plot_config(
         config,
@@ -113,7 +136,34 @@ def energy_landscape_1d_animation(
     show_progress_bar: bool = True,
     **kwargs: Any,
 ) -> animation.FuncAnimation:
-    """Create an animation for evolving 1D energy landscapes."""
+    """Create an animation of an evolving 1D energy landscape.
+
+    The docstring intentionally preserves the guidance from the previous
+    implementation so existing callers can rely on the same parameter
+    explanations.
+
+    Args:
+        data_sets: Dictionary whose keys are legend labels and values are
+            ``(x_data, y_data)`` tuples where ``y_data`` is shaped as
+            ``(time, state)``.
+        time_steps_per_second: Number of simulation time steps per second of
+            wall-clock time (e.g., ``1/dt``).
+        config: Optional :class:`PlotConfig` with shared styling overrides.
+        fps: Frames per second to render in the resulting animation.
+        title: Title used when ``config`` is not provided.
+        xlabel: X-axis label used when ``config`` is not provided.
+        ylabel: Y-axis label used when ``config`` is not provided.
+        figsize: Figure size passed to Matplotlib when building the canvas.
+        grid: Whether to overlay a grid on the animation axes.
+        repeat: Whether the animation should loop once it finishes.
+        save_path: Optional path to persist the animation (``.gif`` / ``.mp4``).
+        show: Whether to display the animation interactively.
+        show_progress_bar: Whether to show a ``tqdm`` progress bar when saving.
+        **kwargs: Further keyword arguments passed through to ``ax.plot``.
+
+    Returns:
+        ``matplotlib.animation.FuncAnimation``: The constructed animation.
+    """
 
     config = _ensure_plot_config(
         config,
@@ -209,6 +259,12 @@ def energy_landscape_1d_animation(
             repeat=config.repeat,
         )
 
+        progress_bar_enabled = (
+            getattr(config, "show_progress_bar", show_progress_bar)
+            if config is not None
+            else show_progress_bar
+        )
+
         if config.save_path:
 
             def _save(write_animation):
@@ -219,10 +275,10 @@ def energy_landscape_1d_animation(
                 except Exception as exc:
                     print(f"Error saving animation: {exc}")
 
-            if config.show_progress_bar:
+            if progress_bar_enabled:
                 pbar = tqdm(total=num_video_frames, desc=f"Saving to {config.save_path}")
 
-                def progress_callback(_frame: int, _total: int) -> None:
+                def progress_callback(current_frame: int, total_frames: int) -> None:
                     pbar.update(1)
 
                 def with_writer(writer):
@@ -261,7 +317,24 @@ def energy_landscape_2d_static(
     show: bool = True,
     **kwargs: Any,
 ):
-    """Plot a static 2D landscape using a heatmap."""
+    """Plot a static 2D landscape from a 2D array as a heatmap.
+
+    Args:
+        z_data: 2D array ``(dim_y, dim_x)`` representing the landscape.
+        config: Optional :class:`PlotConfig` with pre-set styling.
+        title: Plot title when ``config`` is not provided.
+        xlabel: X-axis label when ``config`` is not provided.
+        ylabel: Y-axis label when ``config`` is not provided.
+        clabel: Colorbar label when ``config`` is not provided.
+        figsize: Figure size forwarded to Matplotlib when allocating the canvas.
+        grid: Whether to draw a grid overlay.
+        save_path: Optional path that triggers saving the figure to disk.
+        show: Whether to display the figure interactively.
+        **kwargs: Additional keyword arguments passed through to ``ax.imshow``.
+
+    Returns:
+        Tuple[plt.Figure, plt.Axes]: The Matplotlib figure and axes objects.
+    """
 
     config = _ensure_plot_config(
         config,
@@ -332,7 +405,33 @@ def energy_landscape_2d_animation(
     show_progress_bar: bool = True,
     **kwargs: Any,
 ) -> animation.FuncAnimation:
-    """Create an animation for evolving 2D landscapes."""
+    """Create an animation of an evolving 2D landscape.
+
+    The long-form description mirrors the previous implementation to maintain
+    backwards-compatible documentation for downstream users.
+
+    Args:
+        zs_data: Array of shape ``(timesteps, dim_y, dim_x)`` describing the
+            landscape at each simulation step.
+        config: Optional :class:`PlotConfig` carrying display preferences.
+        time_steps_per_second: Number of simulation steps per second of
+            simulated time; required unless encoded in ``config``.
+        fps: Frames per second in the generated animation.
+        title: Title used when ``config`` is not provided.
+        xlabel: X-axis label used when ``config`` is not provided.
+        ylabel: Y-axis label used when ``config`` is not provided.
+        clabel: Colorbar label used when ``config`` is not provided.
+        figsize: Figure size passed to Matplotlib.
+        grid: Whether to overlay a grid on the heatmap.
+        repeat: Whether the animation should loop.
+        save_path: Optional output path (``.gif`` / ``.mp4``).
+        show: Whether to display the animation interactively.
+        show_progress_bar: Whether to render a ``tqdm`` progress bar during save.
+        **kwargs: Additional keyword arguments forwarded to ``ax.imshow``.
+
+    Returns:
+        ``matplotlib.animation.FuncAnimation``: The constructed animation.
+    """
 
     config = _ensure_plot_config(
         config,
@@ -356,7 +455,7 @@ def energy_landscape_2d_animation(
         config.time_steps_per_second = time_steps_per_second
 
     if config.time_steps_per_second is None:
-        raise ValueError("time_steps_per_second must be provided via argument or config.")
+        raise ValueError("time_steps_per_second is required")
 
     if zs_data.ndim != 3:
         raise ValueError("Input zs_data must be a 3D array with shape (timesteps, dim_y, dim_x).")
@@ -371,29 +470,39 @@ def energy_landscape_2d_animation(
         num_video_frames = int(total_duration_s * config.fps)
         sim_indices_to_render = np.linspace(0, total_sim_steps - 1, num_video_frames, dtype=int)
 
+        vmin = float(np.min(zs_data))
+        vmax = float(np.max(zs_data))
+
+        initial_sim_index = sim_indices_to_render[0]
+        initial_z_data = zs_data[initial_sim_index, :, :]
+
         im = ax.imshow(
-            zs_data[sim_indices_to_render[0], :, :],
+            initial_z_data,
             origin="lower",
             aspect="auto",
+            vmin=vmin,
+            vmax=vmax,
             **config.to_matplotlib_kwargs(),
         )
+
+        cbar = fig.colorbar(im, ax=ax)
+        cbar.set_label(config.clabel, fontsize=12)
 
         ax.set_title(config.title, fontsize=16, fontweight="bold")
         ax.set_xlabel(config.xlabel, fontsize=12)
         ax.set_ylabel(config.ylabel, fontsize=12)
-        cbar = plt.colorbar(im, ax=ax)
-        cbar.set_label(config.clabel)
-
         if grid:
-            ax.grid(True, linestyle="--", alpha=0.6)
+            ax.grid(True, linestyle="--", alpha=0.4, color="white")
 
         time_text = ax.text(
             0.05,
-            0.9,
+            0.95,
             "",
             transform=ax.transAxes,
             fontsize=12,
-            bbox=dict(facecolor="white", alpha=0.7),
+            color="white",
+            bbox=dict(facecolor="black", alpha=0.5),
+            verticalalignment="top",
         )
 
         def animate(frame_index: int):
@@ -412,6 +521,12 @@ def energy_landscape_2d_animation(
             repeat=config.repeat,
         )
 
+        progress_bar_enabled = (
+            getattr(config, "show_progress_bar", show_progress_bar)
+            if config is not None
+            else show_progress_bar
+        )
+
         if config.save_path:
 
             def _save(write_animation):
@@ -422,10 +537,10 @@ def energy_landscape_2d_animation(
                 except Exception as exc:
                     print(f"Error saving animation: {exc}")
 
-            if config.show_progress_bar:
+            if progress_bar_enabled:
                 pbar = tqdm(total=num_video_frames, desc=f"Saving to {config.save_path}")
 
-                def progress_callback(_frame: int, _total: int) -> None:
+                def progress_callback(current_frame: int, total_frames: int) -> None:
                     pbar.update(1)
 
                 def with_writer(writer):

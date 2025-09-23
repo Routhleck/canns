@@ -45,7 +45,24 @@ def raster_plot(
     show: bool = True,
     **kwargs: Any,
 ):
-    """Generate a raster plot for a spike train."""
+    """Generate a raster plot from a spike train matrix.
+
+    The explanatory text mirrors the former ``visualize`` module so callers see
+    the same guidance after the reorganisation.
+
+    Args:
+        spike_train: Boolean/integer array of shape ``(timesteps, neurons)``.
+        config: Optional :class:`PlotConfig` with shared styling options.
+        mode: Either ``"scatter"`` or ``"block"`` to pick the rendering style.
+        title: Plot title when ``config`` is not provided.
+        xlabel: X-axis label when ``config`` is not provided.
+        ylabel: Y-axis label when ``config`` is not provided.
+        figsize: Figure size forwarded to Matplotlib when creating the axes.
+        color: Spike colour (or "on" colour for block mode).
+        save_path: Optional path used to persist the plot.
+        show: Whether to display the plot interactively.
+        **kwargs: Additional keyword arguments passed through to Matplotlib.
+    """
 
     config = _ensure_plot_config(
         config,
@@ -132,7 +149,21 @@ def average_firing_rate_plot(
     show: bool = True,
     **kwargs: Any,
 ):
-    """Plot different summaries of average activity derived from a spike train."""
+    """Calculate and plot average neural activity from a spike train.
+
+    Args:
+        spike_train: Boolean/integer array of shape ``(timesteps, neurons)``.
+        dt: Simulation time step in seconds.
+        config: Optional :class:`PlotConfig` with styling overrides.
+        mode: One of ``"per_neuron"``, ``"population"`` or
+            ``"weighted_average"``.
+        weights: Neuron-wise weights required for ``"weighted_average"``.
+        title: Plot title when ``config`` is not provided.
+        figsize: Figure size forwarded to Matplotlib when creating the axes.
+        save_path: Optional path used to persist the plot.
+        show: Whether to display the plot interactively.
+        **kwargs: Additional keyword arguments forwarded to Matplotlib.
+    """
 
     config = _ensure_plot_config(
         config,
