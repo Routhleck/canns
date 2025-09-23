@@ -6,13 +6,13 @@ principles from neuroscience and cognitive science, including associative memory
 Hebbian learning, and other brain-inspired mechanisms.
 """
 
-from ._base import BrainInspiredGroup, BrainInspiredModel
+from ._base import BrainInspiredModelGroup, BrainInspiredModel
 from .hopfield import AmariHopfieldNetwork
 
 __all__ = [
     # Base classes
     "BrainInspiredModel",
-    "BrainInspiredGroup",
+    "BrainInspiredModelGroup",
     # Specific models
     "AmariHopfieldNetwork",
 ]
