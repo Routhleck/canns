@@ -1,7 +1,7 @@
 # CANNs: Continuous Attractor Neural Networks Toolkit
 
 <div align="center">
-  <img src="images/logo.svg" alt="CANNs Logo" width="200">
+  <img src="images/logo.svg" alt="CANNs Logo" width="350">
 </div>
 
 [![Contributors][contributors-shield]][contributors-url]
@@ -21,6 +21,44 @@ CANNs is a Python library built on top of the Brain Simulation Ecosystem (`brain
 - **Unified training** – `canns.trainer.HebbianTrainer` implements generic Hebbian learning and prediction, layered on the abstract `Trainer` base.
 - **Pipelines out of the box** – `canns.pipeline.ThetaSweepPipeline` orchestrates navigation tasks, direction/grid-cell networks, and visualisation in a single call.
 - **Extensible foundations** – base classes (`BasicModel`, `Task`, `Trainer`, `Pipeline`) keep custom components consistent with the built-in ecosystem.
+
+## Visual Gallery
+
+<div align="center">
+<table>
+<tr>
+<td align="center" width="50%" valign="top">
+<h4>1D CANN Smooth Tracking</h4>
+<img src="docs/_static/smooth_tracking_1d.gif" alt="1D CANN Smooth Tracking" width="320">
+<br><em>Real-time dynamics during smooth tracking</em>
+</td>
+<td align="center" width="50%" valign="top">
+<h4>2D CANN Population Encoding</h4>
+<img src="docs/_static/CANN2D_encoding.gif" alt="2D CANN Encoding" width="320">
+<br><em>Spatial information encoding patterns</em>
+</td>
+</tr>
+<tr>
+<td colspan="2" align="center">
+<h4>Theta Sweep Analysis</h4>
+<img src="docs/_static/theta_sweep_animation.gif" alt="Theta Sweep Animation" width="600">
+<br><em>Grid cell and head direction networks with theta rhythm modulation</em>
+</td>
+</tr>
+<tr>
+<td align="center" width="50%" valign="top">
+<h4>Bump Analysis</h4>
+<img src="docs/_static/bump_analysis_demo.gif" alt="Bump Analysis Demo" width="320">
+<br><em>1D bump fitting and analysis</em>
+</td>
+<td align="center" width="50%" valign="top">
+<h4>Torus Topology Analysis</h4>
+<img src="docs/_static/torus_bump.gif" alt="Torus Bump Analysis" width="320">
+<br><em>3D torus visualization and decoding</em>
+</td>
+</tr>
+</table>
+</div>
 
 ## Installation
 

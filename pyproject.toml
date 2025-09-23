@@ -39,7 +39,7 @@ classifiers = [
 
 dependencies = [
     "BrainX[cpu]",
-    "canns-ripser>=0.4.3",
+    "canns-ripser>=0.4.4",
     "furo>=2025.7.19",
     "notebook>=7.4.4",
     "ratinabox>=1.15.3",
