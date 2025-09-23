@@ -1,8 +1,9 @@
 # CANNs：连续吸引子神经网络工具包
 
 <div align="center">
-  <img src="images/logo.svg" alt="CANNs Logo" width="200">
+  <img src="images/logo.svg" alt="CANNs Logo" width="350">
 </div>
+
 
 [![贡献者][contributors-shield]][contributors-url]
 [![Stars][stars-shield]][stars-url]
@@ -21,6 +22,44 @@ CANNs 是一个构建于脑模拟生态（`brainstate`, `brainunit`）之上的 
 - **统一训练框架** – `canns.trainer.HebbianTrainer` 实现通用的 Hebb 学习与预测，基于抽象 `Trainer` 基类。
 - **即取即用的流水线** – `canns.pipeline.ThetaSweepPipeline` 一次性编排导航任务、方向/网格细胞网络与可视化。
 - **可扩展基础** – 基类（`BasicModel`, `Task`, `Trainer`, `Pipeline`）让自定义组件与内置生态保持一致。
+
+## 可视化展示
+
+<div align="center">
+<table>
+<tr>
+<td align="center" width="50%" valign="top">
+<h4>1D CANN 平滑跟踪</h4>
+<img src="docs/_static/smooth_tracking_1d.gif" alt="1D CANN 平滑跟踪" width="320">
+<br><em>平滑跟踪过程中的实时动态</em>
+</td>
+<td align="center" width="50%" valign="top">
+<h4>2D CANN 群体编码</h4>
+<img src="docs/_static/CANN2D_encoding.gif" alt="2D CANN 编码" width="320">
+<br><em>空间信息编码活动模式</em>
+</td>
+</tr>
+<tr>
+<td colspan="2" align="center">
+<h4>Theta 扫描分析</h4>
+<img src="docs/_static/theta_sweep_animation.gif" alt="Theta 扫描动画" width="600">
+<br><em>网格细胞和头朝向网络的 theta 节律调制</em>
+</td>
+</tr>
+<tr>
+<td align="center" width="50%" valign="top">
+<h4>凸包分析</h4>
+<img src="docs/_static/bump_analysis_demo.gif" alt="凸包分析演示" width="320">
+<br><em>1D 凸包拟合与分析</em>
+</td>
+<td align="center" width="50%" valign="top">
+<h4>环面拓扑分析</h4>
+<img src="docs/_static/torus_bump.gif" alt="环面凸包分析" width="320">
+<br><em>3D 环面可视化与解码</em>
+</td>
+</tr>
+</table>
+</div>
 
 ## 安装方式
 
