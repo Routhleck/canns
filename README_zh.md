@@ -1,5 +1,9 @@
 # CANNs：连续吸引子神经网络工具包
 
+<div align="center">
+  <img src="images/logo.svg" alt="CANNs Logo" width="200">
+</div>
+
 [![贡献者][contributors-shield]][contributors-url]
 [![Stars][stars-shield]][stars-url]
 [![Issues][issues-shield]][issues-url]

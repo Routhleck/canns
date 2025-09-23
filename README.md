@@ -1,5 +1,9 @@
 # CANNs: Continuous Attractor Neural Networks Toolkit
 
+<div align="center">
+  <img src="images/logo.svg" alt="CANNs Logo" width="200">
+</div>
+
 [![Contributors][contributors-shield]][contributors-url]
 [![Stars][stars-shield]][stars-url]
 [![Issues][issues-shield]][issues-url]
