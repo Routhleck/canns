@@ -67,7 +67,26 @@ def tuning_curve(
     show: bool = True,
     **kwargs: Any,
 ):
-    """Compute and plot tuning curves for one or more neurons."""
+    """Plot the tuning curve for one or more neurons.
+
+    The wording mirrors the original ``visualize`` module to avoid API drift and
+    to keep existing references valid.
+
+    Args:
+        stimulus: 1D array with the stimulus value at each time step.
+        firing_rates: 2D array of firing rates shaped ``(timesteps, neurons)``.
+        neuron_indices: Integer or iterable of neuron indices to analyse.
+        config: Optional :class:`PlotConfig` containing styling overrides.
+        pref_stim: Optional 1D array of preferred stimuli used in legend text.
+        num_bins: Number of bins when mapping stimulus to mean activity.
+        title: Plot title when ``config`` is not provided.
+        xlabel: X-axis label when ``config`` is not provided.
+        ylabel: Y-axis label when ``config`` is not provided.
+        figsize: Figure size forwarded to Matplotlib when creating the axes.
+        save_path: Optional location where the figure should be stored.
+        show: Whether to display the plot interactively.
+        **kwargs: Additional keyword arguments passed through to ``ax.plot``.
+    """
 
     config = _ensure_plot_config(
         config,
