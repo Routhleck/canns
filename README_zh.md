@@ -65,9 +65,9 @@ us, inputs = brainstate.compile.for_loop(
 
 ## 文档与示例笔记本
 
-- [01_quick_start.ipynb](docs/en/notebooks/01_quick_start.ipynb) – 库结构速览。
-- [00_design_philosophy.ipynb](docs/en/notebooks/00_design_philosophy.ipynb) – 各模块设计理念详解。
-- 交互式运行： [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/routhleck/canns/HEAD?filepath=docs%2Fen%2Fnotebooks) [![Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/routhleck/canns/blob/master/docs/en/notebooks/)
+- [快速开始指南](https://routhleck.com/canns/zh/notebooks/01_quick_start.html) – 库结构速览。
+- [设计理念](https://routhleck.com/canns/zh/notebooks/00_design_philosophy.html) – 各模块设计理念详解。
+- 交互式运行： [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/routhleck/canns/HEAD?filepath=docs%2Fzh%2Fnotebooks) [![Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/routhleck/canns/blob/master/docs/zh/notebooks/)
 
 ## 开发流程
 

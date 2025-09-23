@@ -65,8 +65,8 @@ For an end-to-end theta sweep workflow, see `examples/pipeline/theta_sweep_from_
 
 ## Documentation & Notebooks
 
-- [01_quick_start.ipynb](docs/en/notebooks/01_quick_start.ipynb) – condensed tour of the library layout.
-- [00_design_philosophy.ipynb](docs/en/notebooks/00_design_philosophy.ipynb) – detailed design rationale for each module.
+- [Quick Start Guide](https://routhleck.com/canns/en/notebooks/01_quick_start.html) – condensed tour of the library layout.
+- [Design Philosophy](https://routhleck.com/canns/en/notebooks/00_design_philosophy.html) – detailed design rationale for each module.
 - Interactive launchers: [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/routhleck/canns/HEAD?filepath=docs%2Fen%2Fnotebooks) [![Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/routhleck/canns/blob/master/docs/en/notebooks/)
 
 ## Development Workflow
