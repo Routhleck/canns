@@ -85,7 +85,7 @@ class BrainInspiredModel(BasicModel):
         raise NotImplementedError(f"{self.__class__.__name__} does not implement `resize`")
 
 
-class BrainInspiredGroup(BasicModelGroup):
+class BrainInspiredModelGroup(BasicModelGroup):
     """
     Base class for groups of brain-inspired models.
 

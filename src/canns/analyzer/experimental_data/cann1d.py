@@ -487,7 +487,7 @@ def create_1d_bump_animation(
             return (line,)
 
         # ==== Create and save animation ====
-        if save_path is None and not config.show:
+        if config.save_path is None and not config.show:
             raise ValueError("Either save_path or show must be specified")
 
         # Create animation with repeat option
@@ -496,29 +496,29 @@ def create_1d_bump_animation(
         )
 
         # Save animation with progress tracking
-        if save_path:
+        if config.save_path:
             if config.show_progress_bar:
-                pbar = tqdm(total=nframes, desc=f"Saving animation to {save_path}")
+                pbar = tqdm(total=nframes, desc=f"Saving animation to {config.save_path}")
 
                 def progress_callback(current_frame, total_frames):
                     pbar.update(1)
 
                 try:
                     ani.save(
-                        save_path,
+                        config.save_path,
                         writer=PillowWriter(fps=config.fps),
                         progress_callback=progress_callback,
                     )
                     pbar.close()
-                    print(f"\nAnimation successfully saved to: {save_path}")
+                    print(f"\nAnimation successfully saved to: {config.save_path}")
                 except Exception as e:
                     pbar.close()
                     print(f"\nError saving animation: {e}")
                     raise
             else:
                 try:
-                    ani.save(save_path, writer=PillowWriter(fps=config.fps))
-                    print(f"Animation saved to: {save_path}")
+                    ani.save(config.save_path, writer=PillowWriter(fps=config.fps))
+                    print(f"Animation saved to: {config.save_path}")
                 except Exception as e:
                     print(f"Error saving animation: {e}")
                     raise

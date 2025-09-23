@@ -1,407 +1,112 @@
-[![Contributors][contributors-shield]][contributors-url]
-[![Forks][forks-shield]][forks-url]
-[![Stargazers][stars-shield]][stars-url]
+# CANNs：连续吸引子神经网络工具包
+
+[![贡献者][contributors-shield]][contributors-url]
+[![Stars][stars-shield]][stars-url]
 [![Issues][issues-shield]][issues-url]
-[![project_license][license-shield]][license-url]
+[![许可证][license-shield]][license-url]
 
-<!-- 语言切换 -->
-**语言**: [English](README.md) | **中文**
+> 英文版说明请参见 [README.md](README.md)
 
-<!-- PROJECT LOGO -->
-<br />
+CANNs 是一个构建于脑模拟生态（`brainstate`, `brainunit`）之上的 Python 库，旨在加速连续吸引子神经网络（Continuous Attractor Neural Networks, CANNs）及相关类脑模型的实验研究。它提供可直接使用的模型、任务生成器、分析工具与流水线（pipelines），让神经科学与人工智能研究者从想法到可复现仿真更加高效。
 
-<div align="center">
-  <a href="https://github.com/routhleck/canns">
-    <img src="images/logo.svg" alt="Logo" height="100">
-  </a>
+## 亮点概览
 
-<h3 align="center">连续吸引子神经网络 (CANNs) Python 库</h3>
+- **模型家族** – `canns.models.basic` 提供 1D/2D CANN（含 SFA 变体与分层网络），`canns.models.brain_inspired` 进一步加入类 Hopfield 系统。
+- **任务优先 API** – `canns.task.tracking` 与 `canns.task.spatial_navigation` 可生成平滑跟踪输入、群体编码刺激，或导入实验轨迹。
+- **丰富分析套件** – `canns.analyzer` 覆盖能量景观、调谐曲线、脉冲嵌入、UMAP/TDA 辅助工具，以及 theta 扫描动画。
+- **统一训练框架** – `canns.trainer.HebbianTrainer` 实现通用的 Hebb 学习与预测，基于抽象 `Trainer` 基类。
+- **即取即用的流水线** – `canns.pipeline.ThetaSweepPipeline` 一次性编排导航任务、方向/网格细胞网络与可视化。
+- **可扩展基础** – 基类（`BasicModel`, `Task`, `Trainer`, `Pipeline`）让自定义组件与内置生态保持一致。
 
-  <p align="center">
-    专为连续吸引子神经网络 (CANNs) 和其他脑启发计算模型设计的 Python 库。提供统一的高级 API，让研究者和开发者能够轻松加载、分析和训练最先进的 CANN 架构，快速实验和部署脑启发解决方案。
-    <br />
-    <a href="docs/zh/"><strong>📖 中文文档 »</strong></a>
-    <br />
-    <br />
-    <a href="#快速开始">🚀 快速开始</a>
-    &middot;
-    <a href="#示例">💡 示例</a>
-    &middot;
-    <a href="https://github.com/routhleck/canns/issues/new?labels=bug&template=bug-report---.md">🐛 报告问题</a>
-    &middot;
-    <a href="https://github.com/routhleck/canns/issues/new?labels=enhancement&template=feature-request---.md">✨ 功能请求</a>
-  </p>
-</div>
-
----
-
-> ⚠️ **开发状态**: 本项目正在积极开发中。功能和接口可能在未来版本中进一步完善和调整。
-
-## 📋 目录
-
-- [关于项目](#关于项目)
-- [核心特性](#核心特性) 
-- [快速开始](#快速开始)
-- [安装](#安装)
-- [使用示例](#使用示例)
-- [交互式文档](#交互式文档)
-- [项目结构](#项目结构)
-- [贡献指南](#贡献指南)
-- [许可证](#许可证)
-- [联系方式](#联系方式)
-
-## 🎯 关于项目
-
-CANNs (Continuous Attractor Neural Networks) 是一个专门为连续吸引子神经网络研究设计的 Python 库。该库基于现代科学计算框架构建，为神经科学研究、计算建模和脑启发算法开发提供了强大而易用的工具集。
-
-### 🔬 什么是连续吸引子神经网络？
-
-连续吸引子神经网络是一类特殊的神经网络模型，能够在连续的状态空间中维持稳定的活动模式。这类网络在以下方面表现突出：
-
-- **空间表征**: 通过神经元群体活动编码连续的空间位置
-- **工作记忆**: 维持和更新动态信息
-- **路径积分**: 基于运动信息推算位置变化
-- **平滑跟踪**: 对连续变化目标的跟踪
-
-## ✨ 核心特性
-
-### 🏗️ 丰富的模型库
-- **CANN1D/2D**: 一维和二维连续吸引子网络
-- **SFA 模型**: 集成慢特征分析的高级模型
-- **分层网络**: 支持多层级信息处理的复杂架构
-
-### 🎮 任务导向设计  
-- **路径积分**: 空间导航和位置估计任务
-- **目标跟踪**: 平滑连续的动态目标跟踪
-- **可扩展框架**: 轻松添加自定义任务类型
-
-### 📊 强大的分析工具
-- **实时可视化**: 能量景观、神经活动动画
-- **统计分析**: 发放率、调谐曲线、群体动力学
-- **数据处理**: z-score 归一化、时间序列分析
-
-### ⚡ 高性能计算
-- **JAX 加速**: 基于 JAX 的高效数值计算
-- **GPU 支持**: CUDA 和 TPU 硬件加速
-- **并行处理**: 大规模网络仿真优化
-
-## 🚀 快速开始
-
-### 安装
+## 安装方式
 
 ```bash
-# 基础安装 (CPU)
+# 仅 CPU 安装
 pip install canns
 
-# GPU 支持 (Linux)
+# 可选加速（仅 Linux）
 pip install canns[cuda12]
-
-# TPU 支持 (Linux)
 pip install canns[tpu]
 ```
 
-### 基础示例
+## 快速开始
 
 ```python
 import brainstate
 from canns.models.basic import CANN1D
 from canns.task.tracking import SmoothTracking1D
-from canns.analyzer.plotting import energy_landscape_1d_animation
 
-# 设置计算环境
 brainstate.environ.set(dt=0.1)
 
-# 创建一维CANN网络
 cann = CANN1D(num=512)
 cann.init_state()
 
-# 定义平滑跟踪任务
 task = SmoothTracking1D(
     cann_instance=cann,
-    Iext=(1., 0.75, 2., 1.75, 3.),  # 外部输入序列
-    duration=(10., 10., 10., 10.),   # 每个阶段持续时间
+    Iext=(0.0, 0.5, 1.0, 1.5),
+    duration=(5.0, 5.0, 5.0, 5.0),
     time_step=brainstate.environ.get_dt(),
 )
-
-# 获取任务数据
 task.get_data()
 
-# 定义仿真步骤
-def run_step(t, inputs):
-    cann(inputs)
+def step(t, stimulus):
+    cann(stimulus)
     return cann.u.value, cann.inp.value
 
-# 运行仿真
-us, inps = brainstate.compile.for_loop(
-    run_step,
+us, inputs = brainstate.compile.for_loop(
+    step,
     task.run_steps,
     task.data,
-    pbar=brainstate.compile.ProgressBar(10)
-)
-
-# 生成能量景观动画
-energy_landscape_1d_animation(
-    {'u': (cann.x, us), 'Iext': (cann.x, inps)},
-    time_steps_per_second=100,
-    fps=20,
-    title='平滑跟踪任务',
-    save_path='tracking_demo.gif'
+    pbar=brainstate.compile.ProgressBar(10),
 )
 ```
 
-## 📖 交互式文档
+若需端到端的 theta 扫描流程，请参见 `examples/pipeline/theta_sweep_from_external_data.py` 或文档中的 `ThetaSweepPipeline` 笔记本。
 
-我们提供了完整的交互式文档，您可以直接在浏览器中运行代码示例：
+## 文档与示例笔记本
 
-### 🌐 在线运行
-- [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/routhleck/canns/HEAD?filepath=docs%2Fzh%2Fnotebooks) **MyBinder** - 免费在线 Jupyter 环境
-- [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/routhleck/canns/blob/master/docs/zh/notebooks/) **Google Colab** - 需要 Google 账户
+- [01_quick_start.ipynb](docs/en/notebooks/01_quick_start.ipynb) – 库结构速览。
+- [00_design_philosophy.ipynb](docs/en/notebooks/00_design_philosophy.ipynb) – 各模块设计理念详解。
+- 交互式运行： [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/routhleck/canns/HEAD?filepath=docs%2Fen%2Fnotebooks) [![Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/routhleck/canns/blob/master/docs/en/notebooks/)
 
-### 📚 文档结构
-- **[入门指南](docs/zh/notebooks/01_introduction.ipynb)** - CANNs 基础概念和使用介绍
-- **[快速开始](docs/zh/notebooks/02_quickstart.ipynb)** - 常用场景和快速上手
-- **[核心概念](docs/zh/notebooks/03_core_concepts.ipynb)** - 数学原理和理论基础
+## 开发流程
 
-## 📁 项目结构
+```bash
+# 创建开发环境（基于 uv）
+make install
 
-```
-canns/
-├── src/canns/
-│   ├── models/          # 神经网络模型
-│   │   ├── basic/       # 基础CANN模型
-│   │   ├── brain_inspired/  # 脑启发模型
-│   │   └── hybrid/      # 混合模型
-│   ├── task/            # 任务定义
-│   │   ├── tracking.py      # 跟踪任务
-│   │   └── path_integration.py  # 路径积分
-│   ├── analyzer/        # 分析工具
-│   │   ├── utils.py         # 分析工具函数
-│   │   └── visualize.py     # 可视化工具
-│   ├── trainer/         # 训练框架
-│   └── pipeline/        # 数据流水线
-├── examples/            # 使用示例
-├── docs/               # 文档
-│   ├── en/             # 英文文档
-│   └── zh/             # 中文文档
-├── tests/              # 单元测试
-└── binder/             # Binder 配置
+# 格式化与静态检查（ruff, codespell 等）
+make lint
+
+# 运行测试（pytest）
+make test
 ```
 
-## 💡 使用示例
+更多脚本位于 `devtools/` 与 `scripts/` 目录。
 
-### 一维振荡跟踪
+## 仓库结构
 
-```python
-import brainstate
-from canns.analyzer.plotting import energy_landscape_1d_animation
-from canns.models.basic import CANN1D
-from canns.task.tracking import SmoothTracking1D
-
-# 设置环境
-brainstate.environ.set(dt=0.1)
-cann = CANN1D(num=512)
-cann.init_state()
-
-# 创建跟踪任务
-task_st = SmoothTracking1D(
-    cann_instance=cann,
-    Iext=(1., 0.75, 2., 1.75, 3.),
-    duration=(10., 10., 10., 10.),
-    time_step=brainstate.environ.get_dt(),
-)
-task_st.get_data()
-
-# 运行仿真
-def run_step(t, inputs):
-    cann(inputs)
-    return cann.u.value, cann.inp.value
-
-us, inps = brainstate.compile.for_loop(
-    run_step, task_st.run_steps, task_st.data,
-    pbar=brainstate.compile.ProgressBar(10)
-)
-
-# 生成动画
-energy_landscape_1d_animation(
-    {'u': (cann.x, us), 'Iext': (cann.x, inps)},
-    title='一维 CANN 振荡跟踪',
-    save_path='oscillatory_tracking.gif'
-)
+```
+src/canns/            核心库模块（模型、任务、分析器、训练器、流水线）
+docs/                 Sphinx 文档与笔记本
+examples/             可直接运行的模型、分析与流水线脚本
+tests/                关键行为的 Pytest 覆盖
 ```
 
-### 二维空间跟踪
+## 参与贡献
 
-```python
-import brainstate as bst
-from canns.analyzer.plotting import energy_landscape_2d_animation
-from canns.models.basic import CANN2D
-from canns.task.tracking import SmoothTracking2D
+欢迎贡献！如计划重大修改，请先发起 issue 或 discussion。Pull Request 请遵循现有工作流（`make lint && make test`）。
 
-bst.environ.set(dt=0.1)
-cann = CANN2D(length=100)
-cann.init_state()
+## 许可证
 
-# 多路径点的二维跟踪
-task_st = SmoothTracking2D(
-    cann_instance=cann,
-    Iext=([0., 0.], [1., 1.], [0.75, 0.75], [2., 2.], [1.75, 1.75], [3., 3.]),
-    duration=(10., 10., 10., 10., 10.),
-    time_step=brainstate.environ.get_dt(),
-)
-task_st.get_data()
+采用 Apache License 2.0。详见 [LICENSE](LICENSE)。
+（注：本中文翻译仅供参考，如与英文版存在差异，以英文 LICENSE 为准。）
 
-def run_step(t, Iext):
-    with bst.environ.context(t=t):
-        cann(Iext)
-        return cann.u.value, cann.r.value, cann.inp.value
-
-cann_us, cann_rs, inps = bst.compile.for_loop(
-    run_step, task_st.run_steps, task_st.data,
-    pbar=brainstate.compile.ProgressBar(10)
-)
-
-# 创建二维动画
-energy_landscape_2d_animation(
-    zs_data=cann_us,
-    title='二维 CANN 空间跟踪',
-    save_path='2d_tracking.gif'
-)
-```
-
-### 调谐曲线分析
-
-```python
-import numpy as np
-from canns.analyzer.plotting import tuning_curve
-from canns.models.basic import CANN1D
-
-# 创建方向性的环形 CANN
-cann = CANN1D(num=512, z_min=-np.pi, z_max=np.pi)
-cann.init_state()
-
-# 运行调谐曲线实验
-task_st = SmoothTracking1D(
-    cann_instance=cann,
-    Iext=(0., 0., np.pi, 2*np.pi),
-    duration=(2., 20., 20.),
-    time_step=brainstate.environ.get_dt(),
-)
-task_st.get_data()
-
-# 分析调谐特性
-neuron_indices_to_plot = [128, 256, 384]
-tuning_curve(
-    stimulus=task_st.Iext_sequence.squeeze(),
-    firing_rates=rs,
-    neuron_indices=neuron_indices_to_plot,
-    pref_stim=cann.x,
-    title='神经元调谐曲线',
-    xlabel='刺激位置 (弧度)',
-    ylabel='发放率'
-)
-```
-
-### 分层路径积分
-
-```python
-import brainstate
-from canns.models.basic import HierarchicalNetwork
-from canns.task.spatial_navigation import SpatialNavigationTask
-
-# 创建路径积分任务
-brainstate.environ.set(dt=0.1)
-task_pi = SpatialNavigationTask(
-    width=5, height=5,
-    speed_mean=0.16, speed_std=0.016,
-    duration=1000.0, dt=0.1,
-    start_pos=(2.5, 2.5)
-)
-task_pi.get_data()
-
-# 创建分层网络
-hierarchical_net = HierarchicalNetwork(num_module=5, num_place=30)
-hierarchical_net.init_state()
-
-
-# 运行路径积分
-def run_step(t, vel, loc):
-    hierarchical_net(velocity=vel, loc=loc, loc_input_stre=0.)
-    return (hierarchical_net.band_x_fr.value,
-            hierarchical_net.band_y_fr.value,
-            hierarchical_net.grid_fr.value,
-            hierarchical_net.place_fr.value)
-
-
-results = brainstate.compile.for_loop(
-    run_step,
-    task_pi.data.velocity,
-    task_pi.data.position,
-    pbar=brainstate.compile.ProgressBar(10)
-)
-```
-
-## 🛠️ 开发环境
-
-### 依赖项
-
-- **Python**: >= 3.11
-- **BrainX**: 核心计算框架
-- **JAX**: 高性能数值计算
-- **ratinabox**: 空间认知建模
-- **matplotlib**: 数据可视化
-- **tqdm**: 进度显示
-
-### 开发工具
-
-- **pytest**: 单元测试
-- **ruff**: 代码格式化和检查
-- **basedpyright**: 类型检查
-- **codespell**: 拼写检查
-
-## 🤝 贡献指南
-
-我们欢迎社区贡献！请查看以下步骤：
-
-1. Fork 本仓库
-2. 创建特性分支 (`git checkout -b feature/AmazingFeature`)  
-3. 提交更改 (`git commit -m 'Add some AmazingFeature'`)
-4. 推送到分支 (`git push origin feature/AmazingFeature`)
-5. 开启 Pull Request
-
-### 开发规范
-
-- 遵循 PEP 8 代码风格
-- 添加必要的类型注解
-- 编写单元测试
-- 更新相关文档
-
-## 📄 许可证
-
-本项目基于 MIT 许可证开源。详见 [LICENSE](LICENSE) 文件。
-
-## 📞 联系方式
-
-**项目维护者**: Sichao He  
-**邮箱**: sichaohe@outlook.com  
-**项目链接**: [https://github.com/routhleck/canns](https://github.com/routhleck/canns)
-
----
-
-<div align="center">
-
-如果这个项目对您有帮助，请考虑给我们一个 ⭐️
-
-</div>
-
-<!-- MARKDOWN LINKS & IMAGES -->
-<!-- https://www.markdownguide.org/basic-syntax/#reference-style-links -->
 [contributors-shield]: https://img.shields.io/github/contributors/routhleck/canns.svg?style=for-the-badge
 [contributors-url]: https://github.com/routhleck/canns/graphs/contributors
-[forks-shield]: https://img.shields.io/github/forks/routhleck/canns.svg?style=for-the-badge
-[forks-url]: https://github.com/routhleck/canns/network/members
 [stars-shield]: https://img.shields.io/github/stars/routhleck/canns.svg?style=for-the-badge
 [stars-url]: https://github.com/routhleck/canns/stargazers
 [issues-shield]: https://img.shields.io/github/issues/routhleck/canns.svg?style=for-the-badge
 [issues-url]: https://github.com/routhleck/canns/issues
 [license-shield]: https://img.shields.io/github/license/routhleck/canns.svg?style=for-the-badge
-[license-url]: https://github.com/routhleck/canns/blob/master/LICENSE.txt
+[license-url]: https://github.com/routhleck/canns/blob/master/LICENSE
