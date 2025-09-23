@@ -26,14 +26,14 @@ Welcome to the CANNs (Continuous Attractor Neural Networks) documentation! This 
    :maxdepth: 2
    :caption: Getting Started
    
-   notebooks/01_introduction
-   notebooks/03_core_concepts
+   notebooks/01_quick_start
+   notebooks/00_design_philosophy
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
    :caption: Examples
-   :hidden:
-   
+
+   examples/index
    GitHub Examples <https://github.com/routhleck/canns/tree/master/examples>
 
 .. toctree::
@@ -79,21 +79,47 @@ Quick Installation
 Quick Example
 -------------
 
+Here's a complete example showing how to create a 1D CANN, run a smooth tracking task, and visualize the results:
+
 .. code-block:: python
 
    import brainstate
    from canns.models.basic import CANN1D
    from canns.task.tracking import SmoothTracking1D
+   from canns.analyzer.plotting import PlotConfigs, energy_landscape_1d_animation
    
-   # Create 1D CANN network
+   # Set up environment and create 1D CANN network
+   brainstate.environ.set(dt=0.1)
    cann = CANN1D(num=512)
    cann.init_state()
    
-   # Define smooth tracking task
+   # Define smooth tracking task with multiple target positions
    task = SmoothTracking1D(
        cann_instance=cann,
        Iext=(1., 0.75, 2., 1.75, 3.),
        duration=(10., 10., 10., 10.),
+       time_step=brainstate.environ.get_dt(),
+   )
+   task.get_data()
+   
+   # Run simulation with compiled loop for efficiency
+   def run_step(t, inputs):
+       cann(inputs)
+       return cann.u.value, cann.inp.value
+   
+   us, inps = brainstate.compile.for_loop(
+       run_step, task.run_steps, task.data,
+       pbar=brainstate.compile.ProgressBar(10)
+   )
+   
+   # Visualize results with animation
+   config = PlotConfigs.energy_landscape_1d_animation(
+       title='1D CANN Smooth Tracking',
+       save_path='tracking_demo.gif'
+   )
+   energy_landscape_1d_animation(
+       {'Activity': (cann.x, us), 'Input': (cann.x, inps)},
+       config=config
    )
 
 Community and Support
