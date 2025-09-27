@@ -30,6 +30,12 @@ Welcome to the CANNs (Continuous Attractor Neural Networks) documentation! This 
    notebooks/00_design_philosophy
 
 .. toctree::
+   :maxdepth: 2
+   :caption: Guides
+
+   guide/index
+
+.. toctree::
    :maxdepth: 1
    :caption: Examples
 
