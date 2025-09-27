@@ -1,12 +1,84 @@
 CANNs 文档
 ===========
 
-.. image:: https://img.shields.io/github/stars/routhleck/canns.svg?style=for-the-badge
-   :target: https://github.com/routhleck/canns/stargazers
-.. image:: https://img.shields.io/github/license/routhleck/canns.svg?style=for-the-badge
+.. image:: https://badges.ws/badge/status-beta-yellow
+   :target: https://github.com/routhleck/canns
+   :alt: 状态: Beta
+
+.. image:: https://img.shields.io/pypi/pyversions/canns
+   :target: https://pypi.org/project/canns/
+   :alt: Python 版本
+
+.. image:: https://badges.ws/maintenance/yes/2025
+   :target: https://github.com/routhleck/canns
+   :alt: 持续维护
+
+.. image:: https://badges.ws/github/release/routhleck/canns
+   :target: https://github.com/routhleck/canns/releases
+   :alt: 发行版本
+
+.. image:: https://badges.ws/github/license/routhleck/canns
    :target: https://github.com/routhleck/canns/blob/master/LICENSE
+   :alt: 许可证
+
+.. image:: https://badges.ws/github/stars/routhleck/canns?logo=github
+   :target: https://github.com/routhleck/canns/stargazers
+   :alt: GitHub Stars
+
+.. image:: https://static.pepy.tech/personalized-badge/canns?period=total&units=INTERNATIONAL_SYSTEM&left_color=BLACK&right_color=GREEN&left_text=downloads
+   :target: https://pepy.tech/projects/canns
+   :alt: 下载量
+
+.. image:: https://deepwiki.com/badge.svg
+   :target: https://deepwiki.com/Routhleck/canns
+   :alt: 询问 DeepWiki
+
+.. image:: https://badges.ws/badge/Buy_Me_a_Coffee-ff813f?icon=buymeacoffee
+   :target: https://buymeacoffee.com/forrestcai6
+   :alt: 请我喝咖啡
 
 欢迎来到 CANNs (连续吸引子神经网络) 文档！本库为构建、训练和分析连续吸引子神经网络提供了统一的高级API。
+
+可视化展示
+----------
+
+.. raw:: html
+
+   <div align="center">
+   <table>
+   <tr>
+   <td align="center" width="50%" valign="top">
+   <h4>1D CANN 平滑追踪</h4>
+   <img src="../_static/smooth_tracking_1d.gif" alt="1D CANN 平滑追踪" width="320">
+   <br><em>平滑追踪过程中的实时动力学</em>
+   </td>
+   <td align="center" width="50%" valign="top">
+   <h4>2D CANN 群体编码</h4>
+   <img src="../_static/CANN2D_encoding.gif" alt="2D CANN 编码" width="320">
+   <br><em>空间信息编码模式</em>
+   </td>
+   </tr>
+   <tr>
+   <td colspan="2" align="center">
+   <h4>Theta 扫描分析</h4>
+   <img src="../_static/theta_sweep_animation.gif" alt="Theta 扫描动画" width="600">
+   <br><em>网格细胞和方向细胞网络的 theta 节律调制</em>
+   </td>
+   </tr>
+   <tr>
+   <td align="center" width="50%" valign="top">
+   <h4>Bump 分析</h4>
+   <img src="../_static/bump_analysis_demo.gif" alt="Bump 分析演示" width="320">
+   <br><em>1D bump 拟合与分析</em>
+   </td>
+   <td align="center" width="50%" valign="top">
+   <h4>环面拓扑分析</h4>
+   <img src="../_static/torus_bump.gif" alt="环面 Bump 分析" width="320">
+   <br><em>3D 环面可视化与解码</em>
+   </td>
+   </tr>
+   </table>
+   </div>
 
 🚀 **交互式示例**
    在线体验示例：

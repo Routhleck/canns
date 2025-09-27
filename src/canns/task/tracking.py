@@ -234,6 +234,18 @@ class PopulationCoding(TrackingTask):
         self.after_duration = after_duration
 
     def get_data(self, progress_bar: bool = True):
+        """
+        Generate task data with a constant stimulus during specified time window.
+
+        Creates input sequence where stimulus is only present during the interval
+        [before_duration, total_duration - after_duration], with zeros elsewhere.
+
+        Args:
+            progress_bar: Whether to display progress information (default: True)
+
+        Returns:
+            None. Sets self.data attribute with shape (total_steps, *network_shape)
+        """
         self.Iext_sequence = self._make_Iext_sequence()
 
         shape = (self.total_steps,) + self.shape
@@ -259,8 +271,13 @@ class PopulationCoding(TrackingTask):
 class TemplateMatching(TrackingTask):
     """
     Template matching task for n-D continuous attractor networks.
-    This task presents a stimulus with added noise to test the network's ability to
-    denoise the input and settle on the correct underlying pattern (template).
+    
+    This task presents a constant stimulus template with Gaussian noise added at each
+    time step. The network must denoise the input and converge to the clean template,
+    testing its attractor dynamics and noise robustness.
+
+    The noisy stimulus is generated as: stimulus + 0.1 * A * randn()
+    where A is the network's stimulus amplitude parameter.
     """
 
     def __init__(
@@ -293,6 +310,18 @@ class TemplateMatching(TrackingTask):
         self.A = cann_instance.A  # The amplitude of the noise to be added.
 
     def get_data(self, progress_bar: bool = True):
+        """
+        Generate noisy stimulus data for template matching task.
+
+        Creates a sequence where each time step contains the same template pattern
+        with different random Gaussian noise added.
+
+        Args:
+            progress_bar: Whether to display progress bar during generation (default: True)
+
+        Returns:
+            None. Sets self.data attribute with shape (total_steps, *network_shape)
+        """
         self.Iext_sequence = self._make_Iext_sequence()
 
         shape = (self.total_steps,) + self.shape

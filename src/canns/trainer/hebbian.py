@@ -337,6 +337,17 @@ class HebbianTrainer(Trainer):
                 state_param.value = jnp.ones((n,), dtype=jnp.float32)
 
     def _resolve_state_attr(self) -> str:
+        """
+        Resolve the name of the state attribute to use for predictions.
+
+        Checks in order:
+        1. Explicit state_attr parameter from constructor
+        2. Model's predict_state_attr hint (method or property)
+        3. Default "s"
+
+        Returns:
+            str: Name of the state attribute (e.g., "s", "u", "r")
+        """
         # Explicit override takes precedence
         if self.state_attr is not None:
             return self.state_attr
@@ -354,14 +365,42 @@ class HebbianTrainer(Trainer):
         return "s"
 
     def _set_state_vector(self, pattern, state_param) -> None:
+        """
+        Set model state vector from a pattern array.
+
+        Args:
+            pattern: Input pattern to set as state
+            state_param: State parameter object with .value attribute
+        """
         vec = jnp.asarray(pattern, dtype=jnp.float32)
         state_param.value = vec
 
     def _get_state_vector(self, state_param):
+        """
+        Get current model state as a JAX array.
+
+        Args:
+            state_param: State parameter object with .value attribute
+
+        Returns:
+            jnp.ndarray: Current state vector
+        """
         return jnp.asarray(state_param.value, dtype=jnp.float32)
 
     def _predict_generic_compiled(self, num_iter: int, state_param):
-        """Compiled generic predict using while_loop; no early stop, no progress."""
+        """
+        Run prediction with JAX-compiled while loop for maximum performance.
+
+        Uses jax.lax.while_loop for efficient execution on GPU/TPU.
+        No early stopping or progress tracking for compilation compatibility.
+
+        Args:
+            num_iter: Fixed number of iterations to run
+            state_param: State parameter to update
+
+        Returns:
+            Final state vector after num_iter iterations
+        """
         # Initial energy
         initial_energy = jnp.float32(self.model.energy)
 
@@ -395,6 +434,21 @@ class HebbianTrainer(Trainer):
         convergence_threshold: float,
         state_param,
     ):
+        """
+        Run prediction with Python loop allowing early stopping and progress tracking.
+
+        Uses standard Python for loop enabling convergence checks and callbacks.
+        Less efficient than compiled version but provides more control and feedback.
+
+        Args:
+            num_iter: Maximum number of iterations
+            progress_callback: Optional callback(iter, energy, converged, delta)
+            convergence_threshold: Energy change threshold for early stopping
+            state_param: State parameter to update
+
+        Returns:
+            Final state vector (may stop early if converged)
+        """
         prev_energy = float(self.model.energy)
         for iteration in range(num_iter):
             self.model.update(prev_energy)
