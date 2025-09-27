@@ -13,6 +13,7 @@
 <picture><img src="https://badges.ws/github/stars/routhleck/canns?logo=github" /></picture>
 [![PyPI Downloads](https://static.pepy.tech/personalized-badge/canns?period=total&units=INTERNATIONAL_SYSTEM&left_color=BLACK&right_color=GREEN&left_text=downloads)](https://pepy.tech/projects/canns)
 [![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/Routhleck/canns)
+[<img src="https://badges.ws/badge/Buy_Me_a_Coffee-ff813f?icon=buymeacoffee" />](https://buymeacoffee.com/forrestcai6)
 
 > 中文说明请见 [README_zh.md](README_zh.md)
 
