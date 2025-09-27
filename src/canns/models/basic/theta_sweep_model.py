@@ -54,9 +54,63 @@ def calculate_theta_modulation(
 
 class DirectionCellNetwork(BasicModel):
     """
-    1D continuous-attractor direction cell network
+    1D continuous-attractor direction (head direction) cell network.
+
+    This network implements a ring attractor model for representing head direction
+    with theta-modulated dynamics and spike-frequency adaptation (SFA). The model
+    exhibits key properties of biological head direction cells including:
+    - Persistent activity bumps encoding current heading
+    - Theta phase precession relative to turning angle
+    - Anticipative tracking through adaptation mechanisms
+
+    The network dynamics include:
+    - Membrane potential (u) with recurrent excitation and global inhibition
+    - Adaptation variable (v) implementing slow negative feedback
+    - Firing rate (r) computed via divisive normalization
+    - External input modulated by theta oscillations
+
+    Args:
+        num: Number of neurons in the network (resolution of head direction representation)
+        tau: Membrane time constant (ms). Controls speed of neural dynamics.
+        tau_v: Adaptation time constant (ms). Larger values = slower adaptation.
+        noise_strength: Standard deviation of Gaussian noise added to inputs
+        k: Global inhibition strength for divisive normalization
+        adaptation_strength: Strength of adaptation coupling (dimensionless)
+        a: Width of connectivity kernel (radians). Determines bump width.
+        A: Amplitude of external input bump
+        J0: Peak recurrent connection strength
+        g: Gain parameter for firing rate transformation
+        z_min: Minimum value of feature space (default: -π)
+        z_max: Maximum value of feature space (default: π)
+        conn_noise: Standard deviation of Gaussian noise added to connectivity matrix
+
+    Attributes:
+        num (int): Number of neurons
+        x (Array): Preferred directions of neurons, uniformly distributed in [z_min, z_max)
+        conn_mat (Array): Recurrent connectivity matrix with Gaussian profile
+        r (HiddenState): Firing rates of neurons
+        u (HiddenState): Membrane potentials
+        v (HiddenState): Adaptation variables
+        center (State): Current bump center position
+        m (float): Effective adaptation strength (adaptation_strength * tau / tau_v)
+
+    Example:
+        >>> import brainstate
+        >>> from canns.models.basic.theta_sweep_model import DirectionCellNetwork
+        >>> 
+        >>> brainstate.environ.set(dt=1.0)  # 1ms time step
+        >>> dc_net = DirectionCellNetwork(num=60)
+        >>> dc_net.init_state()
+        >>> 
+        >>> # Update with head direction and theta modulation
+        >>> head_direction = 0.5  # radians
+        >>> theta_modulation = 1.2  # theta phase-dependent gain
+        >>> dc_net.update(head_direction, theta_modulation)
+
     References:
-        Ji, Z., Lomi, E., Jeffery, K., Mitchell, A. S., & Burgess, N. (2025). Phase Precession Relative to Turning Angle in Theta‐Modulated Head Direction Cells. Hippocampus, 35(2), e70008.
+        Ji, Z., Lomi, E., Jeffery, K., Mitchell, A. S., & Burgess, N. (2025).
+        Phase Precession Relative to Turning Angle in Theta‐Modulated Head Direction Cells.
+        Hippocampus, 35(2), e70008.
     """
 
     def __init__(
@@ -105,6 +159,16 @@ class DirectionCellNetwork(BasicModel):
         self.conn_mat = base_connection + noise_connection
 
     def init_state(self, *args, **kwargs):
+        """
+        Initialize network state variables.
+
+        Creates and initializes:
+        - r: Firing rates (all zeros)
+        - u: Membrane potentials (all zeros)
+        - v: Adaptation variables (all zeros)
+        - center: Current bump center (zero)
+        - centerI: Input bump center (zero)
+        """
         self.r = brainstate.HiddenState(u.math.zeros(self.num))
         self.v = brainstate.HiddenState(u.math.zeros(self.num))
         self.u = brainstate.HiddenState(u.math.zeros(self.num))
@@ -112,6 +176,13 @@ class DirectionCellNetwork(BasicModel):
         self.centerI = brainstate.State(u.math.zeros(1))
 
     def update(self, head_direction, theta_input):
+        """
+        Single time-step update of network dynamics.
+
+        Args:
+            head_direction: Target head direction in radians [-π, π]
+            theta_input: Theta modulation factor (typically 1.0 ± theta_strength)
+        """
         self.center.value = self.get_bump_center(r=self.r, x=self.x)
         Iext = theta_input * self.input_bump(head_direction)
         Irec = self.conn_mat @ self.r.value
@@ -141,11 +212,29 @@ class DirectionCellNetwork(BasicModel):
         return B
 
     def calculate_dist(self, d):
+        """
+        Calculate distance on circular feature space with periodic boundary.
+
+        Args:
+            d: Raw angular difference
+
+        Returns:
+            Shortest angular distance considering periodicity
+        """
         d = self.handle_periodic_condition(d)
         d = u.math.where(d > 0.5 * self.z_range, d - self.z_range, d)
         return d
 
     def make_connection(self):
+        """
+        Generate recurrent connectivity matrix with Gaussian profile.
+
+        Creates a circulant connectivity matrix where connection strength
+        decreases with distance according to a Gaussian kernel.
+
+        Returns:
+            Array of shape (num, num): Connectivity matrix
+        """
         @jax.vmap
         def get_J(xbins):
             d = self.calculate_dist(xbins - self.x)
@@ -160,6 +249,16 @@ class DirectionCellNetwork(BasicModel):
 
     @staticmethod
     def get_bump_center(r, x):
+        """
+        Decode bump center from population activity using circular mean.
+
+        Args:
+            r: Firing rate vector
+            x: Preferred direction vector
+
+        Returns:
+            Decoded center position in radians
+        """
         exppos = u.math.exp(1j * x)
         center = u.math.angle(u.math.sum(exppos * r.value))
         return center.reshape(
@@ -167,6 +266,15 @@ class DirectionCellNetwork(BasicModel):
         )
 
     def input_bump(self, head_direction):
+        """
+        Generate Gaussian-shaped external input centered on target direction.
+
+        Args:
+            head_direction: Center of input bump in radians
+
+        Returns:
+            Input vector of shape (num,)
+        """
         return self.A * u.math.exp(
             -0.5 * u.math.square(self.calculate_dist(self.x - head_direction) / self.a)
         )
@@ -174,9 +282,69 @@ class DirectionCellNetwork(BasicModel):
 
 class GridCellNetwork(BasicModel):
     """
-    2D continuous-attractor grid cell network
+    2D continuous-attractor grid cell network with hexagonal lattice structure.
+
+    This network implements a twisted torus topology that generates grid cell-like
+    spatial representations with hexagonal periodicity. The model combines:
+    - 2D continuous attractor dynamics on a twisted manifold
+    - Spike-frequency adaptation for theta modulation
+    - Integration of direction cell inputs via conjunctive cells
+    - Phase offset mechanism for theta sweeps
+
+    The network operates in a transformed coordinate system where grid cells form
+    a hexagonal lattice, enabling realistic grid field spacing and orientation.
+
+    Args:
+        num_dc: Number of direction cells providing heading input
+        num_gc_x: Number of grid cells along one dimension (total = num_gc_x^2)
+        tau: Membrane time constant (ms)
+        tau_v: Adaptation time constant (ms). Larger = slower adaptation.
+        noise_strength: Standard deviation of activity noise
+        conn_noise: Standard deviation of connectivity noise
+        k: Global inhibition strength for divisive normalization
+        adaptation_strength: Coupling strength between u and v
+        a: Width of connectivity kernel. Determines bump width.
+        A: Amplitude of external input
+        J0: Peak recurrent connection strength
+        g: Firing rate gain factor (scales to biological range)
+        mapping_ratio: Controls grid spacing (larger = smaller spacing).
+            Grid spacing λ = 2π / mapping_ratio
+        phase_offset: Phase shift for conjunctive input, drives theta sweeps.
+            Expressed as fraction of [-π, π] range (default: 1/20)
+
+    Attributes:
+        num (int): Total number of grid cells (num_gc_x^2)
+        x_grid, y_grid (Array): Grid cell preferred phases in [-π, π]
+        value_grid (Array): Neuron positions in phase space, shape (num, 2)
+        Lambda (float): Grid spacing in real space
+        coor_transform (Array): Hexagonal to rectangular coordinate transform
+        conn_mat (Array): Recurrent connectivity matrix
+        candidate_centers (Array): Grid of candidate bump centers for decoding
+        r (HiddenState): Firing rates
+        u (HiddenState): Membrane potentials
+        v (HiddenState): Adaptation variables
+        center_phase (State): Decoded bump center in phase space
+        center_position (State): Decoded position in real space
+        gc_bump (State): Grid cell bump activity pattern
+
+    Example:
+        >>> import brainstate
+        >>> from canns.models.basic.theta_sweep_model import GridCellNetwork
+        >>> 
+        >>> brainstate.environ.set(dt=1.0)
+        >>> gc_net = GridCellNetwork(num_dc=60, num_gc_x=30, mapping_ratio=1.5)
+        >>> gc_net.init_state()
+        >>> 
+        >>> # Update with position, direction activity, and theta modulation
+        >>> position = [0.5, 0.3]  # animal position
+        >>> dir_activity = np.random.rand(60)  # direction cell firing
+        >>> theta_mod = 1.2  # theta phase modulation
+        >>> gc_net.update(position, dir_activity, theta_mod)
+
     References:
-        Ji, Z., Chu, T., Wu, S., & Burgess, N. (2025). A systems model of alternating theta sweeps via firing rate adaptation. Current Biology, 35(4), 709-722.
+        Ji, Z., Chu, T., Wu, S., & Burgess, N. (2025).
+        A systems model of alternating theta sweeps via firing rate adaptation.
+        Current Biology, 35(4), 709-722.
     """
 
     def __init__(
@@ -252,6 +420,18 @@ class GridCellNetwork(BasicModel):
         self.conn_mat = base_connection + noise_connection
 
     def init_state(self, *args, **kwargs):
+        """
+        Initialize network state variables.
+
+        Creates and initializes:
+        - r: Firing rates (shape: num)
+        - u: Membrane potentials (shape: num)
+        - v: Adaptation variables (shape: num)
+        - gc_bump: Grid cell bump pattern (shape: num)
+        - conj_input: Conjunctive cell input (shape: num)
+        - center_phase: Bump center in phase space (shape: 2)
+        - center_position: Decoded position in real space (shape: 2)
+        """
         self.r = brainstate.HiddenState(u.math.zeros(self.num))
         self.v = brainstate.HiddenState(u.math.zeros(self.num))
         self.u = brainstate.HiddenState(u.math.zeros(self.num))
@@ -261,6 +441,15 @@ class GridCellNetwork(BasicModel):
         self.center_position = brainstate.State(u.math.zeros(2))
 
     def make_connection(self):
+        """
+        Generate recurrent connectivity matrix with 2D Gaussian kernel.
+
+        Uses hexagonal lattice geometry via coordinate transformation.
+        Connection strength decays with distance in transformed space.
+
+        Returns:
+            Array of shape (num, num): Recurrent connectivity matrix
+        """
         @jax.vmap
         def kernel(v):
             # v: (2,) location in (x,y)
@@ -287,11 +476,32 @@ class GridCellNetwork(BasicModel):
         return u.math.sqrt(dist[:, 0] ** 2 + dist[:, 1] ** 2)
 
     def handle_periodic_condition(self, d):
+        """
+        Apply periodic boundary conditions to wrap phases into [-π, π].
+
+        Args:
+            d: Phase values (any shape)
+
+        Returns:
+            Wrapped phase values in [-π, π]
+        """
         d = u.math.where(d > u.math.pi, d - 2.0 * u.math.pi, d)
         d = u.math.where(d < -u.math.pi, d + 2.0 * u.math.pi, d)
         return d
 
     def make_candidate_centers(self, Lambda):
+        """
+        Generate grid of candidate bump centers for decoding.
+
+        Creates a regular lattice of potential activity bump locations
+        used for disambiguating position from grid cell phases.
+
+        Args:
+            Lambda: Grid spacing in real space
+
+        Returns:
+            Array of shape (N_c*N_c, 2): Candidate centers in transformed coordinates
+        """
         N_c = 32
         cc = u.math.zeros((N_c, N_c, 2))
 
@@ -305,6 +515,17 @@ class GridCellNetwork(BasicModel):
         return cc_tranformed
 
     def update(self, animal_posistion, direction_activity, theta_modulation):
+        """
+        Single time-step update of grid cell network dynamics.
+
+        Integrates conjunctive inputs from direction cells, applies theta modulation,
+        and updates grid cell activity via continuous attractor dynamics with adaptation.
+
+        Args:
+            animal_posistion: Current position [x, y] for disambiguating grid phase
+            direction_activity: Direction cell firing rates (shape: num_dc)
+            theta_modulation: Theta phase-dependent gain factor
+        """
         # get bump activity in real space info from network activity on the manifold ---
         center_phase, center_position, gc_bump = self.get_unique_activity_bump(
             self.r.value, animal_posistion
@@ -384,6 +605,20 @@ class GridCellNetwork(BasicModel):
         return center_phase, center_position, gc_bump
 
     def calculate_input_from_conjgc(self, animal_pos, direction_activity, theta_modulation):
+        """
+        Calculate external input to grid cells from conjunctive grid cells.
+
+        Conjunctive cells integrate position and direction to generate grid cell inputs
+        with phase offsets. This drives theta sweeps when modulated by theta oscillations.
+
+        Args:
+            animal_pos: Current position [x, y]
+            direction_activity: Direction cell firing rates (shape: num_dc)
+            theta_modulation: Theta phase-dependent gain factor
+
+        Returns:
+            Array of shape (num_gc,): Weighted conjunctive input to grid cells
+        """
         assert u.math.size(animal_pos) == 2
         num_dc = self.num_dc
         num_gc = self.num
@@ -416,7 +651,17 @@ class GridCellNetwork(BasicModel):
 
     def position2phase(self, position):
         """
-        map position->phase; phase is wrapped to [-pi, pi] per-axis
+        Convert real-space position to grid cell phase coordinates.
+
+        Applies coordinate transformation and wraps to periodic boundaries.
+        Each grid cell's preferred phase is determined by the animal's position
+        on the hexagonal lattice.
+
+        Args:
+            position: Real-space coordinates, shape (2,) or (2, N)
+
+        Returns:
+            Array of shape (2,) or (2, N): Phase coordinates in [-π, π] per axis
         """
         mapped_pos = position * self.mapping_ratio
         phase = u.math.matmul(self.coor_transform, mapped_pos) + u.math.pi
