@@ -105,7 +105,18 @@ class ThetaSweepPipeline(Pipeline):
         self.grid_network = None
 
     def _validate_trajectory_data(self):
-        """Validate input trajectory data."""
+        """
+        Validate input trajectory data format and dimensions.
+
+        Checks:
+        - Trajectory is 2D array (n_steps, n_dims)
+        - Only 2D spatial trajectories (n_dims=2)
+        - At least 2 time steps
+        - Times array matches trajectory length if provided
+
+        Raises:
+            ValueError: If validation fails
+        """
         if self.trajectory_data.ndim != 2:
             raise ValueError("trajectory_data must be a 2D array with shape (n_steps, n_dims)")
 
@@ -121,7 +132,15 @@ class ThetaSweepPipeline(Pipeline):
                 raise ValueError("times array length must match trajectory_data length")
 
     def _get_default_direction_cell_params(self) -> dict[str, Any]:
-        """Get default parameters for DirectionCellNetwork."""
+        """
+        Get default parameters for DirectionCellNetwork initialization.
+
+        Returns:
+            dict: Default parameters including:
+                - num: 100 neurons
+                - adaptation_strength: 15 for SFA dynamics
+                - noise_strength: 0.0 (no noise)
+        """
         return {
             "num": 100,
             "adaptation_strength": 15,
@@ -129,7 +148,16 @@ class ThetaSweepPipeline(Pipeline):
         }
 
     def _get_default_grid_cell_params(self) -> dict[str, Any]:
-        """Get default parameters for GridCellNetwork."""
+        """
+        Get default parameters for GridCellNetwork initialization.
+
+        Returns:
+            dict: Default parameters including:
+                - num_gc_x: 100 neurons per dimension (100x100 grid)
+                - adaptation_strength: 8 for SFA dynamics
+                - mapping_ratio: 5 (controls grid spacing)
+                - noise_strength: 0.0 (no noise)
+        """
         return {
             "num_gc_x": 100,
             "adaptation_strength": 8,
@@ -138,7 +166,15 @@ class ThetaSweepPipeline(Pipeline):
         }
 
     def _get_default_theta_params(self) -> dict[str, Any]:
-        """Get default parameters for theta modulation."""
+        """
+        Get default parameters for theta oscillation modulation.
+
+        Returns:
+            dict: Default parameters including:
+                - theta_strength_hd: 1.0 for direction cells
+                - theta_strength_gc: 0.5 for grid cells
+                - theta_cycle_len: 100.0 ms per cycle
+        """
         return {
             "theta_strength_hd": 1.0,
             "theta_strength_gc": 0.5,
@@ -146,7 +182,12 @@ class ThetaSweepPipeline(Pipeline):
         }
 
     def _get_default_spatial_nav_params(self) -> dict[str, Any]:
-        """Get default parameters for SpatialNavigationTask."""
+        """
+        Get default parameters for SpatialNavigationTask initialization.
+
+        Returns:
+            dict: Default parameters including environment size, dt, etc.
+        """
         return {
             "width": self.env_size,
             "height": self.env_size,
@@ -155,7 +196,12 @@ class ThetaSweepPipeline(Pipeline):
         }
 
     def _setup_spatial_navigation_task(self):
-        """Set up and configure the spatial navigation task."""
+        """
+        Set up and configure the spatial navigation task with trajectory data.
+
+        Creates SpatialNavigationTask, imports external trajectory data,
+        and calculates theta sweep parameters (velocity, angular speed, etc.).
+        """
         # Calculate duration from trajectory data
         if self.times is not None:
             duration = self.times[-1] - self.times[0]
@@ -174,7 +220,12 @@ class ThetaSweepPipeline(Pipeline):
         self.spatial_nav_task.calculate_theta_sweep_data()
 
     def _setup_neural_networks(self):
-        """Set up direction cell and grid cell networks."""
+        """
+        Initialize and configure direction cell and grid cell networks.
+
+        Creates DirectionCellNetwork and GridCellNetwork instances with
+        configured parameters and initializes their states.
+        """
         # Create direction cell network
         self.direction_network = DirectionCellNetwork(**self.direction_cell_params)
 
@@ -188,7 +239,21 @@ class ThetaSweepPipeline(Pipeline):
         self.grid_network.init_state()
 
     def _run_simulation(self):
-        """Run the main theta sweep simulation."""
+        """
+        Run the main theta sweep simulation loop.
+
+        Executes time-stepped simulation of direction and grid cell networks
+        with theta modulation. Records neural activity, theta phase, and
+        decoded positions at each time step.
+
+        Returns:
+            dict: Simulation results containing:
+                - dc_activity: Direction cell firing rates over time
+                - gc_activity: Grid cell firing rates over time
+                - gc_center_phase: Grid cell bump centers in phase space
+                - gc_center_position: Decoded positions from grid cells
+                - theta_phase: Theta oscillation phase over time
+        """
         # Set BrainState environment
         brainstate.environ.set(dt=1.0)
 
@@ -333,7 +398,19 @@ class ThetaSweepPipeline(Pipeline):
         return self.set_results(outputs)
 
     def _generate_plots(self, output_path: Path, show_plots: bool, verbose: bool) -> dict[str, str]:
-        """Generate analysis plots."""
+        """
+        Generate analysis plots for theta sweep results.
+
+        Creates trajectory analysis and population activity visualizations.
+
+        Args:
+            output_path: Directory to save plots
+            show_plots: Whether to display plots interactively
+            verbose: Whether to print progress messages
+
+        Returns:
+            dict: Mapping of plot names to file paths
+        """
         plot_outputs = {}
 
         # Trajectory analysis
@@ -373,7 +450,21 @@ class ThetaSweepPipeline(Pipeline):
     def _generate_animation(
         self, output_path: Path, fps: int, dpi: int, verbose: bool
     ) -> dict[str, str]:
-        """Generate theta sweep animation."""
+        """
+        Generate theta sweep animation showing neural dynamics over time.
+
+        Creates animated visualization of direction and grid cell activity
+        with theta phase modulation.
+
+        Args:
+            output_path: Directory to save animation
+            fps: Frames per second for animation
+            dpi: Resolution for animation frames
+            verbose: Whether to print progress messages
+
+        Returns:
+            dict: Mapping containing 'animation' key with file path
+        """
         animation_path = output_path / "theta_sweep_animation.gif"
 
         config_animation = PlotConfig(
