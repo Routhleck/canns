@@ -8,6 +8,7 @@
 
 ## Build, Test, and Dev Commands
 - `make install`: Install with dev + extras using `uv sync`.
+- `make docs`: Build the documentation via `uv run sphinx-build`.
 - `make lint`: Run `devtools/lint.py` (codespell, ruff check --fix, ruff format).
 - `make test`: Run `pytest` via `uv`.
 - `make build`: Build wheel/sdist with `uv build`.

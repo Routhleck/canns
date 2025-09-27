@@ -27,6 +27,11 @@ pytest -v -k "test_cann1d"  # Run specific test pattern
 make build            # Build package with uv build
 ```
 
+### Documentation
+```bash
+make docs             # Build Sphinx documentation
+```
+
 ## Architecture Overview
 
 CANNS is a Python library for Continuous Attractor Neural Networks focused on spatial cognition and neural dynamics. Built on JAX/BrainX for high-performance computation with GPU/TPU support.

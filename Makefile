@@ -4,7 +4,7 @@
 
 .DEFAULT_GOAL := default
 
-.PHONY: default install lint test upgrade build clean
+.PHONY: default install lint test upgrade build clean docs
 
 default: install lint test
 
@@ -23,10 +23,15 @@ upgrade:
 build:
 	uv build
 
+docs:
+	uv sync --group docs
+	cd docs && uv run sphinx-build -b html . _build/html
+
 clean:
 	-rm -rf dist/
 	-rm -rf *.egg-info/
 	-rm -rf .pytest_cache/
 	-rm -rf .mypy_cache/
 	-rm -rf .venv/
+	-rm -rf docs/_build/
 	-find . -type d -name "__pycache__" -exec rm -rf {} +
