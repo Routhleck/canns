@@ -1,12 +1,84 @@
 CANNs Documentation
 ===================
 
-.. image:: https://img.shields.io/github/stars/routhleck/canns.svg?style=for-the-badge
-   :target: https://github.com/routhleck/canns/stargazers
-.. image:: https://img.shields.io/github/license/routhleck/canns.svg?style=for-the-badge
+.. image:: https://badges.ws/badge/status-beta-yellow
+   :target: https://github.com/routhleck/canns
+   :alt: Status: Beta
+
+.. image:: https://img.shields.io/pypi/pyversions/canns
+   :target: https://pypi.org/project/canns/
+   :alt: Python Version
+
+.. image:: https://badges.ws/maintenance/yes/2025
+   :target: https://github.com/routhleck/canns
+   :alt: Maintained
+
+.. image:: https://badges.ws/github/release/routhleck/canns
+   :target: https://github.com/routhleck/canns/releases
+   :alt: Release
+
+.. image:: https://badges.ws/github/license/routhleck/canns
    :target: https://github.com/routhleck/canns/blob/master/LICENSE
+   :alt: License
+
+.. image:: https://badges.ws/github/stars/routhleck/canns?logo=github
+   :target: https://github.com/routhleck/canns/stargazers
+   :alt: Stars
+
+.. image:: https://static.pepy.tech/personalized-badge/canns?period=total&units=INTERNATIONAL_SYSTEM&left_color=BLACK&right_color=GREEN&left_text=downloads
+   :target: https://pepy.tech/projects/canns
+   :alt: Downloads
+
+.. image:: https://deepwiki.com/badge.svg
+   :target: https://deepwiki.com/Routhleck/canns
+   :alt: Ask DeepWiki
+
+.. image:: https://badges.ws/badge/Buy_Me_a_Coffee-ff813f?icon=buymeacoffee
+   :target: https://buymeacoffee.com/forrestcai6
+   :alt: Buy Me a Coffee
 
 Welcome to the CANNs (Continuous Attractor Neural Networks) documentation! This library provides a unified, high-level API for building, training, and analyzing continuous attractor neural networks.
+
+Visual Gallery
+--------------
+
+.. raw:: html
+
+   <div align="center">
+   <table>
+   <tr>
+   <td align="center" width="50%" valign="top">
+   <h4>1D CANN Smooth Tracking</h4>
+   <img src="../_static/smooth_tracking_1d.gif" alt="1D CANN Smooth Tracking" width="320">
+   <br><em>Real-time dynamics during smooth tracking</em>
+   </td>
+   <td align="center" width="50%" valign="top">
+   <h4>2D CANN Population Encoding</h4>
+   <img src="../_static/CANN2D_encoding.gif" alt="2D CANN Encoding" width="320">
+   <br><em>Spatial information encoding patterns</em>
+   </td>
+   </tr>
+   <tr>
+   <td colspan="2" align="center">
+   <h4>Theta Sweep Analysis</h4>
+   <img src="../_static/theta_sweep_animation.gif" alt="Theta Sweep Animation" width="600">
+   <br><em>Grid cell and head direction networks with theta rhythm modulation</em>
+   </td>
+   </tr>
+   <tr>
+   <td align="center" width="50%" valign="top">
+   <h4>Bump Analysis</h4>
+   <img src="../_static/bump_analysis_demo.gif" alt="Bump Analysis Demo" width="320">
+   <br><em>1D bump fitting and analysis</em>
+   </td>
+   <td align="center" width="50%" valign="top">
+   <h4>Torus Topology Analysis</h4>
+   <img src="../_static/torus_bump.gif" alt="Torus Bump Analysis" width="320">
+   <br><em>3D torus visualization and decoding</em>
+   </td>
+   </tr>
+   </table>
+   </div>
 
 🚀 **Interactive Examples**
    Try the examples interactively:
