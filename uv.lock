@@ -536,7 +536,7 @@ requires-dist = [
     { name = "brainx", extras = ["cpu"], marker = "extra == 'cpu'" },
     { name = "brainx", extras = ["cuda12"], marker = "sys_platform == 'linux' and extra == 'cuda12'" },
     { name = "brainx", extras = ["tpu"], marker = "sys_platform == 'linux' and extra == 'tpu'" },
-    { name = "canns-ripser", specifier = ">=0.4.3" },
+    { name = "canns-ripser", specifier = ">=0.4.4" },
     { name = "furo", specifier = ">=2025.7.19" },
     { name = "notebook", specifier = ">=7.4.4" },
     { name = "numba", specifier = ">=0.56.0" },

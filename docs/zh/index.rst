@@ -25,9 +25,15 @@ CANNs 文档
 .. toctree::
    :maxdepth: 2
    :caption: 快速入门
-   
+
    notebooks/01_quick_start
    notebooks/00_design_philosophy
+
+.. toctree::
+   :maxdepth: 2
+   :caption: 指南
+
+   guide/index
 
 .. toctree::
    :maxdepth: 1

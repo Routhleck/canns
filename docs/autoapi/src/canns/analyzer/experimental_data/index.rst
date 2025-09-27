@@ -167,7 +167,13 @@ Package Contents
 
 .. py:class:: PlotConfig
 
-   Unified configuration class for analyzer plotting helpers.
+   Unified configuration class for all plotting helpers in ``canns.analyzer``.
+
+   This mirrors the behaviour of the previous ``visualize`` module so that
+   reorganising the files does not affect the public API. The attributes map
+   directly to keyword arguments exposed by the high-level plotting functions,
+   allowing users to keep existing configuration objects unchanged after the
+   reorganisation.
 
 
    .. py:method:: __post_init__()
