@@ -23,7 +23,13 @@ Module Contents
 
 .. py:class:: PlotConfig
 
-   Unified configuration class for analyzer plotting helpers.
+   Unified configuration class for all plotting helpers in ``canns.analyzer``.
+
+   This mirrors the behaviour of the previous ``visualize`` module so that
+   reorganising the files does not affect the public API. The attributes map
+   directly to keyword arguments exposed by the high-level plotting functions,
+   allowing users to keep existing configuration objects unchanged after the
+   reorganisation.
 
 
    .. py:method:: __post_init__()
@@ -143,7 +149,10 @@ Module Contents
 
 .. py:class:: PlotConfigs
 
-   Collection of high-level presets for common analyzer plots.
+   Collection of commonly used plot configurations.
+
+   These helpers mirror the presets that existed in ``canns.analyzer.visualize``
+   so that callers relying on them continue to receive the exact same defaults.
 
 
    .. py:method:: average_firing_rate_plot(mode = 'per_neuron', **kwargs)
