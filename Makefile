@@ -4,7 +4,7 @@
 
 .DEFAULT_GOAL := default
 
-.PHONY: default install lint test upgrade build clean docs
+.PHONY: default install lint test upgrade build clean docs docs-autoapi
 
 default: install lint test
 
@@ -26,6 +26,15 @@ build:
 docs:
 	uv sync --group docs
 	cd docs && uv run sphinx-build -b html . _build/html
+
+docs-autoapi:
+	@echo "🔄 Removing old autoapi files..."
+	-rm -rf docs/autoapi
+	@echo "📚 Syncing documentation dependencies..."
+	uv sync --group docs
+	@echo "🔨 Rebuilding documentation with fresh autoapi..."
+	cd docs && uv run sphinx-build -b html . _build/html
+	@echo "✅ Done! Documentation updated at docs/_build/html/index.html"
 
 clean:
 	-rm -rf dist/
