@@ -4,7 +4,13 @@ This module provides tools for identifying and analyzing fixed points
 in recurrent neural networks using JAX/BrainState.
 """
 
+from .checkpoint import load_checkpoint, save_checkpoint
 from .fixed_points import FixedPoints
 from .finder import FixedPointFinder
 
-__all__ = ["FixedPoints", "FixedPointFinder"]
+__all__ = [
+    "FixedPoints",
+    "FixedPointFinder",
+    "save_checkpoint",
+    "load_checkpoint",
+]

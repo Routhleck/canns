@@ -12,11 +12,9 @@ import numpy as np
 import jax
 import jax.numpy as jnp
 import brainstate as bst
-import matplotlib.pyplot as plt
-import pickle
-import os
 
-from canns.analyzer.slow_points import FixedPointFinder
+from canns.analyzer.slow_points import FixedPointFinder, save_checkpoint, load_checkpoint
+from canns.analyzer.plotting import plot_fixed_points_2d, plot_fixed_points_3d, PlotConfig
 
 
 # ============================================================================
@@ -243,206 +241,6 @@ class FlipFlopRNN(bst.nn.Module):
 # Fixed Point Analysis Utilities
 # ============================================================================
 
-def plot_fixed_points_2d(unique_fps, state_traj, title="Fixed Points Analysis (2D)"):
-    """Visualize fixed points using 2D PCA."""
-    if unique_fps.n == 0:
-        print("No fixed points found to plot.")
-        return
-
-    from sklearn.decomposition import PCA
-
-    # Flatten trajectories for PCA
-    traj_flat = state_traj.reshape(-1, state_traj.shape[2])
-
-    # Fit PCA
-    pca = PCA(n_components=2)
-    traj_pca = pca.fit_transform(traj_flat)
-    fps_pca = pca.transform(unique_fps.xstar)
-
-    # Plot
-    plt.figure(figsize=(10, 8))
-    plt.scatter(
-        traj_pca[:, 0],
-        traj_pca[:, 1],
-        c="lightblue",
-        alpha=0.1,
-        label="State Trajectories",
-        s=1,
-    )
-
-    if unique_fps.is_stable is not None:
-        stable_idx = np.where(unique_fps.is_stable)[0]
-        unstable_idx = np.where(~unique_fps.is_stable)[0]
-
-        if len(stable_idx) > 0:
-            plt.scatter(
-                fps_pca[stable_idx, 0],
-                fps_pca[stable_idx, 1],
-                c="green",
-                marker="o",
-                s=200,
-                label="Stable Fixed Points",
-                edgecolors="black",
-                linewidths=2,
-            )
-
-        if len(unstable_idx) > 0:
-            plt.scatter(
-                fps_pca[unstable_idx, 0],
-                fps_pca[unstable_idx, 1],
-                c="red",
-                marker="x",
-                s=200,
-                label="Unstable Fixed Points",
-                linewidths=3,
-            )
-    else:
-        plt.scatter(
-            fps_pca[:, 0],
-            fps_pca[:, 1],
-            c="purple",
-            marker="*",
-            s=200,
-            label="Fixed Points",
-        )
-
-    plt.xlabel("PC 1", fontsize=12, fontweight="bold")
-    plt.ylabel("PC 2", fontsize=12, fontweight="bold")
-    plt.title(title, fontsize=14, fontweight="bold")
-    plt.legend()
-    plt.grid(True, alpha=0.3)
-    plt.tight_layout()
-    plt.savefig("flipflop_fixed_points_2d.png", dpi=150, bbox_inches="tight")
-    print(f"  Saved 2D plot to: flipflop_fixed_points_2d.png")
-
-
-def plot_fixed_points_3d(unique_fps, state_traj, title="Fixed Points Analysis (3D)",
-                         plot_batch_idx=None, plot_start_time=0):
-    """Visualize fixed points using 3D PCA.
-
-    Args:
-        unique_fps: FixedPoints object with the fixed points.
-        state_traj: [n_batch x n_time x n_states] array of state trajectories.
-        title: Plot title.
-        plot_batch_idx: List of batch indices to plot trajectories for (default: first 30).
-        plot_start_time: Time index to start plotting trajectories from.
-    """
-    if unique_fps.n == 0:
-        print("No fixed points found to plot.")
-        return
-
-    from sklearn.decomposition import PCA
-    from mpl_toolkits.mplot3d import Axes3D
-
-    # Flatten trajectories for PCA
-    traj_flat = state_traj.reshape(-1, state_traj.shape[2])
-
-    # Fit 3D PCA
-    pca = PCA(n_components=3)
-    traj_pca = pca.fit_transform(traj_flat)
-    fps_pca = pca.transform(unique_fps.xstar)
-
-    print(f"  PCA explained variance: {pca.explained_variance_ratio_[:3]}")
-    print(f"  Total variance explained: {pca.explained_variance_ratio_[:3].sum():.2%}")
-
-    # Create 3D plot
-    fig = plt.figure(figsize=(12, 10))
-    ax = fig.add_subplot(111, projection='3d')
-
-    # Plot individual trajectories as lines
-    if plot_batch_idx is None:
-        plot_batch_idx = list(range(min(30, state_traj.shape[0])))
-
-    n_batch, n_time, n_states = state_traj.shape
-
-    for batch_idx in plot_batch_idx:
-        # Transform this trajectory
-        traj_single = state_traj[batch_idx, plot_start_time:, :]
-        traj_single_pca = pca.transform(traj_single)
-
-        # Plot as a line
-        ax.plot(
-            traj_single_pca[:, 0],
-            traj_single_pca[:, 1],
-            traj_single_pca[:, 2],
-            c='blue',
-            alpha=0.3,
-            linewidth=0.5,
-        )
-
-    # Plot fixed points
-    if unique_fps.is_stable is not None:
-        stable_idx = np.where(unique_fps.is_stable)[0]
-        unstable_idx = np.where(~unique_fps.is_stable)[0]
-
-        if len(stable_idx) > 0:
-            ax.scatter(
-                fps_pca[stable_idx, 0],
-                fps_pca[stable_idx, 1],
-                fps_pca[stable_idx, 2],
-                c='black',
-                marker='o',
-                s=100,
-                label=f"Stable FPs ({len(stable_idx)})",
-                edgecolors='white',
-                linewidths=2,
-            )
-
-        if len(unstable_idx) > 0:
-            ax.scatter(
-                fps_pca[unstable_idx, 0],
-                fps_pca[unstable_idx, 1],
-                fps_pca[unstable_idx, 2],
-                c='red',
-                marker='x',
-                s=80,
-                label=f"Unstable FPs ({len(unstable_idx)})",
-                linewidths=2,
-            )
-    else:
-        ax.scatter(
-            fps_pca[:, 0],
-            fps_pca[:, 1],
-            fps_pca[:, 2],
-            c='purple',
-            marker='*',
-            s=100,
-            label=f"Fixed Points ({unique_fps.n})",
-        )
-
-    ax.set_xlabel('PC 1', fontsize=12, fontweight='bold')
-    ax.set_ylabel('PC 2', fontsize=12, fontweight='bold')
-    ax.set_zlabel('PC 3', fontsize=12, fontweight='bold')
-    ax.set_title(title, fontsize=14, fontweight='bold')
-    ax.legend(loc='upper right')
-    ax.grid(True, alpha=0.3)
-
-    # Set equal aspect ratio
-    max_range = np.array([
-        fps_pca[:, 0].max() - fps_pca[:, 0].min(),
-        fps_pca[:, 1].max() - fps_pca[:, 1].min(),
-        fps_pca[:, 2].max() - fps_pca[:, 2].min()
-    ]).max() / 2.0
-
-    mid_x = (fps_pca[:, 0].max() + fps_pca[:, 0].min()) * 0.5
-    mid_y = (fps_pca[:, 1].max() + fps_pca[:, 1].min()) * 0.5
-    mid_z = (fps_pca[:, 2].max() + fps_pca[:, 2].min()) * 0.5
-
-    ax.set_xlim(mid_x - max_range, mid_x + max_range)
-    ax.set_ylim(mid_y - max_range, mid_y + max_range)
-    ax.set_zlim(mid_z - max_range, mid_z + max_range)
-
-    plt.tight_layout()
-    plt.savefig("flipflop_fixed_points_3d.png", dpi=150, bbox_inches="tight")
-    print(f"  Saved 3D plot to: flipflop_fixed_points_3d.png")
-
-    return fig
-
-
-# ============================================================================
-# Training Functions
-# ============================================================================
-
 def train_flipflop_rnn(rnn, train_data, valid_data,
                        learning_rate=0.01,
                        batch_size=128,
@@ -576,65 +374,6 @@ def train_flipflop_rnn(rnn, train_data, valid_data,
     return losses
 
 
-def save_rnn_checkpoint(rnn, filepath="flipflop_rnn_checkpoint.pkl"):
-    """Save RNN model parameters to a checkpoint file.
-
-    Args:
-        rnn: FlipFlopRNN model to save.
-        filepath: Path to save the checkpoint file.
-    """
-    # Extract all parameter states
-    params = {}
-    for name_tuple, state in rnn.states().items():
-        if isinstance(state, bst.ParamState):
-            # Convert tuple key to string for easier handling
-            if isinstance(name_tuple, tuple):
-                name = name_tuple[0]  # Extract string from tuple
-            else:
-                name = name_tuple
-            params[name] = np.array(state.value)
-
-    with open(filepath, 'wb') as f:
-        pickle.dump(params, f)
-    print(f"Saved checkpoint to: {filepath}")
-
-
-def load_rnn_checkpoint(rnn, filepath="flipflop_rnn_checkpoint.pkl"):
-    """Load RNN model parameters from a checkpoint file.
-
-    Args:
-        rnn: FlipFlopRNN model to load parameters into.
-        filepath: Path to the checkpoint file.
-
-    Returns:
-        True if checkpoint was loaded successfully, False otherwise.
-    """
-    if not os.path.exists(filepath):
-        return False
-
-    with open(filepath, 'rb') as f:
-        params = pickle.load(f)
-
-    # Load parameters into model - match with states dictionary
-    states_dict = rnn.states()
-    for name_tuple, state in states_dict.items():
-        if isinstance(state, bst.ParamState):
-            # Extract string name from tuple
-            if isinstance(name_tuple, tuple):
-                name = name_tuple[0]
-            else:
-                name = name_tuple
-
-            if name in params:
-                state.value = jnp.array(params[name])
-
-    print(f"Loaded checkpoint from: {filepath}")
-    return True
-
-
-# ============================================================================
-# Main Script
-# ============================================================================
 
 def main(seed=42):
     """Main function to train RNN and find fixed points.
@@ -694,7 +433,7 @@ def main(seed=42):
 
     # Check for checkpoint
     checkpoint_path = "flipflop_rnn_checkpoint.pkl"
-    if load_rnn_checkpoint(rnn, checkpoint_path):
+    if load_checkpoint(rnn, checkpoint_path):
         print("Using pre-trained model from checkpoint.")
     else:
         # Train the RNN
@@ -715,7 +454,7 @@ def main(seed=42):
         print("\nTraining complete!")
 
         # Save checkpoint
-        save_rnn_checkpoint(rnn, checkpoint_path)
+        save_checkpoint(rnn, checkpoint_path)
 
     # Generate trajectories for fixed point analysis using trained RNN
     print("\n" + "=" * 70)
@@ -774,13 +513,27 @@ def main(seed=42):
 
         # Visualize fixed points in 2D and 3D
         print("\nGenerating 2D visualization...")
-        plot_fixed_points_2d(unique_fps, hiddens_np, title="FlipFlop Fixed Points (2D PCA)")
+        config_2d = PlotConfig(
+            title="FlipFlop Fixed Points (2D PCA)",
+            xlabel="PC 1",
+            ylabel="PC 2",
+            figsize=(10, 8),
+            save_path="flipflop_fixed_points_2d.png",
+            show=False
+        )
+        plot_fixed_points_2d(unique_fps, hiddens_np, config=config_2d)
 
         print("\nGenerating 3D visualization...")
+        config_3d = PlotConfig(
+            title="FlipFlop Fixed Points (3D PCA)",
+            figsize=(12, 10),
+            save_path="flipflop_fixed_points_3d.png",
+            show=False
+        )
         plot_fixed_points_3d(
             unique_fps,
             hiddens_np,
-            title="FlipFlop Fixed Points (3D PCA)",
+            config=config_3d,
             plot_batch_idx=list(range(30)),  # Plot first 30 trajectories
             plot_start_time=10  # Start from timestep 10 to avoid initial transients
         )
