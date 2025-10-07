@@ -1,21 +1,23 @@
 """Visualization functions for fixed point analysis."""
 
-import numpy as np
+from __future__ import annotations
+
 import matplotlib.pyplot as plt
+import numpy as np
 from matplotlib.figure import Figure
 from sklearn.decomposition import PCA
-from typing import Optional
 
+from ..slow_points.fixed_points import FixedPoints
 from .config import PlotConfig
 
 __all__ = ["plot_fixed_points_2d", "plot_fixed_points_3d"]
 
 
 def plot_fixed_points_2d(
-    fixed_points: "FixedPoints",
+    fixed_points: FixedPoints,
     state_traj: np.ndarray,
-    config: Optional[PlotConfig] = None,
-    plot_batch_idx: Optional[list[int]] = None,
+    config: PlotConfig | None = None,
+    plot_batch_idx: list[int] | None = None,
     plot_start_time: int = 0,
 ) -> Figure:
     """Plot fixed points and trajectories in 2D using PCA.
@@ -147,10 +149,10 @@ def plot_fixed_points_2d(
 
 
 def plot_fixed_points_3d(
-    fixed_points: "FixedPoints",
+    fixed_points: FixedPoints,
     state_traj: np.ndarray,
-    config: Optional[PlotConfig] = None,
-    plot_batch_idx: Optional[list[int]] = None,
+    config: PlotConfig | None = None,
+    plot_batch_idx: list[int] | None = None,
     plot_start_time: int = 0,
 ) -> Figure:
     """Plot fixed points and trajectories in 3D using PCA.
@@ -174,7 +176,6 @@ def plot_fixed_points_3d(
         ... )
         >>> fig = plot_fixed_points_3d(unique_fps, hiddens, config=config)
     """
-    from mpl_toolkits.mplot3d import Axes3D
 
     # Default config
     if config is None:
@@ -284,11 +285,16 @@ def plot_fixed_points_3d(
         ax.legend()
 
     # Set aspect ratio to be equal
-    max_range = np.array([
-        fps_pca[:, 0].max() - fps_pca[:, 0].min() if fixed_points.n > 0 else 1,
-        fps_pca[:, 1].max() - fps_pca[:, 1].min() if fixed_points.n > 0 else 1,
-        fps_pca[:, 2].max() - fps_pca[:, 2].min() if fixed_points.n > 0 else 1,
-    ]).max() / 2.0
+    max_range = (
+        np.array(
+            [
+                fps_pca[:, 0].max() - fps_pca[:, 0].min() if fixed_points.n > 0 else 1,
+                fps_pca[:, 1].max() - fps_pca[:, 1].min() if fixed_points.n > 0 else 1,
+                fps_pca[:, 2].max() - fps_pca[:, 2].min() if fixed_points.n > 0 else 1,
+            ]
+        ).max()
+        / 2.0
+    )
 
     if fixed_points.n > 0:
         mid_x = (fps_pca[:, 0].max() + fps_pca[:, 0].min()) * 0.5
