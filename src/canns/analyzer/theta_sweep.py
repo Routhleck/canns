@@ -227,7 +227,6 @@ def _theta_sweep_frame_to_image(
     ax_traj.set_aspect("equal", adjustable="box")
     ax_traj.set_xticks([0, data.env_size])
     ax_traj.set_yticks([0, data.env_size])
-    ax_traj.set_title(f"Animal Trajectory (t={frame_idx * data.n_step * data.dt:.2f}s)")
     sns.despine(ax=ax_traj)
 
     # Panel 2: Direction cells
@@ -242,7 +241,6 @@ def _theta_sweep_frame_to_image(
     ax_dc.set_yticks([])
     ax_dc.set_xticks([0, np.pi / 2, np.pi, 3 * np.pi / 2])
     ax_dc.set_xticklabels(["0°", "90°", "180°", "270°"])
-    ax_dc.set_title("Direction Sweep")
 
     # Panel 3: Manifold scatter
     ax_manifold.plot(data.manifold_traj_x, data.manifold_traj_y, color="#888888", lw=1, alpha=0.6)
@@ -264,7 +262,6 @@ def _theta_sweep_frame_to_image(
     )
     ax_manifold.set_aspect("equal")
     ax_manifold.axis("off")
-    ax_manifold.set_title("GC Sweep on Manifold")
     fig.colorbar(heatmap, ax=ax_manifold, fraction=0.046, pad=0.04)
 
     # Panel 4: Real space scatter
@@ -292,9 +289,52 @@ def _theta_sweep_frame_to_image(
     ax_realgc.set_aspect("equal", adjustable="box")
     ax_realgc.set_xticks([])
     ax_realgc.set_yticks([])
-    ax_realgc.set_title("GC Sweep in Real Space")
 
-    fig.subplots_adjust(left=0.05, right=0.98, top=0.9, bottom=0.1, wspace=0.35)
+    fig.subplots_adjust(left=0.05, right=0.98, top=0.75, bottom=0.12, wspace=0.35)
+
+    # Draw titles in a shared row so they keep a common height and avoid clipping in exports.
+    titles_row_y = fig.subplotpars.top + (1.0 - fig.subplotpars.top) * 0.55
+
+    def _axis_midpoint(axis: plt.Axes) -> float:
+        bbox = axis.get_position()
+        return bbox.x0 + bbox.width / 2.0
+
+    title_fontsize = plt.rcParams.get("axes.titlesize")
+    time_seconds = frame_idx * data.n_step * data.dt
+
+    fig.text(
+        _axis_midpoint(ax_traj),
+        titles_row_y,
+        f"Animal Trajectory (t={time_seconds:.2f}s)",
+        ha="center",
+        va="center",
+        fontsize=title_fontsize,
+    )
+    fig.text(
+        _axis_midpoint(ax_dc),
+        titles_row_y,
+        "Direction Sweep",
+        ha="center",
+        va="center",
+        fontsize=title_fontsize,
+    )
+    fig.text(
+        _axis_midpoint(ax_manifold),
+        titles_row_y,
+        "GC Sweep on Manifold",
+        ha="center",
+        va="center",
+        fontsize=title_fontsize,
+    )
+    fig.text(
+        _axis_midpoint(ax_realgc),
+        titles_row_y,
+        "GC Sweep in Real Space",
+        ha="center",
+        va="center",
+        fontsize=title_fontsize,
+    )
+
     canvas.draw()
     image = np.asarray(canvas.buffer_rgba(), dtype=np.uint8).copy()
     plt.close(fig)
@@ -867,7 +907,6 @@ def create_theta_sweep_animation(
     # Setup figure with 4 panels
     fig, axes = plt.subplots(1, 4, figsize=config.figsize, width_ratios=[1, 1, 1, 1])
     ax_traj, ax_dc_placeholder, ax_manifold, ax_realgc = axes
-    fig.tight_layout()
 
     # Panel 1: Animal Trajectory (static trajectory + dynamic dot, time in title)
     ax_traj.plot(data.position4ani[:, 0], data.position4ani[:, 1], color="#F18D00", lw=1)
@@ -877,7 +916,6 @@ def create_theta_sweep_animation(
     ax_traj.set_aspect("equal", adjustable="box")
     ax_traj.set_xticks([0, env_size])
     ax_traj.set_yticks([0, env_size])
-    ax_traj.set_title("Animal Trajectory")
 
     # Panel 2: Direction Cells (Polar plot) - replace placeholder
     ax_dc_placeholder.remove()
@@ -889,7 +927,6 @@ def create_theta_sweep_animation(
     ax_dc.set_yticks([])
     ax_dc.set_xticks([0, np.pi / 2, np.pi, 3 * np.pi / 2])
     ax_dc.set_xticklabels(["0°", "90°", "180°", "270°"])
-    ax_dc.set_title("Direction Sweep", pad=20)
 
     # Panel 3: Grid Cells on Manifold
     # Calculate manifold coordinates and static trajectory
@@ -949,7 +986,6 @@ def create_theta_sweep_animation(
 
     ax_manifold.set_aspect("equal")
     ax_manifold.axis("off")
-    ax_manifold.set_title("GC Sweep on Manifold")
 
     # Panel 4: Grid Cells in Real Space (Pre-compute all tile positions)
     points_all = data.points_all
@@ -1009,9 +1045,53 @@ def create_theta_sweep_animation(
     ax_realgc.set_xlim(0, env_size)
     ax_realgc.set_ylim(0, env_size)
     ax_realgc.set_aspect("equal", adjustable="box")
-    ax_realgc.set_title("GC Sweep in Real Space")
     ax_realgc.set_xticks([])
     ax_realgc.set_yticks([])
+
+    fig.subplots_adjust(left=0.05, right=0.98, top=0.75, bottom=0.12, wspace=0.35)
+
+    # Draw titles in a shared row so they keep a common height and avoid clipping in exports.
+    titles_row_y = fig.subplotpars.top + (1.0 - fig.subplotpars.top) * 0.55
+
+    def _axis_midpoint(axis: plt.Axes) -> float:
+        bbox = axis.get_position()
+        return bbox.x0 + bbox.width / 2.0
+
+    title_fontsize = plt.rcParams.get("axes.titlesize")
+
+    traj_title = fig.text(
+        _axis_midpoint(ax_traj),
+        titles_row_y,
+        "Animal Trajectory",
+        ha="center",
+        va="center",
+        fontsize=title_fontsize,
+    )
+    traj_title.set_animated(True)
+    fig.text(
+        _axis_midpoint(ax_dc),
+        titles_row_y,
+        "Direction Sweep",
+        ha="center",
+        va="center",
+        fontsize=title_fontsize,
+    )
+    fig.text(
+        _axis_midpoint(ax_manifold),
+        titles_row_y,
+        "GC Sweep on Manifold",
+        ha="center",
+        va="center",
+        fontsize=title_fontsize,
+    )
+    fig.text(
+        _axis_midpoint(ax_realgc),
+        titles_row_y,
+        "GC Sweep in Real Space",
+        ha="center",
+        va="center",
+        fontsize=title_fontsize,
+    )
 
     def update(frame):
         """Optimized animation update function"""
@@ -1019,7 +1099,7 @@ def create_theta_sweep_animation(
 
         # Panel 1: Update trajectory dot and title with time
         traj_dot.set_data([data.position4ani[frame, 0]], [data.position4ani[frame, 1]])
-        ax_traj.set_title(f"Animal Trajectory (t={t:.2f}s)")
+        traj_title.set_text(f"Animal Trajectory (t={t:.2f}s)")
 
         # Panel 2: Update direction cells
         hd_line.set_data([data.direction4ani[frame], data.direction4ani[frame]], [0, max_dc])
@@ -1059,6 +1139,7 @@ def create_theta_sweep_animation(
             scatter_real,
             traj_line_real,
             red_dot_real,
+            traj_title,
         )
 
     # Create animation with blit for maximum speed
@@ -1066,8 +1147,6 @@ def create_theta_sweep_animation(
     ani = FuncAnimation(
         fig, update, frames=data.frames, interval=interval_ms, blit=True, repeat=True
     )
-
-    fig.subplots_adjust(left=0.05, right=0.98, top=0.9, bottom=0.12, wspace=0.35)
 
     # Save and/or show animation with progress bar (following plotting utilities pattern)
     if config.save_path:
