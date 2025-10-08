@@ -867,6 +867,7 @@ def create_theta_sweep_animation(
     # Setup figure with 4 panels
     fig, axes = plt.subplots(1, 4, figsize=config.figsize, width_ratios=[1, 1, 1, 1])
     ax_traj, ax_dc_placeholder, ax_manifold, ax_realgc = axes
+    fig.tight_layout()
 
     # Panel 1: Animal Trajectory (static trajectory + dynamic dot, time in title)
     ax_traj.plot(data.position4ani[:, 0], data.position4ani[:, 1], color="#F18D00", lw=1)
@@ -888,7 +889,7 @@ def create_theta_sweep_animation(
     ax_dc.set_yticks([])
     ax_dc.set_xticks([0, np.pi / 2, np.pi, 3 * np.pi / 2])
     ax_dc.set_xticklabels(["0°", "90°", "180°", "270°"])
-    ax_dc.set_title("Direction Sweep")
+    ax_dc.set_title("Direction Sweep", pad=20)
 
     # Panel 3: Grid Cells on Manifold
     # Calculate manifold coordinates and static trajectory
