@@ -1,7 +1,6 @@
 """FixedPoints data container class for storing fixed point analysis results."""
 
 import numpy as np
-from typing import Optional
 
 
 class FixedPoints:
@@ -30,19 +29,19 @@ class FixedPoints:
 
     def __init__(
         self,
-        xstar: Optional[np.ndarray] = None,
-        F_xstar: Optional[np.ndarray] = None,
-        x_init: Optional[np.ndarray] = None,
-        inputs: Optional[np.ndarray] = None,
-        qstar: Optional[np.ndarray] = None,
-        dq: Optional[np.ndarray] = None,
-        n_iters: Optional[np.ndarray] = None,
-        J_xstar: Optional[np.ndarray] = None,
-        dFdu: Optional[np.ndarray] = None,
-        eigval_J_xstar: Optional[np.ndarray] = None,
-        eigvec_J_xstar: Optional[np.ndarray] = None,
-        is_stable: Optional[np.ndarray] = None,
-        cond_id: Optional[np.ndarray] = None,
+        xstar: np.ndarray | None = None,
+        F_xstar: np.ndarray | None = None,
+        x_init: np.ndarray | None = None,
+        inputs: np.ndarray | None = None,
+        qstar: np.ndarray | None = None,
+        dq: np.ndarray | None = None,
+        n_iters: np.ndarray | None = None,
+        J_xstar: np.ndarray | None = None,
+        dFdu: np.ndarray | None = None,
+        eigval_J_xstar: np.ndarray | None = None,
+        eigvec_J_xstar: np.ndarray | None = None,
+        is_stable: np.ndarray | None = None,
+        cond_id: np.ndarray | None = None,
         tol_unique: float = 1e-3,
         dtype=np.float32,
     ):
@@ -229,20 +228,24 @@ class FixedPoints:
 
     def print_summary(self):
         """Print a summary of the fixed points."""
-        print(f"\n=== Fixed Points Summary ===")
+        print("\n=== Fixed Points Summary ===")
         print(f"Number of fixed points: {self.n}")
         print(f"State dimension: {self.n_states}")
         print(f"Input dimension: {self.n_inputs}")
 
         if self.qstar is not None and self.n > 0:
-            print(f"\nq values: min={np.min(self.qstar):.2e}, "
-                  f"median={np.median(self.qstar):.2e}, "
-                  f"max={np.max(self.qstar):.2e}")
+            print(
+                f"\nq values: min={np.min(self.qstar):.2e}, "
+                f"median={np.median(self.qstar):.2e}, "
+                f"max={np.max(self.qstar):.2e}"
+            )
 
         if self.n_iters is not None and self.n > 0:
-            print(f"Iterations: min={np.min(self.n_iters)}, "
-                  f"median={np.median(self.n_iters):.0f}, "
-                  f"max={np.max(self.n_iters)}")
+            print(
+                f"Iterations: min={np.min(self.n_iters)}, "
+                f"median={np.median(self.n_iters):.0f}, "
+                f"max={np.max(self.n_iters)}"
+            )
 
         if self.has_decomposed_jacobians and self.is_stable is not None:
             n_stable = np.sum(self.is_stable)

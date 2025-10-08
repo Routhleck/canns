@@ -5,8 +5,8 @@ in recurrent neural networks using JAX/BrainState.
 """
 
 from .checkpoint import load_checkpoint, save_checkpoint
-from .fixed_points import FixedPoints
 from .finder import FixedPointFinder
+from .fixed_points import FixedPoints
 
 __all__ = [
     "FixedPoints",

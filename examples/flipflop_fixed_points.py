@@ -8,13 +8,13 @@ across multiple channels, flipping each channel's state when it receives an inpu
 Based on the PyTorch implementation by Matt Golub.
 """
 
-import numpy as np
+import brainstate as bst
 import jax
 import jax.numpy as jnp
-import brainstate as bst
+import numpy as np
 
-from canns.analyzer.slow_points import FixedPointFinder, save_checkpoint, load_checkpoint
 from canns.analyzer.plotting import plot_fixed_points_2d, plot_fixed_points_3d, PlotConfig
+from canns.analyzer.slow_points import FixedPointFinder, save_checkpoint, load_checkpoint
 
 
 # ============================================================================
@@ -374,7 +374,6 @@ def train_flipflop_rnn(rnn, train_data, valid_data,
     return losses
 
 
-
 def main(seed=42):
     """Main function to train RNN and find fixed points.
 
@@ -402,10 +401,10 @@ def main(seed=42):
     # Task parameters (matching reference implementation)
     n_bits = 3
     n_hidden = 16  # Match reference: 16 hidden units
-    n_time = 64    # Match reference default
+    n_time = 64  # Match reference default
     n_trials_train = 512  # Training data size
     n_trials_valid = 128  # Validation data size
-    n_trials_test = 128   # Test data size
+    n_trials_test = 128  # Test data size
 
     print(f"\nTask Parameters:")
     print(f"  Number of bits: {n_bits}")
@@ -432,7 +431,7 @@ def main(seed=42):
     rnn = FlipFlopRNN(n_inputs=n_bits, n_hidden=n_hidden, n_outputs=n_bits, rnn_type="tanh", seed=seed)
 
     # Check for checkpoint
-    checkpoint_path = "flipflop_rnn_checkpoint.pkl"
+    checkpoint_path = "flipflop_rnn_checkpoint.msgpack"
     if load_checkpoint(rnn, checkpoint_path):
         print("Using pre-trained model from checkpoint.")
     else:
@@ -473,9 +472,9 @@ def main(seed=42):
         rnn,
         method="joint",
         max_iters=10000,  # Match reference
-        lr_init=1.0,      # Match reference
-        tol_q=1e-6,       # More relaxed tolerance to stop earlier
-        tol_unique=0.5,   # Larger tolerance to merge nearby fixed points
+        lr_init=1.0,  # Match reference
+        tol_q=1e-6,  # More relaxed tolerance to stop earlier
+        tol_unique=0.5,  # Larger tolerance to merge nearby fixed points
         do_compute_jacobians=True,
         do_decompose_jacobians=True,
         outlier_distance_scale=10.0,  # Match reference
@@ -490,8 +489,8 @@ def main(seed=42):
     unique_fps, all_fps = finder.find_fixed_points(
         state_traj=hiddens_np,
         inputs=constant_input,
-        n_inits=1024,      # Match reference
-        noise_scale=0.5,   # Match reference
+        n_inits=1024,  # Match reference
+        noise_scale=0.5,  # Match reference
     )
 
     # Print results
@@ -508,7 +507,7 @@ def main(seed=42):
             stability_str = "Stable" if unique_fps.is_stable[i] else "Unstable"
             max_eig = np.abs(unique_fps.eigval_J_xstar[i, 0])
             print(
-                f"{i+1:<4} {unique_fps.qstar[i]:<12.2e} {stability_str:<12} {max_eig:<12.4f}"
+                f"{i + 1:<4} {unique_fps.qstar[i]:<12.2e} {stability_str:<12} {max_eig:<12.4f}"
             )
 
         # Visualize fixed points in 2D and 3D

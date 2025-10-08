@@ -1,11 +1,11 @@
 """Fixed point finder for BrainState RNN models."""
 
 import time
-import numpy as np
+
+import brainstate as bst
 import jax
 import jax.numpy as jnp
-import brainstate as bst
-from typing import Optional, Tuple
+import numpy as np
 
 from .fixed_points import FixedPoints
 
@@ -110,9 +110,9 @@ class FixedPointFinder:
         inputs: np.ndarray,
         n_inits: int = 1024,
         noise_scale: float = 0.0,
-        valid_bxt: Optional[np.ndarray] = None,
-        cond_ids: Optional[np.ndarray] = None,
-    ) -> Tuple[FixedPoints, FixedPoints]:
+        valid_bxt: np.ndarray | None = None,
+        cond_ids: np.ndarray | None = None,
+    ) -> tuple[FixedPoints, FixedPoints]:
         """Find fixed points from sampled RNN states.
 
         Args:
@@ -127,14 +127,10 @@ class FixedPointFinder:
             unique_fps: FixedPoints object with unique fixed points.
             all_fps: FixedPoints object with all fixed points before filtering.
         """
-        self._print_if_verbose(
-            f"\nSearching for fixed points from {n_inits} initial states.\n"
-        )
+        self._print_if_verbose(f"\nSearching for fixed points from {n_inits} initial states.\n")
 
         # Sample initial states
-        initial_states = self._sample_states(
-            state_traj, n_inits, valid_bxt, noise_scale
-        )
+        initial_states = self._sample_states(state_traj, n_inits, valid_bxt, noise_scale)
 
         # Prepare inputs
         if inputs.shape[0] == 1:
@@ -149,17 +145,11 @@ class FixedPointFinder:
 
         # Run optimization
         if self.method == "joint":
-            all_fps = self._run_joint_optimization(
-                initial_states, inputs_nxd, cond_ids
-            )
+            all_fps = self._run_joint_optimization(initial_states, inputs_nxd, cond_ids)
         elif self.method == "sequential":
-            all_fps = self._run_sequential_optimizations(
-                initial_states, inputs_nxd, cond_ids
-            )
+            all_fps = self._run_sequential_optimizations(initial_states, inputs_nxd, cond_ids)
         else:
-            raise ValueError(
-                f"Unsupported method: {self.method}. Must be 'joint' or 'sequential'."
-            )
+            raise ValueError(f"Unsupported method: {self.method}. Must be 'joint' or 'sequential'.")
 
         # Filter unique fixed points
         unique_fps = all_fps.get_unique()
@@ -179,9 +169,7 @@ class FixedPointFinder:
             self._print_if_verbose(
                 f"\tRandomly selecting {int(self.max_n_unique)} unique fixed points to keep."
             )
-            idx_keep = self.rng.choice(
-                unique_fps.n, int(self.max_n_unique), replace=False
-            )
+            idx_keep = self.rng.choice(unique_fps.n, int(self.max_n_unique), replace=False)
             unique_fps = unique_fps[idx_keep]
 
         # Compute Jacobians
@@ -207,7 +195,7 @@ class FixedPointFinder:
         self,
         state_traj: np.ndarray,
         n_inits: int,
-        valid_bxt: Optional[np.ndarray],
+        valid_bxt: np.ndarray | None,
         noise_scale: float,
     ) -> np.ndarray:
         """Sample initial states from trajectory.
@@ -228,8 +216,7 @@ class FixedPointFinder:
             valid_bxt = np.ones((n_batch, n_time), dtype=bool)
         else:
             assert valid_bxt.shape == (n_batch, n_time), (
-                f"valid_bxt shape {valid_bxt.shape} does not match "
-                f"expected ({n_batch}, {n_time})"
+                f"valid_bxt shape {valid_bxt.shape} does not match expected ({n_batch}, {n_time})"
             )
 
         # Sample trial and time indices
@@ -246,9 +233,7 @@ class FixedPointFinder:
 
         # Add noise
         if noise_scale > 0:
-            states += noise_scale * self.rng.randn(n_inits, n_states).astype(
-                self.np_dtype
-            )
+            states += noise_scale * self.rng.randn(n_inits, n_states).astype(self.np_dtype)
 
         assert not np.any(np.isnan(states)), "Detected NaNs in sampled states."
 
@@ -258,7 +243,7 @@ class FixedPointFinder:
         self,
         initial_states: np.ndarray,
         inputs: np.ndarray,
-        cond_ids: Optional[np.ndarray],
+        cond_ids: np.ndarray | None,
     ) -> FixedPoints:
         """Run joint optimization over all initial states.
 
@@ -344,10 +329,7 @@ class FixedPointFinder:
                         lr_cooldown_counter -= 1
 
             # Print update
-            if (
-                self.super_verbose
-                and iter_count % self.n_iters_per_print_update == 0
-            ):
+            if self.super_verbose and iter_count % self.n_iters_per_print_update == 0:
                 self._print_iter_update(
                     iter_count,
                     t_start,
@@ -407,7 +389,7 @@ class FixedPointFinder:
         self,
         initial_states: np.ndarray,
         inputs: np.ndarray,
-        cond_ids: Optional[np.ndarray],
+        cond_ids: np.ndarray | None,
     ) -> FixedPoints:
         """Run sequential optimizations, one initial state at a time.
 
@@ -419,15 +401,13 @@ class FixedPointFinder:
         Returns:
             FixedPoints object with concatenated results.
         """
-        self._print_if_verbose(
-            "\tFinding fixed points via sequential optimizations..."
-        )
+        self._print_if_verbose("\tFinding fixed points via sequential optimizations...")
 
         fps_list = []
         n_inits = initial_states.shape[0]
 
         for i in range(n_inits):
-            self._print_if_verbose(f"\n\tInitialization {i+1} of {n_inits}:")
+            self._print_if_verbose(f"\n\tInitialization {i + 1} of {n_inits}:")
 
             cond_id_i = None if cond_ids is None else cond_ids[i : i + 1]
 
@@ -540,9 +520,7 @@ class FixedPointFinder:
 
         return fps[idx_keep]
 
-    def _run_additional_iterations_on_outliers(
-        self, fps: FixedPoints
-    ) -> FixedPoints:
+    def _run_additional_iterations_on_outliers(self, fps: FixedPoints) -> FixedPoints:
         """Run additional optimization iterations on q outliers.
 
         Args:
