@@ -30,12 +30,12 @@ class BasicModel(brainstate.nn.Dynamics):
     Example:
         >>> import brainstate
         >>> from canns.models.basic import CANN1D
-        >>> 
+        >>>
         >>> # Create a 1D CANN with 512 neurons
         >>> brainstate.environ.set(dt=0.1)
         >>> model = CANN1D(num=512)
         >>> model.init_state()
-        >>> 
+        >>>
         >>> # Run a single update step
         >>> model.update(inp=0.5)
 
@@ -84,12 +84,12 @@ class BasicModelGroup(brainstate.nn.DynamicsGroup):
     Example:
         >>> import brainstate
         >>> from canns.models.basic import HierarchicalNetwork
-        >>> 
+        >>>
         >>> # Create hierarchical network with 4 grid modules and 64 place cells
         >>> brainstate.environ.set(dt=0.1)
         >>> network = HierarchicalNetwork(num_module=4, num_place=64)
         >>> network.init_state()
-        >>> 
+        >>>
         >>> # Update with velocity and position inputs
         >>> velocity = [0.1, 0.2]  # [vx, vy]
         >>> location = [0.5, 0.5]  # [x, y]

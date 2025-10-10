@@ -185,3 +185,6 @@ cython_debug/
 *.npy
 *.png
 /.ref
+
+# Model checkpoints
+*.pkl

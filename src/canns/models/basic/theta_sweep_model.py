@@ -97,11 +97,11 @@ class DirectionCellNetwork(BasicModel):
     Example:
         >>> import brainstate
         >>> from canns.models.basic.theta_sweep_model import DirectionCellNetwork
-        >>> 
+        >>>
         >>> brainstate.environ.set(dt=1.0)  # 1ms time step
         >>> dc_net = DirectionCellNetwork(num=60)
         >>> dc_net.init_state()
-        >>> 
+        >>>
         >>> # Update with head direction and theta modulation
         >>> head_direction = 0.5  # radians
         >>> theta_modulation = 1.2  # theta phase-dependent gain
@@ -235,6 +235,7 @@ class DirectionCellNetwork(BasicModel):
         Returns:
             Array of shape (num, num): Connectivity matrix
         """
+
         @jax.vmap
         def get_J(xbins):
             d = self.calculate_dist(xbins - self.x)
@@ -330,11 +331,11 @@ class GridCellNetwork(BasicModel):
     Example:
         >>> import brainstate
         >>> from canns.models.basic.theta_sweep_model import GridCellNetwork
-        >>> 
+        >>>
         >>> brainstate.environ.set(dt=1.0)
         >>> gc_net = GridCellNetwork(num_dc=60, num_gc_x=30, mapping_ratio=1.5)
         >>> gc_net.init_state()
-        >>> 
+        >>>
         >>> # Update with position, direction activity, and theta modulation
         >>> position = [0.5, 0.3]  # animal position
         >>> dir_activity = np.random.rand(60)  # direction cell firing
@@ -450,6 +451,7 @@ class GridCellNetwork(BasicModel):
         Returns:
             Array of shape (num, num): Recurrent connectivity matrix
         """
+
         @jax.vmap
         def kernel(v):
             # v: (2,) location in (x,y)
