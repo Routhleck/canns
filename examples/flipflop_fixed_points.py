@@ -12,14 +12,11 @@ import brainstate as bst
 import jax
 import jax.numpy as jnp
 import numpy as np
+import jax.tree_util as jtu
 
 from canns.analyzer.plotting import plot_fixed_points_2d, plot_fixed_points_3d, PlotConfig
 from canns.analyzer.slow_points import FixedPointFinder, save_checkpoint, load_checkpoint
 
-
-# ============================================================================
-# FlipFlop Data Generator
-# ============================================================================
 
 class FlipFlopData:
     """Generator for flip-flop memory task data."""
@@ -80,10 +77,6 @@ class FlipFlopData:
             "targets": targets.astype(np.float32),
         }
 
-
-# ============================================================================
-# FlipFlop RNN Model
-# ============================================================================
 
 class FlipFlopRNN(bst.nn.Module):
     """RNN model for the flip-flop memory task."""
@@ -186,20 +179,7 @@ class FlipFlopRNN(bst.nn.Module):
         return h_next
 
     def __call__(self, inputs, hidden=None):
-        """Forward pass through the RNN.
-
-        This can handle two cases:
-        1. Full sequence: inputs [batch x time x input_dim] -> outputs [batch x time x output], hiddens [batch x time x hidden]
-        2. Single step (for fixed point finder): inputs [batch x 1 x input_dim], hidden [batch x hidden] -> output, h_next
-
-        Args:
-            inputs: [batch_size x n_time x n_inputs] input sequence.
-            hidden: [batch_size x n_hidden] initial hidden state (optional).
-
-        Returns:
-            outputs: [batch_size x n_time x n_outputs] output sequence.
-            hiddens: [batch_size x (n_time or 1) x n_hidden] or [batch x hidden] hidden state.
-        """
+        """Forward pass through the RNN. Optimized with jax.lax.scan."""
         batch_size = inputs.shape[0]
         n_time = inputs.shape[1]
 
@@ -209,37 +189,32 @@ class FlipFlopRNN(bst.nn.Module):
         else:
             h = hidden
 
-        # Single step case (for fixed point finder)
+        # Single-step computation mode for the fixed-point finder
         if n_time == 1:
             x_t = inputs[:, 0, :]
             h_next = self.step(x_t, h)
-            # Return output and next hidden (without time dimension)
             y = h_next @ self.w_out.value + self.b_out.value
             return y[:, None, :], h_next
 
         # Full sequence case
-        outputs_list = []
-        hiddens_list = []
+        def scan_fn(carry, x_t):
+            """Single-step scan function"""
+            h_prev = carry
+            h_next = self.step(x_t, h_prev)
+            y_t = h_next @ self.w_out.value + self.b_out.value
+            return h_next, (y_t, h_next)
 
-        for t in range(n_time):
-            x_t = inputs[:, t, :]
-            h = self.step(x_t, h)
+        # (batch, time, features) -> (time, batch, features)
+        inputs_transposed = inputs.transpose(1, 0, 2)
 
-            # Compute output
-            y_t = h @ self.w_out.value + self.b_out.value
+        # Run the scan
+        _, (outputs_seq, hiddens_seq) = jax.lax.scan(scan_fn, h, inputs_transposed)
 
-            outputs_list.append(y_t[:, None, :])
-            hiddens_list.append(h[:, None, :])
-
-        outputs = jnp.concatenate(outputs_list, axis=1)
-        hiddens = jnp.concatenate(hiddens_list, axis=1)
+        outputs = outputs_seq.transpose(1, 0, 2)
+        hiddens = hiddens_seq.transpose(1, 0, 2)
 
         return outputs, hiddens
 
-
-# ============================================================================
-# Fixed Point Analysis Utilities
-# ============================================================================
 
 def train_flipflop_rnn(rnn, train_data, valid_data,
                        learning_rate=0.01,
@@ -247,23 +222,9 @@ def train_flipflop_rnn(rnn, train_data, valid_data,
                        max_epochs=1000,
                        min_loss=1e-4,
                        print_every=10):
-    """Train the FlipFlop RNN.
-
-    Args:
-        rnn: FlipFlop RNN model.
-        train_data: Training data dict with 'inputs' and 'targets'.
-        valid_data: Validation data dict.
-        learning_rate: Initial learning rate.
-        batch_size: Batch size for training.
-        max_epochs: Maximum number of epochs.
-        min_loss: Target loss to stop training.
-        print_every: Print frequency.
-
-    Returns:
-        losses: List of training losses.
-    """
+    """Train the FlipFlop RNN. Final, robust optimized version with all fixes."""
     print("\n" + "=" * 70)
-    print("Training FlipFlop RNN")
+    print("Training FlipFlop RNN (Final, Robust Optimized Version)")
     print("=" * 70)
 
     # Prepare data
@@ -271,106 +232,120 @@ def train_flipflop_rnn(rnn, train_data, valid_data,
     train_targets = jnp.array(train_data['targets'])
     valid_inputs = jnp.array(valid_data['inputs'])
     valid_targets = jnp.array(valid_data['targets'])
-
     n_train = train_inputs.shape[0]
     n_batches = n_train // batch_size
+
+    # Convert all parameter keys to strings
+    def flatten_key(key):
+        return '.'.join(key) if isinstance(key, tuple) else key
+
+    # Flatten the nested keys
+    trainable_states = {flatten_key(name): state for name, state in rnn.states().items() if
+                        isinstance(state, bst.ParamState)}
+    trainable_params = {name: state.value for name, state in trainable_states.items()}
 
     # Create optimizer
     optimizer = bst.optim.Adam(lr=learning_rate)
 
-    # Get all trainable parameters
-    trainable_params = {}
-    for name, state in rnn.states().items():
-        if isinstance(state, bst.ParamState):
-            trainable_params[name] = state
+    # Register optimizer with flattened-key dictionary
+    optimizer.register_trainable_weights(trainable_states)
 
-    optimizer.register_trainable_weights(trainable_params)
+    # Define JIT-compiled gradient steps
+    @jax.jit
+    def grad_step(params, batch_inputs, batch_targets):
+        """Pure function to compute loss and gradients"""
 
-    # Learning rate scheduler (simple exponential decay)
+        def forward_pass(p, inputs):
+            batch_size = inputs.shape[0]
+            h = jnp.tile(p['h0'], (batch_size, 1))
+
+            def scan_fn(carry, x_t):
+                h_prev = carry
+                if rnn.rnn_type == "tanh":
+                    h_next = jnp.tanh(x_t @ p['w_ih'] + h_prev @ p['w_hh'] + p['b_h'])
+                elif rnn.rnn_type == "gru":
+                    r = jax.nn.sigmoid(x_t @ p['w_ir'] + h_prev @ p['w_hr'] + p['b_r'])
+                    z = jax.nn.sigmoid(x_t @ p['w_iz'] + h_prev @ p['w_hz'] + p['b_z'])
+                    n = jnp.tanh(x_t @ p['w_in'] + (r * h_prev) @ p['w_hn'] + p['b_n'])
+                    h_next = (1 - z) * n + z * h_prev
+                else:
+                    h_next = h_prev
+                y_t = h_next @ p['w_out'] + p['b_out']
+                return h_next, y_t
+
+            inputs_transposed = inputs.transpose(1, 0, 2)
+            _, outputs_seq = jax.lax.scan(scan_fn, h, inputs_transposed)
+            outputs = outputs_seq.transpose(1, 0, 2)
+            return outputs
+
+        def loss_fn(p):
+            outputs = forward_pass(p, batch_inputs)
+            return jnp.mean((jnp.tanh(outputs) - batch_targets) ** 2)
+
+        loss_val, grads = jax.value_and_grad(loss_fn)(params)
+        return loss_val, grads
+
+    def clip_by_global_norm(tree, max_norm=3.0):
+        total = jnp.sqrt(sum([jnp.sum(jnp.square(g)) for g in jtu.tree_leaves(tree)]))
+        scale = jnp.minimum(1.0, max_norm / (total + 1e-8))
+        return jtu.tree_map(lambda g: g * scale, tree)
+
+    # LR scheduling logic
     lr_decay_factor = 0.95
     lr_decay_patience = 20
     best_valid_loss = float('inf')
     patience_counter = 0
-
     losses = []
-
-    print(f"\nTraining parameters:")
+    print("\nTraining parameters:")
     print(f"  Batch size: {batch_size}")
     print(f"  Learning rate: {learning_rate}")
-    print(f"  Max epochs: {max_epochs}")
-    print(f"  Target loss: {min_loss:.2e}")
-    print(f"  Number of trainable params: {len(trainable_params)}")
 
-    # Training loop
     for epoch in range(max_epochs):
-        # Shuffle training data
         perm = np.random.permutation(n_train)
-        train_inputs_shuffled = train_inputs[perm]
-        train_targets_shuffled = train_targets[perm]
-
         epoch_loss = 0.0
-
         for batch_idx in range(n_batches):
             start_idx = batch_idx * batch_size
             end_idx = start_idx + batch_size
+            batch_inputs = train_inputs[perm[start_idx:end_idx]]
+            batch_targets = train_targets[perm[start_idx:end_idx]]
 
-            batch_inputs = train_inputs_shuffled[start_idx:end_idx]
-            batch_targets = train_targets_shuffled[start_idx:end_idx]
-
-            # Define loss function
-            def loss_fn():
-                outputs, _ = rnn(batch_inputs)
-                # MSE loss
-                return jnp.mean((outputs - batch_targets) ** 2)
-
-            # Compute loss and gradients
-            loss_val = loss_fn()
-            grads = bst.augment.grad(loss_fn, grad_states=trainable_params)()
-
-            # Update parameters (grads is already a dict matching trainable_params)
+            loss_val, grads = grad_step(trainable_params, batch_inputs, batch_targets)
+            grads = clip_by_global_norm(grads, max_norm=3.0)
             optimizer.update(grads)
+            # Use flattened keys to update the parameters
+            trainable_params = {flatten_key(name): state.value for name, state in rnn.states().items() if
+                                isinstance(state, bst.ParamState)}
 
             epoch_loss += float(loss_val)
-
-        # Average loss over batches
         epoch_loss /= n_batches
         losses.append(epoch_loss)
-
-        # Validate
         if epoch % print_every == 0:
             valid_outputs, _ = rnn(valid_inputs)
             valid_loss = float(jnp.mean((valid_outputs - valid_targets) ** 2))
-
             print(f"Epoch {epoch:4d}: train_loss = {epoch_loss:.6f}, "
-                  f"valid_loss = {valid_loss:.6f}, lr = {optimizer.lr():.6f}")
+                  f"valid_loss = {valid_loss:.6f}, lr = {optimizer.lr.lr:.6f}")
 
-            # Learning rate scheduling
             if valid_loss < best_valid_loss:
                 best_valid_loss = valid_loss
                 patience_counter = 0
             else:
                 patience_counter += 1
                 if patience_counter >= lr_decay_patience:
-                    optimizer.lr._lr *= lr_decay_factor
+                    optimizer.lr.lr *= lr_decay_factor
                     patience_counter = 0
-                    print(f"  -> Reduced learning rate to {optimizer.lr():.6f}")
-
-        # Check convergence
+                    print(f"  -> Reduced learning rate to {optimizer.lr.lr:.6f}")
         if epoch_loss < min_loss:
             print(f"\nReached target loss {min_loss:.2e} at epoch {epoch}")
             break
 
-    # Final validation
     valid_outputs, _ = rnn(valid_inputs)
     final_valid_loss = float(jnp.mean((valid_outputs - valid_targets) ** 2))
-
     print("\n" + "=" * 70)
     print("Training Complete!")
     print("=" * 70)
     print(f"Final training loss: {epoch_loss:.6f}")
     print(f"Final validation loss: {final_valid_loss:.6f}")
     print(f"Total epochs: {epoch + 1}")
-
     return losses
 
 
@@ -444,9 +419,9 @@ def main(seed=42):
             rnn,
             train_data,
             valid_data,
-            learning_rate=0.05,
+            learning_rate=0.08,
             batch_size=128,
-            max_epochs=200,
+            max_epochs=1000,
             min_loss=1e-4,
             print_every=10
         )
@@ -472,9 +447,10 @@ def main(seed=42):
         rnn,
         method="joint",
         max_iters=10000,  # Match reference
-        lr_init=1.0,  # Match reference
-        tol_q=1e-6,  # More relaxed tolerance to stop earlier
-        tol_unique=0.5,  # Larger tolerance to merge nearby fixed points
+        lr_init=0.02,  # Match reference
+        tol_q=1e-4,  # More relaxed tolerance to stop earlier
+        final_q_threshold=1e-6,
+        tol_unique=1e-2,  # Larger tolerance to merge nearby fixed points
         do_compute_jacobians=True,
         do_decompose_jacobians=True,
         outlier_distance_scale=10.0,  # Match reference
@@ -490,7 +466,7 @@ def main(seed=42):
         state_traj=hiddens_np,
         inputs=constant_input,
         n_inits=1024,  # Match reference
-        noise_scale=0.5,  # Match reference
+        noise_scale=0.1,  # Match reference
     )
 
     # Print results

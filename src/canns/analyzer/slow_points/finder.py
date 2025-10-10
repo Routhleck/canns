@@ -40,6 +40,7 @@ class FixedPointFinder:
         do_rerun_q_outliers: bool = False,
         outlier_q_scale: float = 10.0,
         max_n_unique: float = np.inf,
+        final_q_threshold: float = 1e-8,
         dtype: str = "float32",
         verbose: bool = True,
         super_verbose: bool = False,
@@ -87,6 +88,7 @@ class FixedPointFinder:
         self.do_rerun_q_outliers = bool(do_rerun_q_outliers)
         self.outlier_q_scale = float(outlier_q_scale)
         self.max_n_unique = max_n_unique
+        self.final_q_threshold = float(final_q_threshold)
         self.verbose = bool(verbose)
         self.super_verbose = bool(super_verbose)
         self.n_iters_per_print_update = int(n_iters_per_print_update)
@@ -187,6 +189,28 @@ class FixedPointFinder:
             if self.do_decompose_jacobians:
                 unique_fps.decompose_jacobians(verbose=self.verbose)
 
+        # Set the conditions for final filtering
+        if self.final_q_threshold > 0 and unique_fps.n > 0:
+            self._print_if_verbose(
+                f"\tApplying final q-value filter (q < {self.final_q_threshold:.1e})..."
+            )
+            n_before_filter = unique_fps.n
+
+
+            idx_keep = np.where(unique_fps.qstar < self.final_q_threshold)[0]
+
+            unique_fps = unique_fps[idx_keep]
+
+            n_after_filter = unique_fps.n
+            n_discarded = n_before_filter - n_after_filter
+
+            if self.verbose and n_discarded > 0:
+                self._print_if_verbose(
+                    f"\t\tExcluded {n_discarded} low-quality fixed points."
+                )
+            self._print_if_verbose(
+                f"\t\t{n_after_filter} high-quality fixed points remain."
+            )
         self._print_if_verbose("\tFixed point finding complete.\n")
 
         return unique_fps, all_fps
