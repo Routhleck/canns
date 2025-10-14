@@ -679,18 +679,17 @@ class ClosedLoopNavigationTask(Task):
                 x_right = grid.x_edges[col + 1]
                 x_center = (x_left + x_right) / 2
                 weight = grid.costs[row, col]
-                label = "MAX" if weight == INT32_MAX else str(weight)
-                text_color = "#000000" if weight != INT32_MAX else "#ffffff"
-                ax.text(
-                    x_center,
-                    y_center,
-                    label,
-                    ha="center",
-                    va="center",
-                    fontsize=7,
-                    color=text_color,
-                    alpha=0.9,
-                )
+                if weight != INT32_MAX:
+                    ax.text(
+                        x_center,
+                        y_center,
+                        str(weight),
+                        ha="center",
+                        va="center",
+                        fontsize=7,
+                        color="#000000",
+                        alpha=0.9,
+                    )
 
         ax.set_aspect("equal")
 

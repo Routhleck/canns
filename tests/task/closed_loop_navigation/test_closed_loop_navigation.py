@@ -34,7 +34,7 @@ def test_tmaze_movement_cost_and_geodesic_visualisation(tmp_path):
     task._plot_movement_cost_grid(ax, grid, add_colorbar=True)
     labels = {text.get_text() for text in ax.texts}
     assert "1" in labels
-    assert "MAX" in labels
+    assert (grid.costs == INT32_MAX).any()
     plt.close(fig)
 
     movement_path = tmp_path / "tmaze_movement_cost.png"
