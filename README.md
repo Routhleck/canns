@@ -22,7 +22,7 @@ CANNs is a Python library built on top of the Brain Simulation Ecosystem (`brain
 ## Highlights
 
 - **Model families** – `canns.models.basic` ships 1D/2D CANNs (including SFA variants and hierarchical networks), while `canns.models.brain_inspired` adds Hopfield-style systems.
-- **Task-first API** – `canns.task.tracking` and `canns.task.spatial_navigation` generate smooth tracking inputs, population coding stimuli, or import experimental trajectories.
+- **Task-first API** – `canns.task.tracking` and `canns.task.open_loop_navigation` generate smooth tracking inputs, population coding stimuli, or import experimental trajectories.
 - **Rich analysis suite** – `canns.analyzer` covers energy landscapes, tuning curves, spike embeddings, UMAP/TDA helpers, and theta-sweep animations.
 - **Unified training** – `canns.trainer.HebbianTrainer` implements generic Hebbian learning and prediction, layered on the abstract `Trainer` base.
 - **Pipelines out of the box** – `canns.pipeline.ThetaSweepPipeline` orchestrates navigation tasks, direction/grid-cell networks, and visualisation in a single call.

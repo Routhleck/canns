@@ -23,7 +23,7 @@ CANNs 是一个构建于脑模拟生态（`brainstate`, `brainunit`）之上的 
 ## 亮点概览
 
 - **模型家族** – `canns.models.basic` 提供 1D/2D CANN（含 SFA 变体与分层网络），`canns.models.brain_inspired` 进一步加入类 Hopfield 系统。
-- **任务优先 API** – `canns.task.tracking` 与 `canns.task.spatial_navigation` 可生成平滑跟踪输入、群体编码刺激，或导入实验轨迹。
+- **任务优先 API** – `canns.task.tracking` 与 `canns.task.open_loop_navigation` 可生成平滑跟踪输入、群体编码刺激，或导入实验轨迹。
 - **丰富分析套件** – `canns.analyzer` 覆盖能量景观、调谐曲线、脉冲嵌入、UMAP/TDA 辅助工具，以及 theta 扫描动画。
 - **统一训练框架** – `canns.trainer.HebbianTrainer` 实现通用的 Hebb 学习与预测，基于抽象 `Trainer` 基类。
 - **即取即用的流水线** – `canns.pipeline.ThetaSweepPipeline` 一次性编排导航任务、方向/网格细胞网络与可视化。

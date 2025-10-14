@@ -43,6 +43,6 @@ advanced_theta_sweep_pipeline.py
 Usage tips
 ----------
 
-- Both scripts depend on :mod:`~src.canns.task.spatial_navigation` and :mod:`~src.canns.analyzer.theta_sweep`.
+- Both scripts depend on :mod:`~src.canns.task.open_loop_navigation` and :mod:`~src.canns.analyzer.theta_sweep`.
   Revisit :doc:`tasks` or :doc:`models` if you need implementation details.
 - Animation rendering can take a few minutes—watch the progress bar. On headless machines keep ``show=False`` or install ``imageio[ffmpeg]``.

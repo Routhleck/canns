@@ -55,6 +55,7 @@ exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 autoapi_dirs = ['../src/']
 autoapi_type = 'python'
 autoapi_template_dir = '_templates/autoapi'
+autoapi_root = 'autoapi'
 autoapi_options = [
     'members',
     'undoc-members', 

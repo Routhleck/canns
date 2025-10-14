@@ -3,11 +3,11 @@ import brainunit as u
 import numpy as np
 
 from canns.models.basic import HierarchicalNetwork
-from canns.task.spatial_navigation import SpatialNavigationTask
+from canns.task.open_loop_navigation import OpenLoopNavigationTask
 
 def test_path_integration():
     brainstate.environ.set(dt=0.1)
-    task_sn = SpatialNavigationTask(
+    task_sn = OpenLoopNavigationTask(
         width=5,
         height=5,
         speed_mean=0.04,
