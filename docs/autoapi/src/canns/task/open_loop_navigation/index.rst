@@ -1,7 +1,7 @@
-src.canns.task.spatial_navigation
-=================================
+src.canns.task.open_loop_navigation
+===================================
 
-.. py:module:: src.canns.task.spatial_navigation
+.. py:module:: src.canns.task.open_loop_navigation
 
 
 Classes
@@ -9,7 +9,7 @@ Classes
 
 .. autoapisummary::
 
-   src.canns.task.spatial_navigation.SpatialNavigationTask
+   src.canns.task.open_loop_navigation.OpenLoopNavigationTask
 
 
 Functions
@@ -17,19 +17,19 @@ Functions
 
 .. autoapisummary::
 
-   src.canns.task.spatial_navigation.map2pi
+   src.canns.task.open_loop_navigation.map2pi
 
 
 Module Contents
 ---------------
 
-.. py:class:: SpatialNavigationTask(duration=20.0, start_pos=(2.5, 2.5), initial_head_direction=None, progress_bar=True, width=5, height=5, dimensionality='2D', boundary_conditions='solid', scale=None, dx=0.01, boundary=None, walls=None, holes=None, objects=None, dt=None, speed_mean=0.04, speed_std=0.016, speed_coherence_time=0.7, rotational_velocity_coherence_time=0.08, rotational_velocity_std=120 * np.pi / 180, head_direction_smoothing_timescale=0.15, thigmotaxis=0.5, wall_repel_distance=0.1, wall_repel_strength=1.0)
+.. py:class:: OpenLoopNavigationTask(duration=20.0, start_pos=(2.5, 2.5), initial_head_direction=None, progress_bar=True, width=5, height=5, dimensionality='2D', boundary_conditions='solid', scale=None, dx=0.01, boundary=None, walls=None, holes=None, objects=None, dt=None, speed_mean=0.04, speed_std=0.016, speed_coherence_time=0.7, rotational_velocity_coherence_time=0.08, rotational_velocity_std=120 * np.pi / 180, head_direction_smoothing_timescale=0.15, thigmotaxis=0.5, wall_repel_distance=0.1, wall_repel_strength=1.0)
 
    Bases: :py:obj:`src.canns.task._base.Task`
 
 
-   A base class for spatial navigation tasks, inheriting from BaseTask.
-   This class is intended to be extended for specific spatial navigation tasks.
+   Open-loop spatial navigation task that synthesises trajectories without
+   incorporating real-time feedback from a controller.
 
    Initializes the Task instance.
 
@@ -97,7 +97,7 @@ Module Contents
       positions = np.array([[0, 0], [0.1, 0.05], [0.2, 0.1], ...])  # shape: (n_steps, 2)
       times = np.array([0, 0.1, 0.2, ...])  # shape: (n_steps,)
 
-      task = SpatialNavigationTask(...)
+      task = OpenLoopNavigationTask(...)
       task.import_data(position_data=positions, times=times)
 
       # Or with uniform time steps

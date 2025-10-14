@@ -66,7 +66,7 @@ Module Contents
    :param direction_cell_params: Parameters for DirectionCellNetwork. If None, uses defaults
    :param grid_cell_params: Parameters for GridCellNetwork. If None, uses defaults
    :param theta_params: Parameters for theta modulation. If None, uses defaults
-   :param spatial_nav_params: Additional parameters for SpatialNavigationTask. If None, uses defaults
+   :param spatial_nav_params: Additional parameters for OpenLoopNavigationTask. If None, uses defaults
 
 
    .. py:method:: run(output_dir = 'theta_sweep_results', save_animation = True, save_plots = True, show_plots = False, animation_fps = 10, animation_dpi = 120, verbose = True)

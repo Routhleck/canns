@@ -2,12 +2,12 @@
 Example: Import External Trajectory Data
 
 This example demonstrates how to import external position coordinates
-into SpatialNavigationTask instead of using the built-in random motion model.
+into OpenLoopNavigationTask instead of using the built-in random motion model.
 """
 
 import numpy as np
 import brainunit as u
-from canns.task.spatial_navigation import SpatialNavigationTask
+from canns.task.open_loop_navigation import OpenLoopNavigationTask
 
 # Environment parameters
 Env_size = 2.2
@@ -67,7 +67,7 @@ for i in range(1, n_steps):
 head_directions = None
 
 # Create spatial navigation task
-snt = SpatialNavigationTask(
+snt = OpenLoopNavigationTask(
     duration=simulate_time,
     width=Env_size,
     height=Env_size,

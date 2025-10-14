@@ -44,6 +44,6 @@ advanced_theta_sweep_pipeline.py
 使用建议
 --------
 
-- 两个示例都依赖 :mod:`canns.task.spatial_navigation <src.canns.task.spatial_navigation>` 与 :mod:`canns.analyzer.theta_sweep <src.canns.analyzer.theta_sweep>`。
+- 两个示例都依赖 :mod:`canns.task.open_loop_navigation <src.canns.task.open_loop_navigation>` 与 :mod:`canns.analyzer.theta_sweep <src.canns.analyzer.theta_sweep>`。
   若需进一步了解其内部实现，可回顾 :doc:`tasks` / :doc:`models` 章节。
 - 渲染动画时可能需要数分钟，请关注终端进度条；若在无显示环境运行，可保持 ``show=False``。

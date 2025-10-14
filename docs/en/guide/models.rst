@@ -83,7 +83,7 @@ theta_sweep_grid_cell_network.py
   - :mod:`~src.canns.analyzer.theta_sweep`
 - **Workflow**:
 
-  1. Build a :class:`~src.canns.task.spatial_navigation.SpatialNavigationTask` to generate short trajectories and theta gains.
+  1. Build a :class:`~src.canns.task.open_loop_navigation.OpenLoopNavigationTask` to generate trajectories and theta gains.
   2. Step the networks with ``calculate_theta_modulation`` driving the oscillatory envelopes.
   3. Visualise the results using
      :func:`~src.canns.analyzer.theta_sweep.plot_population_activity_with_theta`,
