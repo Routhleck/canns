@@ -107,3 +107,36 @@ def test_geodesic_handles_single_accessible_cell(tmp_path):
     result = task.compute_geodesic_distance_matrix(1.0, 1.0)
     assert result.distances.shape == (1, 1)
     assert np.allclose(result.distances, 0.0)
+
+
+def test_geodesic_with_walls_and_holes():
+    task = ClosedLoopNavigationTask(
+        boundary=[[0.0, 0.0], [1.0, 0.0], [1.0, 1.0], [0.0, 1.0]],
+        walls=[
+            [
+                [0.0, 0.5],
+                [0.5, 0.5],
+            ]
+        ],
+        holes=[
+            [
+                [0.5, 0.0],
+                [1.0, 0.0],
+                [1.0, 0.5],
+                [0.5, 0.5],
+            ]
+        ],
+        dt=0.01,
+    )
+
+    grid = task.build_movement_cost_grid(0.5, 0.5)
+    assert grid.costs.shape == (2, 2)
+    blocked = int((grid.costs == INT32_MAX).sum())
+    assert blocked >= 1
+
+    result = task.compute_geodesic_distance_matrix(0.5, 0.5)
+    accessible = result.accessible_indices.shape[0]
+    assert accessible >= 2
+    assert np.allclose(result.distances, result.distances.T)
+    assert np.all(np.isfinite(np.diag(result.distances)))
+    assert np.any((result.distances > 0) & np.isfinite(result.distances))

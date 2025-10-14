@@ -69,3 +69,5 @@ hierarchical_path_integration.py
   - 将返回的 :class:`MovementCostGrid
     <src.canns.task.closed_loop_navigation.MovementCostGrid>` 传递给自定义规划器或导出为调试文件。
   - 可参考 ``tests/task/closed_loop_navigation`` 中的 pytest 用例，按需拓展迷宫结构的回归测试。
+  - 运行 ``uv run python examples/cann/closed_loop_complex_environment.py`` 快速生成包含墙体与洞口的
+    可视化示例，结果会保存到 ``figures/closed_loop_complex``。

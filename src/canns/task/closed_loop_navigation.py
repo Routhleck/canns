@@ -301,6 +301,7 @@ class ClosedLoopNavigationTask(Task):
         gridline_color: str = "#2b2d42",
         cost_alpha: float = 0.6,
         show_colorbar: bool = False,
+        cost_legend_loc: str | None = None,
     ) -> None:
         fig, ax = plt.subplots(1, 1, figsize=(3, 3))
 
@@ -333,6 +334,7 @@ class ClosedLoopNavigationTask(Task):
                     gridline_color=gridline_color,
                     alpha=cost_alpha,
                     add_colorbar=show_colorbar,
+                    legend_loc=cost_legend_loc,
                 )
 
             plt.savefig(save_path) if save_path else None
@@ -485,7 +487,7 @@ class ClosedLoopNavigationTask(Task):
         accessible_indices = np.argwhere(mask)
         if accessible_indices.size == 0:
             return GeodesicDistanceResult(
-                distances=np.zeros((0, 0), dtype=float),
+                distances=np.full((0, 0), np.nan, dtype=float),
                 accessible_indices=accessible_indices,
                 cost_grid=grid,
             )
@@ -638,6 +640,7 @@ class ClosedLoopNavigationTask(Task):
         gridline_color: str = "#2b2d42",
         alpha: float = 0.6,
         add_colorbar: bool = False,
+        legend_loc: str | None = None,
     ) -> None:
         """Overlay the movement cost grid onto an existing axes."""
 
@@ -692,9 +695,24 @@ class ClosedLoopNavigationTask(Task):
         ax.set_aspect("equal")
 
         if add_colorbar:
-            cbar = plt.colorbar(mesh, ax=ax, fraction=0.046, pad=0.04)
-            cbar.set_ticks([0, 1])
-            cbar.set_ticklabels(["Free", "Blocked"])
+            cbar = plt.colorbar(
+                mesh,
+                ax=ax,
+                fraction=0.046,
+                pad=0.04,
+                boundaries=[-0.5, 0.5, 1.5],
+                ticks=[0, 1],
+            )
+            cbar.ax.set_yticklabels(["Free", "Blocked"])
+
+        if legend_loc:
+            from matplotlib.patches import Patch
+
+            handles = [
+                Patch(facecolor=free_color, edgecolor=gridline_color, label="Free"),
+                Patch(facecolor=blocked_color, edgecolor=gridline_color, label="Blocked"),
+            ]
+            ax.legend(handles=handles, loc=legend_loc, framealpha=0.8)
 
 
 class TMazeClosedLoopNavigationTask(ClosedLoopNavigationTask):

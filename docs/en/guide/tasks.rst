@@ -75,3 +75,5 @@ Closed-loop navigation utilities
     export it to disk for debugging.
   - Use the accompanying pytest in ``tests/task/closed_loop_navigation`` as a template for custom maze
     regression tests.
+  - Render a more complex environment by running ``uv run python examples/cann/closed_loop_complex_environment.py``,
+    which saves both the movement-cost overlay and geodesic heatmap to ``figures/closed_loop_complex``.
