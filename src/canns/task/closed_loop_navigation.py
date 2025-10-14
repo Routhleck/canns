@@ -140,11 +140,10 @@ def _segment_intersects_rect(
         (rect_corners[3], rect_corners[0]),
     )
 
-    for edge_start, edge_end in rect_edges:
-        if _segments_intersect(p1, p2, edge_start, edge_end):
-            return True
-
-    return False
+    return any(
+        _segments_intersect(p1, p2, edge_start, edge_end)
+        for edge_start, edge_end in rect_edges
+    )
 
 
 def _polygon_intersects_rect(
@@ -363,16 +362,10 @@ class ClosedLoopNavigationTask(Task):
                 ax.text(0.5, 0.5, "No traversable cells", ha="center", va="center")
                 ax.axis("off")
             else:
-                matrix = distances.copy()
+                matrix = self._prepare_geodesic_plot_matrix(
+                    distances, normalize=normalize
+                )
                 finite_mask = np.isfinite(matrix)
-                if not finite_mask.any():
-                    matrix = np.zeros_like(matrix)
-                elif normalize:
-                    max_val = np.nanmax(matrix[finite_mask])
-                    if max_val > 0:
-                        matrix = matrix / max_val
-
-                matrix[~finite_mask] = np.nan
                 im = ax.imshow(matrix, cmap=cmap, interpolation="nearest")
                 ax.set_title("Geodesic distances")
                 ax.set_xlabel("Accessible cell index")
@@ -516,6 +509,23 @@ class ClosedLoopNavigationTask(Task):
             cost_grid=grid,
         )
 
+    @staticmethod
+    def _prepare_geodesic_plot_matrix(
+        distances: np.ndarray, *, normalize: bool = False
+    ) -> np.ndarray:
+        matrix = distances.copy()
+        finite_mask = np.isfinite(matrix)
+        if not finite_mask.any():
+            return np.zeros_like(matrix)
+
+        if normalize:
+            max_val = np.nanmax(matrix[finite_mask])
+            if max_val > 0:
+                matrix[finite_mask] = matrix[finite_mask] / max_val
+
+        matrix[~finite_mask] = np.nan
+        return matrix
+
     def _resolve_boundary_coordinates(self) -> np.ndarray:
         if self.boundary is not None and len(self.boundary) >= 3:
             return np.asarray(self.boundary, dtype=float)
@@ -542,8 +552,13 @@ class ClosedLoopNavigationTask(Task):
             return False
 
         for segment in wall_segments:
-            if _segment_intersects_rect(
-                segment[0], segment[-1], x_left, x_right, y_bottom, y_top
+            if len(segment) < 2:
+                continue
+            if any(
+                _segment_intersects_rect(
+                    segment[i], segment[i + 1], x_left, x_right, y_bottom, y_top
+                )
+                for i in range(len(segment) - 1)
             ):
                 return True
         return False
@@ -709,4 +724,5 @@ class TMazeClosedLoopNavigationTask(ClosedLoopNavigationTask):
             start_pos=start_pos,
             boundary=boundary,
             dt=dt,
+            **kwargs,
         )

@@ -13,7 +13,7 @@ from tqdm import tqdm
 
 from ._base import Task
 
-__all__ = ["map2pi", "OpenLoopNavigationTask"]
+__all__ = ["map2pi", "OpenLoopNavigationTask", "OpenLoopNavigationData"]
 
 
 def map2pi(a):
@@ -155,6 +155,7 @@ class OpenLoopNavigationTask(Task):
         self.agent = Agent(Environment=self.env, params=copy.deepcopy(self.agent_params))
         self.agent.pos = np.array(start_pos)
         self.agent.dt = self.dt
+
 
         # Set initial movement direction if specified
         if self.initial_head_direction is not None:
