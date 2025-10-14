@@ -1,3 +1,3 @@
-from . import spatial_navigation, tracking
+from . import closed_loop_navigation, open_loop_navigation, tracking
 
-__all__ = ["spatial_navigation", "tracking"]
+__all__ = ["closed_loop_navigation", "open_loop_navigation", "tracking"]

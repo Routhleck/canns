@@ -77,7 +77,7 @@ theta_sweep_grid_cell_network.py
   - :class:`GridCellNetwork <src.canns.models.basic.theta_sweep_model.GridCellNetwork>`
   - :mod:`canns.analyzer.theta_sweep <src.canns.analyzer.theta_sweep>`
 - **运行流程**：
-  1. 建立 ``SpatialNavigationTask``，生成场地内的短程轨迹及 theta 辅助数据。
+  1. 建立 ``OpenLoopNavigationTask``，以生成场地内的短程轨迹及 theta 辅助数据。
   2. 初始化方向细胞/网格细胞网络，循环调用 ``calculate_theta_modulation`` 更新活动。
   3. 调用 :func:`plot_population_activity_with_theta() <src.canns.analyzer.theta_sweep.plot_population_activity_with_theta>`、:func:`plot_grid_cell_manifold() <src.canns.analyzer.theta_sweep.plot_grid_cell_manifold>` 与 :func:`create_theta_sweep_animation() <src.canns.analyzer.theta_sweep.create_theta_sweep_animation>` 输出图像与动图。
 - **输出**：生成 theta_sweep_animation.gif 及若干 PNG。
@@ -90,5 +90,5 @@ theta_sweep_grid_cell_network.py
 --------
 
 - :doc:`tasks` 中的 ``hierarchical_path_integration.py``、``import_external_trajectory.py``
-  展示了与 ``SpatialNavigationTask`` 联动的场景，适用于空间导航或外部数据导入。
+  展示了与 ``OpenLoopNavigationTask`` 联动的场景，适用于空间导航或外部数据导入。
 - 若需要纯视觉化对照，可直接查看仓库根目录下生成的 GIF/PNG（文件名以 ``test_`` 开头）。

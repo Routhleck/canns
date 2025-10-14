@@ -23,7 +23,7 @@ from ..models.basic.theta_sweep_model import (
     GridCellNetwork,
     calculate_theta_modulation,
 )
-from ..task.spatial_navigation import SpatialNavigationTask
+from ..task.open_loop_navigation import OpenLoopNavigationTask
 from ._base import Pipeline
 
 
@@ -70,7 +70,7 @@ class ThetaSweepPipeline(Pipeline):
             direction_cell_params: Parameters for DirectionCellNetwork. If None, uses defaults
             grid_cell_params: Parameters for GridCellNetwork. If None, uses defaults
             theta_params: Parameters for theta modulation. If None, uses defaults
-            spatial_nav_params: Additional parameters for SpatialNavigationTask. If None, uses defaults
+            spatial_nav_params: Additional parameters for OpenLoopNavigationTask. If None, uses defaults
         """
         super().__init__()
         # Store trajectory data
@@ -183,7 +183,7 @@ class ThetaSweepPipeline(Pipeline):
 
     def _get_default_spatial_nav_params(self) -> dict[str, Any]:
         """
-        Get default parameters for SpatialNavigationTask initialization.
+        Get default parameters for OpenLoopNavigationTask initialization.
 
         Returns:
             dict: Default parameters including environment size, dt, etc.
@@ -195,11 +195,11 @@ class ThetaSweepPipeline(Pipeline):
             "progress_bar": False,
         }
 
-    def _setup_spatial_navigation_task(self):
+    def _setup_open_loop_navigation_task(self):
         """
         Set up and configure the spatial navigation task with trajectory data.
 
-        Creates SpatialNavigationTask, imports external trajectory data,
+        Creates OpenLoopNavigationTask, imports external trajectory data,
         and calculates theta sweep parameters (velocity, angular speed, etc.).
         """
         # Calculate duration from trajectory data
@@ -209,7 +209,7 @@ class ThetaSweepPipeline(Pipeline):
             duration = len(self.trajectory_data) * self.dt
 
         # Create spatial navigation task
-        self.spatial_nav_task = SpatialNavigationTask(duration=duration, **self.spatial_nav_params)
+        self.spatial_nav_task = OpenLoopNavigationTask(duration=duration, **self.spatial_nav_params)
 
         # Import external trajectory data
         self.spatial_nav_task.import_data(
@@ -370,7 +370,7 @@ class ThetaSweepPipeline(Pipeline):
         # Setup pipeline components
         if verbose:
             print("📊 Setting up spatial navigation task...")
-        self._setup_spatial_navigation_task()
+        self._setup_open_loop_navigation_task()
 
         if verbose:
             print("🧠 Setting up neural networks...")
