@@ -365,7 +365,6 @@ class ClosedLoopNavigationTask(Task):
                 matrix = self._prepare_geodesic_plot_matrix(
                     distances, normalize=normalize
                 )
-                finite_mask = np.isfinite(matrix)
                 im = ax.imshow(matrix, cmap=cmap, interpolation="nearest")
                 ax.set_title("Geodesic distances")
                 ax.set_xlabel("Accessible cell index")
