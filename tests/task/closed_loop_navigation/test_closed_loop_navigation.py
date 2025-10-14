@@ -129,12 +129,13 @@ def test_geodesic_with_walls_and_holes():
         dt=0.01,
     )
 
-    grid = task.build_movement_cost_grid(0.5, 0.5)
-    assert grid.costs.shape == (2, 2)
+    dx = dy = 0.25
+    grid = task.build_movement_cost_grid(dx, dy)
+    assert grid.costs.shape == (4, 4)
     blocked = int((grid.costs == INT32_MAX).sum())
     assert blocked >= 1
 
-    result = task.compute_geodesic_distance_matrix(0.5, 0.5)
+    result = task.compute_geodesic_distance_matrix(dx, dy)
     accessible = result.accessible_indices.shape[0]
     assert accessible >= 2
     assert np.allclose(result.distances, result.distances.T)
