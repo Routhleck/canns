@@ -3,7 +3,7 @@ import brainunit as u
 import jax
 from brainstate.nn import exp_euler_step
 
-from ...task.spatial_navigation import map2pi
+from ...task.open_loop_navigation import map2pi
 from ._base import BasicModel, BasicModelGroup
 
 __all__ = [

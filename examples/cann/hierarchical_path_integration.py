@@ -7,13 +7,13 @@ import numpy as np
 import os
 
 from canns.models.basic import HierarchicalNetwork
-from canns.task.spatial_navigation import SpatialNavigationTask
+from canns.task.open_loop_navigation import OpenLoopNavigationTask
 
 PATH = os.path.dirname(os.path.abspath(__file__))
 
 
 brainstate.environ.set(dt=0.1)
-task_sn = SpatialNavigationTask(
+task_sn = OpenLoopNavigationTask(
     width=5,
     height=5,
     speed_mean=0.16,

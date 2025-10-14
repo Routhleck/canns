@@ -13,7 +13,7 @@ from tqdm import tqdm
 
 from ._base import Task
 
-__all__ = ["map2pi", "SpatialNavigationTask"]
+__all__ = ["map2pi", "OpenLoopNavigationTask"]
 
 
 def map2pi(a):
@@ -23,10 +23,11 @@ def map2pi(a):
 
 
 @dataclass
-class SpatialNavigationData:
+class OpenLoopNavigationData:
     """
-    A dataclass to hold the inputs for the spatial navigation task.
-    It contains the position, velocity, speed, movement direction, head direction, and rotational velocity of the agent.
+    Container for the inputs recorded during the open-loop navigation task.
+    It contains the position, velocity, speed, movement direction, head direction,
+    and rotational velocity of the agent.
 
     Additional fields for theta sweep analysis:
     - ang_velocity: Angular velocity calculated using unwrap method
@@ -47,10 +48,10 @@ class SpatialNavigationData:
     ang_speed_gains: np.ndarray | None = None  # Normalized angular speed [-1,1]
 
 
-class SpatialNavigationTask(Task):
+class OpenLoopNavigationTask(Task):
     """
-    A base class for spatial navigation tasks, inheriting from BaseTask.
-    This class is intended to be extended for specific spatial navigation tasks.
+    Open-loop spatial navigation task that synthesises trajectories without
+    incorporating real-time feedback from a controller.
     """
 
     def __init__(
@@ -82,7 +83,7 @@ class SpatialNavigationTask(Task):
         wall_repel_distance=0.1,
         wall_repel_strength=1.0,
     ):
-        super().__init__(data_class=SpatialNavigationData)
+        super().__init__(data_class=OpenLoopNavigationData)
 
         # --- task settings ---
         # time settings
@@ -97,7 +98,7 @@ class SpatialNavigationTask(Task):
         self.dimensionality = str(dimensionality).upper()
         if self.dimensionality == "1D":
             raise NotImplementedError(
-                "SpatialNavigationTask currently supports only 2D environments."
+                "OpenLoopNavigationTask currently supports only 2D environments."
             )
         if self.dimensionality != "2D":
             raise ValueError(f"Unsupported dimensionality '{dimensionality}'. Expected '2D'.")
@@ -253,7 +254,7 @@ class SpatialNavigationTask(Task):
         rot_vel = np.zeros_like(hd_angle)
         rot_vel[1:] = map2pi(np.diff(hd_angle))
 
-        self.data = SpatialNavigationData(
+        self.data = OpenLoopNavigationData(
             position=position,
             velocity=velocity,
             speed=speed,
@@ -499,12 +500,12 @@ class SpatialNavigationTask(Task):
             if not show:
                 plt.close(fig)
 
-    def get_empty_trajectory(self) -> SpatialNavigationData:
+    def get_empty_trajectory(self) -> OpenLoopNavigationData:
         """
         Returns an empty trajectory data structure with the same shape as the generated trajectory.
         This is useful for initializing the trajectory data structure without any actual data.
         """
-        return SpatialNavigationData(
+        return OpenLoopNavigationData(
             position=np.zeros((self.total_steps, 2)),
             velocity=np.zeros((self.total_steps, 2)),
             speed=np.zeros(self.total_steps),
@@ -555,7 +556,7 @@ class SpatialNavigationTask(Task):
             positions = np.array([[0, 0], [0.1, 0.05], [0.2, 0.1], ...])  # shape: (n_steps, 2)
             times = np.array([0, 0.1, 0.2, ...])  # shape: (n_steps,)
 
-            task = SpatialNavigationTask(...)
+            task = OpenLoopNavigationTask(...)
             task.import_data(position_data=positions, times=times)
 
             # Or with uniform time steps
@@ -658,8 +659,8 @@ class SpatialNavigationTask(Task):
         self.total_steps = n_steps
         self.run_steps = np.arange(self.total_steps)
 
-        # Create SpatialNavigationData object
-        self.data = SpatialNavigationData(
+        # Create OpenLoopNavigationData object
+        self.data = OpenLoopNavigationData(
             position=position,
             velocity=velocity,
             speed=speed,

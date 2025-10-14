@@ -23,7 +23,7 @@ from canns.models.basic.theta_sweep_model import (
     GridCellNetwork,
     calculate_theta_modulation,
 )
-from canns.task.spatial_navigation import SpatialNavigationTask
+from canns.task.open_loop_navigation import OpenLoopNavigationTask
 
 
 def main() -> None:
@@ -35,7 +35,7 @@ def main() -> None:
     brainstate.environ.set(dt=1.0)
 
     # Create and run spatial navigation task
-    snt = SpatialNavigationTask(
+    snt = OpenLoopNavigationTask(
         duration=simulate_time,
         initial_head_direction=11 / 12 * u.math.pi,
         width=Env_size,
