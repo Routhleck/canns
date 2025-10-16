@@ -188,7 +188,7 @@ class ClosedLoopNavigationTask(Task):
         dimensionality="2D",
         boundary_conditions="solid",  # "solid" or "periodic"
         scale=None,
-        dx=0.01,  # for show_data only
+        dx=0.01,
         grid_dx: float | None = None,
         grid_dy: float | None = None,
         boundary=None,
@@ -230,15 +230,15 @@ class ClosedLoopNavigationTask(Task):
             raise ValueError(f"Unsupported dimensionality '{dimensionality}'. Expected '2D'.")
         self.boundary_conditions = boundary_conditions
         self.scale = height if scale is None else scale
-        self.dx = dx
         self.grid_dx = dx if grid_dx is None else grid_dx
         self.grid_dy = dx if grid_dy is None else grid_dy
         self.boundary = copy.deepcopy(boundary)
         self.walls = copy.deepcopy(walls) if walls is not None else []
         self.holes = copy.deepcopy(holes) if holes is not None else []
         self.objects = copy.deepcopy(objects) if objects is not None else []
-        self._cached_cost_grid: MovementCostGrid | None = None
-        self._cached_geodesic: GeodesicDistanceResult | None = None
+        self.cost_grid: MovementCostGrid | None = None
+        self.geodesic_result: GeodesicDistanceResult | None = None
+        self.set_grid_resolution(self.grid_dx, self.grid_dy)
 
         # agent settings
         self.speed_mean = speed_mean
@@ -262,7 +262,7 @@ class ClosedLoopNavigationTask(Task):
             "boundary_conditions": self.boundary_conditions,
             "scale": self.scale,
             "aspect": self.aspect,
-            "dx": self.dx,
+            "dx": self.grid_dx,
             "boundary": self.boundary,
             "walls": copy.deepcopy(self.walls),
             "holes": copy.deepcopy(self.holes),
@@ -299,8 +299,6 @@ class ClosedLoopNavigationTask(Task):
         save_path: str | None = None,
         *,
         overlay_movement_cost: bool = False,
-        cost_dx: float | None = None,
-        cost_dy: float | None = None,
         cost_grid: MovementCostGrid | None = None,
         free_color: str = "#f8f9fa",
         blocked_color: str = "#f94144",
@@ -329,11 +327,7 @@ class ClosedLoopNavigationTask(Task):
 
             if overlay_movement_cost:
                 if cost_grid is None:
-                    default_dx = self.grid_dx if self.grid_dx is not None else self.dx
-                    default_dy = self.grid_dy if self.grid_dy is not None else self.dx
-                    dx = cost_dx if cost_dx is not None else default_dx
-                    dy = cost_dy if cost_dy is not None else default_dy
-                    cost_grid = self.build_movement_cost_grid(dx=dx, dy=dy)
+                    cost_grid = self.build_movement_cost_grid()
                 self._plot_movement_cost_grid(
                     ax,
                     cost_grid,
@@ -390,9 +384,7 @@ class ClosedLoopNavigationTask(Task):
 
         return result
 
-    def build_movement_cost_grid(
-        self, dx: float | None = None, dy: float | None = None, *, refresh: bool = False
-    ) -> MovementCostGrid:
+    def build_movement_cost_grid(self, *, refresh: bool = False) -> MovementCostGrid:
         """Construct a grid-based movement cost map for the configured environment.
 
         A cell weight of ``1`` indicates free space, while ``INT32_MAX`` marks an
@@ -407,20 +399,8 @@ class ClosedLoopNavigationTask(Task):
             MovementCostGrid describing the discretised environment.
         """
 
-        if dx is not None:
-            if dx <= 0:
-                raise ValueError("dx must be a positive number.")
-            self.grid_dx = dx
-        if dy is not None:
-            if dy <= 0:
-                raise ValueError("dy must be a positive number.")
-            self.grid_dy = dy
-
         if self.grid_dx is None or self.grid_dy is None:
-            raise ValueError("Grid resolution is not configured. Provide dx and dy.")
-
-        if self._cached_cost_grid is not None and not refresh and dx is None and dy is None:
-            return self._cached_cost_grid
+            raise ValueError("Grid resolution is not configured. Use set_grid_resolution().")
 
         boundary_coords = self._resolve_boundary_coordinates()
         boundary_path = Path(boundary_coords) if len(boundary_coords) >= 3 else None
@@ -489,8 +469,8 @@ class ClosedLoopNavigationTask(Task):
         grid = MovementCostGrid(
             costs=costs, x_edges=x_edges, y_edges=y_edges, dx=self.grid_dx, dy=self.grid_dy
         )
-        self._cached_cost_grid = grid
-        self._cached_geodesic = None
+        self.cost_grid = grid
+        self.geodesic_result = None
         return grid
 
     def compute_geodesic_distance_matrix(
@@ -525,15 +505,13 @@ class ClosedLoopNavigationTask(Task):
                 raise ValueError("dy must be a positive number.")
             self.grid_dy = dy
 
-        if (
-            self._cached_geodesic is not None
-            and not refresh
-            and dx is None
-            and dy is None
-        ):
-            return self._cached_geodesic
+        if self.geodesic_result is not None and not refresh and dx is None and dy is None:
+            return self.geodesic_result
 
-        grid = self.build_movement_cost_grid(refresh=refresh)
+        if self.cost_grid is None or refresh:
+            grid = self.build_movement_cost_grid(refresh=refresh)
+        else:
+            grid = self.cost_grid
         mask = grid.accessible_mask
         accessible_indices = np.argwhere(mask)
         if accessible_indices.size == 0:
@@ -562,7 +540,7 @@ class ClosedLoopNavigationTask(Task):
             accessible_indices=accessible_indices,
             cost_grid=grid,
         )
-        self._cached_geodesic = result
+        self.geodesic_result = result
         return result
 
     @staticmethod
@@ -581,6 +559,17 @@ class ClosedLoopNavigationTask(Task):
 
         matrix[~finite_mask] = np.nan
         return matrix
+
+    def set_grid_resolution(self, dx: float, dy: float) -> None:
+        """Update the stored grid resolution and invalidate cached data."""
+
+        if dx <= 0 or dy <= 0:
+            raise ValueError("dx and dy must be positive numbers.")
+
+        self.grid_dx = float(dx)
+        self.grid_dy = float(dy)
+        self.cost_grid = None
+        self.geodesic_result = None
 
     def _resolve_boundary_coordinates(self) -> np.ndarray:
         if self.boundary is not None and len(self.boundary) >= 3:
@@ -798,8 +787,8 @@ class ClosedLoopNavigationTask(Task):
         if grid.costs[row, col] != 1:
             return None
 
-        if self._cached_geodesic is not None and not refresh:
-            accessible_indices = self._cached_geodesic.accessible_indices
+        if self.geodesic_result is not None and not refresh:
+            accessible_indices = self.geodesic_result.accessible_indices
         else:
             accessible_indices = np.argwhere(grid.accessible_mask)
         for idx, (r, c) in enumerate(accessible_indices):
