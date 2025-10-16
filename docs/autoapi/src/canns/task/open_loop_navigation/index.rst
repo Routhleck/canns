@@ -9,6 +9,7 @@ Classes
 
 .. autoapisummary::
 
+   src.canns.task.open_loop_navigation.OpenLoopNavigationData
    src.canns.task.open_loop_navigation.OpenLoopNavigationTask
 
 
@@ -22,6 +23,60 @@ Functions
 
 Module Contents
 ---------------
+
+.. py:class:: OpenLoopNavigationData
+
+   Container for the inputs recorded during the open-loop navigation task.
+   It contains the position, velocity, speed, movement direction, head direction,
+   and rotational velocity of the agent.
+
+   Additional fields for theta sweep analysis:
+   - ang_velocity: Angular velocity calculated using unwrap method
+   - linear_speed_gains: Normalized linear speed gains [0,1]
+   - ang_speed_gains: Normalized angular speed gains [-1,1]
+
+
+   .. py:attribute:: ang_speed_gains
+      :type:  numpy.ndarray | None
+      :value: None
+
+
+
+   .. py:attribute:: ang_velocity
+      :type:  numpy.ndarray | None
+      :value: None
+
+
+
+   .. py:attribute:: hd_angle
+      :type:  numpy.ndarray
+
+
+   .. py:attribute:: linear_speed_gains
+      :type:  numpy.ndarray | None
+      :value: None
+
+
+
+   .. py:attribute:: movement_direction
+      :type:  numpy.ndarray
+
+
+   .. py:attribute:: position
+      :type:  numpy.ndarray
+
+
+   .. py:attribute:: rot_vel
+      :type:  numpy.ndarray
+
+
+   .. py:attribute:: speed
+      :type:  numpy.ndarray
+
+
+   .. py:attribute:: velocity
+      :type:  numpy.ndarray
+
 
 .. py:class:: OpenLoopNavigationTask(duration=20.0, start_pos=(2.5, 2.5), initial_head_direction=None, progress_bar=True, width=5, height=5, dimensionality='2D', boundary_conditions='solid', scale=None, dx=0.01, boundary=None, walls=None, holes=None, objects=None, dt=None, speed_mean=0.04, speed_std=0.016, speed_coherence_time=0.7, rotational_velocity_coherence_time=0.08, rotational_velocity_std=120 * np.pi / 180, head_direction_smoothing_timescale=0.15, thigmotaxis=0.5, wall_repel_distance=0.1, wall_repel_strength=1.0)
 

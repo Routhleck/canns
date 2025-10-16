@@ -27,7 +27,7 @@ Classes
 Module Contents
 ---------------
 
-.. py:class:: ClosedLoopNavigationTask(start_pos=(2.5, 2.5), width=5, height=5, dimensionality='2D', boundary_conditions='solid', scale=None, dx=0.01, boundary=None, walls=None, holes=None, objects=None, dt=None, speed_mean=0.04, speed_std=0.016, speed_coherence_time=0.7, rotational_velocity_coherence_time=0.08, rotational_velocity_std=120 * np.pi / 180, head_direction_smoothing_timescale=0.15, thigmotaxis=0.5, wall_repel_distance=0.1, wall_repel_strength=1.0)
+.. py:class:: ClosedLoopNavigationTask(start_pos=(2.5, 2.5), width=5, height=5, dimensionality='2D', boundary_conditions='solid', scale=None, dx=0.01, grid_dx = None, grid_dy = None, boundary=None, walls=None, holes=None, objects=None, dt=None, speed_mean=0.04, speed_std=0.016, speed_coherence_time=0.7, rotational_velocity_coherence_time=0.08, rotational_velocity_std=120 * np.pi / 180, head_direction_smoothing_timescale=0.15, thigmotaxis=0.5, wall_repel_distance=0.1, wall_repel_strength=1.0)
 
    Bases: :py:obj:`src.canns.task._base.Task`
 
@@ -55,7 +55,7 @@ Module Contents
    :type data_class: type, optional
 
 
-   .. py:method:: build_movement_cost_grid(dx, dy)
+   .. py:method:: build_movement_cost_grid(*, refresh = False)
 
       Construct a grid-based movement cost map for the configured environment.
 
@@ -64,12 +64,13 @@ Module Contents
 
       :param dx: Grid cell width along the x axis.
       :param dy: Grid cell height along the y axis.
+      :param refresh: Force recomputation even if a cached grid is available.
 
       :returns: MovementCostGrid describing the discretised environment.
 
 
 
-   .. py:method:: compute_geodesic_distance_matrix(dx, dy)
+   .. py:method:: compute_geodesic_distance_matrix(dx = None, dy = None, *, refresh = False)
 
       Compute pairwise geodesic distances between traversable grid cells.
 
@@ -77,8 +78,11 @@ Module Contents
       connected to its four axis-aligned neighbours. Horizontal steps cost ``dx``
       and vertical steps cost ``dy``. Impassable cells (``INT32_MAX``) are ignored.
 
-      :param dx: Grid cell width along the x axis.
-      :param dy: Grid cell height along the y axis.
+      :param dx: Grid cell width along the x axis. When ``None`` the existing
+                 ``grid_dx`` attribute is used.
+      :param dy: Grid cell height along the y axis. When ``None`` the existing
+                 ``grid_dy`` attribute is used.
+      :param refresh: Force recomputation even if cached results exist.
 
       :returns: GeodesicDistanceResult containing the distance matrix and metadata.
 
@@ -100,7 +104,25 @@ Module Contents
 
 
 
-   .. py:method:: show_data(show = True, save_path = None, *, overlay_movement_cost = False, cost_dx = None, cost_dy = None, cost_grid = None, free_color = '#f8f9fa', blocked_color = '#f94144', gridline_color = '#2b2d42', cost_alpha = 0.6, show_colorbar = False)
+   .. py:method:: get_geodesic_index_by_pos(pos, *, refresh = False)
+
+      Get the index of the grid cell containing the given position.
+
+      :param pos: (x, y) coordinates of the position.
+      :param refresh: Recompute the cached grid before querying the index.
+
+      :returns: Index of the grid cell in the geodesic distance matrix, or None if
+                the position is out of bounds or in an impassable cell.
+
+
+
+   .. py:method:: set_grid_resolution(dx, dy)
+
+      Update the stored grid resolution and invalidate cached data.
+
+
+
+   .. py:method:: show_data(show = True, save_path = None, *, overlay_movement_cost = False, cost_grid = None, free_color = '#f8f9fa', blocked_color = '#f94144', gridline_color = '#2b2d42', cost_alpha = 0.6, show_colorbar = False, cost_legend_loc = None)
 
       Abstract method to display a task.
 
@@ -110,7 +132,7 @@ Module Contents
 
 
 
-   .. py:method:: show_geodesic_distance_matrix(dx, dy, *, show = True, save_path = None, cmap = 'viridis', normalize = False, colorbar = True)
+   .. py:method:: show_geodesic_distance_matrix(dx = None, dy = None, *, show = True, save_path = None, cmap = 'viridis', normalize = False, colorbar = True, refresh = False)
 
       Visualise the geodesic distance matrix for the discretised environment.
 
@@ -138,6 +160,12 @@ Module Contents
 
 
 
+   .. py:attribute:: cost_grid
+      :type:  MovementCostGrid | None
+      :value: None
+
+
+
    .. py:attribute:: dimensionality
       :value: ''
 
@@ -148,15 +176,26 @@ Module Contents
 
 
 
-   .. py:attribute:: dx
-      :value: 0.01
-
-
-
    .. py:attribute:: env
 
 
    .. py:attribute:: env_params
+
+
+   .. py:attribute:: geodesic_result
+      :type:  GeodesicDistanceResult | None
+      :value: None
+
+
+
+   .. py:attribute:: grid_dx
+      :value: 0.01
+
+
+
+   .. py:attribute:: grid_dy
+      :value: 0.01
+
 
 
    .. py:attribute:: head_direction_smoothing_timescale
