@@ -784,7 +784,7 @@ class ClosedLoopNavigationTask(Task):
         if not (0 <= row < grid.shape[0]) or not (0 <= col < grid.shape[1]):
             return None
 
-        if grid.costs[row, col] != 1:
+        if not grid.accessible_mask[row, col]:
             return None
 
         if self.geodesic_result is not None and not refresh:
