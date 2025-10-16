@@ -68,6 +68,9 @@ def test_tmaze_movement_cost_and_geodesic_visualisation(tmp_path):
     if finite_mask.any():
         assert pytest.approx(np.nanmax(normalised_matrix[finite_mask]), rel=1e-9) == 1.0
 
+    idx = task.get_geodesic_index_by_pos(task.start_pos)
+    assert idx is not None
+
 
 def test_geodesic_handles_no_accessible_cells(tmp_path):
     mpl_cache = tmp_path / "mpl-no-access"
@@ -141,3 +144,22 @@ def test_geodesic_with_walls_and_holes():
     assert np.allclose(result.distances, result.distances.T)
     assert np.all(np.isfinite(np.diag(result.distances)))
     assert np.any((result.distances > 0) & np.isfinite(result.distances))
+
+
+def test_geodesic_cache_and_default_resolution():
+    task = ClosedLoopNavigationTask(dt=0.01, grid_dx=0.2, grid_dy=0.3)
+
+    grid = task.build_movement_cost_grid()
+    assert pytest.approx(grid.dx) == 0.2
+    assert pytest.approx(grid.dy) == 0.3
+
+    result = task.compute_geodesic_distance_matrix()
+    assert result.cost_grid is grid
+
+    # Second call should hit the cache and return the same object
+    again = task.compute_geodesic_distance_matrix()
+    assert again is result
+
+    # get_geodesic_index_by_pos without explicit dx/dy should succeed
+    idx = task.get_geodesic_index_by_pos(task.start_pos)
+    assert idx is not None
