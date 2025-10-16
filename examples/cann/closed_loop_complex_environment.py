@@ -63,9 +63,10 @@ def main(output_dir: str = "figures/closed_loop_complex", dx: float = 0.1, dy: f
     matplotlib.use("Agg")
 
     task = build_demo_task()
+    task.set_grid_resolution(dx, dy)
     task.start_pos = (0.1, 0.1)  # type: ignore[assignment]
     task.step_by_pos((0.1, 0.1))
-    grid = task.build_movement_cost_grid(dx, dy)
+    grid = task.build_movement_cost_grid()
 
     output_path = Path(output_dir)
     output_path.mkdir(parents=True, exist_ok=True)
@@ -76,16 +77,12 @@ def main(output_dir: str = "figures/closed_loop_complex", dx: float = 0.1, dy: f
         overlay_movement_cost=True,
         cost_grid=grid,
         show_colorbar=False,
-        cost_dx=dx,
-        cost_dy=dy,
         cost_legend_loc="upper right",
         save_path=movement_path,
     )
 
     geodesic_path = output_path / "geodesic_distance_matrix.png"
     task.show_geodesic_distance_matrix(
-        dx,
-        dy,
         show=False,
         normalize=True,
         save_path=geodesic_path,
