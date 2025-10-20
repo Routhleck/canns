@@ -29,7 +29,7 @@ def main() -> None:
         duration=simulate_time,
         start_pos=(0.0, 0.15),
         initial_head_direction=1/2 * u.math.pi,
-        speed_mean=0.5,
+        speed_mean=0.55,
         speed_std=0.0,
         rotational_velocity_std=0,
         dt=dt,

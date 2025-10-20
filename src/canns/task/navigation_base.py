@@ -45,7 +45,7 @@ class MovementCostGrid:
 
     @property
     def y_centers(self) -> np.ndarray:
-        return self.y_edges[:-1] + self.dy / 2
+        return self.y_edges[:-1] - self.dy / 2
 
     @property
     def accessible_mask(self) -> np.ndarray:
@@ -83,7 +83,17 @@ class MovementCostGrid:
         # Use jnp.searchsorted which is JAX-compatible
         # Find grid cell containing the position
         col = jnp.searchsorted(x_edges_jax, x, side="right") - 1
-        row = jnp.searchsorted(y_edges_jax[::-1], y, side="right") - 1
+
+        # y_edges is descending (max_y to min_y), so we need special handling
+        # For descending array, a cell row is defined where y_edges[row] > y >= y_edges[row+1]
+        # Method: search in ascending array (reversed) and convert
+        y_edges_ascending = y_edges_jax[::-1]
+        # searchsorted with side='left' finds leftmost position where y_edges_ascending[idx] >= y
+        idx_in_ascending = jnp.searchsorted(y_edges_ascending, y, side="left")
+        # Convert to descending array index: this gives the edge index
+        edge_idx_in_descending = len(y_edges_jax) - 1 - idx_in_ascending
+        # The cell is one row above this edge (because y_edges[row] > y >= y_edges[row+1])
+        row = edge_idx_in_descending - 1
 
         # Clip indices to valid range to avoid index errors
         # JAX-compatible: no if statements, just array operations

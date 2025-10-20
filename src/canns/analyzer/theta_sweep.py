@@ -840,7 +840,7 @@ def create_theta_sweep_place_cell_animation(
         fps=config.fps,
     )
 
-    cmap_name = config.kwargs.get("cmap", "hot")
+    cmap_name = config.kwargs.get("cmap", "viridis")
     alpha = config.kwargs.get("alpha", 0.8)
     trajectory_color = config.kwargs.get("trajectory_color", "#F18D00")
 
@@ -898,10 +898,15 @@ def create_theta_sweep_place_cell_animation(
 
     # Panel 2: Population activity heatmap over time
     time_axis = np.arange(data.frames) * n_step * dt
-    n_cells = data.activity_grid.shape[1] * data.activity_grid.shape[2]
 
-    # Flatten activity grid for heatmap (cells × time)
-    activity_flat = data.activity_grid.reshape(data.frames, -1).T
+    # Only show accessible cells (filter out NaN cells)
+    accessible_indices = pc_network.geodesic_result.accessible_indices
+    n_cells = len(accessible_indices)
+
+    # Extract activity only for accessible cells (cells × time)
+    activity_flat = np.zeros((n_cells, data.frames), dtype=np.float32)
+    for cell_idx, (row, col) in enumerate(accessible_indices):
+        activity_flat[cell_idx, :] = data.activity_grid[:, row, col]
 
     # Create heatmap
     heatmap = ax_activity.imshow(
@@ -918,7 +923,7 @@ def create_theta_sweep_place_cell_animation(
     (time_marker,) = ax_activity.plot([], [], "w-", lw=2, alpha=0.8)
 
     ax_activity.set_xlabel("Time (s)")
-    ax_activity.set_ylabel("Grid Cell Index")
+    ax_activity.set_ylabel("Place Cell Index")
     ax_activity.set_title("Population Activity Over Time")
 
     # Add colorbar
