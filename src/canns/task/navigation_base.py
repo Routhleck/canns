@@ -32,6 +32,8 @@ class MovementCostGrid:
     y_edges: np.ndarray
     dx: float
     dy: float
+    accessible_indices: np.ndarray | None = None
+    _index_map: np.ndarray | None = None
 
     @property
     def shape(self) -> tuple[int, int]:
@@ -43,11 +45,62 @@ class MovementCostGrid:
 
     @property
     def y_centers(self) -> np.ndarray:
-        return self.y_edges[:-1] - self.dy / 2
+        return self.y_edges[:-1] + self.dy / 2
 
     @property
     def accessible_mask(self) -> np.ndarray:
         return self.costs == 1
+
+    def get_cell_index(self, pos: Sequence[float]) -> int:
+        """Get the geodesic index of the grid cell containing the given position.
+
+        This method is JAX-compatible and can be used inside jitted functions.
+
+        Args:
+            pos: (x, y) coordinates of the position.
+
+        Returns:
+            Index of the grid cell in the accessible_indices array, or -1 if
+            the position is out of bounds or in an impassable cell.
+
+        Note:
+            Returns -1 (instead of None) for JAX compatibility. The caller should
+            check for negative values to detect invalid positions.
+        """
+        if self._index_map is None:
+            raise ValueError("Index map not initialized. Grid must be built with index mapping.")
+
+        # Import jax.numpy for JAX-compatible operations
+        import jax.numpy as jnp
+
+        x, y = pos
+
+        # Convert arrays to JAX arrays for JAX compatibility
+        x_edges_jax = jnp.asarray(self.x_edges)
+        y_edges_jax = jnp.asarray(self.y_edges)
+        index_map_jax = jnp.asarray(self._index_map)
+
+        # Use jnp.searchsorted which is JAX-compatible
+        # Find grid cell containing the position
+        col = jnp.searchsorted(x_edges_jax, x, side="right") - 1
+        row = jnp.searchsorted(y_edges_jax[::-1], y, side="right") - 1
+
+        # Clip indices to valid range to avoid index errors
+        # JAX-compatible: no if statements, just array operations
+        row_clipped = jnp.clip(row, 0, self.shape[0] - 1)
+        col_clipped = jnp.clip(col, 0, self.shape[1] - 1)
+
+        # Lookup index in the precomputed map (O(1) operation)
+        # _index_map[row, col] is -1 for inaccessible cells
+        idx = index_map_jax[row_clipped, col_clipped]
+
+        # Check bounds: if row/col were out of range, return -1
+        # Use array operations instead of if statements
+        in_bounds = (row >= 0) & (row < self.shape[0]) & (col >= 0) & (col < self.shape[1])
+
+        # Return idx if in bounds, otherwise -1
+        # This is JAX-compatible
+        return jnp.where(in_bounds, idx, -1)
 
 
 @dataclass(frozen=True)
@@ -369,8 +422,24 @@ class BaseNavigationTask(Task):
                     center,
                 ):
                     costs[row, col] = INT32_MAX
+
+        # Compute accessible indices and index map for O(1) lookup
+        accessible_mask = costs == 1
+        accessible_indices = np.argwhere(accessible_mask)
+
+        # Build reverse index map: _index_map[row, col] = geodesic_index or -1
+        index_map = np.full(costs.shape, -1, dtype=np.int32)
+        for idx, (r, c) in enumerate(accessible_indices):
+            index_map[r, c] = idx
+
         grid = MovementCostGrid(
-            costs=costs, x_edges=x_edges, y_edges=y_edges, dx=self.grid_dx, dy=self.grid_dy
+            costs=costs,
+            x_edges=x_edges,
+            y_edges=y_edges,
+            dx=self.grid_dx,
+            dy=self.grid_dy,
+            accessible_indices=accessible_indices,
+            _index_map=index_map,
         )
         self.cost_grid = grid
         self.geodesic_result = None
@@ -495,32 +564,8 @@ class BaseNavigationTask(Task):
             Index of the grid cell in the geodesic distance matrix, or None if
             the position is out of bounds or in an impassable cell.
         """
-
         grid = self.build_movement_cost_grid(refresh=refresh)
-        x, y = pos
-
-        if not (grid.x_edges[0] <= x <= grid.x_edges[-1]) or not (
-            grid.y_edges[-1] <= y <= grid.y_edges[0]
-        ):
-            return None
-
-        col = np.searchsorted(grid.x_edges, x, side="right") - 1
-        row = np.searchsorted(grid.y_edges[::-1], y, side="right") - 1
-        if not (0 <= row < grid.shape[0]) or not (0 <= col < grid.shape[1]):
-            return None
-
-        if not grid.accessible_mask[row, col]:
-            return None
-
-        if self.geodesic_result is not None and not refresh:
-            accessible_indices = self.geodesic_result.accessible_indices
-        else:
-            accessible_indices = np.argwhere(grid.accessible_mask)
-        for idx, (r, c) in enumerate(accessible_indices):
-            if r == row and c == col:
-                return idx
-
-        return None
+        return grid.get_cell_index(pos)
 
     def set_grid_resolution(self, dx: float, dy: float) -> None:
         """Update the stored grid resolution and invalidate cached data."""
@@ -532,6 +577,78 @@ class BaseNavigationTask(Task):
         self.grid_dy = float(dy)
         self.cost_grid = None
         self.geodesic_result = None
+
+    def show_data(
+        self,
+        show: bool = True,
+        save_path: str | None = None,
+        *,
+        overlay_movement_cost: bool = False,
+        cost_grid: MovementCostGrid | None = None,
+        free_color: str = "#f8f9fa",
+        blocked_color: str = "#f94144",
+        gridline_color: str = "#2b2d42",
+        cost_alpha: float = 0.6,
+        show_colorbar: bool = False,
+        cost_legend_loc: str | None = None,
+    ) -> None:
+        """Display the agent's trajectory with optional movement cost grid overlay.
+
+        Args:
+            show: Whether to display the plot.
+            save_path: Path to save the figure. If None, the figure is not saved.
+            overlay_movement_cost: Whether to overlay the movement cost grid.
+            cost_grid: Pre-computed cost grid. If None and overlay_movement_cost is True,
+                      the grid will be built on demand.
+            free_color: Color for free (accessible) cells in the cost grid.
+            blocked_color: Color for blocked (inaccessible) cells in the cost grid.
+            gridline_color: Color for grid lines.
+            cost_alpha: Transparency of the cost grid overlay (0=transparent, 1=opaque).
+            show_colorbar: Whether to show a colorbar for the cost grid.
+            cost_legend_loc: Location of the legend for the cost grid (e.g., 'upper right').
+                           If None, no legend is shown.
+        """
+        fig, ax = plt.subplots(1, 1, figsize=(3, 3))
+
+        try:
+            # Check if agent has trajectory history
+            trajectory_length = len(self.agent.history.get("t", []))
+            if trajectory_length >= 2:
+                # For both open-loop and closed-loop with sufficient history
+                total_steps = getattr(self, "total_steps", trajectory_length)
+                self.agent.plot_trajectory(
+                    t_start=0, t_end=total_steps, fig=fig, ax=ax, color="changing"
+                )
+            else:
+                # For closed-loop or when trajectory hasn't been generated yet
+                ax.scatter(
+                    self.agent.pos[0],
+                    self.agent.pos[1],
+                    s=30,
+                    c="tab:blue",
+                    label="start",
+                )
+                ax.legend(loc="upper right")
+
+            # Overlay movement cost grid if requested
+            if overlay_movement_cost:
+                if cost_grid is None:
+                    cost_grid = self.build_movement_cost_grid()
+                self._plot_movement_cost_grid(
+                    ax,
+                    cost_grid,
+                    free_color=free_color,
+                    blocked_color=blocked_color,
+                    gridline_color=gridline_color,
+                    alpha=cost_alpha,
+                    add_colorbar=show_colorbar,
+                    legend_loc=cost_legend_loc,
+                )
+
+            plt.savefig(save_path) if save_path else None
+            plt.show() if show else None
+        finally:
+            plt.close(fig)
 
     @staticmethod
     def _prepare_geodesic_plot_matrix(
@@ -694,27 +811,6 @@ class BaseNavigationTask(Task):
         ax.hlines(
             y_edges_plot, x_edges[0], x_edges[-1], colors=gridline_color, linewidth=0.5, alpha=0.7
         )
-
-        for row in range(grid.costs.shape[0]):
-            y_top = grid.y_edges[row]
-            y_bottom = grid.y_edges[row + 1]
-            y_center = (y_top + y_bottom) / 2
-            for col in range(grid.costs.shape[1]):
-                x_left = grid.x_edges[col]
-                x_right = grid.x_edges[col + 1]
-                x_center = (x_left + x_right) / 2
-                weight = grid.costs[row, col]
-                if weight != INT32_MAX:
-                    ax.text(
-                        x_center,
-                        y_center,
-                        str(weight),
-                        ha="center",
-                        va="center",
-                        fontsize=7,
-                        color="#000000",
-                        alpha=0.9,
-                    )
 
         ax.set_aspect("equal")
 

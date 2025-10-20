@@ -15,7 +15,7 @@ import numpy as np
 
 from ..analyzer.plotting import PlotConfig
 from ..analyzer.theta_sweep import (
-    create_theta_sweep_animation,
+    create_theta_sweep_grid_cell_animation,
     plot_population_activity_with_theta,
 )
 from ..models.basic.theta_sweep_model import (
@@ -485,7 +485,7 @@ class ThetaSweepPipeline(Pipeline):
 
         time.sleep(0.01)
 
-        create_theta_sweep_animation(
+        create_theta_sweep_grid_cell_animation(
             position_data=self.simulation_results["position"],
             direction_data=self.simulation_results["direction"],
             dc_activity_data=self.simulation_results["dc_activity"],

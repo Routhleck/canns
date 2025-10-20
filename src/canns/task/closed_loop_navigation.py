@@ -1,7 +1,6 @@
 import numpy as np
-from matplotlib import pyplot as plt
 
-from .navigation_base import BaseNavigationTask, MovementCostGrid
+from .navigation_base import BaseNavigationTask
 from .open_loop_navigation import OpenLoopNavigationData
 
 
@@ -84,57 +83,6 @@ class ClosedLoopNavigationTask(BaseNavigationTask):
     def get_data(self):
         # TODO: should implement, but currently not used anywhere
         raise NotImplementedError("ClosedLoopNavigationTask does not have get_data method.")
-
-    def show_data(
-        self,
-        show: bool = True,
-        save_path: str | None = None,
-        *,
-        overlay_movement_cost: bool = False,
-        cost_grid: MovementCostGrid | None = None,
-        free_color: str = "#f8f9fa",
-        blocked_color: str = "#f94144",
-        gridline_color: str = "#2b2d42",
-        cost_alpha: float = 0.6,
-        show_colorbar: bool = False,
-        cost_legend_loc: str | None = None,
-    ) -> None:
-        fig, ax = plt.subplots(1, 1, figsize=(3, 3))
-
-        try:
-            trajectory_length = len(self.agent.history.get("t", []))
-            if trajectory_length >= 2:
-                self.agent.plot_trajectory(
-                    t_start=0, t_end=self.total_steps, fig=fig, ax=ax, color="changing"
-                )
-            else:
-                ax.scatter(
-                    self.agent.pos[0],
-                    self.agent.pos[1],
-                    s=30,
-                    c="tab:blue",
-                    label="start",
-                )
-                ax.legend(loc="upper right")
-
-            if overlay_movement_cost:
-                if cost_grid is None:
-                    cost_grid = self.build_movement_cost_grid()
-                self._plot_movement_cost_grid(
-                    ax,
-                    cost_grid,
-                    free_color=free_color,
-                    blocked_color=blocked_color,
-                    gridline_color=gridline_color,
-                    alpha=cost_alpha,
-                    add_colorbar=show_colorbar,
-                    legend_loc=cost_legend_loc,
-                )
-
-            plt.savefig(save_path) if save_path else None
-            plt.show() if show else None
-        finally:
-            plt.close(fig)
 
 
 class TMazeClosedLoopNavigationTask(ClosedLoopNavigationTask):

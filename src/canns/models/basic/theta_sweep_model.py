@@ -829,32 +829,7 @@ class PlaceCellNetwork(BasicModel):
             Index of the grid cell in the geodesic distance matrix, or None if
             the position is out of bounds or in an impassable cell.
         """
-        grid = self.cost_grid
-        x, y = pos
-
-        # Check if position is within grid bounds
-        if not (grid.x_edges[0] <= x <= grid.x_edges[-1]) or not (
-            grid.y_edges[-1] <= y <= grid.y_edges[0]
-        ):
-            return None
-
-        # Find grid cell containing the position
-        col = np.searchsorted(grid.x_edges, x, side="right") - 1
-        row = np.searchsorted(grid.y_edges[::-1], y, side="right") - 1
-
-        if not (0 <= row < grid.shape[0]) or not (0 <= col < grid.shape[1]):
-            return None
-
-        # Check if cell is accessible
-        if not grid.accessible_mask[row, col]:
-            return None
-
-        # Find index in accessible_indices list
-        for idx, (r, c) in enumerate(self.accessible_indices):
-            if r == row and c == col:
-                return idx
-
-        return None
+        return self.cost_grid.get_cell_index(pos)
 
     def input_bump(self, animal_pos):
         """
@@ -867,18 +842,20 @@ class PlaceCellNetwork(BasicModel):
             Input vector of shape (cell_num,)
         """
         # Get the cell index corresponding to the animal's position
+        # Returns -1 if position is out of bounds or inaccessible
         cell_idx = self.get_geodesic_index_by_pos(animal_pos)
 
-        if cell_idx is None:
-            # Position is outside the environment
-            return u.math.zeros(self.cell_num)
+        # Use geodesic distances from the distance matrix
+        # If cell_idx is -1 (invalid), clip to 0 to avoid index error
+        # The result will be near-zero anyway due to large distances
+        cell_idx_safe = u.math.maximum(cell_idx, 0)
+        d = self.D[cell_idx_safe]
 
-        # Convert to float for distance computation
-        cell_idx_float = float(cell_idx)
-        cell_indices = u.math.arange(self.cell_num, dtype=float)
-        distances = u.math.abs(cell_indices - cell_idx_float)
-
-        return self.A * u.math.exp(-0.5 * u.math.square(distances / self.a))
+        # Zero out the input if the position was invalid (cell_idx < 0)
+        # This is JAX-compatible
+        is_valid = cell_idx >= 0
+        bump = self.A * u.math.exp(-0.5 * u.math.square(d / self.a))
+        return u.math.where(is_valid, bump, u.math.zeros_like(bump))
 
     def update(self, animal_pos, theta_input):
         """

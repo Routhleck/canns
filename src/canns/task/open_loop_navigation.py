@@ -225,29 +225,6 @@ class OpenLoopNavigationTask(BaseNavigationTask):
             rot_vel=rot_vel,
         )
 
-    def show_data(
-        self,
-        show=True,
-        save_path=None,
-    ):
-        """
-        Displays the trajectory of the agent in the environment.
-        """
-        # self.reset()
-        # self.generate_trajectory()
-        if self.data is None:
-            raise ValueError("No trajectory data available. Please generate the data first.")
-        fig, ax = plt.subplots(1, 1, figsize=(3, 3))
-
-        try:
-            self.agent.plot_trajectory(
-                t_start=0, t_end=self.total_steps, fig=fig, ax=ax, color="changing"
-            )
-            plt.savefig(save_path) if save_path else None
-            plt.show() if show else None
-        finally:
-            plt.close(fig)
-
     def show_trajectory_analysis(
         self,
         show: bool = True,
