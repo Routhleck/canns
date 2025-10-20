@@ -4,10 +4,10 @@ import numpy as np
 import pytest
 
 from canns.task.closed_loop_navigation import (
-    INT32_MAX,
     ClosedLoopNavigationTask,
     TMazeClosedLoopNavigationTask,
 )
+from canns.task.navigation_base import INT32_MAX
 
 
 def test_tmaze_movement_cost_and_geodesic_visualisation(tmp_path):

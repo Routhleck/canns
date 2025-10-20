@@ -1,19 +1,21 @@
 import copy
 from dataclasses import dataclass
 
-import brainstate
 import brainunit as u
 import numpy as np
-import ratinabox
 import seaborn as sns
 from matplotlib import pyplot as plt
-from ratinabox.Agent import Agent
-from ratinabox.Environment import Environment
+from ratinabox import Agent, Environment
 from tqdm import tqdm
 
-from ._base import Task
+from .navigation_base import BaseNavigationTask
 
-__all__ = ["map2pi", "OpenLoopNavigationTask", "OpenLoopNavigationData"]
+__all__ = [
+    "map2pi",
+    "OpenLoopNavigationTask",
+    "OpenLoopNavigationData",
+    "TMazeOpenLoopNavigationTask",
+]
 
 
 def map2pi(a):
@@ -48,7 +50,7 @@ class OpenLoopNavigationData:
     ang_speed_gains: np.ndarray | None = None  # Normalized angular speed [-1,1]
 
 
-class OpenLoopNavigationTask(Task):
+class OpenLoopNavigationTask(BaseNavigationTask):
     """
     Open-loop spatial navigation task that synthesises trajectories without
     incorporating real-time feedback from a controller.
@@ -66,7 +68,9 @@ class OpenLoopNavigationTask(Task):
         dimensionality="2D",
         boundary_conditions="solid",  # "solid" or "periodic"
         scale=None,
-        dx=0.01,  # for show_data only
+        dx=0.01,
+        grid_dx: float | None = None,  # Grid resolution for geodesic computation
+        grid_dy: float | None = None,  # Grid resolution for geodesic computation
         boundary=None,  # coordinates [[x0,y0],[x1,y1],...] of the corners of a 2D polygon bounding the Env (if None, Env defaults to rectangular). Corners must be ordered clockwise or anticlockwise, and the polygon must be a 'simple polygon' (no holes, doesn't self-intersect).
         walls=None,  # a list of loose walls within the environment. Each wall in the list can be defined by it's start and end coords [[x0,y0],[x1,y1]]. You can also manually add walls after init using Env.add_wall() (preferred).
         holes=None,  # coordinates [[[x0,y0],[x1,y1],...],...] of corners of any holes inside the Env. These must be entirely inside the environment and not intersect one another. Corners must be ordered clockwise or anticlockwise. holes has 1-dimension more than boundary since there can be multiple holes
@@ -83,79 +87,39 @@ class OpenLoopNavigationTask(Task):
         wall_repel_distance=0.1,
         wall_repel_strength=1.0,
     ):
-        super().__init__(data_class=OpenLoopNavigationData)
+        super().__init__(
+            start_pos=start_pos,
+            width=width,
+            height=height,
+            dimensionality=dimensionality,
+            boundary_conditions=boundary_conditions,
+            scale=scale,
+            dx=dx,
+            grid_dx=grid_dx,
+            grid_dy=grid_dy,
+            boundary=boundary,
+            walls=walls,
+            holes=holes,
+            objects=objects,
+            dt=dt,
+            speed_mean=speed_mean,
+            speed_std=speed_std,
+            speed_coherence_time=speed_coherence_time,
+            rotational_velocity_coherence_time=rotational_velocity_coherence_time,
+            rotational_velocity_std=rotational_velocity_std,
+            head_direction_smoothing_timescale=head_direction_smoothing_timescale,
+            thigmotaxis=thigmotaxis,
+            wall_repel_distance=wall_repel_distance,
+            wall_repel_strength=wall_repel_strength,
+            data_class=OpenLoopNavigationData,
+        )
 
-        # --- task settings ---
-        # time settings
+        # Open-loop specific settings
         self.duration = duration
-        self.dt = dt if dt is not None else brainstate.environ.get_dt()
         self.total_steps = int(self.duration / self.dt)
         self.run_steps = np.arange(self.total_steps)
-        # environment settings
-        self.width = width
-        self.height = height
-        self.aspect = width / height
-        self.dimensionality = str(dimensionality).upper()
-        if self.dimensionality == "1D":
-            raise NotImplementedError(
-                "OpenLoopNavigationTask currently supports only 2D environments."
-            )
-        if self.dimensionality != "2D":
-            raise ValueError(f"Unsupported dimensionality '{dimensionality}'. Expected '2D'.")
-        self.boundary_conditions = boundary_conditions
-        self.scale = height if scale is None else scale
-        self.dx = dx
-        self.boundary = copy.deepcopy(boundary)
-        self.walls = copy.deepcopy(walls) if walls is not None else []
-        self.holes = copy.deepcopy(holes) if holes is not None else []
-        self.objects = copy.deepcopy(objects) if objects is not None else []
-        # agent settings
-        self.speed_mean = speed_mean
-        self.speed_std = speed_std
-        self.speed_coherence_time = speed_coherence_time
-        self.rotational_velocity_coherence_time = rotational_velocity_coherence_time
-        self.rotational_velocity_std = rotational_velocity_std
-        self.head_direction_smoothing_timescale = head_direction_smoothing_timescale
-        self.thigmotaxis = thigmotaxis
-        self.wall_repel_distance = wall_repel_distance
-        self.wall_repel_strength = wall_repel_strength
-        self.start_pos = start_pos
         self.initial_head_direction = initial_head_direction
-
-        # ratinabox settings
-        ratinabox.stylize_plots()
-        ratinabox.autosave_plots = False
-        ratinabox.figure_directory = "figures"
-
-        self.env_params = {
-            "dimensionality": self.dimensionality,
-            "boundary_conditions": self.boundary_conditions,
-            "scale": self.scale,
-            "aspect": self.aspect,
-            "dx": self.dx,
-            "boundary": self.boundary,
-            "walls": copy.deepcopy(self.walls),
-            "holes": copy.deepcopy(self.holes),
-            "objects": copy.deepcopy(self.objects),
-        }
-        self.env = Environment(params=self.env_params)
-
-        self.agent_params = {
-            "dt": self.dt,
-            "speed_mean": self.speed_mean,
-            "speed_std": self.speed_std,
-            "speed_coherence_time": self.speed_coherence_time,
-            "rotational_velocity_coherence_time": self.rotational_velocity_coherence_time,
-            "rotational_velocity_std": self.rotational_velocity_std,
-            "head_direction_smoothing_timescale": self.head_direction_smoothing_timescale,
-            "thigmotaxis": self.thigmotaxis,
-            "wall_repel_distance": self.wall_repel_distance,
-            "wall_repel_strength": self.wall_repel_strength,
-        }
-        self.agent = Agent(Environment=self.env, params=copy.deepcopy(self.agent_params))
-        self.agent.pos = np.array(start_pos)
-        self.agent.dt = self.dt
-
+        self.progress_bar = progress_bar
 
         # Set initial movement direction if specified
         if self.initial_head_direction is not None:
@@ -172,8 +136,6 @@ class OpenLoopNavigationTask(Task):
             self.agent.head_direction = np.array(
                 [np.cos(self.initial_head_direction), np.sin(self.initial_head_direction)]
             )
-
-        self.progress_bar = progress_bar
 
     def calculate_theta_sweep_data(self):
         """
@@ -210,7 +172,6 @@ class OpenLoopNavigationTask(Task):
         """
         Resets the agent's position to the starting position.
         """
-        self.agent_params["dt"] = self.dt
         self.agent = Agent(Environment=self.env, params=copy.deepcopy(self.agent_params))
         self.agent.pos = np.array(self.start_pos)
         self.agent.dt = self.dt
@@ -674,3 +635,55 @@ class OpenLoopNavigationTask(Task):
         print(f"Spatial dimensions: {n_dims}D")
         print(f"Time range: {times[0]:.3f} to {times[-1]:.3f} s")
         print(f"Mean speed: {np.mean(speed):.3f} units/s")
+
+
+class TMazeOpenLoopNavigationTask(OpenLoopNavigationTask):
+    """
+    Open-loop navigation task in a T-maze environment.
+
+    This subclass configures the environment with a T-maze boundary, which is useful
+    for studying decision-making and spatial navigation in a controlled setting.
+    """
+
+    def __init__(
+        self,
+        w=0.3,  # corridor width
+        l_s=1.0,  # stem length
+        l_arm=0.75,  # arm length
+        t=0.3,  # wall thickness
+        start_pos=(0.0, 0.15),
+        duration=20.0,
+        dt=None,
+        **kwargs,
+    ):
+        """
+        Initialize T-maze open-loop navigation task.
+
+        Args:
+            w: Width of the corridor (default: 0.3)
+            l_s: Length of the stem (default: 1.0)
+            l_arm: Length of each arm (default: 0.75)
+            t: Thickness of the walls (default: 0.3)
+            start_pos: Starting position of the agent (default: (0.0, 0.15))
+            duration: Duration of the trajectory in seconds (default: 20.0)
+            dt: Time step (default: None, uses brainstate.environ.get_dt())
+            **kwargs: Additional keyword arguments passed to OpenLoopNavigationTask
+        """
+        hw = w / 2
+        boundary = [
+            [-hw, 0.0],
+            [-hw, l_s],
+            [-l_arm, l_s],
+            [-l_arm, l_s + t],
+            [l_arm, l_s + t],
+            [l_arm, l_s],
+            [hw, l_s],
+            [hw, 0.0],
+        ]
+        super().__init__(
+            start_pos=start_pos,
+            boundary=boundary,
+            duration=duration,
+            dt=dt,
+            **kwargs,
+        )
