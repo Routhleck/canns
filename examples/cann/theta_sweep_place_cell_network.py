@@ -14,22 +14,24 @@ import brainunit as u
 
 from canns.analyzer.theta_sweep import create_theta_sweep_place_cell_animation
 from canns.models.basic.theta_sweep_model import PlaceCellNetwork
-from canns.task.open_loop_navigation import TMazeOpenLoopNavigationTask
+from canns.task.open_loop_navigation import TMazeOpenLoopNavigationTask, TMazeRecessOpenLoopNavigationTask
 
 
 def main() -> None:
     # Set up simulation parameters
     np.random.seed(10)
-    simulate_time = 2.0
+    simulate_time = 4.0
     dt = 0.001
     brainstate.environ.set(dt=1.0)
 
     # Create and run spatial navigation task
-    tmazet = TMazeOpenLoopNavigationTask(
+    tmazet = TMazeRecessOpenLoopNavigationTask(
         duration=simulate_time,
         start_pos=(0.0, 0.15),
+        recess_width=0.15,
+        recess_depth=0.15,
         initial_head_direction=1/2 * u.math.pi,
-        speed_mean=0.55,
+        speed_mean=0.25,
         speed_std=0.0,
         rotational_velocity_std=0,
         dt=dt,
@@ -50,7 +52,7 @@ def main() -> None:
 
     # Show trajectory analysis
     print("Displaying trajectory analysis...")
-    tmazet.show_data(show=True, overlay_movement_cost=True)
+    tmazet.show_data(show=False, overlay_movement_cost=True, save_path="tmaze_trajectory_analysis.png")
 
     # Create networks
     pc_net = PlaceCellNetwork(
