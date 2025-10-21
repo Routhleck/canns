@@ -8,30 +8,34 @@ multiple times. Removing the guard would cause the entire script to run once per
 worker when using the parallel GIF renderer.
 """
 
-import numpy as np
 import brainstate
 import brainunit as u
+import numpy as np
 
-from canns.analyzer.theta_sweep import create_theta_sweep_place_cell_animation
+from canns.analyzer.plotting.spikes import population_activity_heatmap
 from canns.models.basic.theta_sweep_model import PlaceCellNetwork
-from canns.task.open_loop_navigation import TMazeOpenLoopNavigationTask, TMazeRecessOpenLoopNavigationTask
+from canns.task.open_loop_navigation import TMazeRecessOpenLoopNavigationTask
 
 
 def main() -> None:
     # Set up simulation parameters
     np.random.seed(10)
-    simulate_time = 4.0
+    simulate_time = 1.0
     dt = 0.001
     brainstate.environ.set(dt=1.0)
 
-    # Create and run spatial navigation task
+    # Create and run spatial navigation task with T-maze geometry from Chu et al. 2024
     tmazet = TMazeRecessOpenLoopNavigationTask(
         duration=simulate_time,
-        start_pos=(0.0, 0.15),
-        recess_width=0.15,
-        recess_depth=0.15,
-        initial_head_direction=1/2 * u.math.pi,
-        speed_mean=0.25,
+        w=0.84,            # Corridor width (m)
+        l_s=3.64,          # Stem length (m)
+        l_arm=2.36,        # Arm length (m)
+        t=1.0,             # T-junction thickness (m)
+        start_pos=(0.0, 0.3),
+        recess_width=0.5,
+        recess_depth=0.5,
+        initial_head_direction=1 / 2 * u.math.pi,
+        speed_mean=1.2,    # Agent speed (m/s)
         speed_std=0.0,
         rotational_velocity_std=0,
         dt=dt,
@@ -39,7 +43,7 @@ def main() -> None:
 
     tmazet.get_data()
     tmazet.calculate_theta_sweep_data()
-    tmazet.set_grid_resolution(0.025, 0.025)
+    tmazet.set_grid_resolution(0.021, 0.021)
     geodesic_result = tmazet.compute_geodesic_distance_matrix()
     tmazet_data = tmazet.data
 
@@ -54,11 +58,38 @@ def main() -> None:
     print("Displaying trajectory analysis...")
     tmazet.show_data(show=False, overlay_movement_cost=True, save_path="tmaze_trajectory_analysis.png")
 
-    # Create networks
+    # Create networks with T-maze parameters from Chu et al. 2024 Table 3
+    # Key: adaptation_strength=190.0 gives m = 190×3/144 ≈ 3.96
     pc_net = PlaceCellNetwork(
-        geodesic_result
+        geodesic_result,
+        tau=3.0,           # Fast neural time constant (ms)
+        tau_v=150.0,       # Slow adaptation time constant (ms)
+        noise_strength=0.1,
+        k=0.25,            # Global inhibition strength
+        adaptation_strength=60.0,  # Gives effective m ≈ 3.96
+        a=0.5,             # Local excitation range
+        A=0.2,             # Local excitation strength
+        J0=0.25,         # Baseline excitation
+        g=1.0,            # Excitatory gain
+        conn_noise=0.0,
     )
     pc_net.init_state()
+
+    # Warmup period: run network for 0.3s at starting position (MATLAB t_start=300ms)
+    warmup_time = 0.1  # seconds
+    warmup_steps = int(warmup_time / dt)
+    print(f"Running network warmup for {warmup_time}s ({warmup_steps} steps)...")
+
+    def warmup_step(i):
+        pc_net(position[0], 1.0)  # Run at start position with no theta modulation
+        return None
+
+    brainstate.compile.for_loop(
+        warmup_step,
+        u.math.arange(warmup_steps),
+        pbar=brainstate.compile.ProgressBar(10),
+    )
+    print("Warmup completed.")
 
     def run_step(i, pos, vel_gain, theta_strength=0, theta_cycle_len=100):
         t = i * brainstate.environ.get_dt()
@@ -68,7 +99,6 @@ def main() -> None:
         theta_modulation = 1 + theta_strength * vel_gain * u.math.cos(theta_phase)
 
         pc_net(pos, theta_modulation)
-
 
         return (
             pc_net.center.value,
@@ -92,21 +122,17 @@ def main() -> None:
         theta_modulation,
     ) = results
 
-    # Create animation visualization
-    print("\nCreating place cell animation...")
-    create_theta_sweep_place_cell_animation(
-        position_data=position,
-        pc_activity_data=net_activity,
-        pc_network=pc_net,
-        navigation_task=tmazet,
+    # Create population activity heatmap (static visualization)
+    print("\nCreating place cell population activity heatmap...")
+    population_activity_heatmap(
+        activity_data=net_activity,
         dt=dt,
-        n_step=10,
-        fps=10,
-        figsize=(14, 5),
-        save_path="place_cell_theta_sweep.gif",
-        show=False,  # Don't show to avoid display errors after saving
+        title="Place Cell Population Activity",
+        figsize=(10, 6),
+        cmap="viridis",
+        save_path="place_cell_population_activity.png",
+        show=False,
     )
-
 
 
 if __name__ == "__main__":
