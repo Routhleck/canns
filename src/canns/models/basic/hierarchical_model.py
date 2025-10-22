@@ -178,7 +178,8 @@ class GaussRecUnits(BasicModel):
             self.u.value
             + (-self.u.value + Irec + self.input.value) / self.tau * brainstate.environ.get_dt()
         )
-        self.center = self.decode(self.u.value)
+        self.input.value = self.input.value.at[:].set(0.)
+        self.center.value = self.center.value.at[0].set(self.decode(self.u.value))
 
 
 class NonRecUnits(BasicModel):
@@ -281,6 +282,8 @@ class NonRecUnits(BasicModel):
             self.u.value
             + (-self.u.value + self.input.value) / self.tau * brainstate.environ.get_dt()
         )
+        self.input.value = self.input.value.at[:].set(0.)
+        return self.r.value
 
 
 # the intact networks contains a group of EPG neurons (recurrent units), two P-EN neurons (non-recurrent units), one group of
@@ -719,16 +722,17 @@ class GridCell(BasicModel):
         self.input.value = input
         Irec = u.math.dot(self.conn_mat, self.r.value)
         # Update neural state
-        self.v.value = exp_euler_step(
-            lambda v: (-v + self.m * self.u.value) / self.tau_v,
-            self.v.value,
-        )
-        self.u.value = exp_euler_step(
+        _u = exp_euler_step(
             lambda u, Irec: (-u + Irec + self.input.value - self.v.value) / self.tau,
             self.u.value,
             Irec,
         )
-        self.u.value = u.math.where(self.u.value > 0, self.u.value, 0)
+        _v = exp_euler_step(
+            lambda v: (-v + self.m * self.u.value) / self.tau_v,
+            self.v.value,
+        )
+        self.u.value = u.math.where(_u > 0, _u, 0)
+        self.v.value = _v
         # self.u.value += (
         #     (-self.u.value + Irec + self.input.value - self.v.value)
         #     / self.tau
@@ -1013,7 +1017,7 @@ class HierarchicalNetwork(BasicModelGroup):
             # update the band cell module
             self.MEC_model_list[i](velocity=velocity, loc=loc, loc_input_stre=loc_input_stre)
             self.grid_fr.value = self.grid_fr.value.at[i].set(
-                self.MEC_model_list[i].grid_cell.r.value
+                self.MEC_model_list[i].grid_cell.u.value
             )
             self.band_x_fr.value = self.band_x_fr.value.at[i].set(
                 self.MEC_model_list[i].band_cell_x.band_cells.r.value
