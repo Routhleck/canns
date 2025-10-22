@@ -117,6 +117,8 @@ def _dijkstra_numba(
     queue_node[0] = start_linear_index
     queue_size = 1
 
+    diag_dist = np.sqrt(dx**2 + dy**2)
+
     while queue_size > 0:
         # Find minimum (simple linear search - still fast with JIT)
         min_idx = 0
@@ -145,7 +147,7 @@ def _dijkstra_numba(
         if costs[row, col] != 1:
             continue
 
-        # Check 4 neighbors
+        # Check 8 neighbors
         # Up
         if row > 0 and costs[row - 1, col] == 1:
             neighbour_idx = (row - 1) * cols + col
@@ -180,6 +182,46 @@ def _dijkstra_numba(
         if col < cols - 1 and costs[row, col + 1] == 1:
             neighbour_idx = row * cols + (col + 1)
             new_dist = current_dist + dx
+            if new_dist < distances[neighbour_idx]:
+                distances[neighbour_idx] = new_dist
+                queue_dist[queue_size] = new_dist
+                queue_node[queue_size] = neighbour_idx
+                queue_size += 1
+
+        # Up-Left
+        if row > 0 and col > 0 and costs[row - 1, col - 1] == 1:
+            neighbour_idx = (row - 1) * cols + (col - 1)
+            new_dist = current_dist + diag_dist
+            if new_dist < distances[neighbour_idx]:
+                distances[neighbour_idx] = new_dist
+                queue_dist[queue_size] = new_dist
+                queue_node[queue_size] = neighbour_idx
+                queue_size += 1
+
+        # Up-Right
+        if row > 0 and col < cols - 1 and costs[row - 1, col + 1] == 1:
+            neighbour_idx = (row - 1) * cols + (col + 1)
+            new_dist = current_dist + diag_dist
+            if new_dist < distances[neighbour_idx]:
+                distances[neighbour_idx] = new_dist
+                queue_dist[queue_size] = new_dist
+                queue_node[queue_size] = neighbour_idx
+                queue_size += 1
+
+        # Down-Left
+        if row < rows - 1 and col > 0 and costs[row + 1, col - 1] == 1:
+            neighbour_idx = (row + 1) * cols + (col - 1)
+            new_dist = current_dist + diag_dist
+            if new_dist < distances[neighbour_idx]:
+                distances[neighbour_idx] = new_dist
+                queue_dist[queue_size] = new_dist
+                queue_node[queue_size] = neighbour_idx
+                queue_size += 1
+
+        # Down-Right
+        if row < rows - 1 and col < cols - 1 and costs[row + 1, col + 1] == 1:
+            neighbour_idx = (row + 1) * cols + (col + 1)
+            new_dist = current_dist + diag_dist
             if new_dist < distances[neighbour_idx]:
                 distances[neighbour_idx] = new_dist
                 queue_dist[queue_size] = new_dist

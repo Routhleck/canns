@@ -694,7 +694,7 @@ class PlaceCellNetwork(BasicModel):
         tau_v: Adaptation time constant (ms). Larger values = slower adaptation.
         noise_strength: Standard deviation of Gaussian noise added to inputs
         k: Global inhibition strength for divisive normalization
-        adaptation_strength: Strength of adaptation coupling (dimensionless)
+        m: Strength of adaptation coupling (dimensionless)
         a: Width of connectivity kernel. Determines bump width in grid units.
         A: Amplitude of external input bump
         J0: Peak recurrent connection strength
@@ -722,7 +722,7 @@ class PlaceCellNetwork(BasicModel):
         tau_v: float = 100.0,
         noise_strength: float = 0.0,
         k: float = 0.2,
-        adaptation_strength: float = 15.0,
+        m: float = 3.0,
         a: float = 0.2,
         A: float = 5.0,
         J0: float = 1.0,
@@ -748,7 +748,6 @@ class PlaceCellNetwork(BasicModel):
         self.tau_v = tau_v
         self.noise_strength = noise_strength
         self.k = k
-        self.adaptation_strength = adaptation_strength
         self.a = a
         self.A = A
         self.J0 = J0
@@ -756,7 +755,7 @@ class PlaceCellNetwork(BasicModel):
         self.conn_noise = conn_noise
 
         # Derived parameters
-        self.m = adaptation_strength * tau / tau_v
+        self.m = m
 
         # Build connectivity based on geodesic distance
         base_connection = self.make_connection()
@@ -794,8 +793,8 @@ class PlaceCellNetwork(BasicModel):
             # d: (cell_num,) distances from one cell to all others
             return (
                 self.J0
-                * u.math.exp(-0.5 * u.math.square(d / self.a))
-                / (u.math.sqrt(2 * u.math.pi) * self.a)
+                * u.math.exp(-d / (2 * self.a ** 2))
+                / ((2 * u.math.pi) * self.a ** 2)
             )
 
         return kernel_row(self.D)
@@ -854,7 +853,7 @@ class PlaceCellNetwork(BasicModel):
         # Zero out the input if the position was invalid (cell_idx < 0)
         # This is JAX-compatible
         is_valid = cell_idx >= 0
-        bump = self.A * u.math.exp(-0.5 * u.math.square(d / self.a))
+        bump = self.A * u.math.exp(-d / (2 * self.a ** 2))
         return u.math.where(is_valid, bump, u.math.zeros_like(bump))
 
     def update(self, animal_pos, theta_input):

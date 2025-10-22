@@ -13,6 +13,7 @@ import brainunit as u
 import numpy as np
 
 from canns.analyzer.plotting.spikes import population_activity_heatmap
+from canns.analyzer.theta_sweep import create_theta_sweep_place_cell_animation
 from canns.models.basic.theta_sweep_model import PlaceCellNetwork
 from canns.task.open_loop_navigation import TMazeRecessOpenLoopNavigationTask
 
@@ -20,7 +21,7 @@ from canns.task.open_loop_navigation import TMazeRecessOpenLoopNavigationTask
 def main() -> None:
     # Set up simulation parameters
     np.random.seed(10)
-    simulate_time = 1.0
+    simulate_time = 3.0
     dt = 0.001
     brainstate.environ.set(dt=1.0)
 
@@ -31,9 +32,9 @@ def main() -> None:
         l_s=3.64,          # Stem length (m)
         l_arm=2.36,        # Arm length (m)
         t=1.0,             # T-junction thickness (m)
-        start_pos=(0.0, 0.3),
-        recess_width=0.5,
-        recess_depth=0.5,
+        start_pos=(0.0, 0.6),
+        recess_width=0.2,
+        recess_depth=0.2,
         initial_head_direction=1 / 2 * u.math.pi,
         speed_mean=1.2,    # Agent speed (m/s)
         speed_std=0.0,
@@ -43,7 +44,7 @@ def main() -> None:
 
     tmazet.get_data()
     tmazet.calculate_theta_sweep_data()
-    tmazet.set_grid_resolution(0.021, 0.021)
+    tmazet.set_grid_resolution(0.05, 0.05)
     geodesic_result = tmazet.compute_geodesic_distance_matrix()
     tmazet_data = tmazet.data
 
@@ -59,18 +60,17 @@ def main() -> None:
     tmazet.show_data(show=False, overlay_movement_cost=True, save_path="tmaze_trajectory_analysis.png")
 
     # Create networks with T-maze parameters from Chu et al. 2024 Table 3
-    # Key: adaptation_strength=190.0 gives m = 190×3/144 ≈ 3.96
     pc_net = PlaceCellNetwork(
         geodesic_result,
         tau=3.0,           # Fast neural time constant (ms)
         tau_v=150.0,       # Slow adaptation time constant (ms)
-        noise_strength=0.1,
-        k=0.25,            # Global inhibition strength
-        adaptation_strength=60.0,  # Gives effective m ≈ 3.96
-        a=0.5,             # Local excitation range
-        A=0.2,             # Local excitation strength
+        noise_strength=0.05,
+        k=1.40,            # Global inhibition strength
+        m=1.1,             # Gives effective m ≈ 3.96
+        a=0.3,             # Local excitation range
+        A=2.3,             # Local excitation strength
         J0=0.25,         # Baseline excitation
-        g=1.0,            # Excitatory gain
+        g=20.0,            # Excitatory gain
         conn_noise=0.0,
     )
     pc_net.init_state()
@@ -91,7 +91,7 @@ def main() -> None:
     )
     print("Warmup completed.")
 
-    def run_step(i, pos, vel_gain, theta_strength=0, theta_cycle_len=100):
+    def run_step(i, pos, vel_gain, theta_strength=0.1, theta_cycle_len=100):
         t = i * brainstate.environ.get_dt()
         theta_phase = u.math.mod(t, theta_cycle_len) / theta_cycle_len
         theta_phase = theta_phase * 2 * u.math.pi - u.math.pi
@@ -121,6 +121,19 @@ def main() -> None:
         theta_phase,
         theta_modulation,
     ) = results
+
+    # remove if needed (this animation will need more time)
+    create_theta_sweep_place_cell_animation(
+        position_data=position,
+        pc_activity_data=net_activity,
+        pc_network=pc_net,
+        navigation_task=tmazet,
+        n_step=20,
+        fps=10,
+        figsize=(14, 5),
+        save_path="place_cell_theta_sweep.gif",
+        show=False,  # Don't show to avoid display errors after saving
+    )
 
     # Create population activity heatmap (static visualization)
     print("\nCreating place cell population activity heatmap...")
