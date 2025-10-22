@@ -1,0 +1,43 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+type: software
+title: "CANNs: Continuous Attractor Neural Networks Toolkit"
+authors:
+  - family-names: "He"
+    given-names: "Sichao"
+    email: "sichaohe@outlook.com"
+    affiliation: "PKU NIP lab"
+repository-code: "https://github.com/Routhleck/canns"
+url: "https://routhleck.com/canns"
+abstract: "A Python library built on top of the Brain Simulation Ecosystem (brainstate, brainunit) that streamlines experimentation with continuous attractor neural networks and related brain-inspired models. It delivers ready-to-use models, task generators, analysis tools, and pipelines so neuroscience and AI researchers can move from ideas to reproducible simulations quickly."
+keywords:
+  - continuous attractor neural networks
+  - CANNs
+  - computational neuroscience
+  - spatial cognition
+  - neural dynamics
+  - JAX
+  - brain-inspired computing
+license: Apache-2.0
+version: "v0.9.0"
+date-released: "2025-10-22"
+identifiers:
+  - type: doi
+    value: "10.5281/zenodo.17412546"
+    description: "The versioned DOI for version v0.9.0"
+  - type: doi
+    value: "10.5281/zenodo.17412545"
+    description: "The concept DOI (always resolves to latest version)"
+preferred-citation:
+  type: software
+  title: "CANNs: Continuous Attractor Neural Networks Toolkit"
+  authors:
+    - family-names: "He"
+      given-names: "Sichao"
+      email: "sichaohe@outlook.com"
+      affiliation: "PKU NIP lab"
+  doi: "10.5281/zenodo.17412545"
+  url: "https://github.com/Routhleck/canns"
+  version: "v0.9.0"
+  year: 2025
+  month: 10
