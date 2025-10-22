@@ -97,11 +97,11 @@ class DirectionCellNetwork(BasicModel):
     Example:
         >>> import brainstate
         >>> from canns.models.basic.theta_sweep_model import DirectionCellNetwork
-        >>> 
+        >>>
         >>> brainstate.environ.set(dt=1.0)  # 1ms time step
         >>> dc_net = DirectionCellNetwork(num=60)
         >>> dc_net.init_state()
-        >>> 
+        >>>
         >>> # Update with head direction and theta modulation
         >>> head_direction = 0.5  # radians
         >>> theta_modulation = 1.2  # theta phase-dependent gain
@@ -235,6 +235,7 @@ class DirectionCellNetwork(BasicModel):
         Returns:
             Array of shape (num, num): Connectivity matrix
         """
+
         @jax.vmap
         def get_J(xbins):
             d = self.calculate_dist(xbins - self.x)
@@ -330,11 +331,11 @@ class GridCellNetwork(BasicModel):
     Example:
         >>> import brainstate
         >>> from canns.models.basic.theta_sweep_model import GridCellNetwork
-        >>> 
+        >>>
         >>> brainstate.environ.set(dt=1.0)
         >>> gc_net = GridCellNetwork(num_dc=60, num_gc_x=30, mapping_ratio=1.5)
         >>> gc_net.init_state()
-        >>> 
+        >>>
         >>> # Update with position, direction activity, and theta modulation
         >>> position = [0.5, 0.3]  # animal position
         >>> dir_activity = np.random.rand(60)  # direction cell firing
@@ -450,6 +451,7 @@ class GridCellNetwork(BasicModel):
         Returns:
             Array of shape (num, num): Recurrent connectivity matrix
         """
+
         @jax.vmap
         def kernel(v):
             # v: (2,) location in (x,y)
@@ -668,3 +670,214 @@ class GridCellNetwork(BasicModel):
         px = u.math.mod(phase[0], 2.0 * u.math.pi) - u.math.pi
         py = u.math.mod(phase[1], 2.0 * u.math.pi) - u.math.pi
         return u.math.array([px, py])
+
+
+class PlaceCellNetwork(BasicModel):
+    """
+    Graph-based continuous-attractor place cell network using environment geodesic distances.
+
+    This network implements a place cell representation where neurons are tuned to discrete
+    locations in a navigation environment. Connectivity is based on geodesic (shortest path)
+    distances within the environment, allowing the network to adapt to complex non-convex spaces
+    with obstacles.
+
+    Key features:
+    - Connectivity matrix based on geodesic distances (not Euclidean)
+    - Replaces NetworkX graph representation with grid-based geodesic computation
+    - Uses GeodesicDistanceResult for environment definition and distance computation
+    - Continuous attractor dynamics with spike-frequency adaptation
+    - Supports arbitrary environment shapes (rectangular, T-maze, complex polygons with holes/walls)
+
+    Args:
+        geodesic_result: Geodesic distance computation result from navigation task
+        tau: Membrane time constant (ms). Controls speed of neural dynamics.
+        tau_v: Adaptation time constant (ms). Larger values = slower adaptation.
+        noise_strength: Standard deviation of Gaussian noise added to inputs
+        k: Global inhibition strength for divisive normalization
+        m: Strength of adaptation coupling (dimensionless)
+        a: Width of connectivity kernel. Determines bump width in grid units.
+        A: Amplitude of external input bump
+        J0: Peak recurrent connection strength
+        g: Gain parameter for firing rate transformation
+        conn_noise: Standard deviation of Gaussian noise added to connectivity matrix
+
+    Attributes:
+        geodesic_result (GeodesicDistanceResult): Geodesic distance computation result
+        cell_num (int): Number of place cells (= number of accessible grid cells)
+        D (Array): Geodesic distance matrix of shape (cell_num, cell_num)
+        accessible_indices (Array): Grid indices of accessible cells (cell_num, 2)
+        cost_grid (MovementCostGrid): Grid cost information for position lookups
+        conn_mat (Array): Recurrent connectivity matrix with Gaussian profile
+        r (HiddenState): Firing rates of place cells
+        u (HiddenState): Membrane potentials
+        v (HiddenState): Adaptation variables
+        center (State): Current decoded bump center
+        m (float): Effective adaptation strength (adaptation_strength * tau / tau_v)
+    """
+
+    def __init__(
+        self,
+        geodesic_result,
+        tau: float = 10.0,
+        tau_v: float = 100.0,
+        noise_strength: float = 0.0,
+        k: float = 0.2,
+        m: float = 3.0,
+        a: float = 0.2,
+        A: float = 5.0,
+        J0: float = 1.0,
+        g: float = 1.0,
+        conn_noise: float = 0.0,
+    ):
+        self.geodesic_result = geodesic_result
+        self.cost_grid = geodesic_result.cost_grid
+
+        # Extract geodesic distances and accessible indices
+        self.D = u.math.asarray(geodesic_result.distances)  # (cell_num, cell_num)
+        self.accessible_indices = geodesic_result.accessible_indices  # (cell_num, 2)
+        self.cell_num = len(self.accessible_indices)
+        self.dx, self.dy = geodesic_result.cost_grid.dx, geodesic_result.cost_grid.dy
+
+        # assume square grid cells
+        self.x = u.math.arange(self.cell_num) * self.dx
+
+        super().__init__(in_size=self.cell_num)
+
+        # Store parameters
+        self.tau = tau
+        self.tau_v = tau_v
+        self.noise_strength = noise_strength
+        self.k = k
+        self.a = a
+        self.A = A
+        self.J0 = J0
+        self.g = g
+        self.conn_noise = conn_noise
+
+        # Derived parameters
+        self.m = m
+
+        # Build connectivity based on geodesic distance
+        base_connection = self.make_connection()
+        noise_connection = np.random.normal(0, conn_noise, size=(self.cell_num, self.cell_num))
+        self.conn_mat = base_connection + noise_connection
+
+    def init_state(self, *args, **kwargs):
+        """
+        Initialize network state variables.
+
+        Creates and initializes:
+        - r: Firing rates (all zeros)
+        - u: Membrane potentials (all zeros)
+        - v: Adaptation variables (all zeros)
+        - center: Current bump center (zero)
+        """
+        self.r = brainstate.HiddenState(u.math.zeros(self.cell_num))
+        self.v = brainstate.HiddenState(u.math.zeros(self.cell_num))
+        self.u = brainstate.HiddenState(u.math.zeros(self.cell_num))
+        self.center = brainstate.State(u.math.zeros(1))
+
+    def make_connection(self):
+        """
+        Generate recurrent connectivity matrix with Gaussian profile based on geodesic distance.
+
+        Connection strength between place cells decays with geodesic distance according
+        to a normalized Gaussian kernel.
+
+        Returns:
+            Array of shape (cell_num, cell_num): Connectivity matrix
+        """
+
+        @jax.vmap
+        def kernel_row(d):
+            # d: (cell_num,) distances from one cell to all others
+            return self.J0 * u.math.exp(-d / (2 * self.a**2)) / ((2 * u.math.pi) * self.a**2)
+
+        return kernel_row(self.D)
+
+    def get_bump_center(self, r, x):
+        """
+        Decode bump center from population activity.
+
+        Uses weighted average of cell indices, normalized by total activity.
+
+        Args:
+            r: Firing rate vector (cell_num,)
+
+        Returns:
+            Decoded center index (scalar)
+        """
+        denom = u.math.sum(r) + 1e-12
+        center_idx = u.math.sum(r * x) / denom
+        return center_idx.reshape(
+            -1,
+        )
+
+    def get_geodesic_index_by_pos(self, pos):
+        """
+        Get the geodesic index of the grid cell containing the given position.
+
+        Args:
+            pos: (x, y) coordinates of the position
+
+        Returns:
+            Index of the grid cell in the geodesic distance matrix, or None if
+            the position is out of bounds or in an impassable cell.
+        """
+        return self.cost_grid.get_cell_index(pos)
+
+    def input_bump(self, animal_pos):
+        """
+        Generate Gaussian bump external input centered on the animal's current position.
+
+        Args:
+            animal_pos: Current position (x, y) tuple or array
+
+        Returns:
+            Input vector of shape (cell_num,)
+        """
+        # Get the cell index corresponding to the animal's position
+        # Returns -1 if position is out of bounds or inaccessible
+        cell_idx = self.get_geodesic_index_by_pos(animal_pos)
+
+        # Use geodesic distances from the distance matrix
+        # If cell_idx is -1 (invalid), clip to 0 to avoid index error
+        # The result will be near-zero anyway due to large distances
+        cell_idx_safe = u.math.maximum(cell_idx, 0)
+        d = self.D[cell_idx_safe]
+
+        # Zero out the input if the position was invalid (cell_idx < 0)
+        # This is JAX-compatible
+        is_valid = cell_idx >= 0
+        bump = self.A * u.math.exp(-d / (2 * self.a**2))
+        return u.math.where(is_valid, bump, u.math.zeros_like(bump))
+
+    def update(self, animal_pos, theta_input):
+        """
+        Single time-step update of network dynamics.
+
+        Args:
+            animal_pos: Current position (x, y) tuple or array
+            theta_input: Theta modulation factor (typically 1.0 ± theta_strength)
+        """
+        self.center.value = self.get_bump_center(r=self.r.value, x=self.x)
+        Iext = theta_input * self.input_bump(animal_pos)
+        Irec = u.math.matmul(self.conn_mat, self.r.value)
+        noise = brainstate.random.randn(self.cell_num) * self.noise_strength
+        input_total = Iext + Irec + noise
+
+        _u = exp_euler_step(
+            lambda u, input: (-u + input - self.v.value) / self.tau,
+            self.u.value,
+            input_total,
+        )
+
+        _v = exp_euler_step(
+            lambda v: (-v + self.m * self.u.value) / self.tau_v,
+            self.v.value,
+        )
+        self.u.value = u.math.where(_u > 0, _u, 0)
+        self.v.value = _v
+
+        u_sq = u.math.square(self.u.value)
+        self.r.value = self.g * u_sq / (1.0 + self.k * u.math.sum(u_sq))

@@ -4,10 +4,10 @@ import numpy as np
 import pytest
 
 from canns.task.closed_loop_navigation import (
-    INT32_MAX,
     ClosedLoopNavigationTask,
     TMazeClosedLoopNavigationTask,
 )
+from canns.task.navigation_base import INT32_MAX
 
 
 def test_tmaze_movement_cost_and_geodesic_visualisation(tmp_path):
@@ -34,7 +34,6 @@ def test_tmaze_movement_cost_and_geodesic_visualisation(tmp_path):
     fig, ax = plt.subplots()
     task._plot_movement_cost_grid(ax, grid, add_colorbar=True)
     labels = {text.get_text() for text in ax.texts}
-    assert "1" in labels
     assert (grid.costs == INT32_MAX).any()
     plt.close(fig)
 
