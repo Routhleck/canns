@@ -143,6 +143,24 @@ examples/             Ready-to-run scripts for models, analysis, and pipelines
 tests/                Pytest coverage for key behaviours
 ```
 
+## Citation
+
+If you use CANNs in your research, please cite it using the information from our [CITATION.cff](CITATION.cff) file or use the following:
+
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.17412545.svg)](https://doi.org/10.5281/zenodo.17412545)
+
+```bibtex
+@software{he_2025_canns,
+  author       = {He, Sichao},
+  title        = {CANNs: Continuous Attractor Neural Networks Toolkit},
+  year         = 2025,
+  publisher    = {Zenodo},
+  version      = {v0.9.0},
+  doi          = {10.5281/zenodo.17412545},
+  url          = {https://github.com/Routhleck/canns}
+}
+```
+
 ## Contributing
 
 Contributions are welcome! Please open an issue or discussion if you plan significant changes. Pull requests should follow the existing lint/test workflow (`make lint && make test`).

@@ -13,6 +13,7 @@
 
 <picture><img src="https://badges.ws/github/stars/routhleck/canns?logo=github" /></picture>
 [![PyPI Downloads](https://static.pepy.tech/personalized-badge/canns?period=total&units=INTERNATIONAL_SYSTEM&left_color=BLACK&right_color=GREEN&left_text=downloads)](https://pepy.tech/projects/canns)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.17412545.svg)](https://doi.org/10.5281/zenodo.17412545)
 [![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/Routhleck/canns)
 [<img src="https://badges.ws/badge/Buy_Me_a_Coffee-ff813f?icon=buymeacoffee" />](https://buymeacoffee.com/forrestcai6)
 
@@ -140,6 +141,24 @@ src/canns/            核心库模块（模型、任务、分析器、训练器�
 docs/                 Sphinx 文档与笔记本
 examples/             可直接运行的模型、分析与流水线脚本
 tests/                关键行为的 Pytest 覆盖
+```
+
+## 引用本项目
+
+如果您在研究中使用了 CANNs，请通过我们的 [CITATION.cff](CITATION.cff) 文件或以下信息引用本项目：
+
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.17412545.svg)](https://doi.org/10.5281/zenodo.17412545)
+
+```bibtex
+@software{he_2025_canns,
+  author       = {He, Sichao},
+  title        = {CANNs: Continuous Attractor Neural Networks Toolkit},
+  year         = 2025,
+  publisher    = {Zenodo},
+  version      = {v0.9.0},
+  doi          = {10.5281/zenodo.17412545},
+  url          = {https://github.com/Routhleck/canns}
+}
 ```
 
 ## 参与贡献
