@@ -886,7 +886,11 @@ def create_theta_sweep_place_cell_animation(
 
     # Plot trajectory on top
     ax_env.plot(
-        data.position4ani[:, 0], data.position4ani[:, 1], color=trajectory_color, lw=1.5, alpha=0.9,
+        data.position4ani[:, 0],
+        data.position4ani[:, 1],
+        color=trajectory_color,
+        lw=1.5,
+        alpha=0.9,
         zorder=15,
     )
 

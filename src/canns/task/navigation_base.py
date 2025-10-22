@@ -19,13 +19,16 @@ from ._base import Task
 # Try to import numba for JIT acceleration
 try:
     from numba import njit, prange
+
     NUMBA_AVAILABLE = True
 except ImportError:
     NUMBA_AVAILABLE = False
+
     # Fallback: njit and prange become no-op
     def njit(*args, **kwargs):
         def decorator(func):
             return func
+
         if len(args) == 1 and callable(args[0]):
             return args[0]
         return decorator
@@ -89,9 +92,7 @@ def _dijkstra_python(
 
 
 @njit
-def _dijkstra_numba(
-    costs: np.ndarray, dx: float, dy: float, start_linear_index: int
-) -> np.ndarray:
+def _dijkstra_numba(costs: np.ndarray, dx: float, dy: float, start_linear_index: int) -> np.ndarray:
     """Numba-optimized Dijkstra's algorithm using simple array-based priority queue.
 
     This implementation uses a simplified priority queue suitable for Numba JIT compilation.
@@ -787,7 +788,7 @@ class BaseNavigationTask(Task):
             compute_thread = threading.Thread(target=compute_parallel)
 
             # Monitor progress with tqdm
-            desc = f"Computing geodesic distances (Numba parallel)"
+            desc = "Computing geodesic distances (Numba parallel)"
             pbar = tqdm(total=n_cells, desc=desc, ncols=100)
 
             compute_thread.start()
@@ -819,7 +820,9 @@ class BaseNavigationTask(Task):
             )
             desc = "Computing geodesic distances (Python)"
             for i, linear_idx in enumerate(tqdm(linear_indices, desc=desc, ncols=100)):
-                distances = self._dijkstra_on_grid(grid.costs, self.grid_dx, self.grid_dy, linear_idx)
+                distances = self._dijkstra_on_grid(
+                    grid.costs, self.grid_dx, self.grid_dy, linear_idx
+                )
                 distance_matrix[i, :] = distances[linear_indices]
 
         result = GeodesicDistanceResult(

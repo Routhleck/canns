@@ -720,14 +720,20 @@ class TMazeRecessOpenLoopNavigationTask(TMazeOpenLoopNavigationTask):
         boundary = [
             [-hw, 0.0],  # 0: Bottom left of stem
             [-hw, l_s - recess_depth],  # 1: Left side of stem, bottom of left recess
-            [-hw - recess_width, l_s - recess_depth],  # 2: Outer left corner of left recess (bottom)
+            [
+                -hw - recess_width,
+                l_s - recess_depth,
+            ],  # 2: Outer left corner of left recess (bottom)
             [-hw - recess_width, l_s],  # 3: Outer left corner of left recess (top)
             [-l_arm, l_s],  # 4: Inner edge of left arm
             [-l_arm, l_s + t],  # 5: Outer edge of left arm (top)
             [l_arm, l_s + t],  # 6: Outer edge of right arm (top)
             [l_arm, l_s],  # 7: Inner edge of right arm
             [hw + recess_width, l_s],  # 8: Outer right corner of right recess (top)
-            [hw + recess_width, l_s - recess_depth],  # 9: Outer right corner of right recess (bottom)
+            [
+                hw + recess_width,
+                l_s - recess_depth,
+            ],  # 9: Outer right corner of right recess (bottom)
             [hw, l_s - recess_depth],  # 10: Right side of stem, bottom of right recess
             [hw, 0.0],  # 11: Bottom right of stem
         ]

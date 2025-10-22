@@ -791,11 +791,7 @@ class PlaceCellNetwork(BasicModel):
         @jax.vmap
         def kernel_row(d):
             # d: (cell_num,) distances from one cell to all others
-            return (
-                self.J0
-                * u.math.exp(-d / (2 * self.a ** 2))
-                / ((2 * u.math.pi) * self.a ** 2)
-            )
+            return self.J0 * u.math.exp(-d / (2 * self.a**2)) / ((2 * u.math.pi) * self.a**2)
 
         return kernel_row(self.D)
 
@@ -853,7 +849,7 @@ class PlaceCellNetwork(BasicModel):
         # Zero out the input if the position was invalid (cell_idx < 0)
         # This is JAX-compatible
         is_valid = cell_idx >= 0
-        bump = self.A * u.math.exp(-d / (2 * self.a ** 2))
+        bump = self.A * u.math.exp(-d / (2 * self.a**2))
         return u.math.where(is_valid, bump, u.math.zeros_like(bump))
 
     def update(self, animal_pos, theta_input):
