@@ -10,7 +10,7 @@ from matplotlib.colors import ListedColormap
 
 from .config import PlotConfig, PlotConfigs
 
-__all__ = ["raster_plot", "average_firing_rate_plot"]
+__all__ = ["raster_plot", "average_firing_rate_plot", "population_activity_heatmap"]
 
 
 def _ensure_plot_config(
@@ -240,3 +240,122 @@ def average_firing_rate_plot(
         plt.close(fig)
 
     return fig, ax
+
+
+def population_activity_heatmap(
+    activity_data: np.ndarray,
+    dt: float,
+    config: PlotConfig | None = None,
+    *,
+    title: str = "Population Activity",
+    xlabel: str = "Time (s)",
+    ylabel: str = "Neuron Index",
+    figsize: tuple[int, int] = (10, 6),
+    cmap: str = "viridis",
+    save_path: str | None = None,
+    show: bool = True,
+    **kwargs: Any,
+):
+    """Generate a heatmap of population firing rate activity over time.
+
+    This function creates a 2D visualization where each row represents a neuron
+    and each column represents a time point, with color indicating the firing rate
+    or activity level.
+
+    Args:
+        activity_data: 2D array of shape ``(timesteps, neurons)`` containing
+            firing rates or activity values.
+        dt: Simulation time step in seconds.
+        config: Optional :class:`PlotConfig` with styling overrides.
+        title: Plot title when ``config`` is not provided.
+        xlabel: X-axis label when ``config`` is not provided.
+        ylabel: Y-axis label when ``config`` is not provided.
+        figsize: Figure size forwarded to Matplotlib when creating the axes.
+        cmap: Colormap name (default: "viridis").
+        save_path: Optional path used to persist the plot.
+        show: Whether to display the plot interactively.
+        **kwargs: Additional keyword arguments forwarded to Matplotlib.
+
+    Returns:
+        tuple: (figure, axis) objects.
+
+    Example:
+        >>> import numpy as np
+        >>> from canns.analyzer.plotting.spikes import population_activity_heatmap
+        >>> # Simulate some activity data
+        >>> activity = np.random.rand(1000, 100)  # 1000 timesteps, 100 neurons
+        >>> fig, ax = population_activity_heatmap(activity, dt=0.001)
+    """
+    if config is None:
+        config = PlotConfig(
+            title=title,
+            xlabel=xlabel,
+            ylabel=ylabel,
+            figsize=figsize,
+            save_path=save_path,
+            show=show,
+            kwargs={"cmap": cmap, **kwargs},
+        )
+    else:
+        # Merge additional kwargs if provided
+        if kwargs or cmap != "viridis":
+            config_kwargs = config.kwargs or {}
+            config_kwargs.update({"cmap": cmap, **kwargs})
+            config.kwargs = config_kwargs
+
+    if activity_data.ndim != 2:
+        raise ValueError(
+            f"Input activity_data must be a 2D array, but got shape {activity_data.shape}"
+        )
+    if activity_data.size == 0:
+        raise ValueError("Input activity_data must not be empty.")
+
+    num_timesteps, num_neurons = activity_data.shape
+
+    fig, ax = plt.subplots(figsize=config.figsize)
+
+    try:
+        # Create time axis
+        time_axis = np.arange(num_timesteps) * dt
+
+        # Transpose for proper visualization (neurons × time)
+        activity_transposed = activity_data.T
+
+        # Extract cmap from kwargs for imshow
+        plot_kwargs = config.to_matplotlib_kwargs()
+        cmap_name = plot_kwargs.pop("cmap", cmap)
+
+        # Plot heatmap
+        im = ax.imshow(
+            activity_transposed,
+            aspect="auto",
+            extent=[time_axis[0], time_axis[-1], 0, num_neurons],
+            origin="lower",
+            cmap=cmap_name,
+            **plot_kwargs,
+        )
+
+        # Configure axes
+        ax.set_title(config.title, fontsize=16, fontweight="bold")
+        ax.set_xlabel(config.xlabel, fontsize=12)
+        ax.set_ylabel(config.ylabel, fontsize=12)
+
+        # Add colorbar
+        cbar = fig.colorbar(im, ax=ax)
+        cbar.set_label("Activity", fontsize=10)
+
+        fig.tight_layout()
+
+        # Save and show
+        if config.save_path:
+            plt.savefig(config.save_path, dpi=300, bbox_inches="tight")
+            print(f"Plot saved to: {config.save_path}")
+
+        if config.show:
+            plt.show()
+
+        return fig, ax
+
+    except Exception as e:
+        plt.close(fig)
+        raise e
