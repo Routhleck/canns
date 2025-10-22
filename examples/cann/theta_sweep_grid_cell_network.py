@@ -13,7 +13,7 @@ import brainstate
 import brainunit as u
 
 from canns.analyzer.theta_sweep import (
-    create_theta_sweep_animation,
+    create_theta_sweep_grid_cell_animation,
     plot_grid_cell_manifold,
     plot_population_activity_with_theta,
 )
@@ -174,7 +174,7 @@ def main() -> None:
         show=False,
     )
 
-    animation = create_theta_sweep_animation(
+    animation = create_theta_sweep_grid_cell_animation(
         position_data=position,
         direction_data=direction,
         dc_activity_data=dc_netactivity,

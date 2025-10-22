@@ -705,7 +705,317 @@ def plot_grid_cell_manifold(
         raise e
 
 
-def create_theta_sweep_animation(
+@dataclass(slots=True)
+class _PlaceCellAnimationData:
+    """Immutable container for place cell animation arrays."""
+
+    frames: int
+    dt: float
+    n_step: int
+    fps: int
+    position4ani: np.ndarray
+    activity_grid: np.ndarray  # Grid-based activity (frames × rows × cols)
+    x_edges: np.ndarray  # Grid cell edges for pcolormesh
+    y_edges: np.ndarray
+    vmin: float
+    vmax: float
+
+
+def _prepare_place_cell_animation_data(
+    position_data: np.ndarray,
+    pc_activity_data: np.ndarray,
+    pc_network,
+    n_step: int,
+    dt: float,
+    fps: int,
+) -> _PlaceCellAnimationData:
+    """Compute reusable arrays required for place cell animations."""
+
+    position_np = np.asarray(position_data)
+    pc_activity_np = np.asarray(pc_activity_data)
+
+    position4ani = position_np[::n_step, :]
+    pc_activity4ani = pc_activity_np[::n_step, :].astype(np.float32, copy=False)
+
+    frames = pc_activity4ani.shape[0]
+
+    # Extract grid structure
+    accessible_indices = pc_network.geodesic_result.accessible_indices
+    cost_grid = pc_network.geodesic_result.cost_grid
+
+    # Create activity grid: map place cell activity back to 2D grid
+    n_rows, n_cols = cost_grid.shape
+    activity_grid = np.full((frames, n_rows, n_cols), np.nan, dtype=np.float32)
+
+    # Map activity back to grid positions
+    for cell_idx, (row, col) in enumerate(accessible_indices):
+        activity_grid[:, row, col] = pc_activity4ani[:, cell_idx]
+
+    # Compute activity range for consistent color scaling
+    vmax_raw = np.nanmax(activity_grid)
+    vmax = float(vmax_raw if np.isfinite(vmax_raw) else 1.0)
+    vmin = 0.0
+
+    return _PlaceCellAnimationData(
+        frames=frames,
+        dt=dt,
+        n_step=n_step,
+        fps=fps,
+        position4ani=position4ani,
+        activity_grid=activity_grid,
+        x_edges=cost_grid.x_edges,
+        y_edges=cost_grid.y_edges,
+        vmin=vmin,
+        vmax=vmax,
+    )
+
+
+def create_theta_sweep_place_cell_animation(
+    position_data: np.ndarray,
+    pc_activity_data: np.ndarray,
+    pc_network,  # PlaceCellNetwork instance
+    navigation_task,  # BaseNavigationTask instance
+    dt: float = 0.001,
+    config: PlotConfig | None = None,
+    # Animation control parameters
+    n_step: int = 10,  # Subsample every n_step frames
+    fps: int = 10,
+    figsize: tuple[int, int] = (12, 4),
+    save_path: str | None = None,
+    show: bool = True,
+    show_progress_bar: bool = True,
+    **kwargs,
+) -> FuncAnimation | None:
+    """
+    Create theta sweep animation for place cell network with 2 panels:
+    1. Environment trajectory with place cell bump overlay
+    2. Population activity heatmap over time
+
+    Args:
+        position_data: Animal position data (time, 2)
+        pc_activity_data: Place cell activity (time, num_cells)
+        pc_network: PlaceCellNetwork instance
+        navigation_task: BaseNavigationTask instance for environment visualization
+        dt: Time step size
+        config: PlotConfig object for unified configuration
+        n_step: Subsample every n_step frames for animation
+        fps: Frames per second for animation
+        figsize: Figure size (width, height)
+        save_path: Path to save animation (GIF or MP4)
+        show: Whether to display animation
+        show_progress_bar: Whether to show progress bar during saving
+        **kwargs: Additional parameters (cmap, alpha, etc.)
+
+    Returns:
+        FuncAnimation: Matplotlib animation object
+    """
+    # Handle configuration
+    if config is None:
+        config = PlotConfig(
+            figsize=figsize,
+            fps=fps,
+            save_path=save_path,
+            show=show,
+            show_progress_bar=show_progress_bar,
+            kwargs=kwargs,
+        )
+    else:
+        config.show_progress_bar = show_progress_bar
+        if save_path is not None:
+            config.save_path = save_path
+        if fps is not None:
+            config.fps = fps
+        if kwargs:
+            merged_kwargs = dict(config.kwargs or {})
+            merged_kwargs.update(kwargs)
+            config.kwargs = merged_kwargs
+
+    # Prepare animation data
+    data = _prepare_place_cell_animation_data(
+        position_data=position_data,
+        pc_activity_data=pc_activity_data,
+        pc_network=pc_network,
+        n_step=n_step,
+        dt=dt,
+        fps=config.fps,
+    )
+
+    cmap_name = config.kwargs.get("cmap", "viridis")
+    alpha = config.kwargs.get("alpha", 0.8)
+    trajectory_color = config.kwargs.get("trajectory_color", "#F18D00")
+
+    # Setup figure with 2 panels
+    fig, axes = plt.subplots(1, 2, figsize=config.figsize, width_ratios=[1, 1])
+    ax_env, ax_activity = axes
+
+    # Panel 1: Environment with place cell bump overlay
+    # Plot environment boundaries
+    env = navigation_task.env
+    if env.boundary is not None:
+        boundary_array = np.array(env.boundary)
+        ax_env.fill(boundary_array[:, 0], boundary_array[:, 1], color="lightgrey", alpha=0.3)
+        ax_env.plot(
+            np.append(boundary_array[:, 0], boundary_array[0, 0]),
+            np.append(boundary_array[:, 1], boundary_array[0, 1]),
+            color="black",
+            linewidth=2,
+        )
+
+    # Plot walls if they exist
+    if env.walls is not None and len(env.walls) > 0:
+        for wall in env.walls:
+            wall_array = np.array(wall)
+            ax_env.plot(wall_array[:, 0], wall_array[:, 1], color="black", linewidth=2)
+
+    # Create pcolormesh for place cell activity (grid-based visualization like grid cells)
+    # Flip y_edges for proper display (top-down to bottom-up)
+    y_edges_plot = data.y_edges[::-1]
+    initial_grid = np.flipud(data.activity_grid[0])
+
+    pc_mesh = ax_env.pcolormesh(
+        data.x_edges,
+        y_edges_plot,
+        initial_grid,
+        cmap=cmap_name,
+        vmin=data.vmin,
+        vmax=data.vmax,
+        alpha=alpha,
+        shading="auto",
+        zorder=1,
+    )
+
+    # Plot trajectory on top
+    ax_env.plot(
+        data.position4ani[:, 0],
+        data.position4ani[:, 1],
+        color=trajectory_color,
+        lw=1.5,
+        alpha=0.9,
+        zorder=15,
+    )
+
+    # Current position marker
+    (pos_marker,) = ax_env.plot([], [], "ro", markersize=8, zorder=20)
+
+    ax_env.set_aspect("equal", adjustable="box")
+    ax_env.set_title("Place Cell Activity in Environment")
+
+    # Panel 2: Population activity heatmap over time
+    time_axis = np.arange(data.frames) * n_step * dt
+
+    # Only show accessible cells (filter out NaN cells)
+    accessible_indices = pc_network.geodesic_result.accessible_indices
+    n_cells = len(accessible_indices)
+
+    # Extract activity only for accessible cells (cells × time)
+    activity_flat = np.zeros((n_cells, data.frames), dtype=np.float32)
+    for cell_idx, (row, col) in enumerate(accessible_indices):
+        activity_flat[cell_idx, :] = data.activity_grid[:, row, col]
+
+    # Create heatmap
+    heatmap = ax_activity.imshow(
+        activity_flat,
+        aspect="auto",
+        extent=[time_axis[0], time_axis[-1], 0, n_cells],
+        origin="lower",
+        cmap=cmap_name,
+        vmin=data.vmin,
+        vmax=data.vmax,
+    )
+
+    # Current time marker (vertical line)
+    (time_marker,) = ax_activity.plot([], [], "w-", lw=2, alpha=0.8)
+
+    ax_activity.set_xlabel("Time (s)")
+    ax_activity.set_ylabel("Place Cell Index")
+    ax_activity.set_title("Population Activity Over Time")
+
+    # Add colorbar
+    cbar = fig.colorbar(heatmap, ax=ax_activity)
+    cbar.set_label("Activity", fontsize=10)
+
+    fig.tight_layout()
+
+    # Animation title with time
+    time_text = fig.text(
+        0.5,
+        0.98,
+        "",
+        ha="center",
+        va="top",
+        fontsize=12,
+        fontweight="bold",
+    )
+    time_text.set_animated(True)
+
+    def update(frame):
+        """Update function for animation."""
+        t = frame * n_step * dt
+
+        # Update panel 1: place cell activity pcolormesh
+        # Flip the grid for proper display
+        grid_flipped = np.flipud(data.activity_grid[frame])
+        pc_mesh.set_array(grid_flipped.ravel())
+
+        # Update current position marker
+        pos_marker.set_data([data.position4ani[frame, 0]], [data.position4ani[frame, 1]])
+
+        # Update panel 2: time marker
+        time_marker.set_data([t, t], [0, n_cells])
+
+        # Update title with current time
+        time_text.set_text(f"t = {t:.2f}s")
+
+        return pc_mesh, pos_marker, time_marker, time_text
+
+    # Create animation
+    interval_ms = 1000 // config.fps
+    ani = FuncAnimation(
+        fig, update, frames=data.frames, interval=interval_ms, blit=True, repeat=True
+    )
+
+    # Save and/or show animation
+    if config.save_path:
+        if config.save_path.endswith(".mp4"):
+            from matplotlib.animation import FFMpegWriter
+
+            writer = FFMpegWriter(
+                fps=config.fps, codec="libx264", extra_args=["-pix_fmt", "yuv420p"]
+            )
+        else:
+            from matplotlib.animation import PillowWriter
+
+            writer = PillowWriter(fps=config.fps)
+
+        if config.show_progress_bar:
+            progress_bar = tqdm(
+                total=data.frames,
+                desc=f"<{create_theta_sweep_place_cell_animation.__name__}> Saving to {config.save_path}",
+            )
+
+            last_frame = {"value": -1}
+
+            def progress_callback(current_frame, _total_frames):
+                update = current_frame - last_frame["value"]
+                if update > 0:
+                    progress_bar.update(update)
+                    last_frame["value"] = current_frame
+
+            ani.save(config.save_path, writer=writer, progress_callback=progress_callback)
+            progress_bar.close()
+        else:
+            ani.save(config.save_path, writer=writer)
+        print(f"Animation saved to: {config.save_path}")
+
+    if config.show:
+        plt.show()
+    else:
+        plt.close(fig)
+
+    return ani
+
+
+def create_theta_sweep_grid_cell_animation(
     position_data: np.ndarray,
     direction_data: np.ndarray,
     dc_activity_data: np.ndarray,
@@ -1165,7 +1475,7 @@ def create_theta_sweep_animation(
         if config.show_progress_bar:
             progress_bar = tqdm(
                 total=data.frames,
-                desc=f"<{create_theta_sweep_animation.__name__}> Saving to {config.save_path}",
+                desc=f"<{create_theta_sweep_grid_cell_animation.__name__}> Saving to {config.save_path}",
             )
 
             last_frame = {"value": -1}

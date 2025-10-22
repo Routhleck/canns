@@ -271,7 +271,7 @@ class PopulationCoding(TrackingTask):
 class TemplateMatching(TrackingTask):
     """
     Template matching task for n-D continuous attractor networks.
-    
+
     This task presents a constant stimulus template with Gaussian noise added at each
     time step. The network must denoise the input and converge to the clean template,
     testing its attractor dynamics and noise robustness.
