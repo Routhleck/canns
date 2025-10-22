@@ -893,8 +893,8 @@ class BaseNavigationTask(Task):
         if dx <= 0 or dy <= 0:
             raise ValueError("dx and dy must be positive numbers.")
 
-        self.grid_dx = float(dx)
-        self.grid_dy = float(dy)
+        self.grid_dx = dx
+        self.grid_dy = dy
         self.cost_grid = None
         self.geodesic_result = None
 
