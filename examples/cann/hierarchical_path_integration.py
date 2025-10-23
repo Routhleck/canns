@@ -90,47 +90,13 @@ np.savez(
 )
 
 #### Visualization
-import matplotlib.pyplot as plt
-from numba import njit, prange
-from scipy.ndimage import gaussian_filter
 from tqdm import tqdm
+
+from canns.analyzer.spatial import compute_firing_field, gaussian_smooth_heatmaps
+from canns.analyzer.plotting import PlotConfig, plot_firing_field_heatmap
 
 
 np.random.seed(10)
-
-
-def gauss_filter(heatmaps, sigma: float = 1.0):
-    """Apply Gaussian smoothing to each heatmap without mixing channels."""
-    filtered = gaussian_filter(heatmaps, sigma=(0, sigma, sigma))
-    return np.where(heatmaps == 0, 0, filtered)
-
-
-@njit(parallel=True)
-def compute_firing_field(A, positions, width, height, M, K):
-    T, N = A.shape  # Number of time steps and neurons
-    # Initialize the heatmaps and bin counters
-    heatmaps = np.zeros((N, M, K))
-    bin_counts = np.zeros((M, K))
-
-    # Determine bin sizes
-    bin_width = width / M
-    bin_height = height / K
-    # Assign positions to bins
-    x_bins = np.clip(((positions[:, 0]) // bin_width).astype(np.int32), 0, M - 1)
-    y_bins = np.clip(((positions[:, 1]) // bin_height).astype(np.int32), 0, K - 1)
-
-    # Accumulate activity in each bin
-    for t in prange(T):
-        x_bin = x_bins[t]
-        y_bin = y_bins[t]
-        heatmaps[:, x_bin, y_bin] += A[t, :]
-        bin_counts[x_bin, y_bin] += 1
-
-    # Compute average firing rate per bin (avoid division by zero)
-    for n in range(N):
-        heatmaps[n] = np.where(bin_counts > 0, heatmaps[n] / bin_counts, 0)
-
-    return heatmaps
 
 
 trajectory = np.load(trajectory_file_path)
@@ -170,10 +136,10 @@ np.savez(
     heatmaps_place=heatmaps_place,
 )
 
-heatmaps_grid = gauss_filter(heatmaps_grid)
-heatmaps_band_x = gauss_filter(heatmaps_band_x)
-heatmaps_band_y = gauss_filter(heatmaps_band_y)
-heatmaps_place = gauss_filter(heatmaps_place)
+heatmaps_grid = gaussian_smooth_heatmaps(heatmaps_grid)
+heatmaps_band_x = gaussian_smooth_heatmaps(heatmaps_band_x)
+heatmaps_band_y = gaussian_smooth_heatmaps(heatmaps_band_y)
+heatmaps_place = gaussian_smooth_heatmaps(heatmaps_place)
 
 heatmaps_band_x = heatmaps_band_x.reshape(5, -1, M, K)
 heatmaps_band_y = heatmaps_band_y.reshape(5, -1, M, K)
@@ -202,17 +168,10 @@ SAVE_CELLS = None
 SAVE_PLACE_CELLS = None
 
 
-def save_heatmap(image: np.ndarray, save_path: str):
-    fig, ax = plt.subplots(figsize=(5, 5))
-    ax.imshow(image.T, cmap='jet', interpolation='nearest', origin='lower')
-    ax.set_xticks([])
-    ax.set_yticks([])
-    fig.tight_layout()
-    fig.savefig(save_path, bbox_inches='tight')
-    plt.close(fig)
-
-
-def save_module_heatmaps(heatmaps: np.ndarray, prefix: str):
+# Save band cell heatmaps
+for heatmaps, prefix in [(heatmaps_band_x, 'heatmap_band_x'),
+                          (heatmaps_band_y, 'heatmap_band_y'),
+                          (heatmaps_grid, 'heatmap_grid')]:
     num_modules, num_cells = heatmaps.shape[:2]
 
     # Determine which modules and cells to save
@@ -224,16 +183,15 @@ def save_module_heatmaps(heatmaps: np.ndarray, prefix: str):
         for module_idx in modules_to_save:
             for cell_idx in cells_to_save:
                 filename = f'{prefix}_module_{module_idx}_cell_{cell_idx}.png'
-                save_heatmap(heatmaps[module_idx, cell_idx], os.path.join(output_dir, filename))
+                save_path = os.path.join(output_dir, filename)
+                config = PlotConfig(figsize=(5, 5), save_path=save_path, show=False)
+                plot_firing_field_heatmap(heatmaps[module_idx, cell_idx], config=config)
                 pbar.update(1)
-
-
-save_module_heatmaps(heatmaps_band_x, 'heatmap_band_x')
-save_module_heatmaps(heatmaps_band_y, 'heatmap_band_y')
-save_module_heatmaps(heatmaps_grid, 'heatmap_grid')
 
 # Save place cell heatmaps
 place_cells_to_save = SAVE_PLACE_CELLS if SAVE_PLACE_CELLS is not None else range(heatmaps_place.shape[0])
 for cell_idx in tqdm(place_cells_to_save, desc='Saving place cell heatmaps'):
     filename = f'heatmap_place_cell_{cell_idx}.png'
-    save_heatmap(heatmaps_place[cell_idx], os.path.join(output_dir, filename))
+    save_path = os.path.join(output_dir, filename)
+    config = PlotConfig(figsize=(5, 5), save_path=save_path, show=False)
+    plot_firing_field_heatmap(heatmaps_place[cell_idx], config=config)
