@@ -7,6 +7,7 @@ from .energy import (
     energy_landscape_2d_animation,
     energy_landscape_2d_static,
 )
+from .spatial import plot_firing_field_heatmap
 from .spikes import average_firing_rate_plot, raster_plot
 from .tuning import tuning_curve
 
@@ -18,6 +19,7 @@ __all__ = [
     "energy_landscape_2d_animation",
     "energy_landscape_2d_static",
     "average_firing_rate_plot",
+    "plot_firing_field_heatmap",
     "raster_plot",
     "tuning_curve",
 ]
