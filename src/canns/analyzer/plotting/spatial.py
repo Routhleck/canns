@@ -82,7 +82,7 @@ def plot_firing_field_heatmap(
             plot_kwargs["origin"] = origin
 
         # Plot heatmap
-        im = ax.imshow(heatmap.T, **plot_kwargs)
+        ax.imshow(heatmap.T, **plot_kwargs)
 
         # Remove ticks for cleaner appearance
         ax.set_xticks([])
