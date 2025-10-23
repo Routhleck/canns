@@ -178,7 +178,8 @@ class GaussRecUnits(BasicModel):
             self.u.value
             + (-self.u.value + Irec + self.input.value) / self.tau * brainstate.environ.get_dt()
         )
-        self.center = self.decode(self.u.value)
+        self.input.value = self.input.value.at[:].set(0.)
+        self.center.value = self.center.value.at[0].set(self.decode(self.u.value))
 
 
 class NonRecUnits(BasicModel):
@@ -281,6 +282,8 @@ class NonRecUnits(BasicModel):
             self.u.value
             + (-self.u.value + self.input.value) / self.tau * brainstate.environ.get_dt()
         )
+        self.input.value = self.input.value.at[:].set(0.)
+        return self.r.value
 
 
 # the intact networks contains a group of EPG neurons (recurrent units), two P-EN neurons (non-recurrent units), one group of
@@ -323,6 +326,13 @@ class BandCell(BasicModel):
         w_L2S=0.2,
         w_S2L=1.0,
         gain=0.2,
+        # GaussRecUnits configuration
+        gauss_tau=1.0,
+        gauss_J0=1.1,
+        gauss_k=5e-4,
+        gauss_a=2 / 9 * u.math.pi,
+        # NonRecUnits configuration
+        nonrec_tau=0.1,
         **kwargs,
     ):
         """Initializes the BandCell model.
@@ -337,6 +347,11 @@ class BandCell(BasicModel):
             w_L2S (float, optional): Weight from band cells to shifter units. Defaults to 0.2.
             w_S2L (float, optional): Weight from shifter units to band cells. Defaults to 1.0.
             gain (float, optional): A gain factor for the velocity signal. Defaults to 0.2.
+            gauss_tau (float, optional): Time constant for GaussRecUnits. Defaults to 1.0.
+            gauss_J0 (float, optional): Connection strength scaling factor for GaussRecUnits. Defaults to 1.1.
+            gauss_k (float, optional): Global inhibition strength for GaussRecUnits. Defaults to 5e-4.
+            gauss_a (float, optional): Gaussian connection width for GaussRecUnits. Defaults to 2/9*pi.
+            nonrec_tau (float, optional): Time constant for NonRecUnits. Defaults to 0.1.
             **kwargs: Additional keyword arguments for the base class.
         """
         self.size = size  # The number of neurons in each neuron group except DN
@@ -364,10 +379,19 @@ class BandCell(BasicModel):
         # self.PEN_shift_num = int(self.PEN_shift / self.dx) # the number of interval shifted
         # self.PFL3_shift_num = int(self.PFL3_shift / self.dx) # the number of interval shifted
 
-        # neurons
-        self.band_cells = GaussRecUnits(size=size, noise=noise)  # heading direction
-        self.left = NonRecUnits(size=size, noise=noise)
-        self.right = NonRecUnits(size=size, noise=noise)
+        # neurons - create with custom parameters
+        self.band_cells = GaussRecUnits(
+            size=size,
+            tau=gauss_tau,
+            J0=gauss_J0,
+            k=gauss_k,
+            a=gauss_a,
+            z_min=z_min,
+            z_max=z_max,
+            noise=noise,
+        )  # heading direction
+        self.left = NonRecUnits(size=size, tau=nonrec_tau, z_min=z_min, z_max=z_max, noise=noise)
+        self.right = NonRecUnits(size=size, tau=nonrec_tau, z_min=z_min, z_max=z_max, noise=noise)
 
         # weights
         self.w_L2S = w_L2S
@@ -719,16 +743,17 @@ class GridCell(BasicModel):
         self.input.value = input
         Irec = u.math.dot(self.conn_mat, self.r.value)
         # Update neural state
-        self.v.value = exp_euler_step(
-            lambda v: (-v + self.m * self.u.value) / self.tau_v,
-            self.v.value,
-        )
-        self.u.value = exp_euler_step(
+        _u = exp_euler_step(
             lambda u, Irec: (-u + Irec + self.input.value - self.v.value) / self.tau,
             self.u.value,
             Irec,
         )
-        self.u.value = u.math.where(self.u.value > 0, self.u.value, 0)
+        _v = exp_euler_step(
+            lambda v: (-v + self.m * self.u.value) / self.tau_v,
+            self.v.value,
+        )
+        self.u.value = u.math.where(_u > 0, _u, 0)
+        self.v.value = _v
         # self.u.value += (
         #     (-self.u.value + Irec + self.input.value - self.v.value)
         #     / self.tau
@@ -764,7 +789,34 @@ class HierarchicalPathIntegrationModel(BasicModelGroup):
         grid_output (brainstate.State): The activity of the place cells.
     """
 
-    def __init__(self, spacing, angle, place_center=None):
+    def __init__(
+        self,
+        spacing,
+        angle,
+        place_center=None,
+        # BandCell configuration
+        band_size=180,
+        band_noise=0.0,
+        band_w_L2S=0.2,
+        band_w_S2L=1.0,
+        band_gain=0.2,
+        # GridCell configuration
+        grid_num=20,
+        grid_tau=0.1,
+        grid_tau_v=10.0,
+        grid_k=5e-3,
+        grid_a=u.math.pi / 9,
+        grid_A=1.0,
+        grid_J0=1.0,
+        grid_mbar=1.0,
+        # GaussRecUnits configuration (for BandCell)
+        gauss_tau=1.0,
+        gauss_J0=1.1,
+        gauss_k=5e-4,
+        gauss_a=2 / 9 * u.math.pi,
+        # NonRecUnits configuration (for BandCell)
+        nonrec_tau=0.1,
+    ):
         """Initializes the HierarchicalPathIntegrationModel.
 
         Args:
@@ -772,12 +824,82 @@ class HierarchicalPathIntegrationModel(BasicModelGroup):
             angle (float): The base orientation angle for the module.
             place_center (brainunit.math.ndarray, optional): The center locations of the
                 target place cell population. Defaults to a random distribution.
+            band_size (int, optional): Number of neurons in each BandCell group. Defaults to 180.
+            band_noise (float, optional): Noise level for BandCells. Defaults to 0.0.
+            band_w_L2S (float, optional): Weight from band cells to shifter units. Defaults to 0.2.
+            band_w_S2L (float, optional): Weight from shifter units to band cells. Defaults to 1.0.
+            band_gain (float, optional): Gain factor for velocity signal in BandCells. Defaults to 0.2.
+            grid_num (int, optional): Number of neurons per dimension for GridCell. Defaults to 20.
+            grid_tau (float, optional): Synaptic time constant for GridCell. Defaults to 0.1.
+            grid_tau_v (float, optional): Adaptation time constant for GridCell. Defaults to 10.0.
+            grid_k (float, optional): Global inhibition strength for GridCell. Defaults to 5e-3.
+            grid_a (float, optional): Connection width for GridCell. Defaults to pi/9.
+            grid_A (float, optional): External input magnitude for GridCell. Defaults to 1.0.
+            grid_J0 (float, optional): Maximum connection strength for GridCell. Defaults to 1.0.
+            grid_mbar (float, optional): Base adaptation strength for GridCell. Defaults to 1.0.
+            gauss_tau (float, optional): Time constant for GaussRecUnits in BandCells. Defaults to 1.0.
+            gauss_J0 (float, optional): Connection strength scaling for GaussRecUnits. Defaults to 1.1.
+            gauss_k (float, optional): Global inhibition for GaussRecUnits. Defaults to 5e-4.
+            gauss_a (float, optional): Connection width for GaussRecUnits. Defaults to 2/9*pi.
+            nonrec_tau (float, optional): Time constant for NonRecUnits in BandCells. Defaults to 0.1.
         """
         super().__init__()
-        self.band_cell_x = BandCell(angle=angle, spacing=spacing, noise=0.0)
-        self.band_cell_y = BandCell(angle=angle + u.math.pi / 3, spacing=spacing, noise=0.0)
-        self.band_cell_z = BandCell(angle=angle + u.math.pi / 3 * 2, spacing=spacing, noise=0.0)
-        self.grid_cell = GridCell(num=20, angle=angle, spacing=spacing)
+        # Create BandCell instances with custom parameters
+        self.band_cell_x = BandCell(
+            angle=angle,
+            spacing=spacing,
+            size=band_size,
+            noise=band_noise,
+            w_L2S=band_w_L2S,
+            w_S2L=band_w_S2L,
+            gain=band_gain,
+            gauss_tau=gauss_tau,
+            gauss_J0=gauss_J0,
+            gauss_k=gauss_k,
+            gauss_a=gauss_a,
+            nonrec_tau=nonrec_tau,
+        )
+        self.band_cell_y = BandCell(
+            angle=angle + u.math.pi / 3,
+            spacing=spacing,
+            size=band_size,
+            noise=band_noise,
+            w_L2S=band_w_L2S,
+            w_S2L=band_w_S2L,
+            gain=band_gain,
+            gauss_tau=gauss_tau,
+            gauss_J0=gauss_J0,
+            gauss_k=gauss_k,
+            gauss_a=gauss_a,
+            nonrec_tau=nonrec_tau,
+        )
+        self.band_cell_z = BandCell(
+            angle=angle + u.math.pi / 3 * 2,
+            spacing=spacing,
+            size=band_size,
+            noise=band_noise,
+            w_L2S=band_w_L2S,
+            w_S2L=band_w_S2L,
+            gain=band_gain,
+            gauss_tau=gauss_tau,
+            gauss_J0=gauss_J0,
+            gauss_k=gauss_k,
+            gauss_a=gauss_a,
+            nonrec_tau=nonrec_tau,
+        )
+        # Create GridCell instance with custom parameters
+        self.grid_cell = GridCell(
+            num=grid_num,
+            angle=angle,
+            spacing=spacing,
+            tau=grid_tau,
+            tau_v=grid_tau_v,
+            k=grid_k,
+            a=grid_a,
+            A=grid_A,
+            J0=grid_J0,
+            mbar=grid_mbar,
+        )
         self.proj_k_x = self.band_cell_x.proj_k
         self.proj_k_y = self.band_cell_y.proj_k
         self.place_center = (
@@ -963,12 +1085,63 @@ class HierarchicalNetwork(BasicModelGroup):
         Anonymous Author(s) "Unfolding the Black Box of Recurrent Neural Networks for Path Integration" (under review).
     """
 
-    def __init__(self, num_module, num_place):
+    def __init__(
+        self,
+        num_module,
+        num_place,
+        # Module spacing configuration
+        spacing_min=2.0,
+        spacing_max=5.0,
+        module_angle=0.0,
+        # BandCell configuration
+        band_size=180,
+        band_noise=0.0,
+        band_w_L2S=0.2,
+        band_w_S2L=1.0,
+        band_gain=0.2,
+        # GridCell configuration
+        grid_num=20,
+        grid_tau=0.1,
+        grid_tau_v=10.0,
+        grid_k=5e-3,
+        grid_a=u.math.pi / 9,
+        grid_A=1.0,
+        grid_J0=1.0,
+        grid_mbar=1.0,
+        # GaussRecUnits configuration (for BandCell)
+        gauss_tau=1.0,
+        gauss_J0=1.1,
+        gauss_k=5e-4,
+        gauss_a=2 / 9 * u.math.pi,
+        # NonRecUnits configuration (for BandCell)
+        nonrec_tau=0.1,
+    ):
         """Initializes the HierarchicalNetwork.
 
         Args:
             num_module (int): The number of grid modules to create.
             num_place (int): The number of place cells along one dimension of a square grid.
+            spacing_min (float, optional): Minimum spacing for grid modules. Defaults to 2.0.
+            spacing_max (float, optional): Maximum spacing for grid modules. Defaults to 5.0.
+            module_angle (float, optional): Base orientation angle for all modules. Defaults to 0.0.
+            band_size (int, optional): Number of neurons in each BandCell group. Defaults to 180.
+            band_noise (float, optional): Noise level for BandCells. Defaults to 0.0.
+            band_w_L2S (float, optional): Weight from band cells to shifter units. Defaults to 0.2.
+            band_w_S2L (float, optional): Weight from shifter units to band cells. Defaults to 1.0.
+            band_gain (float, optional): Gain factor for velocity signal in BandCells. Defaults to 0.2.
+            grid_num (int, optional): Number of neurons per dimension for GridCell. Defaults to 20.
+            grid_tau (float, optional): Synaptic time constant for GridCell. Defaults to 0.1.
+            grid_tau_v (float, optional): Adaptation time constant for GridCell. Defaults to 10.0.
+            grid_k (float, optional): Global inhibition strength for GridCell. Defaults to 5e-3.
+            grid_a (float, optional): Connection width for GridCell. Defaults to pi/9.
+            grid_A (float, optional): External input magnitude for GridCell. Defaults to 1.0.
+            grid_J0 (float, optional): Maximum connection strength for GridCell. Defaults to 1.0.
+            grid_mbar (float, optional): Base adaptation strength for GridCell. Defaults to 1.0.
+            gauss_tau (float, optional): Time constant for GaussRecUnits in BandCells. Defaults to 1.0.
+            gauss_J0 (float, optional): Connection strength scaling for GaussRecUnits. Defaults to 1.1.
+            gauss_k (float, optional): Global inhibition for GaussRecUnits. Defaults to 5e-4.
+            gauss_a (float, optional): Connection width for GaussRecUnits. Defaults to 2/9*pi.
+            nonrec_tau (float, optional): Time constant for NonRecUnits in BandCells. Defaults to 0.1.
         """
         super().__init__()
         self.num_module = num_module
@@ -986,11 +1159,31 @@ class HierarchicalNetwork(BasicModelGroup):
 
         MEC_model_list = []
         # self.W_g2p_list = []
-        spacing = u.math.linspace(2, 5, num_module)
+        spacing = u.math.linspace(spacing_min, spacing_max, num_module)
         for i in range(num_module):
             MEC_model_list.append(
                 HierarchicalPathIntegrationModel(
-                    spacing=spacing[i], angle=0.0, place_center=self.place_center
+                    spacing=spacing[i],
+                    angle=module_angle,
+                    place_center=self.place_center,
+                    band_size=band_size,
+                    band_noise=band_noise,
+                    band_w_L2S=band_w_L2S,
+                    band_w_S2L=band_w_S2L,
+                    band_gain=band_gain,
+                    grid_num=grid_num,
+                    grid_tau=grid_tau,
+                    grid_tau_v=grid_tau_v,
+                    grid_k=grid_k,
+                    grid_a=grid_a,
+                    grid_A=grid_A,
+                    grid_J0=grid_J0,
+                    grid_mbar=grid_mbar,
+                    gauss_tau=gauss_tau,
+                    gauss_J0=gauss_J0,
+                    gauss_k=gauss_k,
+                    gauss_a=gauss_a,
+                    nonrec_tau=nonrec_tau,
                 )
             )
             # W_g2p = self.W_place2grid(heatmaps_grid[i*400:(i+1)*400])
