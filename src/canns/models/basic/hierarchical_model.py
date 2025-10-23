@@ -1017,7 +1017,7 @@ class HierarchicalNetwork(BasicModelGroup):
             # update the band cell module
             self.MEC_model_list[i](velocity=velocity, loc=loc, loc_input_stre=loc_input_stre)
             self.grid_fr.value = self.grid_fr.value.at[i].set(
-                self.MEC_model_list[i].grid_cell.u.value
+                self.MEC_model_list[i].grid_cell.r.value
             )
             self.band_x_fr.value = self.band_x_fr.value.at[i].set(
                 self.MEC_model_list[i].band_cell_x.band_cells.r.value

@@ -12,14 +12,14 @@ from canns.task.open_loop_navigation import OpenLoopNavigationTask
 PATH = os.path.dirname(os.path.abspath(__file__))
 
 
-brainstate.environ.set(dt=0.1)
+brainstate.environ.set(dt=0.05)
 task_sn = OpenLoopNavigationTask(
     width=5,
     height=5,
-    speed_mean=0.16,
+    speed_mean=0.04,
     speed_std=0.016,
-    duration=10000.0,
-    dt=0.1,
+    duration=50000.0,
+    dt=0.05,
     start_pos=(2.5, 2.5),
     progress_bar=True,
 )
@@ -37,7 +37,7 @@ else:
     task_sn.show_data(show=False, save_path=trajectory_graph_file_path)
     task_sn.save_data(trajectory_file_path)
 
-hierarchical_net = HierarchicalNetwork(num_module=5, num_place=10)
+hierarchical_net = HierarchicalNetwork(num_module=5, num_place=30)
 hierarchical_net.init_state()
 
 def initialize(t, input_stre):
@@ -91,40 +91,18 @@ np.savez(
 
 #### Visualization
 import matplotlib.pyplot as plt
-
-trajectory = np.load('trajectory_test.npz')
-
-# 提取各个矩阵
-loc = trajectory['position']
-
-# load the neuron activity
-data = np.load('band_grid_place_activity.npz')
-band_x_r = data['band_x_r']
-band_y_r = data['band_y_r']
-grid_r = data['grid_r']
-place_r = data['place_r']
-
 from numba import njit, prange
-import numpy as np
-import matplotlib.pyplot as plt
-from numba import prange
 from scipy.ndimage import gaussian_filter
+from tqdm import tqdm
 
 
 np.random.seed(10)
 
 
-def gauss_filter(heatmaps):
-    # Gaussian 平滑参数
-    sigma = 1.0  # 平滑的标准差
-    N = heatmaps.shape[-1]
-    for k in range(N):
-        map_k = heatmaps[:, :, k]
-        filtered_map = gaussian_filter(map_k, sigma=sigma)
-        filtered_map = np.where(map_k == 0, 0, filtered_map)
-        heatmaps[:, :, k] = filtered_map
-
-    return heatmaps
+def gauss_filter(heatmaps, sigma: float = 1.0):
+    """Apply Gaussian smoothing to each heatmap without mixing channels."""
+    filtered = gaussian_filter(heatmaps, sigma=(0, sigma, sigma))
+    return np.where(heatmaps == 0, 0, filtered)
 
 
 @njit(parallel=True)
@@ -155,27 +133,42 @@ def compute_firing_field(A, positions, width, height, M, K):
     return heatmaps
 
 
-grid_r = np.array(grid_r)
-band_x_r = np.array(band_x_r)
-band_y_r = np.array(band_y_r)
-place_r = np.array(place_r)
+trajectory = np.load(trajectory_file_path)
+loc = trajectory['position']
+
+# load the neuron activity
+data = np.load(activity_file_path)
+band_x_r = data['band_x_r']
+band_y_r = data['band_y_r']
+grid_r = data['grid_r']
+place_r = data['place_r']
+
 loc = np.array(loc)
 width = 5
 height = 5
 M = int(width * 10)
 K = int(height * 10)
+
 T = grid_r.shape[0]
-grid_r = grid_r.reshape(T, -1)
-band_x_r = band_x_r.reshape(T, -1)
-band_y_r = band_y_r.reshape(T, -1)
+
+grid_r = np.array(grid_r).reshape(T, -1)
+band_x_r = np.array(band_x_r).reshape(T, -1)
+band_y_r = np.array(band_y_r).reshape(T, -1)
+place_r = np.array(place_r).reshape(T, -1)
+
 heatmaps_grid = compute_firing_field(grid_r, loc, width, height, M, K)
 heatmaps_band_x = compute_firing_field(band_x_r, loc, width, height, M, K)
 heatmaps_band_y = compute_firing_field(band_y_r, loc, width, height, M, K)
 heatmaps_place = compute_firing_field(place_r, loc, width, height, M, K)
-# save the heatmap
-np.savez('band_grid_place_heatmap.npz', heatmaps_grid=heatmaps_grid, heatmaps_band_x=heatmaps_band_x,
-         heatmaps_band_y=heatmaps_band_y, heatmaps_place=heatmaps_place)
 
+heatmap_file_path = os.path.join(PATH, 'band_grid_place_heatmap.npz')
+np.savez(
+    heatmap_file_path,
+    heatmaps_grid=heatmaps_grid,
+    heatmaps_band_x=heatmaps_band_x,
+    heatmaps_band_y=heatmaps_band_y,
+    heatmaps_place=heatmaps_place,
+)
 
 heatmaps_grid = gauss_filter(heatmaps_grid)
 heatmaps_band_x = gauss_filter(heatmaps_band_x)
@@ -186,49 +179,61 @@ heatmaps_band_x = heatmaps_band_x.reshape(5, -1, M, K)
 heatmaps_band_y = heatmaps_band_y.reshape(5, -1, M, K)
 heatmaps_grid = heatmaps_grid.reshape(5, -1, M, K)
 
-# plot the heatmap
-probe_index = np.random.choice(heatmaps_band_x.shape[1], 1)[0]
-for module_index in range(5):
-    plt.figure(figsize=(5, 5))
-    plt.imshow(heatmaps_band_x[module_index, probe_index].T, cmap='jet', interpolation='nearest', origin='lower')
-    # plt.title('Band module 1')
-    plt.xticks([])
-    plt.yticks([])
-    plt.tight_layout()
-    figname = 'heatmap_band_1_module_{}.png'.format(module_index)
-    plt.savefig(figname)
+output_dir = os.path.join(PATH, 'heatmap_figures')
+os.makedirs(output_dir, exist_ok=True)
 
-    plt.figure(figsize=(5, 5))
-    plt.imshow(heatmaps_band_y[module_index, probe_index].T, cmap='jet', interpolation='nearest', origin='lower')
-    # plt.title('Band module 2')
-    # 去除 x 轴和 y 轴的刻度
-    plt.xticks([])
-    plt.yticks([])
-    plt.tight_layout()
-    figname = 'heatmap_band_2_module_{}.png'.format(module_index)
-    plt.savefig(figname)
+# ============================================================================
+# Configuration for selective saving of heatmaps
+# ============================================================================
+# SAVE_MODULES: List of module indices to save for band/grid cells
+#   - [0]: Save only module 0
+#   - [0, 1, 2]: Save modules 0, 1, and 2
+#   - None: Save all modules (default behavior)
+SAVE_MODULES = [0]
 
-    plt.figure(figsize=(5, 5))
-    plt.imshow(heatmaps_grid[module_index, probe_index].T, cmap='jet', interpolation='nearest', origin='lower')
-    # plt.title('Grid cell')
-    plt.xticks([])
-    plt.yticks([])
-    plt.tight_layout()
-    figname = 'heatmap_grid_module_{}.png'.format(module_index)
-    plt.savefig(figname)
+# SAVE_CELLS: List of cell indices to save within each module
+#   - [0, 1, 2]: Save only cells 0, 1, and 2 from each selected module
+#   - None: Save all cells in each selected module (default behavior)
+SAVE_CELLS = None
 
-data = np.load('band_grid_place_heatmap.npz')
-heatmaps_place = data['heatmaps_place']
-# plot the data
-# plot three cells, random shuffle 3 cells for 800
-probe_index = np.random.choice(heatmaps_place.shape[0], 3, replace=False)
+# SAVE_PLACE_CELLS: List of place cell indices to save
+#   - [0, 5, 10]: Save only place cells 0, 5, and 10
+#   - None: Save all place cells (default behavior)
+SAVE_PLACE_CELLS = None
 
-fig, ax = plt.subplots(1, 3, figsize=(15, 5))
-for i, probe_index in enumerate(probe_index):
-    ax[i].imshow(heatmaps_place[probe_index].T, cmap='jet', interpolation='nearest', origin='lower')
-    # ax[i].set_title(f'Place cell {i+1}')
-    ax[i].set_xticks([])
-    ax[i].set_yticks([])
 
-plt.tight_layout()
-plt.savefig('heatmap_place.png')
+def save_heatmap(image: np.ndarray, save_path: str):
+    fig, ax = plt.subplots(figsize=(5, 5))
+    ax.imshow(image.T, cmap='jet', interpolation='nearest', origin='lower')
+    ax.set_xticks([])
+    ax.set_yticks([])
+    fig.tight_layout()
+    fig.savefig(save_path, bbox_inches='tight')
+    plt.close(fig)
+
+
+def save_module_heatmaps(heatmaps: np.ndarray, prefix: str):
+    num_modules, num_cells = heatmaps.shape[:2]
+
+    # Determine which modules and cells to save
+    modules_to_save = SAVE_MODULES if SAVE_MODULES is not None else range(num_modules)
+    cells_to_save = SAVE_CELLS if SAVE_CELLS is not None else range(num_cells)
+
+    total = len(modules_to_save) * len(cells_to_save)
+    with tqdm(total=total, desc=f'Saving {prefix} heatmaps') as pbar:
+        for module_idx in modules_to_save:
+            for cell_idx in cells_to_save:
+                filename = f'{prefix}_module_{module_idx}_cell_{cell_idx}.png'
+                save_heatmap(heatmaps[module_idx, cell_idx], os.path.join(output_dir, filename))
+                pbar.update(1)
+
+
+save_module_heatmaps(heatmaps_band_x, 'heatmap_band_x')
+save_module_heatmaps(heatmaps_band_y, 'heatmap_band_y')
+save_module_heatmaps(heatmaps_grid, 'heatmap_grid')
+
+# Save place cell heatmaps
+place_cells_to_save = SAVE_PLACE_CELLS if SAVE_PLACE_CELLS is not None else range(heatmaps_place.shape[0])
+for cell_idx in tqdm(place_cells_to_save, desc='Saving place cell heatmaps'):
+    filename = f'heatmap_place_cell_{cell_idx}.png'
+    save_heatmap(heatmaps_place[cell_idx], os.path.join(output_dir, filename))
