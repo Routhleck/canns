@@ -178,7 +178,7 @@ class GaussRecUnits(BasicModel):
             self.u.value
             + (-self.u.value + Irec + self.input.value) / self.tau * brainstate.environ.get_dt()
         )
-        self.input.value = self.input.value.at[:].set(0.)
+        self.input.value = self.input.value.at[:].set(0.0)
         self.center.value = self.center.value.at[0].set(self.decode(self.u.value))
 
 
@@ -282,7 +282,7 @@ class NonRecUnits(BasicModel):
             self.u.value
             + (-self.u.value + self.input.value) / self.tau * brainstate.environ.get_dt()
         )
-        self.input.value = self.input.value.at[:].set(0.)
+        self.input.value = self.input.value.at[:].set(0.0)
         return self.r.value
 
 
