@@ -554,11 +554,7 @@ class AntiHebbianTrainer(HebbianTrainer):
         >>> anti_trainer.train([pattern_to_forget])
     """
 
-    def __init__(
-        self,
-        model: BrainInspiredModel,
-        **kwargs
-    ):
+    def __init__(self, model: BrainInspiredModel, **kwargs):
         """
         Initialize Anti-Hebbian trainer.
 
