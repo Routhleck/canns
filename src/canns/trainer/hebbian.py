@@ -3,13 +3,14 @@ from __future__ import annotations
 from collections.abc import Callable, Iterable
 
 import brainstate
+import jax
 import jax.numpy as jnp
 from tqdm import tqdm  # type: ignore
 
 from ..models.brain_inspired import BrainInspiredModel
 from ._base import Trainer
 
-__all__ = ["HebbianTrainer"]
+__all__ = ["HebbianTrainer", "AntiHebbianTrainer"]
 
 
 class HebbianTrainer(Trainer):
@@ -146,6 +147,45 @@ class HebbianTrainer(Trainer):
                     "learning and has no `apply_hebbian_learning` method."
                 )
 
+    def _compute_weight_update(
+        self, patterns: list[jnp.ndarray], sign: float = 1.0
+    ) -> jnp.ndarray:
+        """
+        Compute weight update from patterns using vectorized JAX operations.
+
+        This method extracts the common logic for computing Hebbian-style updates,
+        used by both HebbianTrainer (+) and AntiHebbianTrainer (-).
+
+        Args:
+            patterns: List of 1D JAX arrays of shape (N,)
+            sign: Multiplicative factor (+1.0 for Hebbian, -1.0 for Anti-Hebbian)
+
+        Returns:
+            Weight update matrix of shape (N, N)
+        """
+        # Stack patterns into array (P, N) where P is number of patterns
+        patterns_array = jnp.stack(patterns, axis=0)
+        num_patterns, n = patterns_array.shape
+
+        # Compute mean activity across all patterns if requested
+        if self.subtract_mean:
+            rho = jnp.mean(patterns_array)
+            patterns_array = patterns_array - rho
+
+        # Vectorized outer product computation using vmap
+        # Maps outer product over each pattern: (P, N) -> (P, N, N)
+        outer_products = jax.vmap(lambda p: jnp.outer(p, p))(patterns_array)
+
+        # Sum across patterns: (P, N, N) -> (N, N)
+        W_accum = jnp.sum(outer_products, axis=0)
+
+        # Normalize by number of patterns if requested
+        if self.normalize_by_patterns:
+            W_accum = W_accum / num_patterns
+
+        # Apply sign for Hebbian (+) or Anti-Hebbian (-)
+        return sign * W_accum
+
     def _apply_generic_hebbian(self, train_data: Iterable, weight_param) -> None:
         """
         Apply generic Hebbian learning.
@@ -161,50 +201,26 @@ class HebbianTrainer(Trainer):
         """
         # Gather patterns as jax arrays
         patterns = [jnp.asarray(p, dtype=jnp.float32) for p in train_data]
-        if len(patterns) == 0:
+        if not patterns:
             return
-        num_patterns = len(patterns)
 
-        # Infer size and basic checks
+        # Validate pattern dimensions
         n = patterns[0].shape[0]
         for p in patterns:
             if p.ndim != 1 or p.shape[0] != n:
                 raise ValueError("All patterns must be 1D with consistent length.")
 
-        # Create training progress bar via tqdm
-        total_steps = num_patterns * (2 if self.subtract_mean else 1)
-        pbar = tqdm(total=total_steps, desc="Learning patterns", ncols=80, leave=False)
+        # Compute weight update using vectorized operations
+        W_accum = self._compute_weight_update(patterns, sign=1.0)
 
-        try:
-            # Compute mean activity (rho) across dataset if requested
-            rho = jnp.float32(0.0)
-            if self.subtract_mean:
-                total_sum = jnp.float32(0.0)
-                for p in patterns:
-                    total_sum = total_sum + jnp.sum(p)
-                    pbar.update(1)
-                rho = total_sum / (num_patterns * n)
+        # Update with existing weights (Hebbian: addition)
+        W_new = jnp.asarray(weight_param.value, dtype=jnp.float32) + W_accum
 
-            # Accumulate outer products
-            W_accum = jnp.zeros((n, n), dtype=jnp.float32)
-            for p in patterns:
-                t = p - rho if self.subtract_mean else p
-                W_accum = W_accum + jnp.outer(t, t)
-                pbar.update(1)
+        # Force zero diagonal if required
+        if self.zero_diagonal:
+            W_new = W_new.at[jnp.diag_indices(W_new.shape[0])].set(0.0)
 
-            if self.normalize_by_patterns:
-                W_accum = W_accum / num_patterns
-
-            # Update with existing weights
-            W_new = jnp.asarray(weight_param.value, dtype=jnp.float32) + W_accum
-
-            # Force zero diagonal if required
-            if self.zero_diagonal:
-                W_new = W_new - jnp.diag(jnp.diag(W_new))
-
-            weight_param.value = W_new
-        finally:
-            pbar.close()
+        weight_param.value = W_new
 
     def predict(
         self,
@@ -518,3 +534,85 @@ class HebbianTrainer(Trainer):
                 sample_pbar.close()
 
         return results
+
+
+class AntiHebbianTrainer(HebbianTrainer):
+    """
+    Anti-Hebbian trainer for pattern decorrelation and unlearning.
+
+    Overview
+    - Implements anti-Hebbian learning rule: "Neurons that fire together, wire apart"
+    - Uses negative weight updates: ``W <- W - Σ (t t^T)`` instead of positive
+    - Inherits all functionality from HebbianTrainer (predict, predict_batch, etc.)
+
+    Applications
+    - Sparse coding and independent component analysis
+    - Competitive learning networks
+    - Decorrelation and whitening of feature representations
+    - Lateral inhibition modeling
+    - Selective forgetting / pattern unlearning
+
+    Learning Rule
+    - For patterns ``x``, compute optional mean activity ``rho`` and update:
+      ``W <- W - sum_i (x_i - rho)(x_i - rho)^T`` (note the minus sign)
+    - If ``subtract_mean=True``, patterns are centered by mean: ``t = x - rho``
+    - If ``normalize_by_patterns=True``, divide by number of patterns
+    - All options from HebbianTrainer apply (subtract_mean, zero_diagonal, etc.)
+
+    Example
+        >>> model = AmariHopfieldNetwork(num_neurons=100, activation="tanh")
+        >>> model.init_state()
+        >>> # Train with Hebbian first
+        >>> hebb_trainer = HebbianTrainer(model)
+        >>> hebb_trainer.train(all_patterns)
+        >>> # Then apply anti-Hebbian to unlearn specific pattern
+        >>> anti_trainer = AntiHebbianTrainer(model, subtract_mean=False)
+        >>> anti_trainer.train([pattern_to_forget])
+    """
+
+    def __init__(self, model: BrainInspiredModel, **kwargs):
+        """
+        Initialize Anti-Hebbian trainer.
+
+        Args:
+            model: The model to train
+            **kwargs: Additional arguments passed to HebbianTrainer
+        """
+        super().__init__(model, **kwargs)
+
+    def _apply_generic_hebbian(self, train_data: Iterable, weight_param) -> None:
+        """
+        Apply anti-Hebbian learning rule.
+
+        Rule
+        - ``W <- W - Σ (t t^T)`` where ``t = x - rho`` if centering enabled, otherwise ``t = x``
+        - Note the negative sign - this is the key difference from Hebbian learning
+        - If ``normalize_by_patterns`` is True, divide by number of patterns
+        - If ``zero_diagonal`` is True, set diagonal to zero after update
+
+        Args
+        - train_data: Iterable of 1D patterns (numpy/jax arrays) of shape (N,)
+        - weight_param: Parameter object with ``.value`` as ndarray (N, N)
+        """
+        # Gather patterns as jax arrays
+        patterns = [jnp.asarray(p, dtype=jnp.float32) for p in train_data]
+        if not patterns:
+            return
+
+        # Validate pattern dimensions
+        n = patterns[0].shape[0]
+        for p in patterns:
+            if p.ndim != 1 or p.shape[0] != n:
+                raise ValueError("All patterns must be 1D with consistent length.")
+
+        # Compute weight update using vectorized operations (negative sign for anti-Hebbian)
+        W_accum = self._compute_weight_update(patterns, sign=-1.0)
+
+        # Update with existing weights (Anti-Hebbian: addition of negative update)
+        W_new = jnp.asarray(weight_param.value, dtype=jnp.float32) + W_accum
+
+        # Force zero diagonal if required
+        if self.zero_diagonal:
+            W_new = W_new.at[jnp.diag_indices(W_new.shape[0])].set(0.0)
+
+        weight_param.value = W_new
