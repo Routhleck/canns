@@ -9,7 +9,7 @@ from tqdm import tqdm  # type: ignore
 from ..models.brain_inspired import BrainInspiredModel
 from ._base import Trainer
 
-__all__ = ["HebbianTrainer"]
+__all__ = ["HebbianTrainer", "AntiHebbianTrainer"]
 
 
 class HebbianTrainer(Trainer):
@@ -518,3 +518,109 @@ class HebbianTrainer(Trainer):
                 sample_pbar.close()
 
         return results
+
+
+class AntiHebbianTrainer(HebbianTrainer):
+    """
+    Anti-Hebbian trainer - learns to decorrelate patterns.
+
+    Overview
+    - Implements anti-Hebbian learning rule: "Neurons that fire together, wire apart"
+    - Uses negative weight updates instead of positive: ``W <- W - α * Σ (t t^T)``
+    - Inherits all functionality from HebbianTrainer (predict, predict_batch, etc.)
+
+    Applications
+    - Sparse coding and independent component analysis
+    - Competitive learning networks
+    - Decorrelation and whitening of feature representations
+    - Lateral inhibition modeling
+    - Selective forgetting / unlearning specific patterns
+
+    Rule
+    - For patterns ``x``, compute optional mean activity ``rho`` and update:
+      ``W <- W - α * sum_i (x_i - rho)(x_i - rho)^T`` (note the minus sign)
+    - All options from HebbianTrainer apply (subtract_mean, zero_diagonal, etc.)
+    - ``learning_rate`` (α) controls the strength of unlearning (default: 1.0)
+
+    Example
+        >>> model = AmariHopfieldNetwork(num_neurons=100, activation="tanh")
+        >>> model.init_state()
+        >>> # Use higher learning rate for stronger unlearning
+        >>> trainer = AntiHebbianTrainer(model, learning_rate=3.0)
+        >>> trainer.train(patterns)  # Learns to decorrelate patterns
+    """
+
+    def __init__(
+        self,
+        model: BrainInspiredModel,
+        **kwargs
+    ):
+        """
+        Initialize Anti-Hebbian trainer.
+
+        Args:
+            model: The model to train
+            **kwargs: Additional arguments passed to HebbianTrainer
+        """
+        super().__init__(model, **kwargs)
+
+    def _apply_generic_hebbian(self, train_data: Iterable, weight_param) -> None:
+        """
+        Apply anti-Hebbian learning rule.
+
+        Rule
+        - ``W <- W - Σ (t t^T)`` where ``t = x - rho`` if centering enabled, otherwise ``t = x``
+        - Note the negative sign - this is the key difference from Hebbian learning
+        - If ``normalize_by_patterns`` is True, divide by number of patterns
+        - If ``zero_diagonal`` is True, set diagonal to zero after update
+
+        Args
+        - train_data: Iterable of 1D patterns (numpy/jax arrays) of shape (N,)
+        - weight_param: Parameter object with ``.value`` as ndarray (N, N)
+        """
+        # Gather patterns as jax arrays
+        patterns = [jnp.asarray(p, dtype=jnp.float32) for p in train_data]
+        if len(patterns) == 0:
+            return
+        num_patterns = len(patterns)
+
+        # Infer size and basic checks
+        n = patterns[0].shape[0]
+        for p in patterns:
+            if p.ndim != 1 or p.shape[0] != n:
+                raise ValueError("All patterns must be 1D with consistent length.")
+
+        # Create training progress bar via tqdm
+        total_steps = num_patterns * (2 if self.subtract_mean else 1)
+        pbar = tqdm(total=total_steps, desc="Anti-Hebbian learning", ncols=80, leave=False)
+
+        try:
+            # Compute mean activity (rho) across dataset if requested
+            rho = jnp.float32(0.0)
+            if self.subtract_mean:
+                total_sum = jnp.float32(0.0)
+                for p in patterns:
+                    total_sum = total_sum + jnp.sum(p)
+                    pbar.update(1)
+                rho = total_sum / (num_patterns * n)
+
+            # Accumulate outer products
+            W_accum = jnp.zeros((n, n), dtype=jnp.float32)
+            for p in patterns:
+                t = p - rho if self.subtract_mean else p
+                W_accum = W_accum + jnp.outer(t, t)
+                pbar.update(1)
+
+            if self.normalize_by_patterns:
+                W_accum = W_accum / num_patterns
+
+            # Anti-Hebbian update: SUBTRACT instead of ADD
+            W_new = jnp.asarray(weight_param.value, dtype=jnp.float32) - W_accum
+
+            # Force zero diagonal if required
+            if self.zero_diagonal:
+                W_new = W_new - jnp.diag(jnp.diag(W_new))
+
+            weight_param.value = W_new
+        finally:
+            pbar.close()
