@@ -56,9 +56,7 @@ def get_corrupted_input(pattern, corruption_level):
     """Flip random pixels in the binary pattern."""
     corrupted = np.copy(pattern)
     inv = np.random.binomial(n=1, p=corruption_level, size=len(pattern))
-    for i, v in enumerate(pattern):
-        if inv[i]:
-            corrupted[i] = -1 * v
+    corrupted[inv == 1] *= -1
     return corrupted
 
 tests = [get_corrupted_input(d, 0.4) for d in data_list]

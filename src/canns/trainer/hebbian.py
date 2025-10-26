@@ -161,7 +161,7 @@ class HebbianTrainer(Trainer):
         """
         # Gather patterns as jax arrays
         patterns = [jnp.asarray(p, dtype=jnp.float32) for p in train_data]
-        if len(patterns) == 0:
+        if not patterns:
             return
         num_patterns = len(patterns)
 
@@ -200,7 +200,7 @@ class HebbianTrainer(Trainer):
 
             # Force zero diagonal if required
             if self.zero_diagonal:
-                W_new = W_new - jnp.diag(jnp.diag(W_new))
+                W_new = W_new.at[jnp.diag_indices(W_new.shape[0])].set(0.0)
 
             weight_param.value = W_new
         finally:
@@ -580,7 +580,7 @@ class AntiHebbianTrainer(HebbianTrainer):
         """
         # Gather patterns as jax arrays
         patterns = [jnp.asarray(p, dtype=jnp.float32) for p in train_data]
-        if len(patterns) == 0:
+        if not patterns:
             return
         num_patterns = len(patterns)
 
@@ -619,7 +619,7 @@ class AntiHebbianTrainer(HebbianTrainer):
 
             # Force zero diagonal if required
             if self.zero_diagonal:
-                W_new = W_new - jnp.diag(jnp.diag(W_new))
+                W_new = W_new.at[jnp.diag_indices(W_new.shape[0])].set(0.0)
 
             weight_param.value = W_new
         finally:
