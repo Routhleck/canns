@@ -522,11 +522,11 @@ class HebbianTrainer(Trainer):
 
 class AntiHebbianTrainer(HebbianTrainer):
     """
-    Anti-Hebbian trainer - learns to decorrelate patterns.
+    Anti-Hebbian trainer for pattern decorrelation and unlearning.
 
     Overview
     - Implements anti-Hebbian learning rule: "Neurons that fire together, wire apart"
-    - Uses negative weight updates instead of positive: ``W <- W - α * Σ (t t^T)``
+    - Uses negative weight updates: ``W <- W - Σ (t t^T)`` instead of positive
     - Inherits all functionality from HebbianTrainer (predict, predict_batch, etc.)
 
     Applications
@@ -534,20 +534,24 @@ class AntiHebbianTrainer(HebbianTrainer):
     - Competitive learning networks
     - Decorrelation and whitening of feature representations
     - Lateral inhibition modeling
-    - Selective forgetting / unlearning specific patterns
+    - Selective forgetting / pattern unlearning
 
-    Rule
+    Learning Rule
     - For patterns ``x``, compute optional mean activity ``rho`` and update:
-      ``W <- W - α * sum_i (x_i - rho)(x_i - rho)^T`` (note the minus sign)
+      ``W <- W - sum_i (x_i - rho)(x_i - rho)^T`` (note the minus sign)
+    - If ``subtract_mean=True``, patterns are centered by mean: ``t = x - rho``
+    - If ``normalize_by_patterns=True``, divide by number of patterns
     - All options from HebbianTrainer apply (subtract_mean, zero_diagonal, etc.)
-    - ``learning_rate`` (α) controls the strength of unlearning (default: 1.0)
 
     Example
         >>> model = AmariHopfieldNetwork(num_neurons=100, activation="tanh")
         >>> model.init_state()
-        >>> # Use higher learning rate for stronger unlearning
-        >>> trainer = AntiHebbianTrainer(model, learning_rate=3.0)
-        >>> trainer.train(patterns)  # Learns to decorrelate patterns
+        >>> # Train with Hebbian first
+        >>> hebb_trainer = HebbianTrainer(model)
+        >>> hebb_trainer.train(all_patterns)
+        >>> # Then apply anti-Hebbian to unlearn specific pattern
+        >>> anti_trainer = AntiHebbianTrainer(model, subtract_mean=False)
+        >>> anti_trainer.train([pattern_to_forget])
     """
 
     def __init__(

@@ -86,20 +86,15 @@ print("\n" + "=" * 60)
 print("Step 2: Anti-Hebbian Unlearning of Astronaut")
 print("=" * 60)
 
-# Strategy: Use very strong Anti-Hebbian on astronaut to disrupt its attractor
-# Even though it may affect other patterns, the goal is to specifically degrade astronaut
-learning_rate = 1.0  # Very high learning rate for strong disruption
-print(f"Using learning_rate={learning_rate} for Anti-Hebbian unlearning")
-print("Note: This may affect other patterns due to pattern overlap in the network")
-
-# Apply Anti-Hebbian with the original (non-centered) pattern
-# This will create a strong repulsive effect for the astronaut pattern
+# Apply anti-Hebbian learning to the astronaut pattern
+# This demonstrates selective pattern unlearning
+# Note: Use subtract_mean=False to match the Hebbian learning configuration
 trainer_anti = AntiHebbianTrainer(
     model,
     subtract_mean=False,
     normalize_by_patterns=False
 )
-trainer_anti.train([data_list[1]])  # Train on all + astronaut again for strong unlearning
+trainer_anti.train([data_list[1]])  # Apply anti-Hebbian to astronaut pattern
 
 # Test recovery after Anti-Hebbian learning
 predicted_after_anti = trainer_anti.predict_batch(tests, show_sample_progress=True)
