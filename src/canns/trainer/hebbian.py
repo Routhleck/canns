@@ -3,6 +3,7 @@ from __future__ import annotations
 from collections.abc import Callable, Iterable
 
 import brainstate
+import jax
 import jax.numpy as jnp
 from tqdm import tqdm  # type: ignore
 
@@ -146,6 +147,45 @@ class HebbianTrainer(Trainer):
                     "learning and has no `apply_hebbian_learning` method."
                 )
 
+    def _compute_weight_update(
+        self, patterns: list[jnp.ndarray], sign: float = 1.0
+    ) -> jnp.ndarray:
+        """
+        Compute weight update from patterns using vectorized JAX operations.
+
+        This method extracts the common logic for computing Hebbian-style updates,
+        used by both HebbianTrainer (+) and AntiHebbianTrainer (-).
+
+        Args:
+            patterns: List of 1D JAX arrays of shape (N,)
+            sign: Multiplicative factor (+1.0 for Hebbian, -1.0 for Anti-Hebbian)
+
+        Returns:
+            Weight update matrix of shape (N, N)
+        """
+        # Stack patterns into array (P, N) where P is number of patterns
+        patterns_array = jnp.stack(patterns, axis=0)
+        num_patterns, n = patterns_array.shape
+
+        # Compute mean activity across all patterns if requested
+        if self.subtract_mean:
+            rho = jnp.mean(patterns_array)
+            patterns_array = patterns_array - rho
+
+        # Vectorized outer product computation using vmap
+        # Maps outer product over each pattern: (P, N) -> (P, N, N)
+        outer_products = jax.vmap(lambda p: jnp.outer(p, p))(patterns_array)
+
+        # Sum across patterns: (P, N, N) -> (N, N)
+        W_accum = jnp.sum(outer_products, axis=0)
+
+        # Normalize by number of patterns if requested
+        if self.normalize_by_patterns:
+            W_accum = W_accum / num_patterns
+
+        # Apply sign for Hebbian (+) or Anti-Hebbian (-)
+        return sign * W_accum
+
     def _apply_generic_hebbian(self, train_data: Iterable, weight_param) -> None:
         """
         Apply generic Hebbian learning.
@@ -163,48 +203,24 @@ class HebbianTrainer(Trainer):
         patterns = [jnp.asarray(p, dtype=jnp.float32) for p in train_data]
         if not patterns:
             return
-        num_patterns = len(patterns)
 
-        # Infer size and basic checks
+        # Validate pattern dimensions
         n = patterns[0].shape[0]
         for p in patterns:
             if p.ndim != 1 or p.shape[0] != n:
                 raise ValueError("All patterns must be 1D with consistent length.")
 
-        # Create training progress bar via tqdm
-        total_steps = num_patterns * (2 if self.subtract_mean else 1)
-        pbar = tqdm(total=total_steps, desc="Learning patterns", ncols=80, leave=False)
+        # Compute weight update using vectorized operations
+        W_accum = self._compute_weight_update(patterns, sign=1.0)
 
-        try:
-            # Compute mean activity (rho) across dataset if requested
-            rho = jnp.float32(0.0)
-            if self.subtract_mean:
-                total_sum = jnp.float32(0.0)
-                for p in patterns:
-                    total_sum = total_sum + jnp.sum(p)
-                    pbar.update(1)
-                rho = total_sum / (num_patterns * n)
+        # Update with existing weights (Hebbian: addition)
+        W_new = jnp.asarray(weight_param.value, dtype=jnp.float32) + W_accum
 
-            # Accumulate outer products
-            W_accum = jnp.zeros((n, n), dtype=jnp.float32)
-            for p in patterns:
-                t = p - rho if self.subtract_mean else p
-                W_accum = W_accum + jnp.outer(t, t)
-                pbar.update(1)
+        # Force zero diagonal if required
+        if self.zero_diagonal:
+            W_new = W_new.at[jnp.diag_indices(W_new.shape[0])].set(0.0)
 
-            if self.normalize_by_patterns:
-                W_accum = W_accum / num_patterns
-
-            # Update with existing weights
-            W_new = jnp.asarray(weight_param.value, dtype=jnp.float32) + W_accum
-
-            # Force zero diagonal if required
-            if self.zero_diagonal:
-                W_new = W_new.at[jnp.diag_indices(W_new.shape[0])].set(0.0)
-
-            weight_param.value = W_new
-        finally:
-            pbar.close()
+        weight_param.value = W_new
 
     def predict(
         self,
@@ -582,45 +598,21 @@ class AntiHebbianTrainer(HebbianTrainer):
         patterns = [jnp.asarray(p, dtype=jnp.float32) for p in train_data]
         if not patterns:
             return
-        num_patterns = len(patterns)
 
-        # Infer size and basic checks
+        # Validate pattern dimensions
         n = patterns[0].shape[0]
         for p in patterns:
             if p.ndim != 1 or p.shape[0] != n:
                 raise ValueError("All patterns must be 1D with consistent length.")
 
-        # Create training progress bar via tqdm
-        total_steps = num_patterns * (2 if self.subtract_mean else 1)
-        pbar = tqdm(total=total_steps, desc="Anti-Hebbian learning", ncols=80, leave=False)
+        # Compute weight update using vectorized operations (negative sign for anti-Hebbian)
+        W_accum = self._compute_weight_update(patterns, sign=-1.0)
 
-        try:
-            # Compute mean activity (rho) across dataset if requested
-            rho = jnp.float32(0.0)
-            if self.subtract_mean:
-                total_sum = jnp.float32(0.0)
-                for p in patterns:
-                    total_sum = total_sum + jnp.sum(p)
-                    pbar.update(1)
-                rho = total_sum / (num_patterns * n)
+        # Update with existing weights (Anti-Hebbian: addition of negative update)
+        W_new = jnp.asarray(weight_param.value, dtype=jnp.float32) + W_accum
 
-            # Accumulate outer products
-            W_accum = jnp.zeros((n, n), dtype=jnp.float32)
-            for p in patterns:
-                t = p - rho if self.subtract_mean else p
-                W_accum = W_accum + jnp.outer(t, t)
-                pbar.update(1)
+        # Force zero diagonal if required
+        if self.zero_diagonal:
+            W_new = W_new.at[jnp.diag_indices(W_new.shape[0])].set(0.0)
 
-            if self.normalize_by_patterns:
-                W_accum = W_accum / num_patterns
-
-            # Anti-Hebbian update: SUBTRACT instead of ADD
-            W_new = jnp.asarray(weight_param.value, dtype=jnp.float32) - W_accum
-
-            # Force zero diagonal if required
-            if self.zero_diagonal:
-                W_new = W_new.at[jnp.diag_indices(W_new.shape[0])].set(0.0)
-
-            weight_param.value = W_new
-        finally:
-            pbar.close()
+        weight_param.value = W_new
