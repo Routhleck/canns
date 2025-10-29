@@ -399,6 +399,9 @@ def create_1d_bump_animation(
         theta = np.linspace(0, 2 * np.pi, config.npoints, endpoint=False)
         base_radius = Constants.BASE_RADIUS
 
+        # ==== Precompute offsets array for Gaussian kernel (avoid recomputation per frame) ====
+        offsets_array = np.arange(-Constants.MAX_KERNEL_SIZE, Constants.MAX_KERNEL_SIZE + 1)
+
         # ==== Normalize data ranges ====
         # Height normalization
         height_range = np.max(heights_raw_smooth) - np.min(heights_raw_smooth)
@@ -447,12 +450,11 @@ def create_1d_bump_animation(
             # Apply Gaussian kernel around bump center
             sigma = width_range / 2
 
-            # Vectorized kernel application - compute all offsets at once
-            offsets = np.arange(-Constants.MAX_KERNEL_SIZE, Constants.MAX_KERNEL_SIZE + 1)
-            gauss_weights = np.exp(-(offsets**2) / (2 * sigma**2))
+            # Vectorized kernel application using precomputed offsets
+            gauss_weights = np.exp(-(offsets_array**2) / (2 * sigma**2))
             # Filter out negligible contributions
             significant_mask = gauss_weights >= 0.01
-            significant_offsets = offsets[significant_mask]
+            significant_offsets = offsets_array[significant_mask]
             significant_weights = gauss_weights[significant_mask]
             # Apply weights to corresponding indices
             indices = (center_idx + significant_offsets) % config.npoints

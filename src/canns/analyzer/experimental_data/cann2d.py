@@ -1322,8 +1322,12 @@ def _run_shuffle_analysis_multiprocessing(
     sspikes, num_shuffles=1000, num_cores=4, progress_bar=True, **kwargs
 ):
     """Original multiprocessing implementation for fallback."""
-    # Preallocate lists for better performance
-    max_lifetimes = {0: [None] * num_shuffles, 1: [None] * num_shuffles, 2: [None] * num_shuffles}
+    # Use numpy arrays with NaN for failed results (more efficient than None filtering)
+    max_lifetimes = {
+        0: np.full(num_shuffles, np.nan),
+        1: np.full(num_shuffles, np.nan),
+        2: np.full(num_shuffles, np.nan),
+    }
 
     # Estimate runtime with a test iteration
     logging.info("Running test iteration to estimate runtime...")
@@ -1346,9 +1350,9 @@ def _run_shuffle_analysis_multiprocessing(
         for dim, lifetime in res.items():
             max_lifetimes[dim][idx] = lifetime
 
-    # Filter out None values in case of any failures
+    # Filter out NaN values (failed results) - convert to list for consistency
     for dim in max_lifetimes:
-        max_lifetimes[dim] = [x for x in max_lifetimes[dim] if x is not None]
+        max_lifetimes[dim] = max_lifetimes[dim][~np.isnan(max_lifetimes[dim])].tolist()
 
     return max_lifetimes
 
