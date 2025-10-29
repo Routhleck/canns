@@ -88,9 +88,10 @@ def plot_fixed_points_2d(
             traj_pca[start_idx:end_idx, 0],
             traj_pca[start_idx:end_idx, 1],
             c="lightblue",
-            s=1,
-            alpha=0.3,
+            s=8.0,
+            alpha=1.0,
             label="Trajectories" if batch_idx == plot_batch_idx[0] else "",
+            zorder=-1
         )
         start_idx = end_idx
 

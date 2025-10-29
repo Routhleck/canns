@@ -9,14 +9,13 @@ Based on the PyTorch implementation by Matt Golub.
 """
 
 import brainstate as bst
+import braintools as bts
 import jax
 import jax.numpy as jnp
 import numpy as np
-import jax.tree_util as jtu
-
+import random
 from canns.analyzer.plotting import plot_fixed_points_2d, plot_fixed_points_3d, PlotConfig
 from canns.analyzer.slow_points import FixedPointFinder, save_checkpoint, load_checkpoint
-
 
 class FlipFlopData:
     """Generator for flip-flop memory task data."""
@@ -215,16 +214,14 @@ class FlipFlopRNN(bst.nn.Module):
 
         return outputs, hiddens
 
-
 def train_flipflop_rnn(rnn, train_data, valid_data,
-                       learning_rate=0.01,
+                       learning_rate=0.08,
                        batch_size=128,
                        max_epochs=1000,
                        min_loss=1e-4,
                        print_every=10):
-    """Train the FlipFlop RNN. Final, robust optimized version with all fixes."""
     print("\n" + "=" * 70)
-    print("Training FlipFlop RNN (Final, Robust Optimized Version)")
+    print("Training FlipFlop RNN (Using bts Scheduler & built-in Grad Clip)")
     print("=" * 70)
 
     # Prepare data
@@ -235,26 +232,25 @@ def train_flipflop_rnn(rnn, train_data, valid_data,
     n_train = train_inputs.shape[0]
     n_batches = n_train // batch_size
 
-    # Convert all parameter keys to strings
+    # Flatten parameter keys
     def flatten_key(key):
         return '.'.join(key) if isinstance(key, tuple) else key
 
-    # Flatten the nested keys
     trainable_states = {flatten_key(name): state for name, state in rnn.states().items() if
                         isinstance(state, bst.ParamState)}
     trainable_params = {name: state.value for name, state in trainable_states.items()}
 
-    # Create optimizer
-    optimizer = bst.optim.Adam(lr=learning_rate)
+    optimizer = bts.optim.Adam(
+        lr=learning_rate
+    )
 
-    # Register optimizer with flattened-key dictionary
+    # Register trainable weights
     optimizer.register_trainable_weights(trainable_states)
 
-    # Define JIT-compiled gradient steps
+    # Define JIT-compiled gradient step
     @jax.jit
     def grad_step(params, batch_inputs, batch_targets):
         """Pure function to compute loss and gradients"""
-
         def forward_pass(p, inputs):
             batch_size = inputs.shape[0]
             h = jnp.tile(p['h0'], (batch_size, 1))
@@ -280,25 +276,15 @@ def train_flipflop_rnn(rnn, train_data, valid_data,
 
         def loss_fn(p):
             outputs = forward_pass(p, batch_inputs)
-            return jnp.mean((jnp.tanh(outputs) - batch_targets) ** 2)
+            return jnp.mean((outputs - batch_targets) ** 2)
 
         loss_val, grads = jax.value_and_grad(loss_fn)(params)
         return loss_val, grads
 
-    def clip_by_global_norm(tree, max_norm=3.0):
-        total = jnp.sqrt(sum([jnp.sum(jnp.square(g)) for g in jtu.tree_leaves(tree)]))
-        scale = jnp.minimum(1.0, max_norm / (total + 1e-8))
-        return jtu.tree_map(lambda g: g * scale, tree)
-
-    # LR scheduling logic
-    lr_decay_factor = 0.95
-    lr_decay_patience = 20
-    best_valid_loss = float('inf')
-    patience_counter = 0
     losses = []
     print("\nTraining parameters:")
     print(f"  Batch size: {batch_size}")
-    print(f"  Learning rate: {learning_rate}")
+    print(f"  Learning rate:{learning_rate:.6f} (Fixed)")
 
     for epoch in range(max_epochs):
         perm = np.random.permutation(n_train)
@@ -308,36 +294,24 @@ def train_flipflop_rnn(rnn, train_data, valid_data,
             end_idx = start_idx + batch_size
             batch_inputs = train_inputs[perm[start_idx:end_idx]]
             batch_targets = train_targets[perm[start_idx:end_idx]]
-
             loss_val, grads = grad_step(trainable_params, batch_inputs, batch_targets)
-            grads = clip_by_global_norm(grads, max_norm=3.0)
             optimizer.update(grads)
-            # Use flattened keys to update the parameters
             trainable_params = {flatten_key(name): state.value for name, state in rnn.states().items() if
                                 isinstance(state, bst.ParamState)}
-
             epoch_loss += float(loss_val)
         epoch_loss /= n_batches
         losses.append(epoch_loss)
+
         if epoch % print_every == 0:
             valid_outputs, _ = rnn(valid_inputs)
             valid_loss = float(jnp.mean((valid_outputs - valid_targets) ** 2))
             print(f"Epoch {epoch:4d}: train_loss = {epoch_loss:.6f}, "
-                  f"valid_loss = {valid_loss:.6f}, lr = {optimizer.lr.lr:.6f}")
-
-            if valid_loss < best_valid_loss:
-                best_valid_loss = valid_loss
-                patience_counter = 0
-            else:
-                patience_counter += 1
-                if patience_counter >= lr_decay_patience:
-                    optimizer.lr.lr *= lr_decay_factor
-                    patience_counter = 0
-                    print(f"  -> Reduced learning rate to {optimizer.lr.lr:.6f}")
+                  f"valid_loss = {valid_loss:.6f}, lr = {optimizer.current_lr:.6f}")
         if epoch_loss < min_loss:
             print(f"\nReached target loss {min_loss:.2e} at epoch {epoch}")
             break
 
+    # Training complete
     valid_outputs, _ = rnn(valid_inputs)
     final_valid_loss = float(jnp.mean((valid_outputs - valid_targets) ** 2))
     print("\n" + "=" * 70)
@@ -348,135 +322,122 @@ def train_flipflop_rnn(rnn, train_data, valid_data,
     print(f"Total epochs: {epoch + 1}")
     return losses
 
+# Configuration Dictionary
+TASK_CONFIGS = {
+    "2_bit": {
+        "n_bits": 2,
+        "n_hidden": 16,
+        "n_trials_train": 128,
+        "n_inits":1024,
+    },
+    "3_bit": {
+        "n_bits": 3,
+        "n_hidden": 16,
+        "n_trials_train": 256,
+        "n_inits":1024,
+    },
+    "4_bit": {
+        "n_bits": 4,
+        "n_hidden": 32, #
+        "n_trials_train": 1024,
+        "n_inits":1024,
+    },
+}
+# seed,7582,8356,9071,
+def main(config_name="4_bit", seed=np.random.randint(1, 10000)):
+    """Main function to train RNN and find fixed points."""
+    # Get configuration from dictionary
+    if config_name not in TASK_CONFIGS:
+        raise ValueError(f"Unknown config_name: {config_name}. Available: {list(TASK_CONFIGS.keys())}")
+    config = TASK_CONFIGS[config_name]
 
-def main(seed=42):
-    """Main function to train RNN and find fixed points.
-
-    This example trains a RNN to solve the FlipFlop task, then analyzes its
-    fixed points. A properly trained 3-bit FlipFlop RNN should have:
-    - 8 stable fixed points (2^3 memory states at cube corners)
-    - Unstable fixed points on edges/faces/center of the cube
-    - Clean separation between stable and unstable points
-
-    Args:
-        seed: Random seed for reproducibility (default: 0)
-    """
-    # Set random seeds for reproducibility
+    # Set random seeds
     np.random.seed(seed)
-    import random
     random.seed(seed)
-    # JAX uses a different random system (PRNG key), but we set numpy seed
-    # which affects data generation
 
-    print("=" * 70)
-    print("FlipFlop Memory Task - Training and Fixed Point Analysis")
-    print("=" * 70)
-    print(f"Random seed: {seed}")
+    print(f"\n--- Running FlipFlop Task ({config_name}) ---")
+    print(f"Seed: {seed}")
 
-    # Task parameters (matching reference implementation)
-    n_bits = 3
-    n_hidden = 16  # Match reference: 16 hidden units
-    n_time = 64  # Match reference default
-    n_trials_train = 512  # Training data size
-    n_trials_valid = 128  # Validation data size
-    n_trials_test = 128  # Test data size
+    n_bits = config["n_bits"]
+    n_hidden = config["n_hidden"]
+    n_trials_train = config["n_trials_train"]
+    n_inits = config["n_inits"]
 
-    print(f"\nTask Parameters:")
-    print(f"  Number of bits: {n_bits}")
-    print(f"  Hidden units: {n_hidden}")
-    print(f"  Sequence length: {n_time}")
-    print(f"  RNN type: tanh (GRU has issues with FP finding in PyTorch/JAX)")
-    print(f"  Training trials: {n_trials_train}")
-    print(f"  Validation trials: {n_trials_valid}")
+
+    n_time = 64
+    n_trials_valid = 128
+    n_trials_test = 128
+    rnn_type = "tanh"
+    learning_rate = 0.08
+    batch_size = 128
+    max_epochs = 500
+    min_loss = 1e-4
 
     # Generate data
-    print("\nGenerating FlipFlop data...")
     data_gen = FlipFlopData(n_bits=n_bits, n_time=n_time, p=0.5, random_seed=seed)
     train_data = data_gen.generate_data(n_trials_train)
     valid_data = data_gen.generate_data(n_trials_valid)
     test_data = data_gen.generate_data(n_trials_test)
 
-    print(f"  Train inputs shape: {train_data['inputs'].shape}")
-    print(f"  Train targets shape: {train_data['targets'].shape}")
-    print(f"  Valid inputs shape: {valid_data['inputs'].shape}")
-    print(f"  Test inputs shape: {test_data['inputs'].shape}")
-
-    # Create RNN model (use tanh, not GRU)
-    print("\nCreating RNN model...")
-    rnn = FlipFlopRNN(n_inputs=n_bits, n_hidden=n_hidden, n_outputs=n_bits, rnn_type="tanh", seed=seed)
+    # Create RNN model
+    rnn = FlipFlopRNN(n_inputs=n_bits, n_hidden=n_hidden, n_outputs=n_bits, rnn_type=rnn_type, seed=seed)
 
     # Check for checkpoint
-    checkpoint_path = "flipflop_rnn_checkpoint.msgpack"
+    checkpoint_path = f"flipflop_rnn_{config_name}_checkpoint.msgpack"
     if load_checkpoint(rnn, checkpoint_path):
-        print("Using pre-trained model from checkpoint.")
+        print(f"Loaded model from checkpoint: {checkpoint_path}")
     else:
         # Train the RNN
-        print("\n" + "=" * 70)
-        print("Training RNN on FlipFlop Task")
-        print("=" * 70)
-        print("No checkpoint found. Training from scratch...")
+        print(f"No checkpoint found ({checkpoint_path}). Training...")
         losses = train_flipflop_rnn(
             rnn,
             train_data,
             valid_data,
-            learning_rate=0.08,
-            batch_size=128,
-            max_epochs=1000,
-            min_loss=1e-4,
+            learning_rate=learning_rate,
+            batch_size=batch_size,
+            max_epochs=max_epochs,
+            min_loss=min_loss,
             print_every=10
         )
-        print("\nTraining complete!")
 
-        # Save checkpoint
-        save_checkpoint(rnn, checkpoint_path)
-
-    # Generate trajectories for fixed point analysis using trained RNN
-    print("\n" + "=" * 70)
-    print("Fixed Point Analysis")
-    print("=" * 70)
-    print("\nGenerating RNN trajectories with trained model...")
+    # Fixed Point Analysis
+    print("\n--- Fixed Point Analysis ---")
     inputs_jax = jnp.array(test_data["inputs"])
     outputs, hiddens = rnn(inputs_jax)
-
     hiddens_np = np.array(hiddens)
-    print(f"  Hidden state trajectories shape: {hiddens_np.shape}")
 
-    # Find fixed points (matching reference hyperparameters)
-    print("\nInitializing Fixed Point Finder...")
+
+    # Find fixed points
     finder = FixedPointFinder(
         rnn,
         method="joint",
-        max_iters=10000,  # Match reference
-        lr_init=0.02,  # Match reference
-        tol_q=1e-4,  # More relaxed tolerance to stop earlier
+        max_iters=5000,
+        lr_init=0.02,
+        tol_q=1e-4,
         final_q_threshold=1e-6,
-        tol_unique=1e-2,  # Larger tolerance to merge nearby fixed points
+        tol_unique=1e-2,
         do_compute_jacobians=True,
         do_decompose_jacobians=True,
-        outlier_distance_scale=10.0,  # Match reference
+        outlier_distance_scale=10.0,
         verbose=True,
-        super_verbose=True,  # Match reference to see iteration updates
+        super_verbose=True,
     )
 
-    print("\nSearching for fixed points...")
-    # Study system with zero input (like reference)
     constant_input = np.zeros((1, n_bits), dtype=np.float32)
 
     unique_fps, all_fps = finder.find_fixed_points(
         state_traj=hiddens_np,
         inputs=constant_input,
-        n_inits=1024,  # Match reference
-        noise_scale=0.1,  # Match reference
+        n_inits=n_inits,
+        noise_scale=0.4,
     )
 
     # Print results
-    print("\n" + "=" * 70)
-    print("Fixed Point Analysis Results")
-    print("=" * 70)
+    print("\n--- Fixed Point Analysis Results ---")
     unique_fps.print_summary()
 
     if unique_fps.n > 0:
-        print(f"\nDetailed Fixed Point Information:")
+        print(f"\nDetailed Fixed Point Information (Top 10):")
         print(f"{'#':<4} {'q-value':<12} {'Stability':<12} {'Max |eig|':<12}")
         print("-" * 45)
         for i in range(min(10, unique_fps.n)):
@@ -486,37 +447,42 @@ def main(seed=42):
                 f"{i + 1:<4} {unique_fps.qstar[i]:<12.2e} {stability_str:<12} {max_eig:<12.4f}"
             )
 
-        # Visualize fixed points in 2D and 3D
-        print("\nGenerating 2D visualization...")
+        # Visualize fixed points
+        save_path_2d = f"flipflop_{config_name}_fixed_points_2d.png"
         config_2d = PlotConfig(
-            title="FlipFlop Fixed Points (2D PCA)",
-            xlabel="PC 1",
-            ylabel="PC 2",
-            figsize=(10, 8),
-            save_path="flipflop_fixed_points_2d.png",
-            show=False
+            title=f"FlipFlop Fixed Points ({config_name} - 2D PCA)",
+            xlabel="PC 1", ylabel="PC 2", figsize=(10, 8),
+            save_path=save_path_2d, show=False
         )
         plot_fixed_points_2d(unique_fps, hiddens_np, config=config_2d)
+        print(f"\nSaved 2D plot to: {save_path_2d}")
 
-        print("\nGenerating 3D visualization...")
+        save_path_3d = f"flipflop_{config_name}_fixed_points_3d.png"
         config_3d = PlotConfig(
-            title="FlipFlop Fixed Points (3D PCA)",
-            figsize=(12, 10),
-            save_path="flipflop_fixed_points_3d.png",
-            show=False
+            title=f"FlipFlop Fixed Points ({config_name} - 3D PCA)",
+            figsize=(12, 10), save_path=save_path_3d, show=False
         )
         plot_fixed_points_3d(
-            unique_fps,
-            hiddens_np,
-            config=config_3d,
-            plot_batch_idx=list(range(30)),  # Plot first 30 trajectories
-            plot_start_time=10  # Start from timestep 10 to avoid initial transients
+            unique_fps, hiddens_np, config=config_3d,
+            plot_batch_idx=list(range(30)), plot_start_time=10
         )
+        print(f"Saved 3D plot to: {save_path_3d}")
 
-    print("\n" + "=" * 70)
-    print("Analysis complete!")
-    print("=" * 70)
+    print("\n--- Analysis complete ---")
 
 
 if __name__ == "__main__":
-    main()
+
+    config_to_run = "3_bit"  # Specify the desired configuration here: "2_bit","3_bit","4_bit"
+    # Use fixed seed
+    #seed_to_use = 8356
+    # Use random seed
+    seed_to_use = None
+
+    print(f"\n--- Running configuration: {config_to_run} ---")
+    if seed_to_use is None:
+        main(config_name=config_to_run)
+    else:
+        main(config_name=config_to_run, seed=seed_to_use)
+
+    print(f"\n--- Finished configuration: {config_to_run} ---")
