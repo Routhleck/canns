@@ -147,9 +147,7 @@ class HebbianTrainer(Trainer):
                     "learning and has no `apply_hebbian_learning` method."
                 )
 
-    def _compute_weight_update(
-        self, patterns: list[jnp.ndarray], sign: float = 1.0
-    ) -> jnp.ndarray:
+    def _compute_weight_update(self, patterns: list[jnp.ndarray], sign: float = 1.0) -> jnp.ndarray:
         """
         Compute weight update from patterns using vectorized JAX operations.
 

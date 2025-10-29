@@ -447,14 +447,16 @@ def create_1d_bump_animation(
             # Apply Gaussian kernel around bump center
             sigma = width_range / 2
 
-            # Vectorized kernel application (could be further optimized)
-            for offset in range(-Constants.MAX_KERNEL_SIZE, Constants.MAX_KERNEL_SIZE + 1):
-                dist = abs(offset)
-                gauss_weight = np.exp(-(dist**2) / (2 * sigma**2))
-                if gauss_weight < 0.01:  # Skip negligible contributions
-                    continue
-                idx = (center_idx + offset) % config.npoints
-                r[idx] += height * gauss_weight
+            # Vectorized kernel application - compute all offsets at once
+            offsets = np.arange(-Constants.MAX_KERNEL_SIZE, Constants.MAX_KERNEL_SIZE + 1)
+            gauss_weights = np.exp(-(offsets**2) / (2 * sigma**2))
+            # Filter out negligible contributions
+            significant_mask = gauss_weights >= 0.01
+            significant_offsets = offsets[significant_mask]
+            significant_weights = gauss_weights[significant_mask]
+            # Apply weights to corresponding indices
+            indices = (center_idx + significant_offsets) % config.npoints
+            r[indices] += height * significant_weights
 
             # Apply circular smoothing
             r = smooth_circle(r, window=5)
