@@ -7,11 +7,10 @@ from dataclasses import dataclass
 
 import brainstate
 import numpy as np
-import ratinabox
 from matplotlib import colors
 from matplotlib import pyplot as plt
 from matplotlib.path import Path
-from ratinabox import Agent, Environment
+from canns_lib.spatial import Agent, Environment
 from tqdm import tqdm
 
 from ._base import Task
@@ -527,6 +526,7 @@ class BaseNavigationTask(Task):
         rotational_velocity_coherence_time=0.08,
         rotational_velocity_std=120 * np.pi / 180,
         head_direction_smoothing_timescale=0.15,
+        initial_head_direction: float | None = None,
         thigmotaxis=0.5,
         wall_repel_distance=0.1,
         wall_repel_strength=1.0,
@@ -570,11 +570,7 @@ class BaseNavigationTask(Task):
         self.wall_repel_distance = wall_repel_distance
         self.wall_repel_strength = wall_repel_strength
         self.start_pos = start_pos
-
-        # ratinabox settings
-        ratinabox.stylize_plots()
-        ratinabox.autosave_plots = False
-        ratinabox.figure_directory = "figures"
+        self.initial_head_direction = initial_head_direction
 
         self.env_params = {
             "dimensionality": self.dimensionality,
@@ -587,7 +583,7 @@ class BaseNavigationTask(Task):
             "holes": copy.deepcopy(self.holes),
             "objects": copy.deepcopy(self.objects),
         }
-        self.env = Environment(params=self.env_params)
+        self.env = Environment(**self.env_params)
 
         self.agent_params = {
             "dt": self.dt,
@@ -601,9 +597,21 @@ class BaseNavigationTask(Task):
             "wall_repel_distance": self.wall_repel_distance,
             "wall_repel_strength": self.wall_repel_strength,
         }
-        self.agent = Agent(Environment=self.env, params=copy.deepcopy(self.agent_params))
-        self.agent.pos = np.array(start_pos)
+        self.agent = Agent(environment=self.env, params=copy.deepcopy(self.agent_params))
+        self.agent.set_position(np.array(start_pos))
         self.agent.dt = self.dt
+        self._apply_initial_head_direction(speed_mean=self.speed_mean)
+
+    def _apply_initial_head_direction(self, head_direction: float | None = None, speed_mean: float |None=None) -> None:
+        """Apply an initial head direction vector to the agent if provided."""
+
+        angle = self.initial_head_direction if head_direction is None else head_direction
+        if angle is None:
+            return
+
+        self.agent.head_direction = np.array([np.cos(angle), np.sin(angle)])
+        velocity = self.agent.head_direction * (self.agent.speed_mean if speed_mean is None else speed_mean)
+        self.agent.set_velocity(velocity)
 
     def build_movement_cost_grid(self, *, refresh: bool = False) -> MovementCostGrid:
         """Construct a grid-based movement cost map for the configured environment.

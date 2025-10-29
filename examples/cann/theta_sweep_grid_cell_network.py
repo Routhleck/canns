@@ -61,7 +61,7 @@ def main() -> None:
 
     # Show trajectory analysis
     print("Displaying trajectory analysis...")
-    snt.show_trajectory_analysis()
+    snt.show_trajectory_analysis(save_path="open_loop_trajectory_analysis.png", show=False)
 
     # Create networks
     dc_net = DirectionCellNetwork(
