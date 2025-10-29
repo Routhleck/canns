@@ -1092,12 +1092,9 @@ def _build_adjacency_matrix_numba(rows, cols, vals, n):
         X[rows[i], cols[i]] = vals[i]
         X_T[cols[i], rows[i]] = vals[i]  # Transpose
 
-    # Apply the symmetrization formula: A = A + A^T - A ⊙ A^T
+    # Apply the symmetrization formula: A = A + A^T - A ⊙ A^T (vectorized)
     # This matches scipy's: result + transpose - prod_matrix
-    for i in range(n):
-        for j in range(n):
-            prod_val = X[i, j] * X_T[i, j]  # Element-wise multiplication
-            X[i, j] = X[i, j] + X_T[i, j] - prod_val
+    X[:, :] = X + X_T - X * X_T
 
     return X
 
@@ -1183,7 +1180,7 @@ def _smooth_knn_dist(distances, k, n_iter=64, local_connectivity=0.0, bandwidth=
         hi = np.inf
         mid = 1.0
 
-        # TODO: This is very inefficient, but will do for now. FIXME
+        # Vectorized computation of non-zero distances
         ith_distances = distances[i]
         non_zero_dists = ith_distances[ith_distances > 0.0]
         if non_zero_dists.shape[0] >= local_connectivity:
@@ -1198,17 +1195,12 @@ def _smooth_knn_dist(distances, k, n_iter=64, local_connectivity=0.0, bandwidth=
         elif non_zero_dists.shape[0] > 0:
             rho[i] = np.max(non_zero_dists)
 
+        # Vectorized binary search loop - compute all at once instead of loop
         for _ in range(n_iter):
-            psum = 0.0
-            for j in range(1, distances.shape[1]):
-                d = distances[i, j] - rho[i]
-                if d > 0:
-                    psum += np.exp(-(d / mid))
-                #                    psum += d / mid
-
-                else:
-                    psum += 1.0
-            #                    psum += 0
+            # Vectorized computation: compute all distances at once
+            d_array = distances[i, 1:] - rho[i]
+            # Vectorized conditional: use np.where for conditional computation
+            psum = np.sum(np.where(d_array > 0, np.exp(-(d_array / mid)), 1.0))
 
             if np.fabs(psum - target) < 1e-5:
                 break
@@ -1223,7 +1215,7 @@ def _smooth_knn_dist(distances, k, n_iter=64, local_connectivity=0.0, bandwidth=
                 else:
                     mid = (lo + hi) / 2.0
         result[i] = mid
-        # TODO: This is very inefficient, but will do for now. FIXME
+        # Optimized mean computation - reuse ith_distances
         if rho[i] > 0.0:
             mean_ith_distances = np.mean(ith_distances)
             if result[i] < 1e-3 * mean_ith_distances:
@@ -1330,7 +1322,12 @@ def _run_shuffle_analysis_multiprocessing(
     sspikes, num_shuffles=1000, num_cores=4, progress_bar=True, **kwargs
 ):
     """Original multiprocessing implementation for fallback."""
-    max_lifetimes = {0: [], 1: [], 2: []}
+    # Use numpy arrays with NaN for failed results (more efficient than None filtering)
+    max_lifetimes = {
+        0: np.full(num_shuffles, np.nan),
+        1: np.full(num_shuffles, np.nan),
+        2: np.full(num_shuffles, np.nan),
+    }
 
     # Estimate runtime with a test iteration
     logging.info("Running test iteration to estimate runtime...")
@@ -1348,10 +1345,14 @@ def _run_shuffle_analysis_multiprocessing(
         results = list(pool.imap(_process_single_shuffle, tasks))
         logging.info("Shuffle analysis completed")
 
-    # Collect results
-    for res in results:
+    # Collect results - use indexing instead of append for better performance
+    for idx, res in enumerate(results):
         for dim, lifetime in res.items():
-            max_lifetimes[dim].append(lifetime)
+            max_lifetimes[dim][idx] = lifetime
+
+    # Filter out NaN values (failed results) - convert to list for consistency
+    for dim in max_lifetimes:
+        max_lifetimes[dim] = max_lifetimes[dim][~np.isnan(max_lifetimes[dim])].tolist()
 
     return max_lifetimes
 
