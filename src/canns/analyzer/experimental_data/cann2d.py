@@ -7,7 +7,7 @@ from typing import Any
 
 import matplotlib.pyplot as plt
 import numpy as np
-from canns_ripser import ripser
+from canns_lib.ripser import ripser
 from matplotlib import animation, cm, gridspec
 from numpy.exceptions import AxisError
 

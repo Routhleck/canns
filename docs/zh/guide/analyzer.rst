@@ -38,11 +38,11 @@
 ----------
 
 - 如果脚本首次运行时提示缺少数据，将自动创建 ``~/.canns/data`` 并缓存下载结果。
-- 需要额外库：UMAP（``umap-learn``）、Ripser（``canns-ripser``）、Numba、Matplotlib。
+- 需要额外库：UMAP（``umap-learn``）、Ripser（``canns_lib.ripser``，随 ``canns-lib`` 提供）、Numba、Matplotlib。
   若未安装，可在 `make install` 完成后追加：
   
   .. code-block:: bash
 
-     uv add umap-learn numba
+     uv add umap-learn canns-lib numba
 
 - ``PlotConfig``/``CANN2DPlotConfig`` 均支持 ``show=False``，便于在服务器上离线渲染。
