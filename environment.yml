@@ -12,5 +12,5 @@ dependencies:
   - tqdm
   - pip:
     - brainx[cpu]
-    - ratinabox>=1.15.3
+    - canns-lib>=0.6.2
     - canns

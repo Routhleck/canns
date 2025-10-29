@@ -5,7 +5,7 @@ import brainunit as u
 import numpy as np
 import seaborn as sns
 from matplotlib import pyplot as plt
-from ratinabox import Agent, Environment
+from canns_lib.spatial import Agent, Environment
 from tqdm import tqdm
 
 from .navigation_base import BaseNavigationTask
@@ -109,6 +109,7 @@ class OpenLoopNavigationTask(BaseNavigationTask):
             rotational_velocity_coherence_time=rotational_velocity_coherence_time,
             rotational_velocity_std=rotational_velocity_std,
             head_direction_smoothing_timescale=head_direction_smoothing_timescale,
+            initial_head_direction=initial_head_direction,
             thigmotaxis=thigmotaxis,
             wall_repel_distance=wall_repel_distance,
             wall_repel_strength=wall_repel_strength,
@@ -119,7 +120,6 @@ class OpenLoopNavigationTask(BaseNavigationTask):
         self.duration = duration
         self.total_steps = int(self.duration / self.dt)
         self.run_steps = np.arange(self.total_steps)
-        self.initial_head_direction = initial_head_direction
         self.progress_bar = progress_bar
 
         # Set initial movement direction if specified
@@ -133,10 +133,6 @@ class OpenLoopNavigationTask(BaseNavigationTask):
                 ]
             )
             self.agent.velocity = initial_velocity
-            # Also set head direction to match
-            self.agent.head_direction = np.array(
-                [np.cos(self.initial_head_direction), np.sin(self.initial_head_direction)]
-            )
 
     def calculate_theta_sweep_data(self):
         """
@@ -176,6 +172,7 @@ class OpenLoopNavigationTask(BaseNavigationTask):
         self.agent = Agent(Environment=self.env, params=copy.deepcopy(self.agent_params))
         self.agent.pos = np.array(self.start_pos)
         self.agent.dt = self.dt
+        self._apply_initial_head_direction()
 
         # Set initial movement direction if specified
         if self.initial_head_direction is not None:
@@ -188,10 +185,6 @@ class OpenLoopNavigationTask(BaseNavigationTask):
                 ]
             )
             self.agent.velocity = initial_velocity
-            # Also set head direction to match
-            self.agent.head_direction = np.array(
-                [np.cos(self.initial_head_direction), np.sin(self.initial_head_direction)]
-            )
 
     def get_data(self):
         """Generates the inputs for the agent based on its current position."""

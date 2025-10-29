@@ -42,8 +42,8 @@ hierarchical_path_integration.py
 提示
 ----
 
-- ``OpenLoopNavigationTask`` 默认依赖 ``Ratinabox``，在首次运行时会生成内置环境；可通过传入
-  ``walls``、``objects`` 等参数自定义布局。
+- ``OpenLoopNavigationTask`` 依赖 ``canns_lib`` 提供的空间模拟后端，在首次运行时会生成内置环境；
+  可通过传入 ``walls``、``objects`` 等参数自定义布局。
 - 若需要批量生成轨迹，可在脚本外部循环调用 ``task.get_data()`` 并保存，以便流水线示例直接消费。
 
 
@@ -51,7 +51,7 @@ hierarchical_path_integration.py
 --------------
 
 - **路径**：``src/canns/task/closed_loop_navigation.py``
-- **目标**：在 ``Ratinabox`` 闭环代理基础上，提供环境感知的移动规划工具，包括移动代价网格和测地线
+- **目标**：在 ``canns_lib`` 闭环代理基础上，提供环境感知的移动规划工具，包括移动代价网格和测地线
   可视化。
 - **关键流程**：
 

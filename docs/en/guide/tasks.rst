@@ -45,8 +45,9 @@ hierarchical_path_integration.py
 Tips
 ----
 
-- ``OpenLoopNavigationTask`` depends on ``Ratinabox`` and will create the default environment on first run.
-  You can customise layouts by passing ``walls`` or ``objects``.
+- ``OpenLoopNavigationTask`` relies on the ``canns_lib`` spatial backend for agent/environment
+  simulation and will create the default environment on first run. You can customise layouts by
+  passing ``walls`` or ``objects``.
 - For batch simulations, loop over ``task.get_data()`` and write each dataset to disk—the pipeline examples
   happily consume cached trajectories.
 
@@ -55,8 +56,8 @@ Closed-loop navigation utilities
 --------------------------------
 
 - **Location**: ``src/canns/task/closed_loop_navigation.py``
-- **Goal**: Provide environment-aware movement planning tools, including cost-grid generation and geodesic
-  visualisations, on top of the ``Ratinabox`` closed-loop agent.
+- **Goal**: Provide environment-aware movement planning tools, including cost-grid generation and
+  geodesic visualisations, on top of the ``canns_lib`` closed-loop agent implementation.
 - **Workflow**:
 
   1. Instantiate :class:`~src.canns.task.closed_loop_navigation.ClosedLoopNavigationTask`

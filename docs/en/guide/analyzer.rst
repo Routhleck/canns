@@ -43,11 +43,11 @@ Tools & dependencies
 --------------------
 
 - On first run the helpers create ``~/.canns/data`` and cache downloads automatically.
-- Additional libraries you may need: ``umap-learn``, ``canns-ripser``, ``numba``, ``matplotlib``. Install them with:
+- Additional libraries you may need: ``umap-learn``, ``canns_lib.ripser`` (via ``canns-lib``), ``numba``, ``matplotlib``. Install them with:
 
   .. code-block:: bash
 
-     uv add umap-learn numba
+     uv add umap-learn canns-lib numba
 
 - ``PlotConfig`` and ``CANN2DPlotConfig`` accept ``show=False`` so you can render figures on headless servers without
   changing the code.
