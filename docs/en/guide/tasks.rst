@@ -34,7 +34,7 @@ hierarchical_path_integration.py
   2. Build :class:`~src.canns.models.basic.hierarchical_model.HierarchicalNetwork`,
      which stacks band, grid, and place-cell populations.
   3. Use ``brainstate.compile.for_loop`` to prime the network (``loc_input_stre`` warm-up) and then run the full trajectory.
-  4. Compare compiled performance with :func:`~src.canns.misc.benchmark.benchmark`.
+  4. Compare compiled performance with :func:`~src.canns.utils.benchmark.benchmark`.
 - **Output**: ``trajectory_graph.png`` and ``band_grid_place_activity.npz`` (optional).
 - **Extensions**:
 

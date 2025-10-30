@@ -1,9 +1,9 @@
-from . import _datasets as _datasets
 from . import analyzer as analyzer
-from . import misc as misc
+from . import data as data
 from . import models as models
 from . import pipeline as pipeline
 from . import trainer as trainer
+from . import utils as utils
 
 # Version information
 try:
@@ -15,11 +15,11 @@ except ImportError:
 
 __all__ = [
     "analyzer",
-    "_datasets",
-    "misc",
+    "data",
     "models",
     "pipeline",
     "trainer",
+    "utils",
     "__version__",
     "version_info",
 ]

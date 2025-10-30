@@ -37,7 +37,7 @@ except ImportError:
         return range(x)
 
 
-from canns.analyzer.experimental_data._datasets_utils import load_roi_data
+from canns.data.loaders import load_roi_data
 
 # Import PlotConfig for unified plotting
 from ..plotting import PlotConfig
