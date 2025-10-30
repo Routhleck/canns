@@ -5,15 +5,17 @@ from __future__ import annotations
 import jax.numpy as jnp
 
 
-def compute_running_average(current_avg: jnp.ndarray, new_value: jnp.ndarray, tau: float) -> jnp.ndarray:
+def compute_running_average(
+    current_avg: jnp.ndarray, new_value: jnp.ndarray, tau: float
+) -> jnp.ndarray:
     """
     Compute exponential running average for BCM sliding thresholds.
-    
+
     Args:
         current_avg: Current average value
         new_value: New value to incorporate
         tau: Time constant (higher = slower adaptation)
-    
+
     Returns:
         Updated running average
     """
@@ -24,10 +26,10 @@ def compute_running_average(current_avg: jnp.ndarray, new_value: jnp.ndarray, ta
 def normalize_weight_rows(W: jnp.ndarray) -> jnp.ndarray:
     """
     Normalize each row of weight matrix to unit norm (for Oja's rule).
-    
+
     Args:
         W: Weight matrix of shape (N, M)
-    
+
     Returns:
         Normalized weight matrix with unit-norm rows
     """
@@ -40,28 +42,26 @@ def normalize_weight_rows(W: jnp.ndarray) -> jnp.ndarray:
 def initialize_spike_buffer(num_neurons: int, buffer_size: int) -> jnp.ndarray:
     """
     Initialize spike time buffer for STDP learning.
-    
+
     Args:
         num_neurons: Number of neurons in the network
         buffer_size: Number of recent spike times to store per neuron
-    
+
     Returns:
         Spike buffer of shape (num_neurons, buffer_size) initialized to -inf
     """
     return jnp.full((num_neurons, buffer_size), -jnp.inf, dtype=jnp.float32)
 
 
-def update_spike_buffer(
-    buffer: jnp.ndarray, neuron_idx: int, spike_time: float
-) -> jnp.ndarray:
+def update_spike_buffer(buffer: jnp.ndarray, neuron_idx: int, spike_time: float) -> jnp.ndarray:
     """
     Update spike buffer with new spike time (circular buffer).
-    
+
     Args:
         buffer: Current spike buffer of shape (num_neurons, buffer_size)
         neuron_idx: Index of neuron that spiked
         spike_time: Time of spike
-    
+
     Returns:
         Updated spike buffer
     """
@@ -75,12 +75,12 @@ def update_spike_buffer(
 def stdp_kernel(dt: float, tau_plus: float = 20.0, tau_minus: float = 20.0) -> float:
     """
     Compute STDP timing kernel for weight change.
-    
+
     Args:
         dt: Time difference (post_spike_time - pre_spike_time)
         tau_plus: Time constant for potentiation (dt > 0)
         tau_minus: Time constant for depression (dt < 0)
-    
+
     Returns:
         Weight change magnitude (positive for potentiation, negative for depression)
     """
