@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import brainstate
+import jax
 import jax.numpy as jnp
 
 from ._base import BrainInspiredModel
@@ -54,8 +55,6 @@ class LinearHebbLayer(BrainInspiredModel):
         # Weight matrix W: (output_size, input_size)
         # Initialize with small random values to break symmetry
         key = brainstate.random.get_key()
-        import jax
-
         self.W = brainstate.ParamState(
             jax.random.normal(key, (self.output_size, self.input_size), dtype=jnp.float32) * 0.01
         )
