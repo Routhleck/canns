@@ -1,7 +1,7 @@
 # Repository Guidelines
 
 ## Project Structure & Modules
-- Source: `src/canns/` (core packages: `models/`, `trainer/`, `analyzer/`, `task/`, `pipeline/`).
+- Source: `src/canns/` (core packages: `models/`, `trainer/`, `analyzer/`, `task/`, `pipeline/`, `data/`, `utils/`).
 - Tests: `tests/` (e.g., `tests/trainer/test_*.py`, `tests/analyzer/test_*.py`).
 - Docs: `docs/` (Sphinx), examples in `examples/`, dev utilities in `devtools/`, CI in `.github/`.
 - Package entry: `pyproject.toml` (dynamic versioning via `uv-dynamic-versioning`).
@@ -43,6 +43,8 @@ Examples: `uv run pytest -q`, `uv run python devtools/lint.py`.
   - Models in `models/` (e.g., `CANN1D/2D`, brain-inspired variants).
   - Training via `trainer/` (e.g., `HebbianTrainer`).
   - Analysis and visualization in `analyzer/` with config-first plotting.
+  - Dataset management in `data/` (dataset registry, downloading, loaders).
+  - General utilities in `utils/` (benchmarking, etc.).
 
 ## API Policy (Development)
 - Prefer trainer-led APIs. Do not call `model.predict(...)` directly; use `HebbianTrainer.predict(...)`.
