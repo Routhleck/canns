@@ -5,10 +5,6 @@ from . import pipeline as pipeline
 from . import trainer as trainer
 from . import utils as utils
 
-# Backward compatibility aliases for old import paths
-_datasets = data  # For imports like: from canns import _datasets
-misc = utils  # For imports like: from canns import misc
-
 # Version information
 try:
     from ._version import __version__, version_info
@@ -24,10 +20,6 @@ __all__ = [
     "pipeline",
     "trainer",
     "utils",
-    # Backward compatibility
-    "_datasets",
-    "misc",
-    # Version info
     "__version__",
     "version_info",
 ]
