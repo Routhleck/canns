@@ -2102,7 +2102,7 @@ def _smooth_image(img, sigma):
 
 
 if __name__ == "__main__":
-    from canns.analyzer.experimental_data._datasets_utils import load_grid_data
+    from canns.data.loaders import load_grid_data
 
     data = load_grid_data()
 

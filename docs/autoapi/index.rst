@@ -3,11 +3,15 @@ API Reference
 
 This page contains auto-generated API reference documentation [#f1]_.
 
+.. note::
+   
+   After module restructuring, regenerate this documentation with ``make docs`` 
+   to include the new ``data/`` and ``utils/`` modules.
+
 .. toctree::
    :titlesonly:
 
    /autoapi/src/canns/index
-   /autoapi/src/canns/misc/index
    /autoapi/src/canns/task/index
    /autoapi/src/canns/models/index
    /autoapi/src/canns/typing/index
@@ -17,7 +21,6 @@ This page contains auto-generated API reference documentation [#f1]_.
    /autoapi/src/canns/models/basic/index
    /autoapi/src/canns/models/hybrid/index
    /autoapi/src/canns/task/tracking/index
-   /autoapi/src/canns/misc/benchmark/index
    /autoapi/src/canns/analyzer/utils/index
    /autoapi/src/canns/trainer/hebbian/index
    /autoapi/src/canns/models/basic/cann/index
