@@ -101,6 +101,9 @@ class BCMTrainer(Trainer):
             delta_W = self.learning_rate * jnp.outer(phi, x)
 
             W = W + delta_W
+            
+            # Clip weights to prevent divergence
+            W = jnp.clip(W, -10.0, 10.0)
 
             # Update threshold using model's method
             if hasattr(self.model, "update_threshold"):

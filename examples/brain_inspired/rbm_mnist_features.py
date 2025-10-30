@@ -58,7 +58,7 @@ model.init_state()
 trainer = ContrastiveDivergenceTrainer(model, learning_rate=0.1, k=1)
 
 # Train RBM
-n_epochs = 50
+n_epochs = 20  # Reduced for faster execution
 reconstruction_errors = []
 
 print("\nTraining RBM...")
@@ -74,7 +74,7 @@ for epoch in range(n_epochs):
     mean_error = trainer.get_reconstruction_error()
     reconstruction_errors.append(mean_error)
 
-    if (epoch + 1) % 10 == 0:
+    if (epoch + 1) % 5 == 0:
         print(f"Epoch {epoch+1}/{n_epochs}: Reconstruction error = {mean_error:.4f}")
 
 print("\nTraining complete!")
@@ -103,25 +103,26 @@ for plot_idx in range(2):
     # Reshape if data is square
     size = int(np.sqrt(n_visible))
     if size * size == n_visible:
-        # Create grid of features
-        grid_size = int(np.sqrt(8))
-        feature_grid = np.zeros((size * grid_size, size * grid_size))
+        # Create grid of features (2x4 grid for 8 features)
+        n_rows = 2
+        n_cols = 4
+        feature_grid = np.zeros((size * n_rows, size * n_cols))
 
-        for i in range(8):
+        for i in range(min(8, end_idx - start_idx)):
             if start_idx + i >= n_hidden:
                 break
-            row = i // grid_size
-            col = i % grid_size
+            row = i // n_cols
+            col = i % n_cols
             feature = features[i].reshape(size, size)
             feature_grid[row * size : (row + 1) * size, col * size : (col + 1) * size] = feature
 
         im = ax.imshow(feature_grid, cmap="RdBu_r", interpolation="nearest")
-        ax.set_title(f"Learned Features {start_idx+1}-{min(end_idx, n_hidden)}")
+        ax.set_title(f"Learned Features {start_idx+1}-{min(start_idx+8, n_hidden)}")
     else:
         im = ax.imshow(features, aspect="auto", cmap="RdBu_r")
         ax.set_xlabel("Visible Unit")
         ax.set_ylabel("Hidden Unit")
-        ax.set_title(f"Features {start_idx+1}-{end_idx}")
+        ax.set_title(f"Features {start_idx+1}-{min(end_idx, n_hidden)}")
 
     ax.axis("off")
 
@@ -168,7 +169,7 @@ plt.show()
 # Analyze learned features
 print("\n" + "=" * 60)
 print("Feature Analysis")
-print("n" + "=" * 60)
+print("=" * 60)
 
 # Compute feature activation statistics
 feature_activations = []

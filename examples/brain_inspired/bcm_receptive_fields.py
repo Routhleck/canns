@@ -36,9 +36,9 @@ def generate_oriented_stimuli(n_samples, size=16, n_orientations=8):
         # Create bar pattern
         pattern = np.exp(-((x_rot / 2) ** 2))
 
-        # Flatten and normalize
+        # Flatten and normalize to [0, 1]
         pattern_flat = pattern.flatten()
-        pattern_flat = (pattern_flat - pattern_flat.mean()) / (pattern_flat.std() + 1e-8)
+        pattern_flat = (pattern_flat - pattern_flat.min()) / (pattern_flat.max() - pattern_flat.min() + 1e-8)
 
         stimuli.append(pattern_flat.astype(np.float32))
 
@@ -55,13 +55,13 @@ print(f"Input dimension: {len(train_data[0])}")
 
 # Create BCM layer
 n_neurons = 4  # Learn 4 different receptive fields
-model = BCMLayer(input_size=size * size, output_size=n_neurons, threshold_tau=100.0)
+model = BCMLayer(input_size=size * size, output_size=n_neurons, threshold_tau=50.0)
 model.init_state()
 
-trainer = BCMTrainer(model, learning_rate=0.001)
+trainer = BCMTrainer(model, learning_rate=0.00001)  # Small learning rate for stability
 
 # Track evolution of receptive fields and thresholds
-n_epochs = 50
+n_epochs = 100  # More epochs with smaller learning rate
 threshold_history = []
 weight_history = []
 
@@ -76,7 +76,7 @@ for epoch in range(n_epochs):
     threshold_history.append(model.theta.value.copy())
     weight_history.append(model.W.value.copy())
 
-    if (epoch + 1) % 10 == 0:
+    if (epoch + 1) % 20 == 0:
         print(
             f"Epoch {epoch+1}/{n_epochs}: "
             f"Thresholds: {model.theta.value}, "
@@ -140,7 +140,7 @@ for j, angle in enumerate(test_orientations):
     x_rot = x * np.cos(angle) + y * np.sin(angle)
     pattern = np.exp(-((x_rot / 2) ** 2))
     pattern_flat = pattern.flatten()
-    pattern_flat = (pattern_flat - pattern_flat.mean()) / (pattern_flat.std() + 1e-8)
+    pattern_flat = (pattern_flat - pattern_flat.min()) / (pattern_flat.max() - pattern_flat.min() + 1e-8)
 
     # Get neuron responses
     response = trainer.predict(pattern_flat.astype(np.float32))
