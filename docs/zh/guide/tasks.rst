@@ -32,7 +32,7 @@ hierarchical_path_integration.py
   1. 创建长时间 (``duration=1000``) 的空间导航任务，并保存轨迹到 ``trajectory_test.npz``。
   2. 构建 :class:`HierarchicalNetwork <src.canns.models.basic.hierarchical_model.HierarchicalNetwork>`，包含带状细胞、网格细胞、位置细胞模块。
   3. 通过 ``brainstate.compile.for_loop`` 先执行初始化阶段（``loc_input_stre`` 充当校准），再运行完整轨迹。
-  4. 使用 :func:`benchmark() <src.canns.misc.benchmark.benchmark>` 比较编译循环性能。
+  4. 使用 :func:`benchmark() <src.canns.utils.benchmark.benchmark>` 比较编译循环性能。
 - **输出**：生成 trajectory_graph.png、band_grid_place_activity.npz（可选）。
 - **延伸**：
 
