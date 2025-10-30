@@ -11,7 +11,7 @@ from typing import Any
 
 import numpy as np
 
-from canns import _datasets
+from . import datasets as _datasets
 
 
 def load_roi_data(source: str | Path | None = None) -> np.ndarray | None:

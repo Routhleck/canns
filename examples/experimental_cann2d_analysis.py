@@ -13,7 +13,7 @@ from canns.analyzer.experimental_data import (
     CANN2DPlotConfig, SpikeEmbeddingConfig, TDAConfig
 )
 
-from canns.analyzer.experimental_data._datasets_utils import load_grid_data
+from canns.data.loaders import load_grid_data
 
 data = load_grid_data()
 
