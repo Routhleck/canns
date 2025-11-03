@@ -4,8 +4,8 @@ from dataclasses import dataclass
 import brainunit as u
 import numpy as np
 import seaborn as sns
-from matplotlib import pyplot as plt
 from canns_lib.spatial import Agent, Environment
+from matplotlib import pyplot as plt
 from tqdm import tqdm
 
 from .navigation_base import BaseNavigationTask
