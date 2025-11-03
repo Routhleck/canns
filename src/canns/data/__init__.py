@@ -6,8 +6,8 @@ It consolidates data-related functionality previously scattered across the codeb
 """
 
 from .datasets import (
-    DEFAULT_DATA_DIR,
     DATASETS,
+    DEFAULT_DATA_DIR,
     HUGGINGFACE_REPO,
     download_dataset,
     get_data_dir,

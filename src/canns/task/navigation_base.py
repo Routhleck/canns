@@ -7,10 +7,10 @@ from dataclasses import dataclass
 
 import brainstate
 import numpy as np
+from canns_lib.spatial import Agent, Environment
 from matplotlib import colors
 from matplotlib import pyplot as plt
 from matplotlib.path import Path
-from canns_lib.spatial import Agent, Environment
 from tqdm import tqdm
 
 from ._base import Task
@@ -602,7 +602,9 @@ class BaseNavigationTask(Task):
         self.agent.dt = self.dt
         self._apply_initial_head_direction(speed_mean=self.speed_mean)
 
-    def _apply_initial_head_direction(self, head_direction: float | None = None, speed_mean: float |None=None) -> None:
+    def _apply_initial_head_direction(
+        self, head_direction: float | None = None, speed_mean: float | None = None
+    ) -> None:
         """Apply an initial head direction vector to the agent if provided."""
 
         angle = self.initial_head_direction if head_direction is None else head_direction
@@ -610,7 +612,9 @@ class BaseNavigationTask(Task):
             return
 
         self.agent.head_direction = np.array([np.cos(angle), np.sin(angle)])
-        velocity = self.agent.head_direction * (self.agent.speed_mean if speed_mean is None else speed_mean)
+        velocity = self.agent.head_direction * (
+            self.agent.speed_mean if speed_mean is None else speed_mean
+        )
         self.agent.set_velocity(velocity)
 
     def build_movement_cost_grid(self, *, refresh: bool = False) -> MovementCostGrid:
