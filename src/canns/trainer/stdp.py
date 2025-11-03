@@ -195,10 +195,6 @@ class STDPTrainer(Trainer):
             # Forward pass through model (updates traces and generates spikes)
             spike_post = self.model.forward(x)
 
-            # Get updated traces
-            trace_pre_after = self.model.trace_pre.value
-            trace_post_after = self.model.trace_post.value
-
             # STDP weight update
             # LTP: pre before post (use pre trace from before post spike)
             ltp = self.A_plus * jnp.outer(spike_post, trace_pre_before)

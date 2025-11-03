@@ -73,8 +73,7 @@ class SpikingLayer(BrainInspiredModel):
         # Initialize with small random values
         key = brainstate.random.get_key()
         self.W = brainstate.ParamState(
-            jax.random.normal(key, (self.output_size, self.input_size), dtype=jnp.float32)
-            * 0.05
+            jax.random.normal(key, (self.output_size, self.input_size), dtype=jnp.float32) * 0.05
         )
 
         # Input spikes (for training)
@@ -88,9 +87,7 @@ class SpikingLayer(BrainInspiredModel):
 
         # Spike traces (exponentially decaying spike history)
         self.trace_pre = brainstate.HiddenState(jnp.zeros(self.input_size, dtype=jnp.float32))
-        self.trace_post = brainstate.HiddenState(
-            jnp.zeros(self.output_size, dtype=jnp.float32)
-        )
+        self.trace_post = brainstate.HiddenState(jnp.zeros(self.output_size, dtype=jnp.float32))
 
     def forward(self, x: jnp.ndarray) -> jnp.ndarray:
         """
@@ -115,9 +112,7 @@ class SpikingLayer(BrainInspiredModel):
         self.spike.value = (self.v.value >= self.threshold).astype(jnp.float32)
 
         # Reset membrane potential for neurons that spiked
-        self.v.value = jnp.where(
-            self.spike.value > 0, self.v_reset, self.v.value
-        )
+        self.v.value = jnp.where(self.spike.value > 0, self.v_reset, self.v.value)
 
         # Update post-synaptic traces
         self.trace_post.value = self.trace_decay * self.trace_post.value + self.spike.value
