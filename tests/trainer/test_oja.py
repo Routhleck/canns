@@ -5,13 +5,13 @@ from __future__ import annotations
 import jax.numpy as jnp
 import pytest
 
-from canns.models.brain_inspired import LinearHebbLayer
+from canns.models.brain_inspired import LinearLayer
 from canns.trainer import OjaTrainer
 
 
 def test_oja_trainer_initialization():
     """Test OjaTrainer initialization."""
-    model = LinearHebbLayer(input_size=10, output_size=5)
+    model = LinearLayer(input_size=10, output_size=5)
     model.init_state()
     
     trainer = OjaTrainer(model, learning_rate=0.01, normalize_weights=True)
@@ -25,7 +25,7 @@ def test_oja_trainer_initialization():
 def test_oja_trainer_basic_training():
     """Test basic Oja training on synthetic data."""
     # Create model
-    model = LinearHebbLayer(input_size=4, output_size=2)
+    model = LinearLayer(input_size=4, output_size=2)
     model.init_state()
     
     # Create trainer
@@ -52,7 +52,7 @@ def test_oja_trainer_basic_training():
 
 def test_oja_trainer_without_normalization():
     """Test Oja training without weight normalization."""
-    model = LinearHebbLayer(input_size=3, output_size=2)
+    model = LinearLayer(input_size=3, output_size=2)
     model.init_state()
     
     trainer = OjaTrainer(model, learning_rate=0.05, normalize_weights=False)
@@ -71,7 +71,7 @@ def test_oja_trainer_without_normalization():
 
 def test_oja_trainer_predict():
     """Test Oja trainer prediction."""
-    model = LinearHebbLayer(input_size=3, output_size=2)
+    model = LinearLayer(input_size=3, output_size=2)
     model.init_state()
     
     # Set some non-zero weights
@@ -94,7 +94,7 @@ def test_oja_trainer_predict():
 def test_oja_trainer_convergence():
     """Test that Oja training extracts principal components."""
     # Create model
-    model = LinearHebbLayer(input_size=3, output_size=1)
+    model = LinearLayer(input_size=3, output_size=1)
     model.init_state()
     
     trainer = OjaTrainer(model, learning_rate=0.01, normalize_weights=True)

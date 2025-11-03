@@ -7,12 +7,9 @@ Hebbian learning, and other brain-inspired mechanisms.
 """
 
 from ._base import BrainInspiredModel, BrainInspiredModelGroup
-from .bcm import BCMLayer
-from .helmholtz import HelmholtzMachine
 from .hopfield import AmariHopfieldNetwork
-from .linear_hebb import LinearHebbLayer
-from .rbm import RestrictedBoltzmannModel
-from .spiking import LIFSpikingNetwork
+from .linear import LinearLayer
+from .spiking import SpikingLayer
 
 __all__ = [
     # Base classes
@@ -20,9 +17,6 @@ __all__ = [
     "BrainInspiredModelGroup",
     # Specific models
     "AmariHopfieldNetwork",
-    "LinearHebbLayer",
-    "BCMLayer",
-    "LIFSpikingNetwork",
-    "RestrictedBoltzmannModel",
-    "HelmholtzMachine",
+    "LinearLayer",
+    "SpikingLayer",
 ]

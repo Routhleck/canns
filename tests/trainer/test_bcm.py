@@ -5,13 +5,13 @@ from __future__ import annotations
 import jax.numpy as jnp
 import pytest
 
-from canns.models.brain_inspired import BCMLayer
+from canns.models.brain_inspired import LinearLayer
 from canns.trainer import BCMTrainer
 
 
 def test_bcm_trainer_initialization():
     """Test BCMTrainer initialization."""
-    model = BCMLayer(input_size=10, output_size=5)
+    model = LinearLayer(input_size=10, output_size=5, use_bcm_threshold=True)
     model.init_state()
     
     trainer = BCMTrainer(model, learning_rate=0.01)
@@ -23,7 +23,7 @@ def test_bcm_trainer_initialization():
 
 def test_bcm_trainer_basic_training():
     """Test basic BCM training."""
-    model = BCMLayer(input_size=4, output_size=2)
+    model = LinearLayer(input_size=4, output_size=2, use_bcm_threshold=True)
     model.init_state()
     
     trainer = BCMTrainer(model, learning_rate=0.05)
@@ -49,7 +49,7 @@ def test_bcm_trainer_basic_training():
 
 def test_bcm_threshold_adaptation():
     """Test that BCM threshold adapts to activity."""
-    model = BCMLayer(input_size=3, output_size=2, threshold_tau=10.0)
+    model = LinearLayer(input_size=3, output_size=2, use_bcm_threshold=True, threshold_tau=10.0)
     model.init_state()
     
     initial_theta = model.theta.value.copy()
@@ -72,7 +72,7 @@ def test_bcm_threshold_adaptation():
 
 def test_bcm_trainer_predict():
     """Test BCM trainer prediction."""
-    model = BCMLayer(input_size=3, output_size=2)
+    model = LinearLayer(input_size=3, output_size=2)
     model.init_state()
     
     # Set some weights
@@ -94,7 +94,7 @@ def test_bcm_trainer_predict():
 
 def test_bcm_layer_forward():
     """Test BCMLayer forward pass."""
-    model = BCMLayer(input_size=4, output_size=3)
+    model = LinearLayer(input_size=4, output_size=3)
     model.init_state()
     
     # Set known weights
@@ -111,7 +111,7 @@ def test_bcm_layer_forward():
 
 def test_bcm_potentiation_depression():
     """Test BCM potentiation vs depression regimes."""
-    model = BCMLayer(input_size=2, output_size=1, threshold_tau=100.0)
+    model = LinearLayer(input_size=2, output_size=1, use_bcm_threshold=True, threshold_tau=100.0)
     model.init_state()
     
     # Set initial weight

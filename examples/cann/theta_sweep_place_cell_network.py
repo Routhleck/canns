@@ -58,6 +58,7 @@ def main() -> None:
     # Show trajectory analysis
     print("Displaying trajectory analysis...")
     tmazet.show_data(show=False, overlay_movement_cost=True, save_path="tmaze_trajectory_analysis.png")
+    tmazet.show_geodesic_distance_matrix(show=False, save_path="tmaze_geodesic_distance_matrix.png")
 
     # Create networks with T-maze parameters from Chu et al. 2024 Table 3
     pc_net = PlaceCellNetwork(

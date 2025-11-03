@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Iterable
 
+import brainstate
 import jax.numpy as jnp
 
 from ..models.brain_inspired import BrainInspiredModel
@@ -46,22 +47,25 @@ class OjaTrainer(Trainer):
         learning_rate: float = 0.01,
         normalize_weights: bool = True,
         weight_attr: str = "W",
+        compiled: bool = True,
         **kwargs,
     ):
         """
         Initialize Oja trainer.
 
         Args:
-            model: The model to train (typically LinearHebbLayer)
+            model: The model to train (typically LinearLayer)
             learning_rate: Learning rate η for weight updates
             normalize_weights: Whether to normalize weights to unit norm after each update
             weight_attr: Name of model attribute holding the connection weights
+            compiled: Whether to use JIT-compiled training loop (default: True)
             **kwargs: Additional arguments passed to parent Trainer
         """
         super().__init__(model=model, **kwargs)
         self.learning_rate = learning_rate
         self.normalize_weights = normalize_weights
         self.weight_attr = weight_attr
+        self.compiled = compiled
 
     def train(self, train_data: Iterable):
         """
@@ -77,6 +81,57 @@ class OjaTrainer(Trainer):
                 f"Model does not have a '{self.weight_attr}' parameter with .value attribute"
             )
 
+        if self.compiled:
+            self._train_compiled(train_data, weight_param)
+        else:
+            self._train_uncompiled(train_data, weight_param)
+
+    def _train_compiled(self, train_data: Iterable, weight_param):
+        """
+        JIT-compiled training loop using brainstate.transform.scan.
+
+        Args:
+            train_data: Iterable of input patterns
+            weight_param: Weight parameter object
+        """
+        # Convert patterns to array for JIT compilation
+        patterns = jnp.stack([jnp.asarray(p, dtype=jnp.float32) for p in train_data])
+
+        # Initial weights
+        W_init = jnp.asarray(weight_param.value, dtype=jnp.float32)
+
+        # Training step for single pattern
+        def train_step(W, x):
+            # Compute output: y = W @ x
+            y = W @ x
+
+            # Oja's rule: ΔW = η * (y @ x^T - diag(y^2) @ W)
+            outer_product = jnp.outer(y, x)
+            normalization = jnp.outer(y * y, jnp.ones_like(x)) * W
+
+            delta_W = self.learning_rate * (outer_product - normalization)
+            W = W + delta_W
+
+            # Optional: normalize weights to unit norm
+            if self.normalize_weights:
+                W = normalize_weight_rows(W)
+
+            return W, None
+
+        # Run compiled scan
+        W_final, _ = brainstate.transform.scan(train_step, W_init, patterns)
+
+        # Update model parameters
+        weight_param.value = W_final
+
+    def _train_uncompiled(self, train_data: Iterable, weight_param):
+        """
+        Python loop training (fallback, slower but more flexible).
+
+        Args:
+            train_data: Iterable of input patterns
+            weight_param: Weight parameter object
+        """
         W = weight_param.value
 
         # Process each pattern

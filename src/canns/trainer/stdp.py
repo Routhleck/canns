@@ -1,9 +1,10 @@
-"""Spike-Timing-Dependent Plasticity (STDP) trainer."""
+"""STDP (Spike-Timing-Dependent Plasticity) trainer."""
 
 from __future__ import annotations
 
 from collections.abc import Iterable
 
+import brainstate
 import jax.numpy as jnp
 
 from ..models.brain_inspired import BrainInspiredModel
@@ -14,70 +15,78 @@ __all__ = ["STDPTrainer"]
 
 class STDPTrainer(Trainer):
     """
-    Spike-Timing-Dependent Plasticity (STDP) trainer.
+    STDP (Spike-Timing-Dependent Plasticity) trainer.
 
-    STDP is a biological learning rule where synaptic strength changes depend
-    on the precise timing of pre- and postsynaptic spikes. The classic
-    STDP window shows:
-    - Potentiation (LTP) when presynaptic spike precedes postsynaptic spike
-    - Depression (LTD) when postsynaptic spike precedes presynaptic spike
+    STDP is a biologically-inspired learning rule that adjusts synaptic weights
+    based on the precise timing of pre- and post-synaptic spikes. Synapses are
+    strengthened when pre-synaptic spikes precede post-synaptic spikes (LTP),
+    and weakened when the order is reversed (LTD).
 
-    Learning Rule:
-        If pre-spike at t_pre and post-spike at t_post:
-            Δt = t_post - t_pre
+    Trace-based Learning Rule:
+        ΔW_ij = A_plus * trace_pre[j] * spike_post[i] - A_minus * trace_post[i] * spike_pre[j]
 
-            If Δt > 0 (causality):
-                ΔW = A+ * exp(-Δt / τ+)  (potentiation)
+    where:
+        - W_ij is the weight from input j to neuron i
+        - spike_pre[j] is the presynaptic spike (0 or 1)
+        - spike_post[i] is the postsynaptic spike (0 or 1)
+        - trace_pre[j] is the exponential trace of presynaptic spikes
+        - trace_post[i] is the exponential trace of postsynaptic spikes
+        - A_plus controls LTP (long-term potentiation) magnitude
+        - A_minus controls LTD (long-term depression) magnitude
 
-            If Δt < 0 (anti-causality):
-                ΔW = -A- * exp(Δt / τ-)  (depression)
+    The spike traces evolve as:
+        trace = decay * trace + spike
 
-    where A+, A- are learning rate amplitudes and τ+, τ- are time constants.
+    This provides a temporal window for spike-timing correlations.
 
-    Reference:
-        Bi, G. Q., & Poo, M. M. (1998). Synaptic modifications in cultured
-        hippocampal neurons: dependence on spike timing, synaptic strength, and
-        postsynaptic cell type. Journal of Neuroscience, 18(24), 10464-10472.
+    References:
+        - Gerstner & Kistler (2002): Spiking Neuron Models
+        - Morrison et al. (2008): Phenomenological models of synaptic plasticity
+        - Bi & Poo (1998): Synaptic modifications in cultured hippocampal neurons
     """
 
     def __init__(
         self,
         model: BrainInspiredModel,
-        a_plus: float = 0.01,
-        a_minus: float = 0.01,
-        tau_plus: float = 20.0,
-        tau_minus: float = 20.0,
+        learning_rate: float = 0.01,
+        A_plus: float = 0.005,
+        A_minus: float = 0.00525,
         weight_attr: str = "W",
+        w_min: float = 0.0,
+        w_max: float = 1.0,
+        compiled: bool = True,
         **kwargs,
     ):
         """
         Initialize STDP trainer.
 
         Args:
-            model: The model to train (typically LIFSpikingNetwork)
-            a_plus: Learning rate for potentiation (LTP)
-            a_minus: Learning rate for depression (LTD)
-            tau_plus: Time constant for potentiation window (ms)
-            tau_minus: Time constant for depression window (ms)
-            weight_attr: Name of model attribute holding synaptic weights
+            model: The spiking model to train (typically SpikingLayer)
+            learning_rate: Global learning rate multiplier (default: 0.01)
+            A_plus: LTP magnitude (default: 0.005)
+            A_minus: LTD magnitude (default: 0.00525, slightly > A_plus for stability)
+            weight_attr: Name of model attribute holding the connection weights
+            w_min: Minimum weight value (default: 0.0 for excitatory synapses)
+            w_max: Maximum weight value (default: 1.0)
+            compiled: Whether to use JIT-compiled training loop (default: True)
             **kwargs: Additional arguments passed to parent Trainer
         """
         super().__init__(model=model, **kwargs)
-        self.a_plus = a_plus
-        self.a_minus = a_minus
-        self.tau_plus = tau_plus
-        self.tau_minus = tau_minus
+        self.learning_rate = learning_rate
+        self.A_plus = A_plus
+        self.A_minus = A_minus
         self.weight_attr = weight_attr
+        self.w_min = w_min
+        self.w_max = w_max
+        self.compiled = compiled
 
     def train(self, train_data: Iterable):
         """
-        Train the model using STDP.
-
-        This method assumes the model has been simulated and spike times are recorded.
-        It applies STDP updates based on the spike timing relationships.
+        Train the model using STDP rule.
 
         Args:
-            train_data: Iterable of spike trains or stimulus patterns
+            train_data: Iterable of input spike patterns (each of shape (input_size,))
+                       Each pattern should contain binary values (0 or 1)
         """
         # Get weight parameter
         weight_param = getattr(self.model, self.weight_attr, None)
@@ -86,87 +95,141 @@ class STDPTrainer(Trainer):
                 f"Model does not have a '{self.weight_attr}' parameter with .value attribute"
             )
 
+        # Check if model has required trace attributes
+        if not hasattr(self.model, "trace_pre"):
+            raise AttributeError("Model must have 'trace_pre' attribute for STDP learning")
+        if not hasattr(self.model, "trace_post"):
+            raise AttributeError("Model must have 'trace_post' attribute for STDP learning")
+
+        if self.compiled:
+            self._train_compiled(train_data, weight_param)
+        else:
+            self._train_uncompiled(train_data, weight_param)
+
+    def _train_compiled(self, train_data: Iterable, weight_param):
+        """
+        JIT-compiled training loop using brainstate.transform.scan.
+
+        Args:
+            train_data: Iterable of input spike patterns
+            weight_param: Weight parameter object
+        """
+        # Convert patterns to array for JIT compilation
+        patterns = jnp.stack([jnp.asarray(p, dtype=jnp.float32) for p in train_data])
+
+        # Get model parameters
+        trace_decay = getattr(self.model, "trace_decay", 0.95)
+        threshold = getattr(self.model, "threshold", 1.0)
+        v_reset = getattr(self.model, "v_reset", 0.0)
+        leak = getattr(self.model, "leak", 0.9)
+
+        # Initial state
+        W_init = jnp.asarray(weight_param.value, dtype=jnp.float32)
+        trace_pre_init = jnp.zeros(self.model.input_size, dtype=jnp.float32)
+        trace_post_init = jnp.zeros(self.model.output_size, dtype=jnp.float32)
+        v_init = jnp.zeros(self.model.output_size, dtype=jnp.float32)
+
+        # Training step for single pattern
+        def train_step(carry, x):
+            W, trace_pre, trace_post, v = carry
+
+            # Update pre-synaptic trace
+            trace_pre = trace_decay * trace_pre + x
+
+            # Forward pass (LIF dynamics)
+            input_current = W @ x
+            v = leak * v + input_current
+
+            # Generate spikes
+            spike_post = (v >= threshold).astype(jnp.float32)
+
+            # Reset membrane potential
+            v = jnp.where(spike_post > 0, v_reset, v)
+
+            # Update post-synaptic trace
+            trace_post = trace_decay * trace_post + spike_post
+
+            # STDP weight update
+            # LTP: pre before post (pre trace high, post spike now)
+            ltp = self.A_plus * jnp.outer(spike_post, trace_pre)
+            # LTD: post before pre (post trace high, pre spike now)
+            ltd = self.A_minus * jnp.outer(trace_post, x)
+
+            delta_W = self.learning_rate * (ltp - ltd)
+            W = W + delta_W
+
+            # Clip weights to valid range
+            W = jnp.clip(W, self.w_min, self.w_max)
+
+            return (W, trace_pre, trace_post, v), None
+
+        # Run compiled scan
+        (W_final, trace_pre_final, trace_post_final, v_final), _ = brainstate.transform.scan(
+            train_step, (W_init, trace_pre_init, trace_post_init, v_init), patterns
+        )
+
+        # Update model parameters
+        weight_param.value = W_final
+        self.model.trace_pre.value = trace_pre_final
+        self.model.trace_post.value = trace_post_final
+        self.model.v.value = v_final
+
+    def _train_uncompiled(self, train_data: Iterable, weight_param):
+        """
+        Python loop training (fallback, slower but more flexible).
+
+        Args:
+            train_data: Iterable of input spike patterns
+            weight_param: Weight parameter object
+        """
         W = weight_param.value
 
-        # Check if model has spike time information
-        if not hasattr(self.model, "spike_times"):
-            raise AttributeError("Model must have 'spike_times' attribute for STDP learning")
-
-        # For each training episode, simulate and apply STDP
+        # Process each pattern
         for pattern in train_data:
-            # Set input pattern
-            if hasattr(self.model, "set_input"):
-                self.model.set_input(jnp.asarray(pattern, dtype=jnp.float32))
+            x = jnp.asarray(pattern, dtype=jnp.float32)
 
-            # Run simulation for some steps to generate spikes
-            num_steps = 100  # Default simulation length
-            for _ in range(num_steps):
-                self.model.update(0.0)
+            # Store current traces before forward pass
+            trace_pre_before = self.model.trace_pre.value
+            trace_post_before = self.model.trace_post.value
 
-                # Apply STDP update based on current spikes
-                if hasattr(self.model, "spikes") and hasattr(self.model, "x_trace"):
-                    W = self._apply_stdp_update(W)
+            # Forward pass through model (updates traces and generates spikes)
+            spike_post = self.model.forward(x)
+
+            # Get updated traces
+            trace_pre_after = self.model.trace_pre.value
+            trace_post_after = self.model.trace_post.value
+
+            # STDP weight update
+            # LTP: pre before post (use pre trace from before post spike)
+            ltp = self.A_plus * jnp.outer(spike_post, trace_pre_before)
+            # LTD: post before pre (use post trace from before pre spike)
+            ltd = self.A_minus * jnp.outer(trace_post_before, x)
+
+            delta_W = self.learning_rate * (ltp - ltd)
+            W = W + delta_W
+
+            # Clip weights to valid range
+            W = jnp.clip(W, self.w_min, self.w_max)
 
         # Update model weights
         weight_param.value = W
 
-    def _apply_stdp_update(self, W: jnp.ndarray) -> jnp.ndarray:
+    def predict(self, pattern, *args, **kwargs):
         """
-        Apply STDP weight update based on current spike state.
-
-        Uses trace-based STDP for computational efficiency:
-        - When presynaptic neuron j spikes: W[i,j] += A+ * x_post[i]
-        - When postsynaptic neuron i spikes: W[i,j] -= A- * x_pre[j]
+        Predict output spikes for a single input spike pattern.
 
         Args:
-            W: Current weight matrix
+            pattern: Input spike pattern of shape (input_size,)
 
         Returns:
-            Updated weight matrix
+            Output spike pattern of shape (output_size,) with binary values (0 or 1)
         """
-        # Get spike indicators and traces
-        spikes = self.model.spikes.value  # Current spikes (binary)
-        x_trace = self.model.x_trace.value  # Synaptic traces
-
-        # Potentiation: when post spikes, strengthen based on pre-trace
-        # ΔW[i,j] += A+ * post_spike[i] * pre_trace[j]
-        delta_W_ltp = self.a_plus * jnp.outer(spikes, x_trace)
-
-        # Depression: when pre spikes, weaken based on post-trace
-        # ΔW[i,j] -= A- * post_trace[i] * pre_spike[j]
-        delta_W_ltd = -self.a_minus * jnp.outer(x_trace, spikes)
-
-        # Total update
-        W_new = W + delta_W_ltp + delta_W_ltd
-
-        # Ensure weights stay within bounds [0, w_max]
-        W_new = jnp.clip(W_new, 0.0, 10.0)
-
-        return W_new
-
-    def predict(self, pattern, num_steps: int = 100, *args, **kwargs):
-        """
-        Predict network response to input pattern.
-
-        Args:
-            pattern: Input stimulus pattern
-            num_steps: Number of simulation timesteps
-
-        Returns:
-            Final spike pattern or membrane potential
-        """
-        # Set input
-        if hasattr(self.model, "set_input"):
-            self.model.set_input(jnp.asarray(pattern, dtype=jnp.float32))
-
-        # Simulate
-        for _ in range(num_steps):
-            self.model.update(0.0)
-
-        # Return spikes or membrane potential
-        if hasattr(self.model, "spikes"):
-            return self.model.spikes.value
-        elif hasattr(self.model, "V"):
-            return self.model.V.value
+        if hasattr(self.model, "forward"):
+            return self.model.forward(pattern)
         else:
-            return None
+            # Fallback: direct computation with thresholding
+            weight_param = getattr(self.model, self.weight_attr)
+            x = jnp.asarray(pattern, dtype=jnp.float32)
+            v = weight_param.value @ x
+            threshold = getattr(self.model, "threshold", 1.0)
+            return (v >= threshold).astype(jnp.float32)

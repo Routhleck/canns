@@ -2,19 +2,16 @@
 Training utilities for CANNS models.
 
 The module exposes the abstract ``Trainer`` base class and concrete implementations
-such as ``HebbianTrainer``, ``AntiHebbianTrainer``, ``OjaTrainer``, ``BCMTrainer``,
-``STDPTrainer``, ``HopfieldEnergyTrainer``, ``ContrastiveDivergenceTrainer``,
-and ``WakeSleepTrainer``.
+of classic brain-inspired learning algorithms: ``HebbianTrainer``, ``AntiHebbianTrainer``,
+``OjaTrainer``, ``BCMTrainer``, ``SangerTrainer``, and ``STDPTrainer``.
 """
 
 from ._base import Trainer
 from .bcm import BCMTrainer
-from .contrastive_divergence import ContrastiveDivergenceTrainer
 from .hebbian import AntiHebbianTrainer, HebbianTrainer
-from .hopfield_energy import HopfieldEnergyTrainer
 from .oja import OjaTrainer
+from .sanger import SangerTrainer
 from .stdp import STDPTrainer
-from .wake_sleep import WakeSleepTrainer
 
 __all__ = [
     "Trainer",
@@ -22,8 +19,6 @@ __all__ = [
     "AntiHebbianTrainer",
     "OjaTrainer",
     "BCMTrainer",
+    "SangerTrainer",
     "STDPTrainer",
-    "HopfieldEnergyTrainer",
-    "ContrastiveDivergenceTrainer",
-    "WakeSleepTrainer",
 ]

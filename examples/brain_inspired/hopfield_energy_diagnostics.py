@@ -2,7 +2,8 @@
 Hopfield network with energy-based diagnostics.
 
 This example demonstrates:
-- HopfieldEnergyTrainer with capacity estimation
+- Hopfield network training with HebbianTrainer
+- HopfieldAnalyzer for capacity estimation and diagnostics
 - Pattern storage and energy landscape analysis
 - Pattern recall with overlap metrics
 """
@@ -10,8 +11,9 @@ This example demonstrates:
 import numpy as np
 from matplotlib import pyplot as plt
 
+from canns.analyzer.brain_inspired import HopfieldAnalyzer
 from canns.models.brain_inspired import AmariHopfieldNetwork
-from canns.trainer import HopfieldEnergyTrainer
+from canns.trainer import HebbianTrainer
 
 np.random.seed(42)
 
@@ -45,7 +47,7 @@ print(f"Storing {n_patterns} patterns")
 model = AmariHopfieldNetwork(num_neurons=n_neurons, asyn=False, activation="sign")
 model.init_state()
 
-trainer = HopfieldEnergyTrainer(
+trainer = HebbianTrainer(
     model, subtract_mean=True, zero_diagonal=True, normalize_by_patterns=True
 )
 
@@ -53,8 +55,11 @@ trainer = HopfieldEnergyTrainer(
 patterns = generate_random_patterns(n_patterns, n_neurons)
 trainer.train(patterns)
 
+# Create analyzer for diagnostics
+analyzer = HopfieldAnalyzer(model, stored_patterns=patterns)
+
 # Get statistics
-stats = trainer.get_pattern_statistics()
+stats = analyzer.get_statistics()
 print("\n" + "=" * 60)
 print("Network Statistics")
 print("=" * 60)
@@ -80,8 +85,11 @@ for noise_level in noise_levels:
         # Create noisy version
         noisy = add_noise(pattern, noise_level)
 
-        # Recall pattern
-        recalled, diag = trainer.recall_pattern(noisy, num_iter=20)
+        # Recall pattern using trainer
+        recalled = trainer.predict(noisy, num_iter=20)
+
+        # Analyze recall quality
+        diag = analyzer.analyze_recall(noisy, recalled)
 
         # Record overlap
         overlaps.append(diag["best_match_overlap"])
@@ -95,7 +103,7 @@ fig = plt.figure(figsize=(14, 10))
 
 # Plot 1: Pattern energies
 ax1 = plt.subplot(2, 3, 1)
-energies = trainer.pattern_energies
+energies = analyzer.pattern_energies
 ax1.bar(range(len(energies)), energies)
 ax1.set_xlabel("Pattern Index")
 ax1.set_ylabel("Energy")
@@ -134,7 +142,8 @@ for plot_idx, pattern_idx in enumerate(example_indices):
 
     pattern = patterns[pattern_idx]
     noisy = add_noise(pattern, noise_level)
-    recalled, diag = trainer.recall_pattern(noisy, num_iter=20)
+    recalled = trainer.predict(noisy, num_iter=20)
+    diag = analyzer.analyze_recall(noisy, recalled)
 
     # Reshape for visualization (if square-ish)
     size = int(np.sqrt(n_neurons))
@@ -179,24 +188,28 @@ for n_test_patterns in pattern_counts:
     # Create fresh network
     test_model = AmariHopfieldNetwork(num_neurons=n_neurons, asyn=False, activation="sign")
     test_model.init_state()
-    test_trainer = HopfieldEnergyTrainer(test_model)
+    test_trainer = HebbianTrainer(test_model)
 
     # Store patterns
     test_patterns = generate_random_patterns(n_test_patterns, n_neurons)
     test_trainer.train(test_patterns)
+
+    # Create analyzer for this test
+    test_analyzer = HopfieldAnalyzer(test_model, stored_patterns=test_patterns)
 
     # Test recall
     noise_level = 0.2
     overlaps = []
     for pattern in test_patterns:
         noisy = add_noise(pattern, noise_level)
-        recalled, diag = test_trainer.recall_pattern(noisy, num_iter=20)
+        recalled = test_trainer.predict(noisy, num_iter=20)
+        diag = test_analyzer.analyze_recall(noisy, recalled)
         overlaps.append(diag["best_match_overlap"])
 
     mean_overlap = np.mean(overlaps)
     capacity_test_results.append(mean_overlap)
 
-    capacity_usage = n_test_patterns / test_trainer.estimate_capacity()
+    capacity_usage = n_test_patterns / test_analyzer.estimate_capacity()
     print(
         f"Patterns: {n_test_patterns:2d} "
         f"(Capacity: {capacity_usage:5.1%}) -> "
@@ -207,7 +220,7 @@ for n_test_patterns in pattern_counts:
 fig, ax = plt.subplots(figsize=(10, 6))
 ax.plot(pattern_counts, capacity_test_results, marker="o", linewidth=2)
 ax.axvline(
-    x=trainer.estimate_capacity(), color="r", linestyle="--", label="Theoretical capacity"
+    x=analyzer.estimate_capacity(), color="r", linestyle="--", label="Theoretical capacity"
 )
 ax.set_xlabel("Number of Stored Patterns")
 ax.set_ylabel("Mean Recall Overlap (20% noise)")
