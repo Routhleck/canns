@@ -134,7 +134,8 @@ def translate_with_openrouter(prompt):
                 }
             ],
             "max_tokens": 8000,
-        }
+        },
+        timeout=30  # Prevent hanging on network issues
     )
 
     if response.status_code != 200:
