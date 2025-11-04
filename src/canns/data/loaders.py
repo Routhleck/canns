@@ -1,5 +1,5 @@
 """
-Experimental data processing utilities for CANNS.
+Experimental data processing utilities for CANNs.
 
 This module provides specialized functions for processing experimental data
 typically used in CANN analyses, including ROI data, grid cell data, and
@@ -24,7 +24,7 @@ def load_roi_data(source: str | Path | None = None) -> np.ndarray | None:
         Data source. Can be:
         - URL string: downloads and loads from URL
         - Path: loads from local file
-        - None: uses default CANNS dataset
+        - None: uses default CANNs dataset
 
     Returns
     -------
@@ -45,7 +45,7 @@ def load_roi_data(source: str | Path | None = None) -> np.ndarray | None:
 
     # Handle different source types
     if source is None:
-        # Use default CANNS dataset
+        # Use default CANNs dataset
         dataset_path = _datasets.get_dataset_path("roi_data")
         if dataset_path is None:
             return None
@@ -100,7 +100,7 @@ def load_grid_data(
         Data source. Can be:
         - URL string: downloads and loads from URL
         - Path: loads from local file
-        - None: uses default CANNS dataset
+        - None: uses default CANNs dataset
     dataset_key : str
         Which default dataset to use ('grid_1' or 'grid_2') when source is None.
 
@@ -124,7 +124,7 @@ def load_grid_data(
 
     # Handle different source types
     if source is None:
-        # Use default CANNS dataset
+        # Use default CANNs dataset
         dataset_path = _datasets.get_dataset_path(dataset_key)
         if dataset_path is None:
             return None

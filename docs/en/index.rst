@@ -80,26 +80,13 @@ Visual Gallery
    </table>
    </div>
 
-🚀 **Interactive Examples**
-   Try the examples interactively:
-   
-   - |binder| **Run on Binder** (Free, no setup required)
-   - |colab| **Open in Google Colab** (Google account required)
-
-.. |binder| image:: https://mybinder.org/badge_logo.svg
-   :target: https://mybinder.org/v2/gh/routhleck/canns/HEAD?filepath=docs%2Fen%2Fnotebooks
-   
-.. |colab| image:: https://colab.research.google.com/assets/colab-badge.svg
-   :target: https://colab.research.google.com/github/routhleck/canns/blob/master/docs/en/notebooks/
-
 📖 **Table of Contents**
 
 .. toctree::
    :maxdepth: 2
    :caption: Getting Started
-   
-   notebooks/01_quick_start
-   notebooks/00_design_philosophy
+
+   guide/index
 
 .. toctree::
    :maxdepth: 2

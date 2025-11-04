@@ -5,7 +5,7 @@ src.canns.pipeline
 
 .. autoapi-nested-parse::
 
-   CANNS Pipeline Module
+   CANNs Pipeline Module
 
    High-level pipelines for common analysis workflows, designed to make CANN models
    accessible to experimental researchers without requiring detailed knowledge of
@@ -48,7 +48,7 @@ Package Contents
    Bases: :py:obj:`abc.ABC`
 
 
-   Abstract base class for CANNS pipelines.
+   Abstract base class for CANNs pipelines.
 
    Pipelines orchestrate multi-step workflows (data preparation, model execution,
    visualization, etc.). This base class standardizes how we manage results and

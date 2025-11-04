@@ -1,5 +1,5 @@
 """
-Theta sweep specific visualization functions for CANNS models.
+Theta sweep specific visualization functions for CANNs models.
 
 This module contains specialized plotting functions for analyzing theta-modulated
 neural activity, particularly for direction cell and grid cell networks.

@@ -34,7 +34,7 @@ make docs             # Build Sphinx documentation
 
 ## Architecture Overview
 
-CANNS is a Python library for Continuous Attractor Neural Networks focused on spatial cognition and neural dynamics. Built on JAX/BrainX for high-performance computation with GPU/TPU support.
+CANNs is a Python library for Continuous Attractor Neural Networks focused on spatial cognition and neural dynamics. Built on JAX/BrainX for high-performance computation with GPU/TPU support.
 
 ### Core Model Hierarchy
 ```
