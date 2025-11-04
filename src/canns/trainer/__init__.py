@@ -1,5 +1,5 @@
 """
-Training utilities for CANNS models.
+Training utilities for CANNs models.
 
 The module exposes the abstract ``Trainer`` base class and concrete implementations
 of classic brain-inspired learning algorithms: ``HebbianTrainer``, ``AntiHebbianTrainer``,
