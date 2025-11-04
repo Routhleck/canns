@@ -3,7 +3,12 @@
 Translate Chinese documentation to English using Claude API.
 
 Usage:
+    export ANTHROPIC_API_KEY='your-key-here'
     python scripts/translate_docs.py --source docs/zh --target docs/en [--batch-size 5]
+
+    # Or for OpenRouter
+    export OPENROUTER_API_KEY='your-key-here'
+    python scripts/translate_docs.py --source docs/zh --target docs/en --use-openrouter
 """
 
 import argparse
@@ -32,8 +37,13 @@ def extract_metadata(content):
     }
     return metadata
 
-def translate_file_with_claude(content, file_path, api_key=None, use_openrouter=False):
-    """Translate RST file content using Claude API."""
+def translate_file_with_claude(content, file_path, use_openrouter=False):
+    """Translate RST file content using Claude API.
+
+    API keys must be set via environment variables:
+    - ANTHROPIC_API_KEY for Anthropic API
+    - OPENROUTER_API_KEY for OpenRouter API
+    """
 
     prompt = f"""Please translate the following ReStructuredText documentation from Chinese to English.
 
@@ -57,9 +67,9 @@ Content to translate:
 Provide ONLY the translated content without any explanation."""
 
     if use_openrouter:
-        result = translate_with_openrouter(prompt, api_key)
+        result = translate_with_openrouter(prompt)
     else:
-        result = translate_with_anthropic(prompt, api_key)
+        result = translate_with_anthropic(prompt)
 
     # Strip markdown code fences if present
     if result.startswith('```'):
@@ -74,12 +84,12 @@ Provide ONLY the translated content without any explanation."""
 
     return result
 
-def translate_with_anthropic(prompt, api_key=None):
-    """Translate using direct Anthropic API."""
-    if api_key:
-        client = Anthropic(api_key=api_key)
-    else:
-        client = Anthropic()
+def translate_with_anthropic(prompt):
+    """Translate using direct Anthropic API.
+
+    API key must be set via ANTHROPIC_API_KEY environment variable.
+    """
+    client = Anthropic()  # Automatically uses ANTHROPIC_API_KEY env var
 
     message = client.messages.create(
         model="claude-opus",  # Using claude-opus as it's the latest available
@@ -94,12 +104,17 @@ def translate_with_anthropic(prompt, api_key=None):
 
     return message.content[0].text
 
-def translate_with_openrouter(prompt, api_key):
-    """Translate using OpenRouter API."""
+def translate_with_openrouter(prompt):
+    """Translate using OpenRouter API.
+
+    API key must be set via OPENROUTER_API_KEY environment variable.
+    """
+    api_key = os.environ.get('OPENROUTER_API_KEY')
     if not api_key:
-        api_key = os.environ.get('OPENROUTER_API_KEY')
-        if not api_key:
-            raise ValueError("OPENROUTER_API_KEY not set")
+        raise ValueError(
+            "OPENROUTER_API_KEY not set. Please set it via:\n"
+            "  export OPENROUTER_API_KEY='your-key-here'"
+        )
 
     headers = {
         "Authorization": f"Bearer {api_key}",
@@ -127,26 +142,13 @@ def translate_with_openrouter(prompt, api_key):
 
     return response.json()["choices"][0]["message"]["content"]
 
-def translate_directory(source_dir, target_dir, batch_size=5, api_key=None, use_openrouter=False):
-    """Translate all RST files in source directory to target directory."""
-    if not api_key:
-        if use_openrouter:
-            api_key = os.environ.get('OPENROUTER_API_KEY')
-            if not api_key:
-                raise ValueError(
-                    "OPENROUTER_API_KEY not found. Please set it via:\n"
-                    "  export OPENROUTER_API_KEY='your-key-here'\n"
-                    "Or pass it via --api-key parameter"
-                )
-        else:
-            api_key = os.environ.get('ANTHROPIC_API_KEY')
-            if not api_key:
-                raise ValueError(
-                    "ANTHROPIC_API_KEY not found. Please set it via:\n"
-                    "  export ANTHROPIC_API_KEY='your-key-here'\n"
-                    "Or pass it via --api-key parameter with --use-openrouter for OpenRouter"
-                )
+def translate_directory(source_dir, target_dir, batch_size=5, use_openrouter=False):
+    """Translate all RST files in source directory to target directory.
 
+    API keys must be set via environment variables:
+    - ANTHROPIC_API_KEY for Anthropic API (default)
+    - OPENROUTER_API_KEY for OpenRouter API (if --use-openrouter is specified)
+    """
     source_path = Path(source_dir)
     target_path = Path(target_dir)
 
@@ -185,7 +187,7 @@ def translate_directory(source_dir, target_dir, batch_size=5, api_key=None, use_
 
             # Translate content
             translated_content = translate_file_with_claude(
-                content, source_file, api_key=api_key, use_openrouter=use_openrouter
+                content, source_file, use_openrouter=use_openrouter
             )
 
             # Create target directory structure
@@ -240,11 +242,6 @@ def main():
         help='Print progress every N files (default: 5)'
     )
     parser.add_argument(
-        '--api-key',
-        default=None,
-        help='Anthropic API key (or OpenRouter key with --use-openrouter)'
-    )
-    parser.add_argument(
         '--use-openrouter',
         action='store_true',
         help='Use OpenRouter API instead of direct Anthropic API'
@@ -287,7 +284,7 @@ def main():
 
     translate_directory(
         args.source, args.target, args.batch_size,
-        api_key=args.api_key, use_openrouter=args.use_openrouter
+        use_openrouter=args.use_openrouter
     )
 
 if __name__ == '__main__':
