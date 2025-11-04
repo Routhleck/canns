@@ -215,7 +215,7 @@ Package Contents
 
 
 
-.. py:class:: HierarchicalNetwork(num_module, num_place)
+.. py:class:: HierarchicalNetwork(num_module, num_place, spacing_min=2.0, spacing_max=5.0, module_angle=0.0, band_size=180, band_noise=0.0, band_w_L2S=0.2, band_w_S2L=1.0, band_gain=0.2, grid_num=20, grid_tau=0.1, grid_tau_v=10.0, grid_k=0.005, grid_a=u.math.pi / 9, grid_A=1.0, grid_J0=1.0, grid_mbar=1.0, gauss_tau=1.0, gauss_J0=1.1, gauss_k=0.0005, gauss_a=2 / 9 * u.math.pi, nonrec_tau=0.1)
 
    Bases: :py:obj:`src.canns.models.basic._base.BasicModelGroup`
 
@@ -292,20 +292,54 @@ Package Contents
    :type num_module: int
    :param num_place: The number of place cells along one dimension of a square grid.
    :type num_place: int
+   :param spacing_min: Minimum spacing for grid modules. Defaults to 2.0.
+   :type spacing_min: float, optional
+   :param spacing_max: Maximum spacing for grid modules. Defaults to 5.0.
+   :type spacing_max: float, optional
+   :param module_angle: Base orientation angle for all modules. Defaults to 0.0.
+   :type module_angle: float, optional
+   :param band_size: Number of neurons in each BandCell group. Defaults to 180.
+   :type band_size: int, optional
+   :param band_noise: Noise level for BandCells. Defaults to 0.0.
+   :type band_noise: float, optional
+   :param band_w_L2S: Weight from band cells to shifter units. Defaults to 0.2.
+   :type band_w_L2S: float, optional
+   :param band_w_S2L: Weight from shifter units to band cells. Defaults to 1.0.
+   :type band_w_S2L: float, optional
+   :param band_gain: Gain factor for velocity signal in BandCells. Defaults to 0.2.
+   :type band_gain: float, optional
+   :param grid_num: Number of neurons per dimension for GridCell. Defaults to 20.
+   :type grid_num: int, optional
+   :param grid_tau: Synaptic time constant for GridCell. Defaults to 0.1.
+   :type grid_tau: float, optional
+   :param grid_tau_v: Adaptation time constant for GridCell. Defaults to 10.0.
+   :type grid_tau_v: float, optional
+   :param grid_k: Global inhibition strength for GridCell. Defaults to 5e-3.
+   :type grid_k: float, optional
+   :param grid_a: Connection width for GridCell. Defaults to pi/9.
+   :type grid_a: float, optional
+   :param grid_A: External input magnitude for GridCell. Defaults to 1.0.
+   :type grid_A: float, optional
+   :param grid_J0: Maximum connection strength for GridCell. Defaults to 1.0.
+   :type grid_J0: float, optional
+   :param grid_mbar: Base adaptation strength for GridCell. Defaults to 1.0.
+   :type grid_mbar: float, optional
+   :param gauss_tau: Time constant for GaussRecUnits in BandCells. Defaults to 1.0.
+   :type gauss_tau: float, optional
+   :param gauss_J0: Connection strength scaling for GaussRecUnits. Defaults to 1.1.
+   :type gauss_J0: float, optional
+   :param gauss_k: Global inhibition for GaussRecUnits. Defaults to 5e-4.
+   :type gauss_k: float, optional
+   :param gauss_a: Connection width for GaussRecUnits. Defaults to 2/9*pi.
+   :type gauss_a: float, optional
+   :param nonrec_tau: Time constant for NonRecUnits in BandCells. Defaults to 0.1.
+   :type nonrec_tau: float, optional
 
 
    .. py:method:: init_state(*args, **kwargs)
 
-      State initialization function.
-
-
 
    .. py:method:: update(velocity, loc, loc_input_stre=0.0)
-
-      Update function of a network.
-
-      In this update function, the update functions in children systems are iteratively called.
-
 
 
    .. py:attribute:: MEC_model_list

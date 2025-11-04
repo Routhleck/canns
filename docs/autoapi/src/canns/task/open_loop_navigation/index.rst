@@ -9,7 +9,10 @@ Classes
 
 .. autoapisummary::
 
+   src.canns.task.open_loop_navigation.OpenLoopNavigationData
    src.canns.task.open_loop_navigation.OpenLoopNavigationTask
+   src.canns.task.open_loop_navigation.TMazeOpenLoopNavigationTask
+   src.canns.task.open_loop_navigation.TMazeRecessOpenLoopNavigationTask
 
 
 Functions
@@ -23,21 +26,67 @@ Functions
 Module Contents
 ---------------
 
-.. py:class:: OpenLoopNavigationTask(duration=20.0, start_pos=(2.5, 2.5), initial_head_direction=None, progress_bar=True, width=5, height=5, dimensionality='2D', boundary_conditions='solid', scale=None, dx=0.01, boundary=None, walls=None, holes=None, objects=None, dt=None, speed_mean=0.04, speed_std=0.016, speed_coherence_time=0.7, rotational_velocity_coherence_time=0.08, rotational_velocity_std=120 * np.pi / 180, head_direction_smoothing_timescale=0.15, thigmotaxis=0.5, wall_repel_distance=0.1, wall_repel_strength=1.0)
+.. py:class:: OpenLoopNavigationData
 
-   Bases: :py:obj:`src.canns.task._base.Task`
+   Container for the inputs recorded during the open-loop navigation task.
+   It contains the position, velocity, speed, movement direction, head direction,
+   and rotational velocity of the agent.
+
+   Additional fields for theta sweep analysis:
+   - ang_velocity: Angular velocity calculated using unwrap method
+   - linear_speed_gains: Normalized linear speed gains [0,1]
+   - ang_speed_gains: Normalized angular speed gains [-1,1]
+
+
+   .. py:attribute:: ang_speed_gains
+      :type:  numpy.ndarray | None
+      :value: None
+
+
+
+   .. py:attribute:: ang_velocity
+      :type:  numpy.ndarray | None
+      :value: None
+
+
+
+   .. py:attribute:: hd_angle
+      :type:  numpy.ndarray
+
+
+   .. py:attribute:: linear_speed_gains
+      :type:  numpy.ndarray | None
+      :value: None
+
+
+
+   .. py:attribute:: movement_direction
+      :type:  numpy.ndarray
+
+
+   .. py:attribute:: position
+      :type:  numpy.ndarray
+
+
+   .. py:attribute:: rot_vel
+      :type:  numpy.ndarray
+
+
+   .. py:attribute:: speed
+      :type:  numpy.ndarray
+
+
+   .. py:attribute:: velocity
+      :type:  numpy.ndarray
+
+
+.. py:class:: OpenLoopNavigationTask(duration=20.0, start_pos=(2.5, 2.5), initial_head_direction=None, progress_bar=True, width=5, height=5, dimensionality='2D', boundary_conditions='solid', scale=None, dx=0.01, grid_dx = None, grid_dy = None, boundary=None, walls=None, holes=None, objects=None, dt=None, speed_mean=0.04, speed_std=0.016, speed_coherence_time=0.7, rotational_velocity_coherence_time=0.08, rotational_velocity_std=120 * np.pi / 180, head_direction_smoothing_timescale=0.15, thigmotaxis=0.5, wall_repel_distance=0.1, wall_repel_strength=1.0)
+
+   Bases: :py:obj:`src.canns.task.navigation_base.BaseNavigationTask`
 
 
    Open-loop spatial navigation task that synthesises trajectories without
    incorporating real-time feedback from a controller.
-
-   Initializes the Task instance.
-
-   :param data_class: A dataclass type for structured data.
-                      If provided, the task will use this
-                      class to structure the loaded or
-                      generated data.
-   :type data_class: type, optional
 
 
    .. py:method:: calculate_theta_sweep_data()
@@ -112,12 +161,6 @@ Module Contents
 
 
 
-   .. py:method:: show_data(show=True, save_path=None)
-
-      Displays the trajectory of the agent in the environment.
-
-
-
    .. py:method:: show_trajectory_analysis(show = True, save_path = None, figsize = (12, 3), smooth_window = 50, **kwargs)
 
       Display comprehensive trajectory analysis including position, speed, and direction changes.
@@ -130,70 +173,9 @@ Module Contents
 
 
 
-   .. py:attribute:: agent
-
-
-   .. py:attribute:: agent_params
-
-
-   .. py:attribute:: aspect
-      :value: 1.0
-
-
-
-   .. py:attribute:: boundary
-
-
-   .. py:attribute:: boundary_conditions
-      :value: 'solid'
-
-
-
-   .. py:attribute:: dimensionality
-      :value: ''
-
-
-
-   .. py:attribute:: dt
-      :value: None
-
-
-
    .. py:attribute:: duration
       :value: 20.0
 
-
-
-   .. py:attribute:: dx
-      :value: 0.01
-
-
-
-   .. py:attribute:: env
-
-
-   .. py:attribute:: env_params
-
-
-   .. py:attribute:: head_direction_smoothing_timescale
-      :value: 0.15
-
-
-
-   .. py:attribute:: height
-      :value: 5
-
-
-
-   .. py:attribute:: holes
-
-
-   .. py:attribute:: initial_head_direction
-      :value: None
-
-
-
-   .. py:attribute:: objects
 
 
    .. py:attribute:: progress_bar
@@ -201,66 +183,57 @@ Module Contents
 
 
 
-   .. py:attribute:: rotational_velocity_coherence_time
-      :value: 0.08
-
-
-
-   .. py:attribute:: rotational_velocity_std
-
-
    .. py:attribute:: run_steps
-
-
-   .. py:attribute:: scale
-      :value: 5
-
-
-
-   .. py:attribute:: speed_coherence_time
-      :value: 0.7
-
-
-
-   .. py:attribute:: speed_mean
-      :value: 0.04
-
-
-
-   .. py:attribute:: speed_std
-      :value: 0.016
-
-
-
-   .. py:attribute:: start_pos
-      :value: (2.5, 2.5)
-
-
-
-   .. py:attribute:: thigmotaxis
-      :value: 0.5
-
 
 
    .. py:attribute:: total_steps
 
 
-   .. py:attribute:: wall_repel_distance
-      :value: 0.1
+.. py:class:: TMazeOpenLoopNavigationTask(w=0.3, l_s=1.0, l_arm=0.75, t=0.3, start_pos=(0.0, 0.15), duration=20.0, dt=None, **kwargs)
+
+   Bases: :py:obj:`OpenLoopNavigationTask`
 
 
+   Open-loop navigation task in a T-maze environment.
 
-   .. py:attribute:: wall_repel_strength
-      :value: 1.0
+   This subclass configures the environment with a T-maze boundary, which is useful
+   for studying decision-making and spatial navigation in a controlled setting.
+
+   Initialize T-maze open-loop navigation task.
+
+   :param w: Width of the corridor (default: 0.3)
+   :param l_s: Length of the stem (default: 1.0)
+   :param l_arm: Length of each arm (default: 0.75)
+   :param t: Thickness of the walls (default: 0.3)
+   :param start_pos: Starting position of the agent (default: (0.0, 0.15))
+   :param duration: Duration of the trajectory in seconds (default: 20.0)
+   :param dt: Time step (default: None, uses brainstate.environ.get_dt())
+   :param \*\*kwargs: Additional keyword arguments passed to OpenLoopNavigationTask
 
 
+.. py:class:: TMazeRecessOpenLoopNavigationTask(w=0.3, l_s=1.0, l_arm=0.75, t=0.3, recess_width=None, recess_depth=None, start_pos=(0.0, 0.15), duration=20.0, dt=None, **kwargs)
 
-   .. py:attribute:: walls
+   Bases: :py:obj:`TMazeOpenLoopNavigationTask`
 
 
-   .. py:attribute:: width
-      :value: 5
+   Open-loop navigation task in a T-maze environment with recesses at stem-arm junctions.
 
+   This variant adds small rectangular indentations at the T-junction, creating
+   additional spatial features that may be useful for studying spatial navigation
+   and decision-making.
+
+   Initialize T-maze with recesses open-loop navigation task.
+
+   :param w: Width of the corridor (default: 0.3)
+   :param l_s: Length of the stem (default: 1.0)
+   :param l_arm: Length of each arm (default: 0.75)
+   :param t: Thickness of the walls (default: 0.3)
+   :param recess_width: Width of recesses at stem-arm junctions (default: t/4)
+   :param recess_depth: Depth of recesses extending downward (default: t/4)
+   :param start_pos: Starting position of the agent (default: (0.0, 0.15))
+   :param duration: Duration of the trajectory in seconds (default: 20.0)
+   :param dt: Time step (default: None, uses brainstate.environ.get_dt())
+   :param \*\*kwargs: Additional keyword arguments passed to OpenLoopNavigationTask
 
 
 .. py:function:: map2pi(a)

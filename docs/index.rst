@@ -6,7 +6,7 @@ Welcome to the CANNs (Continuous Attractor Neural Networks) documentation!
 欢迎来到 CANNs（连续吸引子神经网络）文档！
 
 Choose Your Language / 选择语言
-------------------------------
+================================
 
 .. grid:: 2
 

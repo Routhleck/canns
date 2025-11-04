@@ -1,8 +1,8 @@
 """
-Universal data loading utilities for CANNS.
+Universal data loading utilities for CANNs.
 
 This module provides generic functions to download and load data from URLs,
-with specialized support for CANNS example datasets.
+with specialized support for CANNs example datasets.
 """
 
 import hashlib
@@ -127,7 +127,7 @@ def download_file_with_progress(url: str, filepath: Path, chunk_size: int = 8192
 
 def list_datasets() -> None:
     """List available datasets with descriptions."""
-    print("Available CANNS Datasets:")
+    print("Available CANNs Datasets:")
     print("=" * 60)
 
     for key, info in DATASETS.items():
@@ -438,7 +438,7 @@ Hugging Face Dataset Upload Guide
    - Citation information
    - License information
 
-Once uploaded, users can easily access the datasets through the CANNS package.
+Once uploaded, users can easily access the datasets through the CANNs package.
 """
     return guide
 
@@ -452,7 +452,7 @@ def quick_setup() -> bool:
     bool
         True if successful, False otherwise.
     """
-    print("CANNS Dataset Quick Setup")
+    print("CANNs Dataset Quick Setup")
     print("=" * 40)
 
     # First try downloading from Hugging Face

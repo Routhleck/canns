@@ -9,11 +9,54 @@ Classes
 
 .. autoapisummary::
 
+   src.canns.trainer.hebbian.AntiHebbianTrainer
    src.canns.trainer.hebbian.HebbianTrainer
 
 
 Module Contents
 ---------------
+
+.. py:class:: AntiHebbianTrainer(model, **kwargs)
+
+   Bases: :py:obj:`HebbianTrainer`
+
+
+   Anti-Hebbian trainer for pattern decorrelation and unlearning.
+
+   Overview
+   - Implements anti-Hebbian learning rule: "Neurons that fire together, wire apart"
+   - Uses negative weight updates: ``W <- W - Σ (t t^T)`` instead of positive
+   - Inherits all functionality from HebbianTrainer (predict, predict_batch, etc.)
+
+   Applications
+   - Sparse coding and independent component analysis
+   - Competitive learning networks
+   - Decorrelation and whitening of feature representations
+   - Lateral inhibition modeling
+   - Selective forgetting / pattern unlearning
+
+   Learning Rule
+   - For patterns ``x``, compute optional mean activity ``rho`` and update:
+     ``W <- W - sum_i (x_i - rho)(x_i - rho)^T`` (note the minus sign)
+   - If ``subtract_mean=True``, patterns are centered by mean: ``t = x - rho``
+   - If ``normalize_by_patterns=True``, divide by number of patterns
+   - All options from HebbianTrainer apply (subtract_mean, zero_diagonal, etc.)
+
+   Example
+       >>> model = AmariHopfieldNetwork(num_neurons=100, activation="tanh")
+       >>> model.init_state()
+       >>> # Train with Hebbian first
+       >>> hebb_trainer = HebbianTrainer(model)
+       >>> hebb_trainer.train(all_patterns)
+       >>> # Then apply anti-Hebbian to unlearn specific pattern
+       >>> anti_trainer = AntiHebbianTrainer(model, subtract_mean=False)
+       >>> anti_trainer.train([pattern_to_forget])
+
+   Initialize Anti-Hebbian trainer.
+
+   :param model: The model to train
+   :param \*\*kwargs: Additional arguments passed to HebbianTrainer
+
 
 .. py:class:: HebbianTrainer(model, show_iteration_progress = False, compiled_prediction = True, *, weight_attr = 'W', subtract_mean = True, zero_diagonal = True, normalize_by_patterns = True, prefer_generic = True, state_attr = None, prefer_generic_predict = True, preserve_on_resize = True)
 

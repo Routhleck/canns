@@ -20,6 +20,8 @@ Submodules
    :maxdepth: 1
 
    /autoapi/src/canns/models/brain_inspired/hopfield/index
+   /autoapi/src/canns/models/brain_inspired/linear/index
+   /autoapi/src/canns/models/brain_inspired/spiking/index
 
 
 Classes
@@ -30,6 +32,8 @@ Classes
    src.canns.models.brain_inspired.AmariHopfieldNetwork
    src.canns.models.brain_inspired.BrainInspiredModel
    src.canns.models.brain_inspired.BrainInspiredModelGroup
+   src.canns.models.brain_inspired.LinearLayer
+   src.canns.models.brain_inspired.SpikingLayer
 
 
 Package Contents
@@ -224,7 +228,7 @@ Package Contents
       Override in subclasses if the weight parameter is not named ``W``.
 
 
-.. py:class:: BrainInspiredModelGroup(*children_as_tuple, **children_as_dict)
+.. py:class:: BrainInspiredModelGroup
 
    Bases: :py:obj:`src.canns.models.basic._base.BasicModelGroup`
 
@@ -233,5 +237,235 @@ Package Contents
 
    This class manages collections of brain-inspired models and provides
    coordinated learning and dynamics across multiple model instances.
+
+
+.. py:class:: LinearLayer(input_size, output_size, use_bcm_threshold = False, threshold_tau = 100.0, **kwargs)
+
+   Bases: :py:obj:`src.canns.models.brain_inspired._base.BrainInspiredModel`
+
+
+   Generic linear feedforward layer supporting multiple brain-inspired learning rules.
+
+   This model provides a simple linear transformation with optional sliding threshold
+   for BCM-style plasticity. It can be used with various trainers:
+   - OjaTrainer: Normalized Hebbian learning for PCA
+   - BCMTrainer: Sliding threshold plasticity (requires use_bcm_threshold=True)
+   - HebbianTrainer: Standard Hebbian learning
+
+   Computation:
+       y = W @ x
+
+   where W is the weight matrix, x is the input, and y is the output.
+
+   For BCM learning, an optional sliding threshold θ tracks output activity:
+       θ ← θ + (1/τ) * (y² - θ)
+
+   .. rubric:: References
+
+   - Oja (1982): Simplified neuron model as a principal component analyzer
+   - Bienenstock et al. (1982): Theory for the development of neuron selectivity
+
+   Initialize the linear layer.
+
+   :param input_size: Dimensionality of input vectors
+   :param output_size: Number of output neurons (features to extract)
+   :param use_bcm_threshold: Whether to maintain sliding threshold for BCM learning
+   :param threshold_tau: Time constant for threshold sliding average (only used if use_bcm_threshold=True)
+   :param \*\*kwargs: Additional arguments passed to parent class
+
+
+   .. py:method:: forward(x)
+
+      Forward pass through the layer.
+
+      :param x: Input vector of shape (input_size,)
+
+      :returns: Output vector of shape (output_size,)
+
+
+
+   .. py:method:: init_state()
+
+      Initialize layer parameters and state variables.
+
+
+
+   .. py:method:: resize(input_size, output_size = None, preserve_submatrix = True)
+
+      Resize layer dimensions.
+
+      :param input_size: New input dimension
+      :param output_size: New output dimension (if None, keep current)
+      :param preserve_submatrix: Whether to preserve existing weights
+
+
+
+   .. py:method:: update(prev_energy)
+
+      Update method for trainer compatibility (no-op for feedforward layer).
+
+
+
+   .. py:method:: update_threshold()
+
+      Update the sliding threshold based on recent activity (BCM only).
+
+      This method should be called by BCMTrainer after each forward pass.
+      Updates θ using: θ ← θ + (1/τ) * (y² - θ)
+
+
+
+   .. py:property:: energy
+      :type: float
+
+
+      Energy for trainer compatibility (0 for feedforward layer).
+
+
+   .. py:attribute:: input_size
+
+
+   .. py:attribute:: output_size
+
+
+   .. py:property:: predict_state_attr
+      :type: str
+
+
+      Name of output state for prediction.
+
+
+   .. py:attribute:: threshold_tau
+      :value: 100.0
+
+
+
+   .. py:attribute:: use_bcm_threshold
+      :value: False
+
+
+
+   .. py:property:: weight_attr
+      :type: str
+
+
+      Name of weight parameter for generic training.
+
+
+.. py:class:: SpikingLayer(input_size, output_size, threshold = 1.0, v_reset = 0.0, leak = 0.9, trace_decay = 0.95, dt = 1.0, **kwargs)
+
+   Bases: :py:obj:`src.canns.models.brain_inspired._base.BrainInspiredModel`
+
+
+   Simple Leaky Integrate-and-Fire (LIF) spiking neuron layer.
+
+   This model provides a minimal spiking neuron implementation for demonstrating
+   spike-timing-dependent plasticity (STDP). It features:
+   - Leaky integration of input currents
+   - Threshold-based spike generation
+   - Reset mechanism after spiking
+   - Exponential spike traces for STDP learning
+
+   Dynamics:
+       v[t+1] = leak * v[t] + W @ x[t]
+       spike = 1 if v >= threshold else 0
+       v = v_reset if spike else v
+       trace = decay * trace + spike
+
+   .. rubric:: References
+
+   - Gerstner & Kistler (2002): Spiking Neuron Models
+   - Morrison et al. (2008): Phenomenological models of synaptic plasticity
+
+   Initialize the spiking layer.
+
+   :param input_size: Number of input neurons
+   :param output_size: Number of output neurons
+   :param threshold: Spike threshold for membrane potential
+   :param v_reset: Reset potential after spike
+   :param leak: Membrane leak factor (0-1, closer to 1 = less leaky)
+   :param trace_decay: Decay factor for spike traces (used in STDP)
+   :param dt: Time step size
+   :param \*\*kwargs: Additional arguments passed to parent class
+
+
+   .. py:method:: forward(x)
+
+      Forward pass through the spiking layer.
+
+      :param x: Input spikes of shape (input_size,) with binary values (0 or 1)
+
+      :returns: Output spikes of shape (output_size,) with binary values (0 or 1)
+
+
+
+   .. py:method:: init_state()
+
+      Initialize layer parameters and state variables.
+
+
+
+   .. py:method:: reset_state()
+
+      Reset membrane potentials and spike traces.
+
+
+
+   .. py:method:: update(prev_energy)
+
+      Update method for trainer compatibility (no-op for spiking layer).
+
+
+
+   .. py:attribute:: dt
+      :value: 1.0
+
+
+
+   .. py:property:: energy
+      :type: float
+
+
+      Energy for trainer compatibility (0 for spiking layer).
+
+
+   .. py:attribute:: input_size
+
+
+   .. py:attribute:: leak
+      :value: 0.9
+
+
+
+   .. py:attribute:: output_size
+
+
+   .. py:property:: predict_state_attr
+      :type: str
+
+
+      Name of output state for prediction.
+
+
+   .. py:attribute:: threshold
+      :value: 1.0
+
+
+
+   .. py:attribute:: trace_decay
+      :value: 0.95
+
+
+
+   .. py:attribute:: v_reset
+      :value: 0.0
+
+
+
+   .. py:property:: weight_attr
+      :type: str
+
+
+      Name of weight parameter for generic training.
 
 

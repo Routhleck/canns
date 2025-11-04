@@ -1,5 +1,5 @@
 """
-Data utilities for CANNS.
+Data utilities for CANNs.
 
 This module provides dataset management, loading, and downloading utilities.
 It consolidates data-related functionality previously scattered across the codebase.

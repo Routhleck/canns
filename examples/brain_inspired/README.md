@@ -1,6 +1,6 @@
 # Brain-Inspired Learning Algorithms Examples
 
-This directory demonstrates **classic brain-inspired learning algorithms** implemented as trainers in CANNS. The focus is on the algorithms themselves, not model complexity.
+This directory demonstrates **classic brain-inspired learning algorithms** implemented as trainers in CANNs. The focus is on the algorithms themselves, not model complexity.
 
 ## Philosophy
 

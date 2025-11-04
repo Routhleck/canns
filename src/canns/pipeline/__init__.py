@@ -1,5 +1,5 @@
 """
-CANNS Pipeline Module
+CANNs Pipeline Module
 
 High-level pipelines for common analysis workflows, designed to make CANN models
 accessible to experimental researchers without requiring detailed knowledge of
