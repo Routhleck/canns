@@ -178,10 +178,13 @@ def translate_directory(source_dir, target_dir, batch_size=5, use_openrouter=Fal
             with open(source_file, 'r', encoding='utf-8') as f:
                 content = f.read()
 
-            # Skip already translated files (check if mostly English)
-            english_ratio = sum(1 for c in content if ord(c) < 128) / len(content)
-            if english_ratio > 0.8:
-                print(f"[{i}/{len(rst_files)}] Skipping (already English): {source_file}")
+            # Create target directory structure
+            relative_path = os.path.relpath(source_file, source_path)
+            target_file = os.path.join(target_path, relative_path)
+
+            # Skip if target file already exists
+            if os.path.exists(target_file):
+                print(f"[{i}/{len(rst_files)}] Skipping (already translated): {target_file}")
                 continue
 
             print(f"[{i}/{len(rst_files)}] Translating: {source_file}")
@@ -192,10 +195,7 @@ def translate_directory(source_dir, target_dir, batch_size=5, use_openrouter=Fal
             )
 
             # Create target directory structure
-            relative_path = os.path.relpath(source_file, source_path)
-            target_file = os.path.join(target_path, relative_path)
             target_file_dir = os.path.dirname(target_file)
-
             os.makedirs(target_file_dir, exist_ok=True)
 
             # Write translated content
