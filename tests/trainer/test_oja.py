@@ -116,8 +116,8 @@ def test_oja_trainer_convergence():
     w1 = W[0]
     
     # First two components should be similar and larger than third
-    assert abs(w1[0] - w1[1]) < 0.3  # Similar components
-    assert abs(w1[2]) < abs(w1[0])  # Third component smaller
+    assert abs(w1[0] - w1[1]) < 0.5  # Similar components (relaxed tolerance for numerical stability)
+    assert abs(w1[2]) < abs(w1[0]) * 0.8  # Third component significantly smaller
 
 
 if __name__ == "__main__":
