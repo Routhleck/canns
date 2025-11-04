@@ -6,7 +6,7 @@ from typing import Any
 
 
 class Trainer(ABC):
-    """Abstract base class for training utilities in CANNS."""
+    """Abstract base class for training utilities in CANNs."""
 
     def __init__(
         self,

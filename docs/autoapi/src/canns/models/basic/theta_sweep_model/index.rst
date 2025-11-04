@@ -11,6 +11,7 @@ Classes
 
    src.canns.models.basic.theta_sweep_model.DirectionCellNetwork
    src.canns.models.basic.theta_sweep_model.GridCellNetwork
+   src.canns.models.basic.theta_sweep_model.PlaceCellNetwork
 
 
 Functions
@@ -630,6 +631,241 @@ Module Contents
 
 
    .. py:attribute:: y_grid
+
+
+.. py:class:: PlaceCellNetwork(geodesic_result, tau = 10.0, tau_v = 100.0, noise_strength = 0.0, k = 0.2, m = 3.0, a = 0.2, A = 5.0, J0 = 1.0, g = 1.0, conn_noise = 0.0)
+
+   Bases: :py:obj:`src.canns.models.basic._base.BasicModel`
+
+
+   Graph-based continuous-attractor place cell network using environment geodesic distances.
+
+   This network implements a place cell representation where neurons are tuned to discrete
+   locations in a navigation environment. Connectivity is based on geodesic (shortest path)
+   distances within the environment, allowing the network to adapt to complex non-convex spaces
+   with obstacles.
+
+   Key features:
+   - Connectivity matrix based on geodesic distances (not Euclidean)
+   - Replaces NetworkX graph representation with grid-based geodesic computation
+   - Uses GeodesicDistanceResult for environment definition and distance computation
+   - Continuous attractor dynamics with spike-frequency adaptation
+   - Supports arbitrary environment shapes (rectangular, T-maze, complex polygons with holes/walls)
+
+   :param geodesic_result: Geodesic distance computation result from navigation task
+   :param tau: Membrane time constant (ms). Controls speed of neural dynamics.
+   :param tau_v: Adaptation time constant (ms). Larger values = slower adaptation.
+   :param noise_strength: Standard deviation of Gaussian noise added to inputs
+   :param k: Global inhibition strength for divisive normalization
+   :param m: Strength of adaptation coupling (dimensionless)
+   :param a: Width of connectivity kernel. Determines bump width in grid units.
+   :param A: Amplitude of external input bump
+   :param J0: Peak recurrent connection strength
+   :param g: Gain parameter for firing rate transformation
+   :param conn_noise: Standard deviation of Gaussian noise added to connectivity matrix
+
+   .. attribute:: geodesic_result
+
+      Geodesic distance computation result
+
+      :type: GeodesicDistanceResult
+
+   .. attribute:: cell_num
+
+      Number of place cells (= number of accessible grid cells)
+
+      :type: int
+
+   .. attribute:: D
+
+      Geodesic distance matrix of shape (cell_num, cell_num)
+
+      :type: Array
+
+   .. attribute:: accessible_indices
+
+      Grid indices of accessible cells (cell_num, 2)
+
+      :type: Array
+
+   .. attribute:: cost_grid
+
+      Grid cost information for position lookups
+
+      :type: MovementCostGrid
+
+   .. attribute:: conn_mat
+
+      Recurrent connectivity matrix with Gaussian profile
+
+      :type: Array
+
+   .. attribute:: r
+
+      Firing rates of place cells
+
+      :type: HiddenState
+
+   .. attribute:: u
+
+      Membrane potentials
+
+      :type: HiddenState
+
+   .. attribute:: v
+
+      Adaptation variables
+
+      :type: HiddenState
+
+   .. attribute:: center
+
+      Current decoded bump center
+
+      :type: State
+
+   .. attribute:: m
+
+      Effective adaptation strength (adaptation_strength * tau / tau_v)
+
+      :type: float
+
+
+   .. py:method:: get_bump_center(r, x)
+
+      Decode bump center from population activity.
+
+      Uses weighted average of cell indices, normalized by total activity.
+
+      :param r: Firing rate vector (cell_num,)
+
+      :returns: Decoded center index (scalar)
+
+
+
+   .. py:method:: get_geodesic_index_by_pos(pos)
+
+      Get the geodesic index of the grid cell containing the given position.
+
+      :param pos: (x, y) coordinates of the position
+
+      :returns: Index of the grid cell in the geodesic distance matrix, or None if
+                the position is out of bounds or in an impassable cell.
+
+
+
+   .. py:method:: init_state(*args, **kwargs)
+
+      Initialize network state variables.
+
+      Creates and initializes:
+      - r: Firing rates (all zeros)
+      - u: Membrane potentials (all zeros)
+      - v: Adaptation variables (all zeros)
+      - center: Current bump center (zero)
+
+
+
+   .. py:method:: input_bump(animal_pos)
+
+      Generate Gaussian bump external input centered on the animal's current position.
+
+      :param animal_pos: Current position (x, y) tuple or array
+
+      :returns: Input vector of shape (cell_num,)
+
+
+
+   .. py:method:: make_connection()
+
+      Generate recurrent connectivity matrix with Gaussian profile based on geodesic distance.
+
+      Connection strength between place cells decays with geodesic distance according
+      to a normalized Gaussian kernel.
+
+      :returns: Connectivity matrix
+      :rtype: Array of shape (cell_num, cell_num)
+
+
+
+   .. py:method:: update(animal_pos, theta_input)
+
+      Single time-step update of network dynamics.
+
+      :param animal_pos: Current position (x, y) tuple or array
+      :param theta_input: Theta modulation factor (typically 1.0 ± theta_strength)
+
+
+
+   .. py:attribute:: A
+      :value: 5.0
+
+
+
+   .. py:attribute:: D
+
+
+   .. py:attribute:: J0
+      :value: 1.0
+
+
+
+   .. py:attribute:: a
+      :value: 0.2
+
+
+
+   .. py:attribute:: accessible_indices
+
+
+   .. py:attribute:: cell_num
+
+
+   .. py:attribute:: conn_mat
+
+
+   .. py:attribute:: conn_noise
+      :value: 0.0
+
+
+
+   .. py:attribute:: cost_grid
+
+
+   .. py:attribute:: g
+      :value: 1.0
+
+
+
+   .. py:attribute:: geodesic_result
+
+
+   .. py:attribute:: k
+      :value: 0.2
+
+
+
+   .. py:attribute:: m
+      :value: 3.0
+
+
+
+   .. py:attribute:: noise_strength
+      :value: 0.0
+
+
+
+   .. py:attribute:: tau
+      :value: 10.0
+
+
+
+   .. py:attribute:: tau_v
+      :value: 100.0
+
+
+
+   .. py:attribute:: x
 
 
 .. py:function:: calculate_theta_modulation(time_step, linear_gain, ang_gain, theta_strength_hd = 0.0, theta_strength_gc = 0.0, theta_cycle_len = 100.0, dt = None)

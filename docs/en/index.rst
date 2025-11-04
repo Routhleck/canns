@@ -1,5 +1,5 @@
 CANNs Documentation
-===================
+====================
 
 .. image:: https://badges.ws/badge/status-beta-yellow
    :target: https://github.com/routhleck/canns
@@ -7,7 +7,7 @@ CANNs Documentation
 
 .. image:: https://img.shields.io/pypi/pyversions/canns
    :target: https://pypi.org/project/canns/
-   :alt: Python Version
+   :alt: Python Versions
 
 .. image:: https://badges.ws/maintenance/yes/2025
    :target: https://github.com/routhleck/canns
@@ -23,7 +23,7 @@ CANNs Documentation
 
 .. image:: https://badges.ws/github/stars/routhleck/canns?logo=github
    :target: https://github.com/routhleck/canns/stargazers
-   :alt: Stars
+   :alt: GitHub Stars
 
 .. image:: https://static.pepy.tech/personalized-badge/canns?period=total&units=INTERNATIONAL_SYSTEM&left_color=BLACK&right_color=GREEN&left_text=downloads
    :target: https://pepy.tech/projects/canns
@@ -37,9 +37,47 @@ CANNs Documentation
    :target: https://buymeacoffee.com/forrestcai6
    :alt: Buy Me a Coffee
 
-Welcome to the CANNs (Continuous Attractor Neural Networks) documentation! This library provides a unified, high-level API for building, training, and analyzing continuous attractor neural networks.
+Welcome to CANNs!
+-----------------
 
-Visual Gallery
+CANNs (Continuous Attractor Neural Networks) is a powerful neural dynamics modeling framework focused on spatial cognition and neural computation. Built on JAX/BrainState, it provides high-performance GPU/TPU support.
+
+What would you like to do?
+--------------------------
+
+**📊 Analyze CANN Dynamics**
+   Understand how different inputs affect bump responses and tracking behavior
+   → :doc:`1_tutorials/cann_dynamics/index`
+
+**🧭 Model Spatial Navigation**
+   Build grid cells, place cells, and path integration systems
+   → :doc:`1_tutorials/spatial_navigation/index`
+
+**🧠 Train Memory Networks**
+   Implement Hopfield associative memory and pattern storage
+   → :doc:`1_tutorials/memory_networks/index`
+
+**📈 Unsupervised Learning**
+   Extract principal components using Oja/Sanger rules
+   → :doc:`1_tutorials/unsupervised_learning/index`
+
+**👁️ Develop Receptive Fields**
+   Train orientation-selective neurons with BCM rule
+   → :doc:`1_tutorials/receptive_fields/index`
+
+**⏱️ Learn Temporal Patterns**
+   Train spiking neural networks using STDP
+   → :doc:`1_tutorials/temporal_learning/index`
+
+**🔬 Analyze Experimental Data**
+   Fit and analyze real neural recording data
+   → :doc:`1_tutorials/experimental_analysis/index`
+
+**⚙️ Advanced Workflows**
+   Build automated pipelines and batch processing
+   → :doc:`1_tutorials/advanced_workflows/index`
+
+Visualizations
 --------------
 
 .. raw:: html
@@ -62,7 +100,7 @@ Visual Gallery
    <td colspan="2" align="center">
    <h4>Theta Sweep Analysis</h4>
    <img src="../_static/theta_sweep_animation.gif" alt="Theta Sweep Animation" width="600">
-   <br><em>Grid cell and head direction networks with theta rhythm modulation</em>
+   <br><em>Theta rhythm modulation in grid and direction cell networks</em>
    </td>
    </tr>
    <tr>
@@ -80,136 +118,122 @@ Visual Gallery
    </table>
    </div>
 
-🚀 **Interactive Examples**
-   Try the examples interactively:
-   
-   - |binder| **Run on Binder** (Free, no setup required)
-   - |colab| **Open in Google Colab** (Google account required)
-
-.. |binder| image:: https://mybinder.org/badge_logo.svg
-   :target: https://mybinder.org/v2/gh/routhleck/canns/HEAD?filepath=docs%2Fen%2Fnotebooks
-   
-.. |colab| image:: https://colab.research.google.com/assets/colab-badge.svg
-   :target: https://colab.research.google.com/github/routhleck/canns/blob/master/docs/en/notebooks/
-
-📖 **Table of Contents**
-
-.. toctree::
-   :maxdepth: 2
-   :caption: Getting Started
-   
-   notebooks/01_quick_start
-   notebooks/00_design_philosophy
-
-.. toctree::
-   :maxdepth: 2
-   :caption: Guides
-
-   guide/index
-
-.. toctree::
-   :maxdepth: 1
-   :caption: Examples
-
-   examples/index
-   GitHub Examples <https://github.com/routhleck/canns/tree/master/examples>
-
-.. toctree::
-   :maxdepth: 2
-   :caption: API Reference
-   
-   ../autoapi/index
-
-.. toctree::
-   :maxdepth: 2
-   :caption: Resources
-   :hidden:
-   
-   GitHub Issues <https://github.com/routhleck/canns/issues>
-   Discussions <https://github.com/routhleck/canns/discussions>
-
-**Language**: `English <../en/>`_ | `中文 <../zh/>`_
-
-About CANNs
+Quick Start
 -----------
 
-Continuous Attractor Neural Networks (CANNs) are a class of neural network models characterized by their ability to maintain stable activity patterns in continuous state spaces. This library provides:
-
-- **Rich Model Library**: 1D/2D CANNs, SFA models, hierarchical networks
-- **Task-Oriented Design**: Path integration, smooth tracking, custom tasks
-- **Powerful Analysis Tools**: Real-time visualization, statistical analysis
-- **High Performance**: JAX-based computation with GPU/TPU support
-
-Quick Installation
-------------------
+Install CANNs:
 
 .. code-block:: bash
 
-   # Basic installation (CPU)
+   # Using uv (recommended, faster)
+   uv pip install canns
+
+   # Or using pip
    pip install canns
-   
-   # GPU support (Linux)
+
+   # GPU support
    pip install canns[cuda12]
-   
-   # TPU support (Linux)  
-   pip install canns[tpu]
 
-Quick Example
--------------
-
-Here's a complete example showing how to create a 1D CANN, run a smooth tracking task, and visualize the results:
+Run your first example:
 
 .. code-block:: python
 
    import brainstate
    from canns.models.basic import CANN1D
    from canns.task.tracking import SmoothTracking1D
-   from canns.analyzer.plotting import PlotConfigs, energy_landscape_1d_animation
-   
-   # Set up environment and create 1D CANN network
+
+   # Set environment
    brainstate.environ.set(dt=0.1)
+
+   # Create model
    cann = CANN1D(num=512)
    cann.init_state()
-   
-   # Define smooth tracking task with multiple target positions
+
+   # Define tracking task
    task = SmoothTracking1D(
        cann_instance=cann,
        Iext=(1., 0.75, 2., 1.75, 3.),
        duration=(10., 10., 10., 10.),
-       time_step=brainstate.environ.get_dt(),
+       time_step=0.1,
    )
    task.get_data()
-   
-   # Run simulation with compiled loop for efficiency
+
+   # Run simulation
    def run_step(t, inputs):
        cann(inputs)
-       return cann.u.value, cann.inp.value
-   
-   us, inps = brainstate.compile.for_loop(
-       run_step, task.run_steps, task.data,
-       pbar=brainstate.compile.ProgressBar(10)
+       return cann.u.value
+
+   us = brainstate.compile.for_loop(
+       run_step, task.run_steps, task.data
    )
-   
-   # Visualize results with animation
-   config = PlotConfigs.energy_landscape_1d_animation(
-       title='1D CANN Smooth Tracking',
-       save_path='tracking_demo.gif'
-   )
-   energy_landscape_1d_animation(
-       {'Activity': (cann.x, us), 'Input': (cann.x, inps)},
-       config=config
-   )
+
+See :doc:`0_getting_started/01_quick_start` for detailed tutorials.
+
+
+Documentation Navigation
+------------------------
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Getting Started
+
+   0_getting_started/index
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Scenario-Driven Tutorials
+
+   1_tutorials/index
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Resources
+
+   examples/README
+   GitHub Repository <https://github.com/routhleck/canns>
+   GitHub Issues <https://github.com/routhleck/canns/issues>
+   Discussions <https://github.com/routhleck/canns/discussions>
+
+**Language**: `English <../en/index.html>`_ | `中文 <../zh/index.html>`_
+
+About CANNs
+-----------
+
+Continuous Attractor Neural Networks (CANNs) are a special class of neural network models characterized by their ability to maintain stable "bump" activity patterns in continuous state spaces. This makes them particularly suitable for modeling:
+
+- **Spatial Cognition**: Location encoding, direction sensing
+- **Working Memory**: Maintaining short-term information
+- **Motor Control**: Neural representations of direction and velocity
+- **Perceptual Decision Making**: Stimulus representation and attention mechanisms
+
+The CANNs library provides a complete toolchain, from model construction to training, analysis, and visualization.
 
 Community and Support
 ---------------------
 
 - **GitHub Repository**: https://github.com/routhleck/canns
-- **Issue Reports**: https://github.com/routhleck/canns/issues
+- **Issue Tracker**: https://github.com/routhleck/canns/issues
 - **Discussions**: https://github.com/routhleck/canns/discussions
+- **Documentation**: https://canns.readthedocs.io/
 
-Indices and tables
-==================
+Contributing
+------------
 
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
+Contributions are welcome! Please check our `Contribution Guidelines <https://github.com/routhleck/canns/blob/master/CONTRIBUTING.md>`_.
+
+Citation
+--------
+
+If you use CANNs in your research, please cite:
+
+.. code-block:: bibtex
+
+   @software{he_2025_canns,
+      author       = {He, Sichao},
+      title        = {CANNs: Continuous Attractor Neural Networks Toolkit},
+      year         = 2025,
+      publisher    = {Zenodo},
+      version      = {v0.9.0},
+      doi          = {10.5281/zenodo.17412545},
+      url          = {https://github.com/Routhleck/canns}
+   }

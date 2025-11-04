@@ -513,7 +513,7 @@ Package Contents
    :param source: Data source. Can be:
                   - URL string: downloads and loads from URL
                   - Path: loads from local file
-                  - None: uses default CANNS dataset
+                  - None: uses default CANNs dataset
    :type source: str, Path, or None
    :param dataset_key: Which default dataset to use ('grid_1' or 'grid_2') when source is None.
    :type dataset_key: str
@@ -541,7 +541,7 @@ Package Contents
    :param source: Data source. Can be:
                   - URL string: downloads and loads from URL
                   - Path: loads from local file
-                  - None: uses default CANNS dataset
+                  - None: uses default CANNs dataset
    :type source: str, Path, or None
 
    :returns: ROI data array if successful, None otherwise.
