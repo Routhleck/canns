@@ -475,9 +475,9 @@ if __name__ == "__main__":
 
     config_to_run = "3_bit"  # Specify the desired configuration here: "2_bit","3_bit","4_bit"
     # Use fixed seed
-    #seed_to_use = 8356
+    seed_to_use = 8356
     # Use random seed
-    seed_to_use = None
+    #seed_to_use = None
 
     print(f"\n--- Running configuration: {config_to_run} ---")
     if seed_to_use is None:
