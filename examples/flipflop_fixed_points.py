@@ -326,20 +326,20 @@ def train_flipflop_rnn(rnn, train_data, valid_data,
 TASK_CONFIGS = {
     "2_bit": {
         "n_bits": 2,
-        "n_hidden": 16,
-        "n_trials_train": 128,
+        "n_hidden": 3,
+        "n_trials_train": 512,
         "n_inits":1024,
     },
     "3_bit": {
         "n_bits": 3,
-        "n_hidden": 16,
-        "n_trials_train": 256,
+        "n_hidden": 4,
+        "n_trials_train": 512,
         "n_inits":1024,
     },
     "4_bit": {
         "n_bits": 4,
-        "n_hidden": 32, #
-        "n_trials_train": 1024,
+        "n_hidden": 6,
+        "n_trials_train": 512,
         "n_inits":1024,
     },
 }
@@ -473,11 +473,11 @@ def main(config_name="4_bit", seed=np.random.randint(1, 10000)):
 
 if __name__ == "__main__":
 
-    config_to_run = "3_bit"  # Specify the desired configuration here: "2_bit","3_bit","4_bit"
+    config_to_run = "2_bit"  # Specify the desired configuration here: "2_bit","3_bit","4_bit"
     # Use fixed seed
-    seed_to_use = 8356
+    seed_to_use = 42
     # Use random seed
-    #seed_to_use = None
+    # seed_to_use = None
 
     print(f"\n--- Running configuration: {config_to_run} ---")
     if seed_to_use is None:
