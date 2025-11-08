@@ -1,160 +1,155 @@
 # Release Template
 
-Use this template to create release notes for each version.
+Use this template for creating GitHub releases. Replace placeholders with actual content.
 
 ---
 
-## Release vX.Y.Z
+## Title Format
+```
+Release vX.Y.Z: [Main Theme/Feature Summary]
+```
 
-**Release Date:** YYYY-MM-DD
-
-### Summary
-
-Brief 1-2 sentence overview of what this release accomplishes.
-
-### Major Features
-
-New capabilities or significant enhancements:
-
-- **Feature Name**: Description of the feature and its benefits
-- **Feature Name**: Description of the feature and its benefits
-
-### Improvements
-
-Enhancements to existing functionality:
-
-- **Component/Module**: What was improved and why it matters
-- **Performance**: Any performance optimizations
-- **API**: API improvements or refinements
-
-### Bug Fixes
-
-Issues resolved in this release:
-
-- Fixed: Description of the bug and the fix
-- Fixed: Description of the bug and the fix
-
-### Breaking Changes
-
-⚠️ **Important**: Changes that may require code updates:
-
-- **Change Description**: What changed and how to migrate
-- **Change Description**: What changed and how to migrate
-
-### Deprecations
-
-Features marked for future removal:
-
-- **Deprecated Feature**: Use `new_feature()` instead. Will be removed in vX.Y.Z
-- **Deprecated Feature**: Use `new_feature()` instead. Will be removed in vX.Y.Z
-
-### Documentation
-
-Documentation updates and additions:
-
-- Added: New guides or tutorials
-- Updated: Documentation improvements
-- Fixed: Documentation corrections
-
-### Dependencies
-
-Changes to project dependencies:
-
-- Added: `package-name>=X.Y.Z` - Reason for addition
-- Updated: `package-name` from X.Y.Z to X.Y.Z - Reason for update
-- Removed: `package-name` - Reason for removal
-
-### Internal Changes
-
-Changes that don't affect external API:
-
-- Refactoring, testing, or infrastructure improvements
-- Build system or CI/CD updates
+Examples:
+- `Release v0.8.2: Plotting API Restoration & Documentation Polish`
+- `Release v0.8.0: Theta Sweep Models, Pipeline, and Enhanced Spatial Navigation`
 
 ---
 
-## Example Release Notes
+## Release Body Template
 
-### Release v0.6.0
+```markdown
+## What's New
 
-**Release Date:** 2025-10-22
+**[Emoji] [Bold One-Liner Headline]**
+- [Bullet point summary 1]
+- [Bullet point summary 2]
+- [Bullet point summary 3]
 
-### Summary
+**[Optional Second Headline]**  
+- [Additional context or supporting features]
 
-This release adds place cell theta sweep visualization and refactors navigation tasks with geodesic distance computation for complex environments.
+## Major Features / Key Changes
 
-### Major Features
+### [Emoji] **[Feature/Change Category 1]** (PR #XX)
+- **[Specific component]**: [Description]
+- **[Specific component]**: [Description]
+- **[Specific component]**: [Description]
 
-- **Place Cell Network & Theta Sweep**: Implemented `PlaceCellNetwork` using graph-based continuous-attractor dynamics with `create_theta_sweep_place_cell_animation()` for visualizing place cell activity during navigation
-- **Geodesic Distance Computation**: Added geodesic distance support for complex environments (T-maze, obstacles) via `MovementCostGrid` and `GeodesicDistanceResult` classes
-- **T-Maze Navigation Tasks**: New T-maze variants with optional recesses at junctions for both open-loop and closed-loop navigation
+```python
+# Code example showing usage
+from canns.module import Component
 
-### Improvements
+# Demonstrative code
+component = Component(param=value)
+result = component.method()
+```
 
-- **Navigation Architecture**: Extracted common functionality into `BaseNavigationTask` base class for better code reuse
-- **Visualization**: Enhanced environment visualization with movement cost overlays and unified animation interface
-- **Grid Indexing**: Improved coordinate-to-grid mapping across models and tasks
+### [Emoji] **[Feature/Change Category 2]** (PR #XX)
+- **[Specific component]**: [Description]
+- **[Enhanced capability]**: [Description]
 
-### Bug Fixes
+```python
+# Another usage example
+```
 
-- Fixed: Grid resolution validation now properly checks for positive values
-- Fixed: Trajectory analysis now correctly handles edge cases with zero angular velocity
+### [Emoji] **[Feature/Change Category 3]** (PR #XX)
+- **[Component updates]**: [Description]
+- **[Improvements]**: [Description]
 
-### Breaking Changes
+## [Optional] New Components Added
 
-None - all changes are backward compatible.
+- `path/to/new/module.py` - [Brief description]
+- `path/to/another/module.py` - [Brief description]
 
-### Documentation
+## [Optional] Technical Improvements
 
-- Added: Example `theta_sweep_place_cell_network.py` demonstrating place cell animations
-- Updated: Navigation task documentation with geodesic distance examples
-- Added: API reference for `PlaceCellNetwork` and geodesic utilities
+### [Subsection if needed]
+- **[Improvement type]**: [Description]
+- **[Optimization]**: [Description]
+- **[Enhancement]**: [Description]
 
-### Dependencies
+## [Optional] New Dependencies
+- **[package-name] ([version constraint])**: [Purpose/reason]
 
-No dependency changes in this release.
+## [Optional] Breaking Changes
+[None - all additions are backward compatible.] OR [List of breaking changes]
 
-### Internal Changes
+## [Optional] Technical Notes
+- [Technical detail 1]
+- [Technical detail 2]
+- [Compatibility information]
 
-- Refactored: Navigation tasks now share common base class
-- Testing: Added tests for geodesic distance computation
-- CI/CD: Updated workflows for multiprocessing-safe examples
+## [Optional] Files Added/Modified
+- `path/to/file.py`: [Change description]
+- `path/to/another/file.py`: [Change description]
+
+## [Optional] Use Cases
+- **[User type]**: [How they benefit]
+- **[Another user type]**: [How they benefit]
 
 ---
 
-## Release Checklist
-
-Before creating a release, ensure:
-
-- [ ] All tests pass (`pytest tests/`)
-- [ ] Documentation builds without errors (`make docs`)
-- [ ] Examples run successfully
-- [ ] Version number follows semantic versioning
-- [ ] CHANGELOG.md is updated
-- [ ] Breaking changes are clearly documented
-- [ ] Migration guide provided (if applicable)
-- [ ] All dependencies are up to date
-
-## Quick Release Commands
-
-```bash
-# 1. Sync version (optional)
-python scripts/sync_version.py X.Y.Z
-
-# 2. Commit version bump
-git add -A
-git commit -m "Release vX.Y.Z"
-
-# 3. Create and push tag
-git tag vX.Y.Z
-git push origin vX.Y.Z
-
-# Automation handles PyPI publish and docs update
+**Full Changelog**: https://github.com/Routhleck/canns/compare/v[PREV]...v[CURRENT]
 ```
 
 ---
 
-*Follow semantic versioning: MAJOR.MINOR.PATCH*
-- **MAJOR**: Breaking changes
-- **MINOR**: New features, backward compatible
-- **PATCH**: Bug fixes, backward compatible
+## Style Guidelines
+
+### Emojis by Section Type
+- 🧠 Brain-inspired models / Neural networks
+- 🌊 Wave/oscillation features (theta sweep, etc.)
+- 🔧 Fixes / Technical improvements
+- 📖 Documentation
+- 🎨 Plotting / Visualization
+- 🗺️ Spatial navigation / Tasks
+- 🚀 Performance / Pipeline
+- 📊 Data analysis / Import
+- 🎛️ Training / Trainer
+- 🎯 Progress / User experience
+- ✨ New features
+- 🔬 Scientific / Experimental tools
+- 📈 Progress / Reporting
+
+### Writing Style
+1. **Headlines**: Bold + emoji, action-oriented
+2. **Descriptions**: Start with component/feature name in bold, followed by description
+3. **Code examples**: Always use syntax highlighting with language tag
+4. **PR references**: Include PR numbers in section headers when applicable
+5. **Bullet formatting**: Use `-` for lists, `**bold**` for emphasis
+6. **Versioning**: Always include "Full Changelog" link comparing previous and current version
+
+### Section Ordering
+1. What's New (required)
+2. Major Features / Key Changes (required)
+3. New Components Added (if applicable)
+4. Technical Improvements (if applicable)
+5. New Dependencies (if applicable)
+6. Breaking Changes (if applicable)
+7. Technical Notes (if applicable)
+8. Code Examples (if not inline)
+9. Files Added/Modified (if helpful)
+10. Use Cases (if applicable)
+11. Full Changelog link (required)
+
+### Content Priority
+- **Minor releases (x.y.Z)**: Focus on fixes, polish, documentation
+- **Feature releases (x.Y.0)**: Emphasize new capabilities, breaking changes, major refactors
+- Always highlight **user-facing impacts** before internal technical details
+- Include **code examples** for new APIs or significant changes
+- Mention **compatibility** and **migration guidance** when relevant
+
+---
+
+## Automation Hints for AI
+
+When generating a release from git history:
+
+1. **Analyze commits/PRs between tags**: Extract feature descriptions, breaking changes, new files
+2. **Categorize changes**: Group by type (features, fixes, docs, deps, breaking)
+3. **Extract code samples**: Look for examples in PR descriptions or new example files
+4. **Determine version type**: patch (fixes), minor (features), major (breaking)
+5. **Generate headline**: Summarize 2-3 main themes from the changes
+6. **Match tone**: Technical but accessible, concise but complete
+7. **Include metrics**: File counts, PR numbers, performance improvements when available
+8. **Cross-reference**: Link related PRs and issues in descriptions

@@ -89,7 +89,7 @@ decode = decode_circular_coordinates(
 # Using config-based approach for torus animation
 torus_config = CANN2DPlotConfig.for_torus_animation(
     show=True,
-    save_path='experimental_cann2d_analysis_torus.gif',
+    save_path='../experimental_cann2d_analysis_torus.gif',
     n_frames=20,
     fps=5,
     title="3D Bump Movement on Torus",
