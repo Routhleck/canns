@@ -13,7 +13,7 @@ import brainstate
 import brainunit as u
 
 from canns.analyzer.theta_sweep import (
-    create_theta_sweep_animation,
+    create_theta_sweep_grid_cell_animation,
     plot_grid_cell_manifold,
     plot_population_activity_with_theta,
 )
@@ -23,7 +23,7 @@ from canns.models.basic.theta_sweep_model import (
     GridCellNetwork,
     calculate_theta_modulation,
 )
-from canns.task.spatial_navigation import SpatialNavigationTask
+from canns.task.open_loop_navigation import OpenLoopNavigationTask
 
 
 def main() -> None:
@@ -35,7 +35,7 @@ def main() -> None:
     brainstate.environ.set(dt=1.0)
 
     # Create and run spatial navigation task
-    snt = SpatialNavigationTask(
+    snt = OpenLoopNavigationTask(
         duration=simulate_time,
         initial_head_direction=11 / 12 * u.math.pi,
         width=Env_size,
@@ -61,7 +61,7 @@ def main() -> None:
 
     # Show trajectory analysis
     print("Displaying trajectory analysis...")
-    snt.show_trajectory_analysis()
+    snt.show_trajectory_analysis(save_path="open_loop_trajectory_analysis.png", show=False)
 
     # Create networks
     dc_net = DirectionCellNetwork(
@@ -174,7 +174,7 @@ def main() -> None:
         show=False,
     )
 
-    animation = create_theta_sweep_animation(
+    animation = create_theta_sweep_grid_cell_animation(
         position_data=position,
         direction_data=direction,
         dc_activity_data=dc_netactivity,

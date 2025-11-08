@@ -39,15 +39,15 @@ classifiers = [
 
 dependencies = [
     "BrainX[cpu]",
-    "canns-ripser>=0.4.4",
+    "canns-lib>=0.6.2",
     "furo>=2025.7.19",
     "notebook>=7.4.4",
-    "ratinabox>=1.15.3",
     "tqdm",
     "numpy>=1.24,<2.3",
     "numba>=0.56.0",
     "scipy>=1.9.0",
     "seaborn>=0.13.2",
+    "imageio>=2.37.0",
 ]
 
 

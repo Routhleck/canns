@@ -6,7 +6,7 @@ from typing import Any
 
 
 class Pipeline(ABC):
-    """Abstract base class for CANNS pipelines.
+    """Abstract base class for CANNs pipelines.
 
     Pipelines orchestrate multi-step workflows (data preparation, model execution,
     visualization, etc.). This base class standardizes how we manage results and

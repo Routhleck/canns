@@ -43,7 +43,6 @@ extensions = [
     'sphinx.ext.intersphinx',
     'sphinx_autodoc_typehints',
     'autoapi.extension',
-    'nbsphinx',
     'myst_parser',
     'sphinx_design',
 ]
@@ -55,6 +54,7 @@ exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 autoapi_dirs = ['../src/']
 autoapi_type = 'python'
 autoapi_template_dir = '_templates/autoapi'
+autoapi_root = 'autoapi'
 autoapi_options = [
     'members',
     'undoc-members', 
@@ -118,11 +118,6 @@ html_theme_options = {
     },
 }
 
-# -- Options for nbsphinx ---------------------------------------------------
-nbsphinx_execute = 'never'  # Don't execute notebooks during build
-nbsphinx_allow_errors = True
-nbsphinx_requirejs_path = ''  # Disable requirejs to avoid conflicts
-
 # -- Internationalization ---------------------------------------------------
 language = 'en'
 locale_dirs = ['locale/']
@@ -136,7 +131,6 @@ myst_enable_extensions = [
     "dollarmath",
     "html_admonition",
     "html_image",
-    "linkify",
     "replacements",
     "smartquotes",
     "substitution",

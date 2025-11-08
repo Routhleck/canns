@@ -8,6 +8,8 @@ Hebbian learning, and other brain-inspired mechanisms.
 
 from ._base import BrainInspiredModel, BrainInspiredModelGroup
 from .hopfield import AmariHopfieldNetwork
+from .linear import LinearLayer
+from .spiking import SpikingLayer
 
 __all__ = [
     # Base classes
@@ -15,4 +17,6 @@ __all__ = [
     "BrainInspiredModelGroup",
     # Specific models
     "AmariHopfieldNetwork",
+    "LinearLayer",
+    "SpikingLayer",
 ]

@@ -92,7 +92,7 @@ def test_bump_fits_with_real_data_structure():
     """Test bump fitting with data structure similar to real ROI data."""
     # Load actual test data if available, otherwise use mock data
     try:
-        from canns.analyzer.experimental_data._datasets_utils import load_roi_data
+        from canns.data.loaders import load_roi_data
         data = load_roi_data()
         roi_data = data['roi_data']
         n_roi = roi_data.shape[1]
