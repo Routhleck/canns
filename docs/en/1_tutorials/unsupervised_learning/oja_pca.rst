@@ -1,6 +1,12 @@
 Oja's Rule: Principal Component Extraction via PCA
 ===================================================
 
+.. warning::
+
+   ⚠️ **Important Notice**: Some content in this documentation is still under development and validation, and may be incomplete. It is recommended for reference only. Please confirm with the development team about the completeness of relevant features before using them in important projects.
+
+
+
 Scenario Description
 --------------------
 
