@@ -24,7 +24,8 @@ def save_checkpoint(model: bst.nn.Module, filepath: str) -> None:
     os.makedirs(os.path.dirname(filepath) if os.path.dirname(filepath) else ".", exist_ok=True)
 
     # Use BrainState's built-in checkpointing
-    checkpoint = bst.graph.states(model).to_nest()
+    states = bst.graph.states(model)
+    checkpoint = states[0].to_nest() if isinstance(states, tuple) else states.to_nest()
     bts.file.msgpack_save(filepath, checkpoint)
     print(f"Saved checkpoint to: {filepath}")
 
@@ -52,7 +53,8 @@ def load_checkpoint(model: bst.nn.Module, filepath: str) -> bool:
         return False
 
     # Use BrainState's built-in checkpointing
-    checkpoint = bst.graph.states(model).to_nest()
+    states = bst.graph.states(model)
+    checkpoint = states[0].to_nest() if isinstance(states, tuple) else states.to_nest()
     bts.file.msgpack_load(filepath, checkpoint)
     print(f"Loaded checkpoint from: {filepath}")
     return True

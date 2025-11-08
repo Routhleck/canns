@@ -23,7 +23,7 @@ class FixedPointFinder:
 
     def __init__(
         self,
-        rnn_model,
+        rnn_model: bst.nn.Module,
         method: str = "joint",
         max_iters: int = 5000,
         tol_q: float = 1e-12,
@@ -196,7 +196,6 @@ class FixedPointFinder:
             )
             n_before_filter = unique_fps.n
 
-
             idx_keep = np.where(unique_fps.qstar < self.final_q_threshold)[0]
 
             unique_fps = unique_fps[idx_keep]
@@ -205,12 +204,8 @@ class FixedPointFinder:
             n_discarded = n_before_filter - n_after_filter
 
             if self.verbose and n_discarded > 0:
-                self._print_if_verbose(
-                    f"\t\tExcluded {n_discarded} low-quality fixed points."
-                )
-            self._print_if_verbose(
-                f"\t\t{n_after_filter} high-quality fixed points remain."
-            )
+                self._print_if_verbose(f"\t\tExcluded {n_discarded} low-quality fixed points.")
+            self._print_if_verbose(f"\t\t{n_after_filter} high-quality fixed points remain.")
         self._print_if_verbose("\tFixed point finding complete.\n")
 
         return unique_fps, all_fps

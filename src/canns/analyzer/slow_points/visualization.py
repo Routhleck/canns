@@ -7,8 +7,8 @@ import numpy as np
 from matplotlib.figure import Figure
 from sklearn.decomposition import PCA
 
-from .fixed_points import FixedPoints
 from ..plotting.config import PlotConfig
+from .fixed_points import FixedPoints
 
 __all__ = ["plot_fixed_points_2d", "plot_fixed_points_3d"]
 
@@ -92,7 +92,7 @@ def plot_fixed_points_2d(
             s=8.0,
             alpha=1.0,
             label="Trajectories" if batch_idx == plot_batch_idx[0] else "",
-            zorder=-1
+            zorder=-1,
         )
         start_idx = end_idx
 
