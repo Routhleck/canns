@@ -72,7 +72,7 @@ def update_spike_buffer(buffer: jnp.ndarray, neuron_idx: int, spike_time: float)
     return buffer.at[neuron_idx].set(new_buffer)
 
 
-def stdp_kernel(dt: float, tau_plus: float = 20.0, tau_minus: float = 20.0) -> float:
+def stdp_kernel(dt: float, tau_plus: float = 20.0, tau_minus: float = 20.0) -> jnp.ndarray:
     """
     Compute STDP timing kernel for weight change.
 
