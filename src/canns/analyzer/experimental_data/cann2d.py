@@ -1515,12 +1515,12 @@ def _plot_barcode_with_shuffle(persistence, shuffle_max):
             axes.axvspan(0, thresholds[dim], alpha=0.2, color="gray", zorder=-3)
             axes.axvline(x=thresholds[dim], color="gray", linestyle="--", alpha=0.7)
 
-        # Filter out infinite values
-        d = np.array([bar for bar in persistence["dgms"][dim] if not np.isinf(bar[1])])
-        if len(d) == 0:
+        # Do not pre-filter out infinite bars; copy the full diagram instead
+        d = np.copy(persistence["dgms"][dim])
+        if d.size == 0:
             d = np.zeros((0, 2))
 
-        d = np.copy(d)
+        # Map infinite death values to a finite upper bound for visualization
         d[np.isinf(d[:, 1]), 1] = infinity
         dlife = d[:, 1] - d[:, 0]
 
