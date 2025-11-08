@@ -147,6 +147,16 @@ class FixedPointFinder:
 
         # Run optimization
         if self.method == "joint":
+            # Warn if n_inits is large for joint optimization
+            LARGE_N_INITS_THRESHOLD = 1000
+            if n_inits > LARGE_N_INITS_THRESHOLD:
+                import warnings
+
+                warnings.warn(
+                    f"Joint optimization with n_inits={n_inits} may be inefficient and use excessive memory. "
+                    f"Consider using sequential optimization or reducing n_inits.",
+                    stacklevel=2,
+                )
             all_fps = self._run_joint_optimization(initial_states, inputs_nxd, cond_ids)
         elif self.method == "sequential":
             all_fps = self._run_sequential_optimizations(initial_states, inputs_nxd, cond_ids)
@@ -169,9 +179,11 @@ class FixedPointFinder:
         # Limit number of unique fixed points
         if unique_fps.n > self.max_n_unique:
             self._print_if_verbose(
-                f"\tRandomly selecting {int(self.max_n_unique)} unique fixed points to keep."
+                f"\tSelecting top {int(self.max_n_unique)} unique fixed points by qstar."
             )
-            idx_keep = self.rng.choice(unique_fps.n, int(self.max_n_unique), replace=False)
+            # Sort fixed points by qstar (ascending = better convergence)
+            idx_sorted = np.argsort(unique_fps.qstar)
+            idx_keep = idx_sorted[: int(self.max_n_unique)]
             unique_fps = unique_fps[idx_keep]
 
         # Compute Jacobians
@@ -241,7 +253,13 @@ class FixedPointFinder:
         # Sample trial and time indices
         trial_idx, time_idx = np.nonzero(valid_bxt)
         max_sample_index = len(trial_idx)
-        sample_indices = self.rng.randint(max_sample_index, size=n_inits)
+
+        # Sample without replacement if possible, otherwise allow duplicates
+        if n_inits <= max_sample_index:
+            sample_indices = self.rng.choice(max_sample_index, size=n_inits, replace=False)
+        else:
+            # If we need more samples than available, allow duplicates
+            sample_indices = self.rng.randint(max_sample_index, size=n_inits)
 
         # Draw samples
         states = np.zeros([n_inits, n_states], dtype=self.np_dtype)

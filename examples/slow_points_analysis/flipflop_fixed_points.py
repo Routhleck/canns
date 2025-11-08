@@ -183,10 +183,7 @@ class FlipFlopRNN(bst.nn.Module):
         n_time = inputs.shape[1]
 
         # Initialize hidden state
-        if hidden is None:
-            h = jnp.tile(self.h0.value, (batch_size, 1))
-        else:
-            h = hidden
+        h = jnp.tile(self.h0.value, (batch_size, 1)) if hidden is None else hidden
 
         # Single-step computation mode for the fixed-point finder
         if n_time == 1:

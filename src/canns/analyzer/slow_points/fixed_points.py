@@ -201,6 +201,13 @@ class FixedPoints:
         for i in range(n):
             # Check for NaNs in Jacobian
             if np.any(np.isnan(self.J_xstar[i])):
+                import warnings
+
+                warnings.warn(
+                    f"NaNs detected in Jacobian at index {i}. "
+                    "This may indicate upstream numerical issues.",
+                    stacklevel=2,
+                )
                 eigvals[i, :] = np.nan
                 eigvecs[i, :, :] = np.nan
                 is_stable[i] = False
