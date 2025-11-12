@@ -1568,6 +1568,7 @@ def decode_circular_coordinates(
     real_ground: bool = True,
     real_of: bool = True,
     save_path: str | None = None,
+    cohomap: bool = False,
 ) -> dict[str, Any]:
     """
     Decode circular coordinates (bump positions) from cohomology.
@@ -1586,6 +1587,8 @@ def decode_circular_coordinates(
             Whether experiment was performed in open field
         save_path : str, optional
             Path to save decoding results. If None, saves to 'Results/spikes_decoding.npz'
+        cohomap : bool
+            Whether plot CohoMap or not
 
     Returns:
         dict : Dictionary containing decoding results with keys:
@@ -1716,6 +1719,47 @@ def decode_circular_coordinates(
 
     os.makedirs(os.path.dirname(save_path), exist_ok=True)
     np.savez_compressed(save_path, **results)
+    # --- CohoMap 1.0 Visualization ---
+    if cohomap and real_ground and "xx" in locals() and "yy" in locals():
+        try:
+            # Subsample time indices for plotting
+            plot_times = np.arange(0, len(times_box), 10)
+
+            # Create a two-panel figure (one per cohomology dimension)
+            plt.set_cmap("viridis")
+            fig, ax = plt.subplots(1, 2, figsize=(10, 4))
+
+            # Plot for the first circular coordinate
+            ax[0].axis("off")
+            ax[0].set_aspect("equal", "box")
+            ax[0].scatter(
+                xx[times_box][plot_times],
+                yy[times_box][plot_times],
+                c=np.cos(coordsbox[plot_times, 0]),
+                s=8
+            )
+            ax[0].set_title("CohoMap Dim 1", fontsize=10)
+
+            # Plot for the second circular coordinate
+            ax[1].axis("off")
+            ax[1].set_aspect("equal", "box")
+            ax[1].scatter(
+                xx[times_box][plot_times],
+                yy[times_box][plot_times],
+                c=np.cos(coordsbox[plot_times, 1]),
+                s=8
+            )
+            ax[1].set_title("CohoMap Dim 2", fontsize=10)
+
+            plt.tight_layout()
+
+            # Save the visualization next to decoding results
+            vis_path = save_path.replace(".npz", "_cohomap.png")
+            plt.savefig(vis_path, dpi=300)
+            plt.close()
+            print(f"CohoMap 1.0 visualization saved to {vis_path}")
+        except Exception as e:
+            print(f"CohoMap visualization failed: {e}")
 
     return results
 
@@ -2122,5 +2166,12 @@ if __name__ == "__main__":
     #
     # plot_projection(reduce_func=reduce_func, embed_data=spikes, show=True)
     results = tda_vis(embed_data=spikes, maxdim=1, do_shuffle=False, show=True)
+    decoding = decode_circular_coordinates(
+        persistence_result=results,
+        spike_data=data,
+        real_ground=True,
+        real_of=True,
+        cohomap=True,  # enable CohoMap visualization
+    )
 
     # results = tda_vis(embed_data=spikes, maxdim=1, do_shuffle=True, num_shuffles=10, show=True)
