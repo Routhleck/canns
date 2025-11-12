@@ -1758,9 +1758,11 @@ def decode_circular_coordinates(
             plt.savefig(vis_path, dpi=300)
             plt.close()
             print(f"CohoMap 1.0 visualization saved to {vis_path}")
-        except Exception as e:
+        except (ValueError, IndexError, KeyError, IOError) as e:
             print(f"CohoMap visualization failed: {e}")
-
+        except Exception as e:
+            print(f"Unexpected error in CohoMap visualization: {e}")
+            raise  # Re-raise unexpected exceptions
     return results
 
 
