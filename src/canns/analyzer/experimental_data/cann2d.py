@@ -1723,7 +1723,7 @@ def decode_circular_coordinates(
     if cohomap and ("xx" in locals() and "yy" in locals()):
         try:
             # Subsample time indices for plotting
-            plot_times = np.arange(0, len(times_box), 10)
+            plot_times = np.arange(0, len(coordsbox), 10)
 
             # Create a two-panel figure (one per cohomology dimension)
             plt.set_cmap("viridis")
