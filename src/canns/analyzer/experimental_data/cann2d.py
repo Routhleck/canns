@@ -1732,23 +1732,27 @@ def decode_circular_coordinates(
             # Plot for the first circular coordinate
             ax[0].axis("off")
             ax[0].set_aspect("equal", "box")
-            ax[0].scatter(
+            im0 = ax[0].scatter(
                 xx[times_box][plot_times],
                 yy[times_box][plot_times],
                 c=np.cos(coordsbox[plot_times, 0]),
-                s=8
+                s=8,
+                cmap="viridis"
             )
+            plt.colorbar(im0, ax=ax[0], label="cos(coord)")
             ax[0].set_title("CohoMap Dim 1", fontsize=10)
 
             # Plot for the second circular coordinate
             ax[1].axis("off")
             ax[1].set_aspect("equal", "box")
-            ax[1].scatter(
+            im1 = ax[1].scatter(
                 xx[times_box][plot_times],
                 yy[times_box][plot_times],
                 c=np.cos(coordsbox[plot_times, 1]),
-                s=8
+                s=8,
+                cmap="viridis"
             )
+            plt.colorbar(im1, ax=ax[1], label="cos(coord)")
             ax[1].set_title("CohoMap Dim 2", fontsize=10)
 
             plt.tight_layout()
