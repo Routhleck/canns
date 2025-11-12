@@ -1720,7 +1720,7 @@ def decode_circular_coordinates(
     os.makedirs(os.path.dirname(save_path), exist_ok=True)
     np.savez_compressed(save_path, **results)
     # --- CohoMap 1.0 Visualization ---
-    if cohomap and real_ground and "xx" in locals() and "yy" in locals():
+    if cohomap and ("xx" in locals() and "yy" in locals()):
         try:
             # Subsample time indices for plotting
             plot_times = np.arange(0, len(times_box), 10)
