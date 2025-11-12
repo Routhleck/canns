@@ -1587,9 +1587,9 @@ def decode_circular_coordinates(
             Whether experiment was performed in open field
         save_path : str, optional
             Path to save decoding results. If None, saves to 'Results/spikes_decoding.npz'
-        cohomap : bool
-            Whether plot CohoMap or not
-
+        cohomap : bool, default=False
+            Whether to generate and save CohoMap 1.0 visualization showing decoded circular 
+            coordinates mapped onto the animal's spatial trajectory.
     Returns:
         dict : Dictionary containing decoding results with keys:
             - 'coords': decoded coordinates for all timepoints
