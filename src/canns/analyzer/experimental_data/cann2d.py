@@ -1754,7 +1754,8 @@ def decode_circular_coordinates(
             plt.tight_layout()
 
             # Save the visualization next to decoding results
-            vis_path = save_path.replace(".npz", "_cohomap.png")
+            base_path, _ = os.path.splitext(save_path)
+            vis_path = f"{base_path}_cohomap.png"
             plt.savefig(vis_path, dpi=300)
             plt.close()
             print(f"CohoMap 1.0 visualization saved to {vis_path}")
