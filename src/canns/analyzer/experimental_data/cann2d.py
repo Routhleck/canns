@@ -1720,6 +1720,126 @@ def decode_circular_coordinates(
     return results
 
 
+def plot_cohomap(
+    decoding_result: dict[str, Any],
+    position_data: dict[str, Any],
+    save_path: str | None = None,
+    show: bool = False,
+    figsize: tuple[int, int] = (10, 4),
+    dpi: int = 300,
+    subsample: int = 10,
+) -> plt.Figure:
+    """
+    Visualize CohoMap 1.0: decoded circular coordinates mapped onto spatial trajectory.
+
+    Creates a two-panel visualization showing how the two decoded circular coordinates
+    vary across the animal's spatial trajectory. Each panel displays the spatial path
+    colored by the cosine of one circular coordinate dimension.
+
+    Parameters:
+        decoding_result : dict
+            Dictionary from decode_circular_coordinates() containing:
+            - 'coordsbox': decoded coordinates for box timepoints (n_times x n_dims)
+            - 'times_box': time indices for coordsbox
+        position_data : dict
+            Position data containing 'x' and 'y' arrays for spatial coordinates
+        save_path : str, optional
+            Path to save the visualization. If None, no save performed
+        show : bool, default=False
+            Whether to display the visualization
+        figsize : tuple[int, int], default=(10, 4)
+            Figure size (width, height) in inches
+        dpi : int, default=300
+            Resolution for saved figure
+        subsample : int, default=10
+            Subsampling interval for plotting (plot every Nth timepoint)
+
+    Returns:
+        plt.Figure : The matplotlib figure object
+
+    Raises:
+        KeyError : If required keys are missing from input dictionaries
+        ValueError : If data dimensions are inconsistent
+        IndexError : If time indices are out of bounds
+
+    Examples:
+        >>> # Decode coordinates
+        >>> decoding = decode_circular_coordinates(persistence_result, spike_data)
+        >>> # Visualize with trajectory data
+        >>> fig = plot_cohomap(
+        ...     decoding,
+        ...     position_data={'x': xx, 'y': yy},
+        ...     save_path='cohomap.png',
+        ...     show=True
+        ... )
+    """
+    try:
+        # Extract data
+        coordsbox = decoding_result["coordsbox"]
+        times_box = decoding_result["times_box"]
+        xx = position_data["x"]
+        yy = position_data["y"]
+
+        # Subsample time indices for plotting
+        plot_times = np.arange(0, len(coordsbox), subsample)
+
+        # Create a two-panel figure (one per cohomology dimension)
+        plt.set_cmap("viridis")
+        fig, ax = plt.subplots(1, 2, figsize=figsize)
+
+        # Plot for the first circular coordinate
+        ax[0].axis("off")
+        ax[0].set_aspect("equal", "box")
+        im0 = ax[0].scatter(
+            xx[times_box][plot_times],
+            yy[times_box][plot_times],
+            c=np.cos(coordsbox[plot_times, 0]),
+            s=8,
+            cmap="viridis",
+        )
+        plt.colorbar(im0, ax=ax[0], label="cos(coord)")
+        ax[0].set_title("CohoMap Dim 1", fontsize=10)
+
+        # Plot for the second circular coordinate
+        ax[1].axis("off")
+        ax[1].set_aspect("equal", "box")
+        im1 = ax[1].scatter(
+            xx[times_box][plot_times],
+            yy[times_box][plot_times],
+            c=np.cos(coordsbox[plot_times, 1]),
+            s=8,
+            cmap="viridis",
+        )
+        plt.colorbar(im1, ax=ax[1], label="cos(coord)")
+        ax[1].set_title("CohoMap Dim 2", fontsize=10)
+
+        plt.tight_layout()
+
+        # Save if path provided
+        if save_path:
+            try:
+                os.makedirs(os.path.dirname(save_path), exist_ok=True)
+                plt.savefig(save_path, dpi=dpi)
+                print(f"CohoMap visualization saved to {save_path}")
+            except Exception as e:
+                print(f"Error saving CohoMap visualization: {e}")
+
+        # Show if requested
+        if show:
+            plt.show()
+        else:
+            plt.close(fig)
+
+        return fig
+
+    except (KeyError, ValueError, IndexError) as e:
+        print(f"CohoMap visualization failed: {e}")
+        raise
+    except Exception as e:
+        print(f"Unexpected error in CohoMap visualization: {e}")
+        raise
+
+
 def plot_3d_bump_on_torus(
     decoding_result: dict[str, Any] | str,
     spike_data: dict[str, Any],
@@ -2106,7 +2226,7 @@ if __name__ == "__main__":
 
     data = load_grid_data()
 
-    spikes, *_ = embed_spike_trains(data)
+    spikes, xx, yy, tt = embed_spike_trains(data)
 
     # import umap
     #
@@ -2122,5 +2242,19 @@ if __name__ == "__main__":
     #
     # plot_projection(reduce_func=reduce_func, embed_data=spikes, show=True)
     results = tda_vis(embed_data=spikes, maxdim=1, do_shuffle=False, show=True)
+    decoding = decode_circular_coordinates(
+        persistence_result=results,
+        spike_data=data,
+        real_ground=True,
+        real_of=True,
+    )
+
+    # Visualize CohoMap
+    plot_cohomap(
+        decoding_result=decoding,
+        position_data={"x": xx, "y": yy},
+        save_path="Results/cohomap.png",
+        show=True,
+    )
 
     # results = tda_vis(embed_data=spikes, maxdim=1, do_shuffle=True, num_shuffles=10, show=True)
