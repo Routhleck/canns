@@ -53,23 +53,29 @@ def parse_markdown_to_cells(md_content: str) -> List[Dict[str, Any]]:
         # Add markdown cell for text before code block
         text_before = md_content[last_end:match.start()].strip()
         if text_before:
+            # Split lines and add newline to each line except the last
+            lines = text_before.split('\n')
+            source = [line + '\n' for line in lines[:-1]] + [lines[-1]] if lines else []
             cells.append({
                 "cell_type": "markdown",
                 "id": f"cell-{cell_id_counter}",
                 "metadata": {},
-                "source": text_before.split('\n')
+                "source": source
             })
             cell_id_counter += 1
 
         # Add code cell
         code = match.group(1)
+        # Split lines and add newline to each line except the last
+        code_lines = code.split('\n')
+        code_source = [line + '\n' for line in code_lines[:-1]] + [code_lines[-1]] if code_lines else []
         cells.append({
             "cell_type": "code",
             "id": f"cell-{cell_id_counter}",
             "execution_count": None,
             "metadata": {},
             "outputs": [],
-            "source": code.split('\n')
+            "source": code_source
         })
         cell_id_counter += 1
 
@@ -78,11 +84,14 @@ def parse_markdown_to_cells(md_content: str) -> List[Dict[str, Any]]:
     # Add remaining markdown
     text_after = md_content[last_end:].strip()
     if text_after:
+        # Split lines and add newline to each line except the last
+        lines = text_after.split('\n')
+        source = [line + '\n' for line in lines[:-1]] + [lines[-1]] if lines else []
         cells.append({
             "cell_type": "markdown",
             "id": f"cell-{cell_id_counter}",
             "metadata": {},
-            "source": text_after.split('\n')
+            "source": source
         })
 
     return cells

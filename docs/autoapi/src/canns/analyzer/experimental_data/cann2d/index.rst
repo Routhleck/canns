@@ -42,6 +42,7 @@ Functions
    src.canns.analyzer.experimental_data.cann2d.decode_circular_coordinates
    src.canns.analyzer.experimental_data.cann2d.embed_spike_trains
    src.canns.analyzer.experimental_data.cann2d.plot_3d_bump_on_torus
+   src.canns.analyzer.experimental_data.cann2d.plot_cohomap
    src.canns.analyzer.experimental_data.cann2d.plot_projection
    src.canns.analyzer.experimental_data.cann2d.tda_vis
 
@@ -398,6 +399,51 @@ Module Contents
 
    :returns: The animation object
    :rtype: matplotlib.animation.FuncAnimation
+
+
+.. py:function:: plot_cohomap(decoding_result, position_data, save_path = None, show = False, figsize = (10, 4), dpi = 300, subsample = 10)
+
+   Visualize CohoMap 1.0: decoded circular coordinates mapped onto spatial trajectory.
+
+   Creates a two-panel visualization showing how the two decoded circular coordinates
+   vary across the animal's spatial trajectory. Each panel displays the spatial path
+   colored by the cosine of one circular coordinate dimension.
+
+   :param decoding_result: dict
+                           Dictionary from decode_circular_coordinates() containing:
+                           - 'coordsbox': decoded coordinates for box timepoints (n_times x n_dims)
+                           - 'times_box': time indices for coordsbox
+   :param position_data: dict
+                         Position data containing 'x' and 'y' arrays for spatial coordinates
+   :param save_path: str, optional
+                     Path to save the visualization. If None, no save performed
+   :param show: bool, default=False
+                Whether to display the visualization
+   :param figsize: tuple[int, int], default=(10, 4)
+                   Figure size (width, height) in inches
+   :param dpi: int, default=300
+               Resolution for saved figure
+   :param subsample: int, default=10
+                     Subsampling interval for plotting (plot every Nth timepoint)
+
+   :returns: The matplotlib figure object
+   :rtype: plt.Figure
+
+   :raises KeyError: If required keys are missing from input dictionaries
+   :raises ValueError: If data dimensions are inconsistent
+   :raises IndexError: If time indices are out of bounds
+
+   .. rubric:: Examples
+
+   >>> # Decode coordinates
+   >>> decoding = decode_circular_coordinates(persistence_result, spike_data)
+   >>> # Visualize with trajectory data
+   >>> fig = plot_cohomap(
+   ...     decoding,
+   ...     position_data={'x': xx, 'y': yy},
+   ...     save_path='cohomap.png',
+   ...     show=True
+   ... )
 
 
 .. py:function:: plot_projection(reduce_func, embed_data, config = None, title='Projection (3D)', xlabel='Component 1', ylabel='Component 2', zlabel='Component 3', save_path=None, show=True, dpi=300, figsize=(10, 8), **kwargs)

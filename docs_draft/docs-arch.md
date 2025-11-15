@@ -53,3 +53,49 @@
     - Data Analyzer
       - Experimental Data Analysis
       - RNN Dynamics Analysis
+
+
+
+Dir Structure
+
+- 0_why_canns.ipynb
+
+- 1_quick_starts
+
+  - 1_00_installation.ipynb
+  - 1_01_models.ipynb
+  - 1_02_tasks.ipynb
+  - 1_03_analyze_model.ipynb
+  - 1_04_analyze_data.ipynb
+  - 1_05_train.ipynb
+
+- 2_core_concepts
+
+  - 2_00_design_philosophy.ipynb
+  - 2_01_model_collections
+    - 2_01_01_basic.ipynb
+    - 2_01_02_hybrid.ipynb
+    - 2_01_03_brain_inspired.ipynb
+  - 2_02_task_generators.ipynb
+  - 2_03_analysis_methods
+    - 2_03_01_model_analyzer.ipynb
+    - 2_03_02_experimental_data_analyzer.ipynb
+    - 2_03_03_rnn_dynamics_analyzer.ipynb
+  - 2_04_brain_inspired_training.ipynb
+
+- 3_full_detail_tutorials
+
+  - 3_01_model_collections
+    - 3_01_01_basic
+    - 3_01_02_hybrid
+    - 3_01_03_brain_inspired
+
+  - 3_02_task_generators
+    - 3_02_01_tracking
+    - 3_02_02_navigation
+  - 3_03_analysis_methods
+    - 3_03_01_model_analyzer
+    - 3_03_02_experimental_data_analyzer
+    - 3_03_03_rnn_dynamics_analyzer
+
+  - 3_04_brain_inspired_training

@@ -34,6 +34,7 @@ This page contains auto-generated API reference documentation [#f1]_.
    /autoapi/src/canns/pipeline/theta_sweep/index
    /autoapi/src/canns/task/navigation_base/index
    /autoapi/src/canns/analyzer/theta_sweep/index
+   /autoapi/src/canns/analyzer/slow_points/index
    /autoapi/src/canns/models/brain_inspired/index
    /autoapi/src/canns/analyzer/brain_inspired/index
    /autoapi/src/canns/analyzer/plotting/config/index
@@ -44,14 +45,18 @@ This page contains auto-generated API reference documentation [#f1]_.
    /autoapi/src/canns/analyzer/plotting/spatial/index
    /autoapi/src/canns/analyzer/experimental_data/index
    /autoapi/src/canns/task/closed_loop_navigation/index
+   /autoapi/src/canns/analyzer/slow_points/finder/index
    /autoapi/src/canns/models/brain_inspired/linear/index
    /autoapi/src/canns/models/brain_inspired/spiking/index
    /autoapi/src/canns/models/basic/theta_sweep_model/index
    /autoapi/src/canns/models/brain_inspired/hopfield/index
    /autoapi/src/canns/models/basic/hierarchical_model/index
+   /autoapi/src/canns/analyzer/slow_points/checkpoint/index
    /autoapi/src/canns/analyzer/brain_inspired/hopfield/index
    /autoapi/src/canns/analyzer/experimental_data/cann2d/index
    /autoapi/src/canns/analyzer/experimental_data/cann1d/index
+   /autoapi/src/canns/analyzer/slow_points/fixed_points/index
+   /autoapi/src/canns/analyzer/slow_points/visualization/index
 
 
 .. [#f1] Created with `sphinx-autoapi <https://github.com/readthedocs/sphinx-autoapi>`_
