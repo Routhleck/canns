@@ -40,42 +40,7 @@ CANNs 文档
 欢迎使用 CANNs！
 ----------------
 
-CANNs (连续吸引子神经网络) 是一个强大的神经动力学建模框架，专注于空间认知和神经计算。基于 JAX/BrainState 构建，提供高性能的 GPU/TPU 支持。
-
-你想做什么？
-------------
-
-**📊 分析 CANN 动力学**
-   理解不同输入如何影响 bump 响应和追踪行为
-   → :doc:`1_tutorials/cann_dynamics/index`
-
-**🧭 建模空间导航**
-   构建网格细胞、位置细胞和路径积分系统
-   → :doc:`1_tutorials/spatial_navigation/index`
-
-**🧠 训练记忆网络**
-   实现 Hopfield 联想记忆和模式存储
-   → :doc:`1_tutorials/memory_networks/index`
-
-**📈 无监督学习**
-   使用 Oja/Sanger 规则提取主成分
-   → :doc:`1_tutorials/unsupervised_learning/index`
-
-**👁️ 感受野发展**
-   用 BCM 规则训练方向选择性
-   → :doc:`1_tutorials/receptive_fields/index`
-
-**⏱️ 时序模式学习**
-   使用 STDP 训练脉冲神经网络
-   → :doc:`1_tutorials/temporal_learning/index`
-
-**🔬 实验数据分析**
-   拟合和分析真实神经记录数据
-   → :doc:`1_tutorials/experimental_analysis/index`
-
-**⚙️ 高级工作流**
-   构建自动化 Pipeline 和批量处理
-   → :doc:`1_tutorials/advanced_workflows/index`
+CANNs（连续吸引子神经网络工具包）是一个基于大脑仿真生态系统（brainstate、brainunit）构建的 Python 库，它简化了连续吸引子神经网络和相关类脑模型的实验。它提供了即用型模型、任务生成器、分析工具和管道，使神经科学和 AI 研究人员能够快速从想法转变为可重现的仿真。
 
 可视化展示
 ----------
@@ -125,7 +90,7 @@ CANNs (连续吸引子神经网络) 是一个强大的神经动力学建模框�
 
 .. code-block:: bash
 
-   # 使用 uv (推荐，更快)
+   # 使用 uv（推荐，更快）
    uv pip install canns
 
    # 或使用 pip
@@ -133,80 +98,45 @@ CANNs (连续吸引子神经网络) 是一个强大的神经动力学建模框�
 
    # GPU 支持
    pip install canns[cuda12]
-
-运行第一个示例：
-
-.. code-block:: python
-
-   import brainstate
-   from canns.models.basic import CANN1D
-   from canns.task.tracking import SmoothTracking1D
-
-   # 设置环境
-   brainstate.environ.set(dt=0.1)
-
-   # 创建模型
-   cann = CANN1D(num=512)
-   cann.init_state()
-
-   # 定义追踪任务
-   task = SmoothTracking1D(
-       cann_instance=cann,
-       Iext=(1., 0.75, 2., 1.75, 3.),
-       duration=(10., 10., 10., 10.),
-       time_step=0.1,
-   )
-   task.get_data()
-
-   # 运行仿真
-   def run_step(t, inputs):
-       cann(inputs)
-       return cann.u.value
-
-   us = brainstate.compile.for_loop(
-       run_step, task.run_steps, task.data
-   )
-
-详细教程请参见 :doc:`0_getting_started/quick_start`。
+   pip install canns[cuda13]
 
 
 文档导航
 --------
 
 .. toctree::
-   :maxdepth: 2
-   :caption: 快速开始
+   :maxdepth: 1
+   :caption: 介绍
 
-   0_getting_started/index
+   0_why_canns
 
 .. toctree::
    :maxdepth: 2
-   :caption: 场景驱动教程
+   :caption: 快速入门指南
 
-   1_tutorials/index
+   1_quick_starts/index
+
+.. toctree::
+   :maxdepth: 2
+   :caption: 核心概念
+
+   2_core_concepts/index
+
+.. toctree::
+   :maxdepth: 2
+   :caption: 完整详细教程
+
+   3_full_detail_tutorials/index
 
 .. toctree::
    :maxdepth: 1
    :caption: 资源
 
-   examples/README
    GitHub 仓库 <https://github.com/routhleck/canns>
    GitHub Issues <https://github.com/routhleck/canns/issues>
    讨论区 <https://github.com/routhleck/canns/discussions>
 
 **语言**: `English <../en/index.html>`_ | `中文 <../zh/index.html>`_
-
-关于 CANNs
-----------
-
-连续吸引子神经网络 (CANNs) 是一类特殊的神经网络模型，其特征是能够在连续状态空间中维持稳定的"bump"活动模式。这使得它们特别适合建模：
-
-- **空间认知**：位置编码、方向感知
-- **工作记忆**：维持短期信息
-- **运动控制**：方向和速度的神经表征
-- **感知决策**：刺激表征和注意力机制
-
-CANNs 库提供了完整的工具链，从模型构建到训练、分析和可视化。
 
 社区和支持
 ----------
@@ -224,7 +154,7 @@ CANNs 库提供了完整的工具链，从模型构建到训练、分析和可�
 引用
 ----
 
-如果你在研究中使用了 CANNs，请引用：
+如果您在研究中使用了 CANNs，请引用：
 
 .. code-block:: bibtex
 

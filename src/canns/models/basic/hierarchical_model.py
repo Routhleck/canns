@@ -1255,7 +1255,7 @@ class HierarchicalNetwork(BasicModelGroup):
 
         for i, model in enumerate(self.MEC_model_list):
             if pbar is None:
-                pbar = brainstate.compile.ProgressBar(
+                pbar = brainstate.transform.ProgressBar(
                     total=indices.shape[0], desc=f"Module {i + 1}/{self.num_module}"
                 )
 
@@ -1269,7 +1269,7 @@ class HierarchicalNetwork(BasicModelGroup):
                 )
 
             single_band_x_r, single_band_y_r, single_grid_r, single_grid_output = (
-                brainstate.compile.for_loop(
+                brainstate.transform.for_loop(
                     run_single_module,
                     velocities,
                     positions,
