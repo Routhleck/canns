@@ -23,6 +23,7 @@ from mpl_toolkits.axes_grid1 import make_axes_locatable
 from tqdm import tqdm
 
 from .plotting import PlotConfig
+from .plotting.jupyter_utils import display_animation_in_jupyter, is_jupyter_environment
 
 
 @dataclass(slots=True)
@@ -1008,7 +1009,11 @@ def create_theta_sweep_place_cell_animation(
         print(f"Animation saved to: {config.save_path}")
 
     if config.show:
-        plt.show()
+        # Automatically detect Jupyter and display as HTML/JS
+        if is_jupyter_environment():
+            display_animation_in_jupyter(ani)
+        else:
+            plt.show()
     else:
         plt.close(fig)
 
@@ -1493,7 +1498,11 @@ def create_theta_sweep_grid_cell_animation(
         print(f"Animation saved to: {config.save_path}")
 
     if config.show:
-        plt.show()
+        # Automatically detect Jupyter and display as HTML/JS
+        if is_jupyter_environment():
+            display_animation_in_jupyter(ani)
+        else:
+            plt.show()
     else:
         plt.close(fig)
 

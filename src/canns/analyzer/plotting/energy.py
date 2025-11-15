@@ -10,6 +10,7 @@ from matplotlib import pyplot as plt
 from tqdm import tqdm
 
 from .config import PlotConfig, PlotConfigs
+from .jupyter_utils import display_animation_in_jupyter, is_jupyter_environment
 
 __all__ = [
     "energy_landscape_1d_static",
@@ -296,9 +297,15 @@ def energy_landscape_1d_animation(
                 _save(lambda writer: ani.save(config.save_path, writer=writer))
 
         if config.show:
-            plt.show()
+            # Automatically detect Jupyter and display as HTML/JS
+            if is_jupyter_environment():
+                display_animation_in_jupyter(ani)
+            else:
+                plt.show()
     finally:
-        plt.close(fig)
+        if not (config.show and is_jupyter_environment()):
+            # Don't close figure in Jupyter when showing, as it's needed for HTML rendering
+            plt.close(fig)
 
     return ani
 
@@ -558,8 +565,14 @@ def energy_landscape_2d_animation(
                 _save(lambda writer: ani.save(config.save_path, writer=writer))
 
         if config.show:
-            plt.show()
+            # Automatically detect Jupyter and display as HTML/JS
+            if is_jupyter_environment():
+                display_animation_in_jupyter(ani)
+            else:
+                plt.show()
     finally:
-        plt.close(fig)
+        if not (config.show and is_jupyter_environment()):
+            # Don't close figure in Jupyter when showing, as it's needed for HTML rendering
+            plt.close(fig)
 
     return ani
