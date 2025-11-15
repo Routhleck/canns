@@ -109,14 +109,14 @@ def main() -> None:
             theta_modulation_gc,
         )
 
-    results = brainstate.compile.for_loop(
+    results = brainstate.transform.for_loop(
         run_step,
         u.math.arange(len(position)),
         position,
         direction,
         linear_speed_gains,
         ang_speed_gains,
-        pbar=brainstate.compile.ProgressBar(10),
+        pbar=brainstate.transform.ProgressBar(10),
     )
 
     (

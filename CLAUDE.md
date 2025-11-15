@@ -65,9 +65,9 @@ def run_step(t, inputs):
     return model.u.value, model.r.value
 
 # 3. Run compiled loop
-results = brainstate.compile.for_loop(
+results = brainstate.transform.for_loop(
     run_step, time_steps, data,
-    pbar=brainstate.compile.ProgressBar(10)
+    pbar=brainstate.transform.ProgressBar(10)
 )
 ```
 
