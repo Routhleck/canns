@@ -1012,11 +1012,15 @@ def create_theta_sweep_place_cell_animation(
         # Automatically detect Jupyter and display as HTML/JS
         if is_jupyter_environment():
             display_animation_in_jupyter(ani)
+            plt.close(fig)  # Close after HTML conversion to prevent auto-display
         else:
             plt.show()
     else:
         plt.close(fig)
 
+    # Return None in Jupyter when showing to avoid double display
+    if config.show and is_jupyter_environment():
+        return None
     return ani
 
 
@@ -1501,9 +1505,13 @@ def create_theta_sweep_grid_cell_animation(
         # Automatically detect Jupyter and display as HTML/JS
         if is_jupyter_environment():
             display_animation_in_jupyter(ani)
+            plt.close(fig)  # Close after HTML conversion to prevent auto-display
         else:
             plt.show()
     else:
         plt.close(fig)
 
+    # Return None in Jupyter when showing to avoid double display
+    if config.show and is_jupyter_environment():
+        return None
     return ani

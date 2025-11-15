@@ -52,6 +52,7 @@ This page contains auto-generated API reference documentation [#f1]_.
    /autoapi/src/canns/models/brain_inspired/hopfield/index
    /autoapi/src/canns/models/basic/hierarchical_model/index
    /autoapi/src/canns/analyzer/slow_points/checkpoint/index
+   /autoapi/src/canns/analyzer/plotting/jupyter_utils/index
    /autoapi/src/canns/analyzer/brain_inspired/hopfield/index
    /autoapi/src/canns/analyzer/experimental_data/cann2d/index
    /autoapi/src/canns/analyzer/experimental_data/cann1d/index
