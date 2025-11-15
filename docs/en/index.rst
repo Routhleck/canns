@@ -40,42 +40,7 @@ CANNs Documentation
 Welcome to CANNs!
 -----------------
 
-CANNs (Continuous Attractor Neural Networks) is a powerful neural dynamics modeling framework focused on spatial cognition and neural computation. Built on JAX/BrainState, it provides high-performance GPU/TPU support.
-
-What would you like to do?
---------------------------
-
-**📊 Analyze CANN Dynamics**
-   Understand how different inputs affect bump responses and tracking behavior
-   → :doc:`1_tutorials/cann_dynamics/index`
-
-**🧭 Model Spatial Navigation**
-   Build grid cells, place cells, and path integration systems
-   → :doc:`1_tutorials/spatial_navigation/index`
-
-**🧠 Train Memory Networks**
-   Implement Hopfield associative memory and pattern storage
-   → :doc:`1_tutorials/memory_networks/index`
-
-**📈 Unsupervised Learning**
-   Extract principal components using Oja/Sanger rules
-   → :doc:`1_tutorials/unsupervised_learning/index`
-
-**👁️ Develop Receptive Fields**
-   Train orientation-selective neurons with BCM rule
-   → :doc:`1_tutorials/receptive_fields/index`
-
-**⏱️ Learn Temporal Patterns**
-   Train spiking neural networks using STDP
-   → :doc:`1_tutorials/temporal_learning/index`
-
-**🔬 Analyze Experimental Data**
-   Fit and analyze real neural recording data
-   → :doc:`1_tutorials/experimental_analysis/index`
-
-**⚙️ Advanced Workflows**
-   Build automated pipelines and batch processing
-   → :doc:`1_tutorials/advanced_workflows/index`
+CANNs (Continuous Attractor Neural Networks toolkit) is a Python library built on top of the Brain Simulation Ecosystem (brainstate, brainunit) that streamlines experimentation with continuous attractor neural networks and related brain-inspired models. It delivers ready-to-use models, task generators, analysis tools, and pipelines so neuroscience and AI researchers can move from ideas to reproducible simulations quickly.
 
 Visualizations
 --------------
@@ -133,80 +98,45 @@ Install CANNs:
 
    # GPU support
    pip install canns[cuda12]
-
-Run your first example:
-
-.. code-block:: python
-
-   import brainstate
-   from canns.models.basic import CANN1D
-   from canns.task.tracking import SmoothTracking1D
-
-   # Set environment
-   brainstate.environ.set(dt=0.1)
-
-   # Create model
-   cann = CANN1D(num=512)
-   cann.init_state()
-
-   # Define tracking task
-   task = SmoothTracking1D(
-       cann_instance=cann,
-       Iext=(1., 0.75, 2., 1.75, 3.),
-       duration=(10., 10., 10., 10.),
-       time_step=0.1,
-   )
-   task.get_data()
-
-   # Run simulation
-   def run_step(t, inputs):
-       cann(inputs)
-       return cann.u.value
-
-   us = brainstate.compile.for_loop(
-       run_step, task.run_steps, task.data
-   )
-
-See :doc:`0_getting_started/01_quick_start` for detailed tutorials.
+   pip install canns[cuda13]
 
 
 Documentation Navigation
 ------------------------
 
 .. toctree::
-   :maxdepth: 2
-   :caption: Getting Started
+   :maxdepth: 1
+   :caption: Introduction
 
-   0_getting_started/index
+   0_why_canns
 
 .. toctree::
    :maxdepth: 2
-   :caption: Scenario-Driven Tutorials
+   :caption: Quick Start Guides
 
-   1_tutorials/index
+   1_quick_starts/index
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Core Concepts
+
+   2_core_concepts/index
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Full Detail Tutorials
+
+   3_full_detail_tutorials/index
 
 .. toctree::
    :maxdepth: 1
    :caption: Resources
 
-   examples/README
    GitHub Repository <https://github.com/routhleck/canns>
    GitHub Issues <https://github.com/routhleck/canns/issues>
    Discussions <https://github.com/routhleck/canns/discussions>
 
 **Language**: `English <../en/index.html>`_ | `中文 <../zh/index.html>`_
-
-About CANNs
------------
-
-Continuous Attractor Neural Networks (CANNs) are a special class of neural network models characterized by their ability to maintain stable "bump" activity patterns in continuous state spaces. This makes them particularly suitable for modeling:
-
-- **Spatial Cognition**: Location encoding, direction sensing
-- **Working Memory**: Maintaining short-term information
-- **Motor Control**: Neural representations of direction and velocity
-- **Perceptual Decision Making**: Stimulus representation and attention mechanisms
-
-The CANNs library provides a complete toolchain, from model construction to training, analysis, and visualization.
 
 Community and Support
 ---------------------

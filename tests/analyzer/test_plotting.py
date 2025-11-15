@@ -38,7 +38,7 @@ def test_energy_landscape_1d():
         cann(inputs)
         return cann.u.value, cann.inp.value
 
-    us, inps = brainstate.compile.for_loop(run_step, task_pc.run_steps, task_pc.data, pbar=brainstate.compile.ProgressBar(10))
+    us, inps = brainstate.transform.for_loop(run_step, task_pc.run_steps, task_pc.data, pbar=brainstate.transform.ProgressBar(10))
 
     # Test with new config-based approach
     output_path_static = 'test_energy_landscape_1d_static.png'
@@ -104,7 +104,7 @@ def test_energy_landscape_2d():
         cann(inputs)
         return cann.u.value, cann.r.value, cann.inp.value
 
-    us, rs, inps = brainstate.compile.for_loop(run_step, task_pc.run_steps, task_pc.data, pbar=brainstate.compile.ProgressBar(10))
+    us, rs, inps = brainstate.transform.for_loop(run_step, task_pc.run_steps, task_pc.data, pbar=brainstate.transform.ProgressBar(10))
 
     # Test with new config-based approach
     output_path_static = 'test_energy_landscape_2d_static.png'
@@ -158,8 +158,8 @@ def test_raster_plot():
         cann(inputs)
         return cann.u.value, cann.r.value
 
-    us, rs = brainstate.compile.for_loop(run_step, task_st.run_steps, task_st.data,
-                                           pbar=brainstate.compile.ProgressBar(10))
+    us, rs = brainstate.transform.for_loop(run_step, task_st.run_steps, task_st.data,
+                                           pbar=brainstate.transform.ProgressBar(10))
     spike_trains = firing_rate_to_spike_train(normalize_firing_rates(rs), dt_rate=0.1, dt_spike=0.1)
 
     # Test with new config-based approach
@@ -196,8 +196,8 @@ def test_average_firing_rate():
         cann(inputs)
         return cann.u.value, cann.r.value
 
-    us, rs = brainstate.compile.for_loop(run_step, task_pc.run_steps, task_pc.data,
-                                           pbar=brainstate.compile.ProgressBar(10))
+    us, rs = brainstate.transform.for_loop(run_step, task_pc.run_steps, task_pc.data,
+                                           pbar=brainstate.transform.ProgressBar(10))
 
     # Test with new config-based approach
     output_path_population = 'test_average_firing_rate_population.png'
@@ -245,8 +245,8 @@ def test_tuning_curve():
         cann(inputs)
         return cann.r.value, cann.inp.value
 
-    rs, inps = brainstate.compile.for_loop(run_step, task_st.run_steps, task_st.data,
-                                           pbar=brainstate.compile.ProgressBar(10))
+    rs, inps = brainstate.transform.for_loop(run_step, task_st.run_steps, task_st.data,
+                                           pbar=brainstate.transform.ProgressBar(10))
 
     # Test with new config-based approach
     neuron_indices_to_plot = [0, 8, 16]

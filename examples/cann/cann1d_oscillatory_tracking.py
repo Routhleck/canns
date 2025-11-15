@@ -20,11 +20,11 @@ def run_step(t, inputs):
     cann(inputs)
     return cann.u.value, cann.inp.value
 
-us, inps = brainstate.compile.for_loop(
+us, inps = brainstate.transform.for_loop(
     run_step,
     task_st.run_steps,
     task_st.data,
-    pbar=brainstate.compile.ProgressBar(10)
+    pbar=brainstate.transform.ProgressBar(10)
 )
 
 # Using new config-based approach

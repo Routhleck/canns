@@ -434,7 +434,7 @@ class HebbianTrainer(Trainer):
             return new_s, new_energy, iteration + 1
 
         initial_carry = (self._get_state_vector(state_param), initial_energy, 0)
-        final_s, _, _ = brainstate.compile.while_loop(
+        final_s, _, _ = brainstate.transform.while_loop(
             cond_fn,
             body_fn,
             initial_carry,

@@ -34,10 +34,10 @@ def test_path_integration():
     indices = np.arange(init_time)
     input_stre = np.zeros(init_time)
     input_stre[:5] = 100.
-    brainstate.compile.for_loop(
+    brainstate.transform.for_loop(
         initialize,
         u.math.asarray(indices),
         u.math.asarray(input_stre),
-        pbar=brainstate.compile.ProgressBar(10),
+        pbar=brainstate.transform.ProgressBar(10),
     )
 

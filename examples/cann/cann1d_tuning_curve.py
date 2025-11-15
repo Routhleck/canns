@@ -21,11 +21,11 @@ def run_step(t, inputs):
     cann(inputs)
     return cann.r.value, cann.inp.value
 
-rs, inps = brainstate.compile.for_loop(
+rs, inps = brainstate.transform.for_loop(
     run_step,
     task_st.run_steps,
     task_st.data,
-    pbar=brainstate.compile.ProgressBar(10)
+    pbar=brainstate.transform.ProgressBar(10)
 )
 
 # Example of using config-based approach for energy landscape animation

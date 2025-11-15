@@ -45,10 +45,17 @@ extensions = [
     'autoapi.extension',
     'myst_parser',
     'sphinx_design',
+    'nbsphinx',  # Jupyter notebook support
 ]
 
 templates_path = ['_templates']
 exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
+
+# -- Jupyter Notebook configuration (nbsphinx) --------------------------------
+nbsphinx_execute = 'never'  # Don't execute notebooks during build (display code only)
+nbsphinx_allow_errors = False  # Fail build if notebooks have errors
+nbsphinx_timeout = 300  # 5 minutes timeout per notebook
+nbsphinx_kernel_name = 'python3'
 
 # -- AutoAPI configuration ---------------------------------------------------
 autoapi_dirs = ['../src/']
