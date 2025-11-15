@@ -85,10 +85,10 @@ def main() -> None:
         pc_net(position[0], 1.0)  # Run at start position with no theta modulation
         return None
 
-    brainstate.compile.for_loop(
+    brainstate.transform.for_loop(
         warmup_step,
         u.math.arange(warmup_steps),
-        pbar=brainstate.compile.ProgressBar(10),
+        pbar=brainstate.transform.ProgressBar(10),
     )
     print("Warmup completed.")
 
@@ -108,12 +108,12 @@ def main() -> None:
             theta_modulation,
         )
 
-    results = brainstate.compile.for_loop(
+    results = brainstate.transform.for_loop(
         run_step,
         u.math.arange(len(position)),
         position,
         linear_speed_gains,
-        pbar=brainstate.compile.ProgressBar(10),
+        pbar=brainstate.transform.ProgressBar(10),
     )
 
     (

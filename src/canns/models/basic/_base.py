@@ -17,7 +17,7 @@ class BasicModel(brainstate.nn.Dynamics):
     Key Features:
         - Automatic state management through BrainState
         - JAX-compatible for GPU/TPU acceleration
-        - Support for compiled execution via brainstate.compile
+        - Support for compiled execution via brainstate.transform
         - Compatible with visualization and analysis tools
 
     Expected Subclass Implementation:

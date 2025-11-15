@@ -1,5 +1,5 @@
 import brainstate as bst
-import brainstate.compile
+import brainstate.transform
 import brainunit as u
 import jax
 
@@ -29,7 +29,7 @@ cann_us, cann_rs, inps = bst.compile.for_loop(
     run_step,
     task_st.run_steps,
     task_st.data,
-    pbar=brainstate.compile.ProgressBar(10)
+    pbar=brainstate.transform.ProgressBar(10)
 )
 
 # Using new config-based approach

@@ -103,11 +103,11 @@ def step(t, stimulus):
     cann(stimulus)
     return cann.u.value, cann.inp.value
 
-us, inputs = brainstate.compile.for_loop(
+us, inputs = brainstate.transform.for_loop(
     step,
     task.run_steps,
     task.data,
-    pbar=brainstate.compile.ProgressBar(10),
+    pbar=brainstate.transform.ProgressBar(10),
 )
 ```
 
