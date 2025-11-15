@@ -51,11 +51,11 @@ init_time = 500
 indices = np.arange(init_time)
 input_stre = np.zeros(init_time)
 input_stre[:400]=100.
-brainstate.compile.for_loop(
+brainstate.transform.for_loop(
     initialize,
     u.math.asarray(indices),
     u.math.asarray(input_stre),
-    pbar=brainstate.compile.ProgressBar(10),
+    pbar=brainstate.transform.ProgressBar(10),
 )
 
 def run_step(t, vel, loc):
@@ -70,12 +70,12 @@ total_time = task_sn.data.velocity.shape[0]
 indices = np.arange(total_time)
 
 
-band_x_r, band_y_r, grid_r, place_r = brainstate.compile.for_loop(
+band_x_r, band_y_r, grid_r, place_r = brainstate.transform.for_loop(
     run_step,
     u.math.asarray(indices),
     u.math.asarray(task_sn.data.velocity),
     u.math.asarray(task_sn.data.position),
-    pbar=brainstate.compile.ProgressBar(10),
+    pbar=brainstate.transform.ProgressBar(10),
 )
 
 
