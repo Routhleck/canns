@@ -11,6 +11,11 @@ from canns_lib.ripser import ripser
 from matplotlib import animation, cm, gridspec
 from numpy.exceptions import AxisError
 
+from canns.analyzer.plotting.jupyter_utils import (
+    display_animation_in_jupyter,
+    is_jupyter_environment,
+)
+
 # from ripser import ripser
 from scipy import signal
 from scipy.ndimage import (
@@ -2072,8 +2077,18 @@ def plot_3d_bump_on_torus(
                     print(f"Error saving animation: {e}")
 
         if show:
-            plt.show()
+            # Automatically detect Jupyter and display as HTML/JS
+            if is_jupyter_environment():
+                display_animation_in_jupyter(ani)
+                plt.close(fig)  # Close after HTML conversion to prevent auto-display
+            else:
+                plt.show()
+        else:
+            plt.close(fig)  # Close if not showing
 
+        # Return None in Jupyter when showing to avoid double display
+        if show and is_jupyter_environment():
+            return None
         return ani
 
     except Exception as e:
