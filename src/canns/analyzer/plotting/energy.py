@@ -300,13 +300,17 @@ def energy_landscape_1d_animation(
             # Automatically detect Jupyter and display as HTML/JS
             if is_jupyter_environment():
                 display_animation_in_jupyter(ani)
+                plt.close(fig)  # Close after HTML conversion to prevent auto-display
             else:
                 plt.show()
     finally:
-        if not (config.show and is_jupyter_environment()):
-            # Don't close figure in Jupyter when showing, as it's needed for HTML rendering
+        if not config.show:
+            # Close figure if not showing
             plt.close(fig)
 
+    # Return None in Jupyter when showing to avoid double display
+    if config.show and is_jupyter_environment():
+        return None
     return ani
 
 
@@ -568,11 +572,15 @@ def energy_landscape_2d_animation(
             # Automatically detect Jupyter and display as HTML/JS
             if is_jupyter_environment():
                 display_animation_in_jupyter(ani)
+                plt.close(fig)  # Close after HTML conversion to prevent auto-display
             else:
                 plt.show()
     finally:
-        if not (config.show and is_jupyter_environment()):
-            # Don't close figure in Jupyter when showing, as it's needed for HTML rendering
+        if not config.show:
+            # Close figure if not showing
             plt.close(fig)
 
+    # Return None in Jupyter when showing to avoid double display
+    if config.show and is_jupyter_environment():
+        return None
     return ani

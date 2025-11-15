@@ -17,6 +17,7 @@ Submodules
 
    /autoapi/src/canns/analyzer/plotting/config/index
    /autoapi/src/canns/analyzer/plotting/energy/index
+   /autoapi/src/canns/analyzer/plotting/jupyter_utils/index
    /autoapi/src/canns/analyzer/plotting/spatial/index
    /autoapi/src/canns/analyzer/plotting/spikes/index
    /autoapi/src/canns/analyzer/plotting/tuning/index
