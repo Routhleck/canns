@@ -9,6 +9,11 @@ from scipy.optimize import linear_sum_assignment
 from scipy.special import i0
 from tqdm import tqdm
 
+from canns.analyzer.plotting.jupyter_utils import (
+    display_animation_in_jupyter,
+    is_jupyter_environment,
+)
+
 try:
     from numba import jit, njit, prange
 
@@ -528,15 +533,24 @@ def create_1d_bump_animation(
                     raise
 
         if config.show:
-            plt.show()
+            # Automatically detect Jupyter and display as HTML/JS
+            if is_jupyter_environment():
+                display_animation_in_jupyter(ani)
+                plt.close(fig)  # Close after HTML conversion to prevent auto-display
+            else:
+                plt.show()
 
+        # Return None in Jupyter when showing to avoid double display
+        if config.show and is_jupyter_environment():
+            return None
         return ani
 
     except Exception as e:
         raise AnimationError(f"Failed to create animation: {e}") from e
     finally:
-        # Ensure we clean up the figure to avoid memory leaks
-        plt.close(fig)
+        if not config.show:
+            # Ensure we clean up the figure to avoid memory leaks
+            plt.close(fig)
 
 
 class SiteBump:
