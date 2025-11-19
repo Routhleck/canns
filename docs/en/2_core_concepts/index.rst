@@ -1,33 +1,35 @@
+==============
 Core Concepts
-=============
-
-.. note::
-   This section is under development. Core concept documentation will be added based on Tier 3 planning.
+==============
 
 Deep dive into library design, architecture, and theoretical foundations.
+
+This section provides in-depth explanations of the CANNs library's design principles, module organization, and conceptual foundations. These documents focus on the "why" and "when" rather than the "how", helping you understand the library's architecture and make informed decisions about using its components.
 
 .. toctree::
    :maxdepth: 2
    :caption: Topics:
 
-   00_design_philosophy
+   01_design_philosophy
+   02_model_collections
+   03_task_generators
+   04_analysis_methods
+   05_brain_inspired_training
 
-Planned Topics
---------------
+Overview
+--------
 
-**Overview & Design Philosophy**
-   Understanding the library's architecture and design principles
+:doc:`01_design_philosophy`
+   Understanding the library's architecture, core design principles, and the four core application scenarios. Learn about separation of concerns, extensibility, BrainState integration, and performance strategies.
 
-**Model Collections**
-   Basic CANN models, hybrid approaches, and brain-inspired architectures
+:doc:`02_model_collections`
+   Explore the three model categories: Basic CANN models, Brain-Inspired models with learning mechanisms, and Hybrid models combining CANN with ANNs. Understand the BrainState foundation and how to implement custom models.
 
-**Task Generators**
-   Experimental paradigms and task design patterns
+:doc:`03_task_generators`
+   Task generation philosophy and available paradigms. Learn about tracking tasks (population coding, template matching, smooth tracking) and navigation tasks (closed-loop, open-loop). Understand model-task coupling and design considerations.
 
-**Analysis Methods**
-   Model analysis, experimental data analysis, and RNN dynamics
+:doc:`04_analysis_methods`
+   Comprehensive analysis tools including Model Analyzer for simulations, Data Analyzer for experimental recordings, RNN Dynamics Analysis for fixed points, and Topological Data Analysis for geometric structures.
 
-**Brain-Inspired Training**
-   Hebbian learning, STDP, BCM rules, and the trainer framework
-
-For now, please refer to :doc:`00_design_philosophy` for architectural overview.
+:doc:`05_brain_inspired_training`
+   Brain-inspired learning mechanisms and the Trainer framework. Understand activity-dependent plasticity, learning rules (Hebbian, STDP, BCM), and how to implement custom trainers for biologically plausible learning.

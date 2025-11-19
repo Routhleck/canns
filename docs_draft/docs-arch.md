@@ -87,9 +87,18 @@ Dir Structure
 
   - 3_01_model_collections
     - 3_01_01_basic
+      - CANN1D
+      - CANN2D
+      - Hierarchical Path Integration Network
+      - Theta Sweep Head Direction Cell Network
+      - Theta Sweep Grid Cell Network
+      - Theta Sweep Place Cell Network
     - 3_01_02_hybrid
+      - TODO
     - 3_01_03_brain_inspired
-
+      - AmariHopfield Network
+      - LIF
+    
   - 3_02_task_generators
     - 3_02_01_tracking
     - 3_02_02_navigation
@@ -97,5 +106,5 @@ Dir Structure
     - 3_03_01_model_analyzer
     - 3_03_02_experimental_data_analyzer
     - 3_03_03_rnn_dynamics_analyzer
-
+  
   - 3_04_brain_inspired_training

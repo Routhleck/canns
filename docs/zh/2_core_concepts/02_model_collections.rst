@@ -1,0 +1,298 @@
+==================
+模型集合
+==================
+
+本文档解释了CANNs库中不同类别的模型以及如何扩展它们。
+
+概览
+========
+
+模型模块（ ``canns.models`` ）实现了各种CANN架构及其变体。模型分为三类：
+
+**基础模型** ( ``canns.models.basic`` )
+   标准CANN实现及其变体
+
+**脑启发模型** ( ``canns.models.brain_inspired`` )
+   具有生物学习机制的模型
+
+**混合模型** ( ``canns.models.hybrid`` )
+   CANN与人工神经网络的组合
+
+所有模型都基于BrainState的动力学框架构建，该框架提供状态管理、时间步进和JIT编译功能。
+
+基础模型
+============
+
+基础模型实现了理论神经科学文献中描述的核心CANN动力学。它们使用预定义的连接模式（通常是高斯核）和固定参数。
+
+可用的基础模型
+----------------------
+
+模型按 ``canns.models.basic`` 中的模块文件组织：
+
+原始CANN (cann.py)
+~~~~~~~~~~~~~~~~~~~~~
+
+核心连续吸引子神经网络实现。
+
+``CANN1D``
+   一维连续吸引子网络。默认512个神经元排列在环上。高斯递归连接。适用于头部方向编码、角度变量。
+
+``CANN1D_SFA``
+   带有尖峰频率适应的CANN1D。添加活动依赖的负反馈，实现自持续波传播。用于建模内在动力学。
+
+``CANN2D``
+   二维连续吸引子网络。神经元排列在环面上。适用于位置场编码、空间变量。
+
+``CANN2D_SFA``
+   带有尖峰频率适应的CANN2D。支持2D行波。
+
+层次化路径积分模型 (hierarchical_model.py)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+结合多种细胞类型的层次化模型，用于空间认知。
+
+``GaussRecUnits``
+   具有高斯连接的递归单元。
+
+``NonRecUnits``
+   用于对比的非递归单元。
+
+``BandCell``
+   用于1D路径积分的带细胞。
+
+``GridCell``
+   具有多个尺度的单个网格细胞模块。
+
+``HierarchicalPathIntegrationModel``
+   包含网格细胞和位置细胞的完整路径积分系统。
+
+``HierarchicalNetwork``
+   结合多种细胞类型进行空间认知。
+
+Theta扫描模型 (theta_sweep_model.py)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+专为theta节律分析和空间导航研究设计的模型。
+
+``DirectionCellNetwork``
+   头部方向细胞网络。
+
+``GridCellNetwork``
+   网格细胞模块网络。
+
+``PlaceCellNetwork``
+   基于网格细胞输入的位置细胞网络。
+
+实现基础模型
+--------------------------
+
+每个基础模型都继承自 ``canns.models.basic.BasicModel`` 或 ``canns.models.basic.BasicModelGroup`` 。
+
+构造函数设置
+~~~~~~~~~~~~~~~~~
+
+使用总神经元数调用父构造函数::
+
+   super().__init__(math.prod(shape), **kwargs)
+
+在 ``self.shape`` 和 ``self.varshape`` 中存储形状信息以进行适当的维度处理。
+
+必需方法
+~~~~~~~~~~~~~~~~
+
+**连接矩阵** ( ``make_conn()`` )
+   生成递归连接矩阵。典型实现使用高斯核：
+
+   - 计算神经元之间的成对距离
+   - 应用指定宽度的高斯函数
+   - 将结果存储在 ``self.conn_mat`` 中
+
+   参见 ``src/canns/models/basic/cann.py`` 中的参考实现。
+
+**刺激生成** ( ``get_stimulus_by_pos(pos)`` )
+   将特征空间位置转换为外部输入模式。由任务模块调用以生成神经输入：
+
+   - 接受位置坐标作为输入
+   - 返回与网络大小匹配的刺激向量
+   - 使用高斯凸起或类似的局部化模式
+
+**状态初始化** ( ``init_state()`` )
+   使用BrainState容器注册状态变量：
+
+   - ``self.u`` ：膜电位（ ``brainstate.HiddenState`` ）
+   - ``self.r`` ：放电率（ ``brainstate.HiddenState`` ）
+   - ``self.inp`` ：外部输入（ ``brainstate.State`` ）
+
+   变体的额外状态（例如SFA的 ``self.v`` ）。
+
+**更新动力学** ( ``update(inputs)`` )
+   定义单步状态演化：
+
+   - 读取当前状态
+   - 基于CANN方程计算导数
+   - 应用时间步长： ``new_state = old_state + derivative * brainstate.environ.get_dt()``
+   - 写入更新的状态
+
+**诊断属性**
+   暴露用于分析的有用信息：
+
+   - ``self.x`` ：特征空间坐标
+   - ``self.rho`` ：神经元密度
+   - 用于凸起跟踪的峰值检测方法
+
+脑启发模型
+=====================
+
+脑启发模型具有生物学合理的学习机制。与具有固定权重的基础模型不同，这些网络通过局部、活动依赖的可塑性修改其连接。
+
+关键特征
+-------------------
+
+**局部学习规则**
+   权重更新仅依赖于突触前和突触后的活动
+
+**无误差反向传播**
+   学习在没有显式误差信号的情况下发生
+
+**基于能量的动力学**
+   网络状态演化以最小化能量函数
+
+**吸引子形成**
+   存储的模式成为动力学的不动点
+
+可用的脑启发模型
+--------------------------------
+
+``AmariHopfieldNetwork``
+   具有二进制模式存储的经典联想记忆模型。Hebbian学习用于权重形成。内容可寻址记忆。
+
+``LinearLayer``
+   用于对比和测试的可学习权重线性层。
+
+``SpikingLayer``
+   具有生物学真实尖峰动力学的尖峰神经网络层。
+
+实现脑启发模型
+-----------------------------------
+
+继承自 ``canns.models.brain_inspired.BrainInspiredModel`` 或 ``canns.models.brain_inspired.BrainInspiredModelGroup`` 。
+
+状态和权重初始化
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+在 ``init_state()`` 中注册状态变量和可训练权重：
+
+- ``self.s`` ：状态向量（通常为 ``brainstate.HiddenState`` ）
+- ``self.W`` ：连接权重（通常为 ``brainstate.ParamState`` ）
+
+对权重使用 ``ParamState`` 允许训练器在学习期间修改它们。
+
+权重属性
+~~~~~~~~~~~~~~~~
+
+如果权重存储在不同的名称下，覆盖 ``weight_attr`` 属性::
+
+   @property
+   def weight_attr(self):
+       return 'W'  # 或自定义属性名称
+
+更新动力学
+~~~~~~~~~~~~~~~
+
+在 ``update(...)`` 中定义当前权重下的状态演化。通常涉及矩阵-向量乘法和激活函数。
+
+能量函数
+~~~~~~~~~~~~~~~
+
+返回当前状态的标量能量值。训练器使用它来监控收敛::
+
+   @property
+   def energy(self):
+       return -0.5 * state @ weights @ state
+
+Hebbian学习
+~~~~~~~~~~~~~~~~
+
+在 ``apply_hebbian_learning(patterns)`` 中可选的权重更新自定义实现。如果未提供，训练器使用默认的外积规则::
+
+   W += learning_rate * patterns.T @ patterns
+
+动态调整大小
+~~~~~~~~~~~~~~~~
+
+可选支持在保留学习结构的同时更改网络大小： ``resize(num_neurons, preserve_submatrix)``
+
+参见 ``src/canns/models/brain_inspired/hopfield.py`` 中的参考实现。
+
+混合模型
+=============
+
+.. note::
+
+   混合模型将CANN动力学与其他神经网络架构结合（正在开发中）。愿景包括：
+
+   - 嵌入在更大人工神经网络中的CANN模块
+   - 用于端到端训练的可微CANN层
+   - 吸引子动力学与前馈处理的集成
+   - 在生物学合理性与深度学习能力之间架起桥梁
+
+   当前状态： ``canns.models.hybrid`` 中存在占位符模块结构以供未来实现。
+
+BrainState基础
+=====================
+
+所有模型都利用BrainState的基础设施：
+
+动力学抽象
+--------------------
+
+``brainstate.nn.Dynamics`` 提供：
+
+- 自动状态跟踪
+- JIT编译支持
+- 可组合的子模块
+
+状态容器
+----------------
+
+``brainstate.State``
+   仿真期间可变
+
+``brainstate.HiddenState``
+   内部网络状态
+
+``brainstate.ParamState``
+   可学习参数
+
+这些容器在保持直观的面向对象语法的同时实现透明的JAX转换。
+
+时间管理
+---------------
+
+``brainstate.environ`` 提供全局配置：
+
+- ``brainstate.environ.set(dt=0.1)`` ：设置仿真时间步长
+- ``brainstate.environ.get_dt()`` ：检索当前时间步长
+
+这确保了模型、任务和训练器之间的一致性。
+
+编译仿真
+-------------------
+
+``brainstate.compile.for_loop`` 实现高效仿真：
+
+- GPU/TPU加速的JIT编译
+- 自动微分支持
+- 进度跟踪集成
+
+总结
+=======
+
+CANNs模型集合提供：
+
+1. **基础模型** - 可立即使用的标准CANN实现
+2. **脑启发模型** - 具有局部学习能力的网络
+3. **混合模型** - 与深度学习的未来集成（开发中）
+
+每个类别都通过基类继承遵循一致的模式，使库既强大又可扩展。BrainState基础处理复杂性，使用户可以专注于定义神经动力学而不是实现细节。
