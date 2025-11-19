@@ -4,6 +4,12 @@ Convert CANNs markdown documentation to Jupyter notebooks.
 
 This script parses markdown files and creates properly formatted Jupyter notebooks
 with alternating markdown and code cells.
+
+Supports tier-based folder structure:
+- tier1_why_canns/
+- tier2_quick_starts/
+- tier3_core_concepts/
+- tier4_full_details/
 """
 
 import json
@@ -123,42 +129,71 @@ def convert_md_to_notebook(md_file: Path, output_file: Path) -> None:
     print(f"  ✓ Created {output_file} with {len(cells)} cells")
 
 
-def main():
-    """Convert all markdown docs to notebooks."""
-    # Define conversions
-    conversions = [
-        ("01_why_canns.md", "00_why_canns.ipynb"),
-        ("02_how_to_build_cann_model.md", "01_build_model.ipynb"),
-        ("03_how_to_generate_task_data.md", "02_generate_tasks.ipynb"),
-        ("04_how_to_analyze_cann_model.md", "03_analyze_model.ipynb"),
-        ("05_how_to_analyze_experimental_data.md", "04_analyze_data.ipynb"),
-        ("06_how_to_train_brain_inspired_model.md", "05_train_brain_inspired.ipynb"),
-    ]
+def convert_tier_folder(tier_folder: Path) -> int:
+    """
+    Convert all markdown files in a tier folder to notebooks.
 
-    # Script is now in docs_draft/scripts/, drafts are in docs_draft/drafts/
-    script_dir = Path(__file__).parent
-    drafts_dir = script_dir.parent / "drafts"
-    output_dir = drafts_dir  # Save in same directory
+    Returns the number of files converted.
+    """
+    count = 0
+    md_files = sorted(tier_folder.glob("*.md"))
 
-    print("=" * 60)
-    print("Converting Markdown to Jupyter Notebooks")
-    print("=" * 60)
-
-    for md_name, nb_name in conversions:
-        md_file = drafts_dir / md_name
-        nb_file = output_dir / nb_name
-
-        if not md_file.exists():
-            print(f"  ⚠ Skipping {md_name} (not found)")
-            continue
+    for md_file in md_files:
+        # Output notebook has same name but .ipynb extension
+        nb_file = md_file.with_suffix(".ipynb")
 
         try:
             convert_md_to_notebook(md_file, nb_file)
+            count += 1
         except Exception as e:
-            print(f"  ✗ Error converting {md_name}: {e}")
+            print(f"  ✗ Error converting {md_file.name}: {e}")
+
+    return count
+
+
+def main():
+    """Convert all markdown docs to notebooks across all tiers."""
+    # Script is in docs_draft/scripts/, drafts are in docs_draft/drafts/
+    script_dir = Path(__file__).parent
+    drafts_dir = script_dir.parent / "drafts"
+
+    # Define tier folders
+    tier_folders = [
+        "tier1_why_canns",
+        "tier2_quick_starts",
+        "tier3_core_concepts",
+        "tier4_full_details",
+    ]
 
     print("=" * 60)
-    print("Conversion complete!")
+    print("Converting Markdown to Jupyter Notebooks")
+    print(f"Base directory: {drafts_dir}")
+    print("=" * 60)
+
+    total_converted = 0
+
+    for tier_name in tier_folders:
+        tier_path = drafts_dir / tier_name
+
+        if not tier_path.exists():
+            print(f"\n⚠ Skipping {tier_name}/ (folder not found)")
+            continue
+
+        md_files = list(tier_path.glob("*.md"))
+        if not md_files:
+            print(f"\n⚠ Skipping {tier_name}/ (no .md files)")
+            continue
+
+        print(f"\n📁 {tier_name}/")
+        print("-" * 40)
+
+        count = convert_tier_folder(tier_path)
+        total_converted += count
+
+        print(f"  → Converted {count} file(s)")
+
+    print("\n" + "=" * 60)
+    print(f"Conversion complete! Total: {total_converted} file(s)")
     print("=" * 60)
 
 
