@@ -52,7 +52,7 @@ Examples:
 
 **Your Answer:**
 ```
-[What are the 3-5 key design principles that guided library development?]
+主要说Separation of concerns和Extensibility through base classes吧
 ```
 
 ---
@@ -65,7 +65,7 @@ Current doc has a flat list of modules. Should we show:
 
 **Your Answer:**
 ```
-[Which visualization/organization would be most helpful?]
+workflow diagram可能比较好些
 ```
 
 ---
@@ -78,8 +78,7 @@ The current document covers:
 
 **Your Answer:**
 ```
-[Which sections are essential and should stay in Overview?
-Which sections should move to other Core Concept topics?]
+尽量都保留吧，然后看看有什么improve的
 ```
 
 ---
@@ -92,7 +91,7 @@ Should Overview include:
 
 **Your Answer:**
 ```
-[Level of technical detail desired]
+just high-level concepts with links to other topics
 ```
 
 ---
@@ -110,14 +109,12 @@ Help readers understand when to use which:
 
 **Your Answer:**
 ```
-Basic CANN Models:
-[Purpose and use cases]
-
-Hybrid Models:
-[Concept and vision]
-
-Brain-Inspired Models:
-[Key differences and when to use]
+模型模块实现不同维度的CANN基础模型及其变体，脑启发模型以及CANN混合模型。该模块是本库的基础，可以与其他的模块来进行交互来实现各种场景的应用。
+这里根据不同的模型类型进行分类：
+Basic Models (canns.models.basic) 基础的CANNs模型及其各个变体。
+Brain-Inspired Models (canns.models.brain_inspired) 类脑模型。
+Hybrid Models (canns.models.hybrid) CANN与ANN或其他的混合模型。
+在这里主要依赖Brain simulation ecosystem中的brainstate来实现各个模型。brainstate 是 Brain Simulation Ecosystem 中面向动力系统的核心框架，底层基于 JAX/BrainUnit。它提供 brainstate.nn.Dynamics 抽象、State/HiddenState/ParamState 状态容器以及 brainstate.environ 统一的时间步长管理，与 brainstate.compile.for_loop、brainstate.random 等工具一起，让我们可以写出既可 JIT 编译又支持自动微分的神经网络动力学。借助这些接口，CANN 模型只需描述变量与更新方程，时间推进、并行化和随机数管理都由 brainstate 负责，从而显著降低实现成本。
 ```
 
 ---
@@ -130,7 +127,22 @@ The library has `BaseCANN` as parent class for CANN1D/2D.
 
 **Your Answer:**
 ```
-[Yes/No, and if yes, how much detail?]
+每个模型都继承自canns.models.basic.BasicModel或canns.models.basic.BasicModelGroup类，并实现了以下主要方法：
+在基础模型中需要完成的主要工作：
+继承 canns.models.basic.BasicModel 或 BasicModelGroup，在 __init__ 中调用父类构造（例如 super().__init__(math.prod(shape), **kwargs)）并保存好 shape、varshape 等维度信息；
+实现 make_conn() 生成连接矩阵，并在构造函数里赋值给 self.conn_mat（可参考 src/canns/models/basic/cann.py 中的高斯核实现）；
+实现 get_stimulus_by_pos(pos)，根据特征空间的位置返回外部刺激，供任务模块调用；
+在 init_state() 注册 brainstate.HiddenState/State（常见的有 self.u、self.r、self.inp），确保更新函数能够直接读写；
+在 update(inputs) 中写出单步动力学，记得乘以 brainstate.environ.get_dt() 维持数值稳定；
+需要暴露诊断量或轴信息时，通过属性/方法返回（如 self.x、self.rho），供任务、分析器和流水线重用。
+对于脑启发模型
+每个模型都继承自canns.models.brain_inspired.BrainInspiredModel或canns.models.brain_inspired.BrainInspiredModelGroup类，并实现了
+若要扩展脑启发模型（继承 BrainInspiredModel 或 BrainInspiredModelGroup），请确保：
+在 init_state() 中至少注册状态向量（默认 self.s）和连接权重 self.W，其中 self.W 建议使用 brainstate.ParamState 以便 Hebbian 学习直接写入；
+如果权重属性名称不是 W，重写 weight_attr 以便 HebbianTrainer 能找到；
+实现 update(...) 与 energy 属性，确保训练器可以运行通用预测循环并判定收敛；
+需要定制 Hebbian 规则时实现 apply_hebbian_learning(patterns)，否则可以完全依赖训练器的通用实现；
+若模型支持动态尺寸调整，可重写 resize(num_neurons, preserve_submatrix=True)，参考 src/canns/models/brain_inspired/hopfield.py 中的做法。
 ```
 
 ---
@@ -142,7 +154,7 @@ The library has `BaseCANN` as parent class for CANN1D/2D.
 
 **Your Answer:**
 ```
-[Approach for explaining variants]
+就是增加新的特性
 ```
 
 ---
@@ -155,7 +167,7 @@ These are special:
 
 **Your Answer:**
 ```
-[How to handle hierarchical models?]
+其也是相当于CANN的变体，思想与思路与基础CANN一致，不过实现有些区别
 ```
 
 ---
@@ -173,7 +185,7 @@ Tasks are more than just "data generators". What's the deeper concept?
 
 **Your Answer:**
 ```
-[Core concept of task generators]
+任务模块主要用于生成、保存、读取、导入和可视化各种CANN任务。该模块提供了多种预定义的任务类型，并允许用户自定义任务以满足特定需求。
 ```
 
 ---
@@ -192,7 +204,13 @@ Should we organize by:
 
 **Your Answer:**
 ```
-[Preferred organization principle]
+这里暂时就两类，Tracking任务和Navigation任务，然后其中tracking又分为
+- population coding
+- template matching
+- smooth tracking
+navigation的话分成
+- closed loop navigation
+- open loop navigation
 ```
 
 ---
@@ -205,7 +223,7 @@ Some tasks need `cann_instance` (like SmoothTracking1D).
 
 **Your Answer:**
 ```
-[Detail level for task-model relationship]
+目前只有tracking task是需要传入model来获取对应的stimulus的，因为基本的CANN model都是这样子来进行输入的，我们想要做到更user-firendly，所以暂时需要coupling，对于navigation就不需要了，因为可能我们需要提供更多的data信息（比如速度、角度等等）然后让用户自行判断来去使用。
 ```
 
 ---
@@ -218,7 +236,7 @@ The library can import external trajectories.
 
 **Your Answer:**
 ```
-[How to handle trajectory import topic?]
+可以简单提一下，不用特别去详细说明，这是后面要做的事情
 ```
 
 ---
@@ -236,7 +254,7 @@ Help users understand which to use when:
 
 **Your Answer:**
 ```
-[Clear distinction between the two analyzers]
+是的，不过model analyzer主要是对我们现在的一些CANN model的输出做一些分析可视化，然后data analyzer主要是对实验数据（一般可能是spike train或者是firing rate）以及可以生成这一类的虚拟数据来去进行分析可视化
 ```
 
 ---
@@ -251,7 +269,7 @@ Should we explain this design choice?
 
 **Your Answer:**
 ```
-[Yes/No, and reasoning for PlotConfig]
+简单提一下PlotConfig吧
 ```
 
 ---
@@ -267,7 +285,7 @@ Is this:
 
 **Your Answer:**
 ```
-[Scope of RNN dynamics analysis]
+暂时只用于分析RNN model
 ```
 
 ---
@@ -280,7 +298,7 @@ The library has TDA tools (UMAP, persistent homology).
 
 **Your Answer:**
 ```
-[How to handle TDA explanation?]
+是的，我们cann-lib提供了加速的ripser持续同调方法，但对于降维工具，我们这里没有重新实现，用户可以自行使用，我们可能在某些tda中会有调用外部方法，因为grid cell是有torus structure的，然后可能有一些拓扑结构能够用CANN来去构建，所以我们希望有这样的工具来去探索数据中有没有attractor structure
 ```
 
 ---
@@ -298,7 +316,7 @@ Beyond "local vs. global", what ties these rules together?
 
 **Your Answer:**
 ```
-[Unifying theme for brain-inspired training]
+应该是activity-dependent plasticity
 ```
 
 ---
@@ -316,7 +334,7 @@ Should we:
 
 **Your Answer:**
 ```
-[Level of neuroscience explanation]
+只是大概简单说下吧，这部分还是主要是如何统一去用trainer这个module
 ```
 
 ---
@@ -329,7 +347,15 @@ Why separate `Trainer` from `Model`?
 
 **Your Answer:**
 ```
-[Reasoning for Trainer design]
+训练模块提供了统一的接口，用于训练和评估类脑模型。
+
+用户可以通过继承canns.trainer.Trainer类来创建自定义的训练器。需要实现以下主要方法：
+若要实现新的训练器，需继承 canns.trainer.Trainer 并：
+在构造函数中保存目标模型及进度显示配置；
+实现 train(self, train_data)，定义参数更新策略；
+实现 predict(self, pattern, *args, **kwargs)，给出单样本推理逻辑，必要时使用 predict_batch封装批量推理；
+遵循默认的 configure_progress 约定，让用户可以打开/关闭进度条或编译模式；
+当训练器需要与特定模型协作时，约定好公共属性名（如权重、状态向量）以保证互操作性。
 ```
 
 ---
@@ -344,7 +370,7 @@ Or assume readers already understand deep learning?
 
 **Your Answer:**
 ```
-[Include comparison? If yes, how much detail?]
+这个感觉不用说什么，没必要解释太多
 ```
 
 ---
@@ -359,7 +385,7 @@ Core Concepts should be:
 
 **Your Answer:**
 ```
-[Preferred balance]
+balanced吧，最好用户易懂地介绍
 ```
 
 ---
@@ -372,7 +398,7 @@ Should these conceptual docs include:
 
 **Your Answer:**
 ```
-[Code inclusion strategy]
+这里就不要提代码了，可以说具体的module或者是class中的属性
 ```
 
 ---
@@ -386,7 +412,7 @@ Would diagrams help? Which types:
 
 **Your Answer:**
 ```
-[Which diagram types would be most valuable?]
+workflow可以根据下tier2中的几个how来去展示
 ```
 
 ---
@@ -399,7 +425,7 @@ How should Core Concepts link to other tiers?
 
 **Your Answer:**
 ```
-[Linking strategy]
+暂时先留着mark吧，以后都完成后再统一加
 ```
 
 ---
@@ -412,7 +438,7 @@ Should Core Concepts compare design choices with:
 
 **Your Answer:**
 ```
-[Include comparisons? Which frameworks?]
+暂时不要提了
 ```
 
 ---
@@ -428,7 +454,7 @@ Is this appropriate?
 
 **Your Answer:**
 ```
-[Feedback on target length]
+主要讲核心部分，尽量精简，应该和tier2差不多，而且这部分应该不会有什么代码，所以可能还比tier2短
 ```
 
 ---
@@ -452,7 +478,7 @@ The current `00_design_philosophy.rst` is comprehensive (661 lines). How should 
 
 **Your Answer:**
 ```
-[Which option do you prefer? Or another approach?]
+感觉不用太动这个
 ```
 
 ---
