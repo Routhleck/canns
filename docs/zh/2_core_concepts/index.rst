@@ -7,7 +7,7 @@
 本节提供CANNs库设计原则、模块组织和概念基础的深入解释。这些文档侧重于"为什么"和"何时"而不是"如何"，帮助您理解库的架构并就使用其组件做出明智决策。
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
    :caption: 主题:
 
    01_design_philosophy

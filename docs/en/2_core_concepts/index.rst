@@ -7,7 +7,7 @@ Deep dive into library design, architecture, and theoretical foundations.
 This section provides in-depth explanations of the CANNs library's design principles, module organization, and conceptual foundations. These documents focus on the "why" and "when" rather than the "how", helping you understand the library's architecture and make informed decisions about using its components.
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
    :caption: Topics:
 
    01_design_philosophy
