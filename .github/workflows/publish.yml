@@ -29,7 +29,7 @@ jobs:
         run: uv python install
 
       - name: Install all dependencies
-        run: uv sync --all-extras --dev
+        run: uv sync --all-extras --group dev
 
       - name: Run tests
         run: uv run pytest
