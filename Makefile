@@ -4,12 +4,25 @@
 
 .DEFAULT_GOAL := default
 
-.PHONY: default install lint test upgrade build clean docs docs-autoapi
+.PHONY: default install install-dev install-docs install-all lint test upgrade build clean docs docs-autoapi
 
 default: install lint test
 
+# Install only production dependencies
 install:
-	uv sync --all-extras --dev
+	uv sync --all-extras
+
+# Install production + dev dependencies
+install-dev:
+	uv sync --all-extras --group dev
+
+# Install production + docs dependencies
+install-docs:
+	uv sync --all-extras --group docs
+
+# Install all dependencies (production + all groups)
+install-all:
+	uv sync --all-extras --all-groups
 
 lint:
 	uv run python devtools/lint.py
@@ -17,8 +30,13 @@ lint:
 test:
 	uv run pytest
 
+# Upgrade all dependencies
 upgrade:
-	uv sync --upgrade --all-extras --dev
+	uv sync --upgrade --all-extras --all-groups
+
+# Upgrade specific group
+upgrade-dev:
+	uv sync --upgrade --all-extras --group dev
 
 build:
 	uv build
