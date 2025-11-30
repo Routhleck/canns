@@ -1,4 +1,5 @@
-"""Sine wave generator task with fixed point analysis using BrainState.
+"""
+Sine wave generator task with fixed point analysis using BrainState.
 
 This example trains an RNN to generate sine waves of different frequencies,
 based on a constant input signal that specifies the target frequency.
@@ -12,312 +13,362 @@ Sussillo, D., & Barak, O. (2013). Opening the black box: low-dimensional
 dynamics in high-dimensional recurrent neural networks. Neural Computation.
 """
 
-import brainstate as bst
-import braintools as bts  #
+
+import os
+import time
+import random
+import numpy as np
+import matplotlib.pyplot as plt
+from sklearn.decomposition import PCA
+
 import jax
 import jax.numpy as jnp
-import numpy as np
-import random
-from canns.analyzer.plotting import PlotConfig
-from canns.analyzer.slow_points import FixedPointFinder, save_checkpoint, load_checkpoint, plot_fixed_points_2d, plot_fixed_points_3d
+import brainstate as bst
+import braintools as bts
 
 
-def generate_sine_wave_data(n_trials=128, n_steps=100):
-    t = np.linspace(0, 10 * np.pi, n_steps)
-    sequences = np.array([np.sin(t + np.random.uniform(-np.pi, np.pi)) for _ in range(n_trials)])
+class Config:
+    # Task Parameters
+    N_FREQS = 51
+    HIDDEN_SIZE = 200
 
-    inputs = sequences[:, :-1]
-    targets = sequences[:, 1:]
+    # Simulation Parameters
+    DT = 0.01
+    N_STEPS = 400
 
-    return {
-        "inputs": inputs[..., None].astype(np.float32),
-        "targets": targets[..., None].astype(np.float32)
-    }
+    # Dynamics (Physical Inertia)
+    # Tau = 0.1s => alpha = dt/tau = 0.1
+    # State updates by 10% each step, providing necessary inertia.
+    TAU = 0.1
 
-class SineWaveRNN(bst.nn.Module):
+    # Training Parameters
+    BATCH_SIZE = 64
+    STEPS_PER_EPOCH = 50
+    MAX_EPOCHS = 1500
+
+    # Learning Rate Schedule
+    DECAY_STEP_1 = 800 * STEPS_PER_EPOCH
+    DECAY_STEP_2 = 1200 * STEPS_PER_EPOCH
+
+    VALID_SIZE = 1024
+    SEED = 1234
+
+
+def get_random_batch(batch_size, n_steps=Config.N_STEPS, n_freqs=Config.N_FREQS):
     """
-    A simple RNN for sine wave prediction
+    Generate training data
     """
+    # 1. Randomly select frequency indices (1 to 51)
+    freq_indices = np.random.randint(0, n_freqs, size=batch_size)
 
-    def __init__(self, hidden_size=32, seed=0):
+    # 2. Input Mapping
+    # Input = j/51 + 0.25
+    inputs_u = (freq_indices / float(n_freqs)) + 0.25
+
+    # 3. Target Frequencies Mapping
+    # Original: 0.1-0.6 rad/s. Scaled to 1.0-6.0 rad/s for efficient training.
+    min_omega, max_omega = 1.0, 6.0
+    omegas = min_omega + (freq_indices / float(n_freqs - 1)) * (max_omega - min_omega)
+
+    # 4. Generate Time Vector
+    t = np.arange(0, n_steps * Config.DT, Config.DT, dtype=np.float32)
+
+    batch_x = []
+    batch_y = []
+
+    for i in range(batch_size):
+        u = inputs_u[i]
+        omega = omegas[i]
+
+        # Target: Sine wave
+        target = np.sin(omega * t)
+
+        # Input: Static constant value
+        inp = np.full((n_steps, 1), u, dtype=np.float32)
+
+        batch_x.append(inp)
+        batch_y.append(target[:, None])
+
+    return jnp.array(batch_x), jnp.array(batch_y)
+
+
+class SineWaveCTRNN(bst.nn.Module):
+    def __init__(self, hidden_size, out_size=1, seed=0, dt=Config.DT, tau=Config.TAU):
         super().__init__()
-        self.input_size = 1
         self.hidden_size = hidden_size
-        self.n_outputs = 1
-        self.rnn_type = "tanh"  #
+        self.out_size = out_size
+
+        # Inertia coefficient alpha
+        self.alpha = dt / tau
 
         key = jax.random.PRNGKey(seed)
         k1, k2, k3, k4, k5 = jax.random.split(key, 5)
+        std = 1.0 / np.sqrt(hidden_size)
 
-        # Adopting orthogonal initialization and high gain
-        def orthogonal(key, shape, gain=1.0):
-            a = jax.random.normal(key, shape)
-            q, r = jnp.linalg.qr(a)
-            q = q * jnp.sign(jnp.diag(r))
-            return gain * q
+        # Weight Initialization
+        self.w_ih = bst.ParamState(jax.random.normal(k1, (1, hidden_size)) * std)
+        self.w_hh = bst.ParamState(jax.random.normal(k2, (hidden_size, hidden_size)) * std)
+        self.b_h = bst.ParamState(jnp.zeros(hidden_size))
 
-        # Input weights use small random values
-        self.w_ih = bst.ParamState(
-            jax.random.normal(k1, (self.input_size, self.hidden_size)) * 0.1
-        )
+        self.w_out = bst.ParamState(jax.random.normal(k4, (hidden_size, out_size)) * std)
+        self.b_out = bst.ParamState(jnp.zeros(out_size))
 
-        # Promote sustained oscillation
-        self.w_hh = bst.ParamState(orthogonal(k2, (self.hidden_size, self.hidden_size), gain=1.1))
-        self.b_h = bst.ParamState(jnp.zeros(self.hidden_size))
-        self.w_out = bst.ParamState(
-            jax.random.normal(k3, (self.hidden_size, self.n_outputs)) * 0.1
-        )
-        self.b_out = bst.ParamState(jnp.zeros(self.n_outputs))
-        self.h0 = bst.ParamState(jnp.zeros(self.hidden_size))
+        # Initial State (Membrane Potential x)
+        self.x0 = bst.ParamState(jnp.zeros(hidden_size))
 
-    def step(self, x_t, h):
-        """Single RNN step (Tanh)."""
-        h_next = jnp.tanh(
-            x_t @ self.w_ih.value + h @ self.w_hh.value + self.b_h.value
-        )
-        return h_next
+    def cell_step(self, u_t, x_prev):
+        """
+        Euler Integration Step
+        Equation 6.4: tau * x_dot = -x + J*r + B*u + b
+        """
+        # 1. Compute firing rate r = tanh(x)
+        r_prev = jnp.tanh(x_prev)
+
+        # 2. Compute Input Current (Input + Recurrent + Bias)
+        current_in = u_t @ self.w_ih.value + r_prev @ self.w_hh.value + self.b_h.value
+
+        # 3. Update Membrane Potential x (Euler Method)
+        # x_new = (1 - alpha) * x_old + alpha * current_in
+        x_next = (1 - self.alpha) * x_prev + self.alpha * current_in
+
+        return x_next
 
     def __call__(self, inputs, hidden=None):
-        """Forward pass."""
         batch_size = inputs.shape[0]
         n_time = inputs.shape[1]
 
         if hidden is None:
-            h = jnp.tile(self.h0.value, (batch_size, 1))
+            # 'hidden' here refers to membrane potential x
+            x = jnp.tile(self.x0.value, (batch_size, 1))
         else:
-            h = hidden
+            x = hidden
 
+        # Single step execution (for FixedPointFinder)
         if n_time == 1:
-            x_t = inputs[:, 0, :]
-            h_next = self.step(x_t, h)
-            y = h_next @ self.w_out.value + self.b_out.value
-            return y[:, None, :], h_next
+            u_t = inputs[:, 0, :]
+            x_next = self.cell_step(u_t, x)
+            # Output is based on firing rate r
+            r_next = jnp.tanh(x_next)
+            y = r_next @ self.w_out.value + self.b_out.value
+            return y[:, None, :], x_next
 
-        def scan_fn(carry, x_t):
-            h_prev = carry
-            h_next = self.step(x_t, h_prev)
-            y_t = h_next @ self.w_out.value + self.b_out.value
-            return h_next, (y_t, h_next)
+        # Sequence Scan
+        def scan_fn(carry, u_t):
+            x_prev = carry
+            x_next = self.cell_step(u_t, x_prev)
 
-        inputs_transposed = inputs.transpose(1, 0, 2)
-        _, (outputs_seq, hiddens_seq) = jax.lax.scan(scan_fn, h, inputs_transposed)
-        outputs = outputs_seq.transpose(1, 0, 2)
-        hiddens = hiddens_seq.transpose(1, 0, 2)
+            r_next = jnp.tanh(x_next)
+            y_t = r_next @ self.w_out.value + self.b_out.value
 
-        return outputs, hiddens
+            return x_next, (y_t, x_next)
 
-def train_sine_wave_rnn(rnn, train_data, valid_data,
-                        learning_rate=0.01,
-                        batch_size=128,
-                        max_epochs=200,
-                        min_loss=1e-5,
-                        print_every=10):
-    print("\n" + "=" * 70)
-    print("Training Sine Wave RNN (FlipFlop Style)")
-    print("=" * 70)
+        inputs_T = inputs.transpose(1, 0, 2)
+        _, (outputs_T, hiddens_T) = jax.lax.scan(scan_fn, x, inputs_T)
 
-    train_inputs = jnp.array(train_data['inputs'])
-    train_targets = jnp.array(train_data['targets'])
-    valid_inputs = jnp.array(valid_data['inputs'])
-    valid_targets = jnp.array(valid_data['targets'])
-    n_train = train_inputs.shape[0]
-    n_batches = max(1, n_train // batch_size)
+        return outputs_T.transpose(1, 0, 2), hiddens_T.transpose(1, 0, 2)
 
-    def flatten_key(key):
-        return '.'.join(key) if isinstance(key, tuple) else key
 
-    trainable_states = {flatten_key(name): state for name, state in rnn.states().items() if
-                        isinstance(state, bst.ParamState)}
-    trainable_params = {name: state.value for name, state in trainable_states.items()}
+def train(model):
+    print(f"Setting up training (CTRNN Reproduction)...")
+    print(f"  Frequencies: {Config.N_FREQS}")
+    print(f"  Network: N={Config.HIDDEN_SIZE}, Tau={Config.TAU}, dt={Config.DT}")
 
-    optimizer = bts.optim.Adam(lr=learning_rate)
-    optimizer.register_trainable_weights(trainable_states)
+    valid_x, valid_y = get_random_batch(Config.VALID_SIZE)
 
-    @jax.jit
-    def grad_step(params, batch_inputs, batch_targets):
-        """Pure function to compute loss and gradients"""
-
-        def forward_pass(p, inputs):
-            batch_size = inputs.shape[0]
-            h = jnp.tile(p['h0'], (batch_size, 1))
-
-            def scan_fn(carry, x_t):
-                h_prev = carry
-                h_next = jnp.tanh(x_t @ p['w_ih'] + h_prev @ p['w_hh'] + p['b_h'])
-                y_t = h_next @ p['w_out'] + p['b_out']
-                return h_next, y_t
-
-            inputs_transposed = inputs.transpose(1, 0, 2)
-            _, outputs_seq = jax.lax.scan(scan_fn, h, inputs_transposed)
-            outputs = outputs_seq.transpose(1, 0, 2)
-            return outputs
-
-        def loss_fn(p):
-            outputs = forward_pass(p, batch_inputs)
-            return jnp.mean((outputs - batch_targets) ** 2)
-
-        loss_val, grads = jax.value_and_grad(loss_fn)(params)
-        return loss_val, grads
-
-    losses = []
-    print("\nTraining parameters:")
-    print(f"  Batch size: {batch_size}")
-    print(f"  Learning rate:{learning_rate:.6f} (Fixed)")
-
-    for epoch in range(max_epochs):
-        perm = np.random.permutation(n_train)
-        epoch_loss = 0.0
-        for batch_idx in range(n_batches):
-            start_idx = batch_idx * batch_size
-            end_idx = start_idx + batch_size
-            batch_inputs = train_inputs[perm[start_idx:end_idx]]
-            batch_targets = train_targets[perm[start_idx:end_idx]]
-
-            loss_val, grads = grad_step(trainable_params, batch_inputs, batch_targets)
-            optimizer.update(grads)
-
-            trainable_params = {flatten_key(name): state.value for name, state in rnn.states().items() if
-                                isinstance(state, bst.ParamState)}
-            epoch_loss += float(loss_val)
-
-        epoch_loss /= n_batches
-        losses.append(epoch_loss)
-
-        if epoch % print_every == 0:
-            valid_outputs, _ = rnn(valid_inputs)
-            valid_loss = float(jnp.mean((valid_outputs - valid_targets) ** 2))
-            print(f"Epoch {epoch:4d}: train_loss = {epoch_loss:.6f}, "
-                  f"valid_loss = {valid_loss:.6f}, lr = {optimizer.current_lr:.6f}")
-
-        if epoch_loss < min_loss:
-            print(f"\nReached target loss {min_loss:.2e} at epoch {epoch}")
-            break
-
-    print("\nTraining complete!")
-    return losses
-
-if __name__ == '__main__':
-    seed = np.random.randint(1, 10000)
-    np.random.seed(seed)
-
-    random.seed(seed)  #
-    print(f"Running with global seed: {seed}")
-
-    # Initialize the model
-    model = SineWaveRNN(hidden_size=32, seed=seed)  #
-
-    # Generate data
-    train_data = generate_sine_wave_data(n_trials=128)
-    valid_data = generate_sine_wave_data(n_trials=64)
-
-    # Train the model
-    train_sine_wave_rnn(
-        model,
-        train_data,
-        valid_data,
-        learning_rate=0.01,
-        max_epochs=200,
-        min_loss=1e-5
+    # Learning Rate Schedule
+    lr_schedule = bts.optim.PiecewiseConstantSchedule(
+        boundaries=[Config.DECAY_STEP_1, Config.DECAY_STEP_2],
+        values=[1e-3, 1e-4, 1e-5]
     )
 
-    # Generate trajectories for analysis
-    print("\nGenerating trajectories for Fixed Point analysis...")
-    print("  Generating 64 trajectories for robust fixed point *finding*...")
-    find_test_data = generate_sine_wave_data(n_trials=64)  #
-    find_inputs_jax = jnp.array(find_test_data['inputs'])
-    _, find_hiddens_jax = model(find_inputs_jax)
-    find_hiddens_np = np.asarray(find_hiddens_jax)  # Shape (64, T, H)
-    print(f"  Generated 'find' trajectories, shape: {find_hiddens_np.shape}")
+    optimizer = bts.optim.Adam(lr=lr_schedule)
+    optimizer.register_trainable_weights(bst.graph.states(model, bst.ParamState))
 
-    print("  Generating 1 trajectory for clean plotting")
-    plot_test_data = generate_sine_wave_data(n_trials=1)
-    plot_inputs_jax = jnp.array(plot_test_data['inputs'])
-    _, plot_hiddens_jax = model(plot_inputs_jax)
-    plot_hiddens_np = np.asarray(plot_hiddens_jax)  # Shape (1, T, H)
+    def loss_fn(inputs, targets):
+        preds, _ = model(inputs)
+        return jnp.mean((preds - targets) ** 2)
+
+    @bst.transform.jit
+    def train_step(batch_x, batch_y):
+        def loss_wrapper(in_x, in_y):
+            l = loss_fn(in_x, in_y)
+            return l, l
+
+        grad_fn = bst.transform.grad(
+            loss_wrapper,
+            grad_states=bst.graph.states(model, bst.ParamState),
+            has_aux=True
+        )
+
+        grads, loss = grad_fn(batch_x, batch_y)
+        optimizer.update(grads)
+        return loss
+
+    @bst.transform.jit
+    def valid_step(batch_x, batch_y):
+        return loss_fn(batch_x, batch_y)
+
+    # Training Loop
+    start_time = time.time()
+    global_step = 0
+
+    for epoch in range(Config.MAX_EPOCHS):
+        epoch_loss = 0.0
+        for _ in range(Config.STEPS_PER_EPOCH):
+            bx, by = get_random_batch(Config.BATCH_SIZE)
+            loss_val = train_step(bx, by)
+            epoch_loss += float(loss_val)
+            global_step += 1
+
+        epoch_loss /= Config.STEPS_PER_EPOCH
+
+        if epoch % 50 == 0:
+            val_loss = valid_step(valid_x, valid_y)
+            print(f"Epoch {epoch:4d} | Train: {epoch_loss:.6f} | Valid: {val_loss:.6f}")
+
+            if val_loss < 1e-4:
+                print("Converged! Stopping early.")
+                break
+
+    print(f"Training finished in {time.time() - start_time:.2f}s")
 
 
-    def normalize_hiddens(h_arr, expected_T=None, name="hiddens"):
-        # ensure numpy array
-        h = np.asarray(h_arr)
-        print(f"[DEBUG] raw {name} shape: {h.shape}")
-        # if time-first (T, B, H) and expected_T known, transpose
-        if h.ndim == 3 and expected_T is not None and h.shape[0] == expected_T and h.shape[1] != expected_T:
-            print(f"[DEBUG] detected {name} likely (T,B,H) -> transposing to (B,T,H).")
-            h = h.transpose(1, 0, 2)
-        # if single-step (B, H), expand time axis
-        if h.ndim == 2:
-            print(f"[DEBUG] detected {name} shape (B,H) -> expanding to (B,1,H).")
-            h = h[:, None, :]
-        if h.ndim != 3:
-            raise RuntimeError(f"[ERROR] normalized {name} must be 3D (B,T,H), got {h.shape}")
-        if expected_T is not None and h.shape[1] != expected_T:
-            print(f"[WARNING] {name} time-dim mismatch: expected T={expected_T}, got T={h.shape[1]}")
-        print(f"[DEBUG] normalized {name} shape -> {h.shape}")
-        return h
+def analyze_and_plot(model):
+    print("\n--- Starting Fixed Point Analysis ---")
+    try:
+        from canns.analyzer.slow_points.finder import FixedPointFinder
+    except ImportError:
+        print("Analysis library 'canns' not found. Skipping.")
+        return
 
+    # 1. Generate inputs for all 51 frequencies sequentially
+    print("Generating trajectories for all 51 frequencies...")
+    inputs_list = []
 
-    expected_T = find_inputs_jax.shape[1] if 'find_inputs_jax' in locals() else None
-    find_hiddens_np = normalize_hiddens(find_hiddens_jax, expected_T=expected_T, name="find_hiddens_np")
+    for i in range(Config.N_FREQS):
+        u_val = (i / float(Config.N_FREQS)) + 0.25
+        # Shape: (1, N_STEPS, 1)
+        inp = np.full((1, Config.N_STEPS, 1), u_val, dtype=np.float32)
+        inputs_list.append(inp)
 
-    expected_T_plot = plot_inputs_jax.shape[1] if 'plot_inputs_jax' in locals() else None
-    plot_hiddens_np = normalize_hiddens(plot_hiddens_jax, expected_T=expected_T_plot, name="plot_hiddens_np")
+    inputs_all = np.concatenate(inputs_list, axis=0)  # (51, 400, 1)
 
-    print(f"  Generated 'plot' trajectories, shape: {plot_hiddens_np.shape}")
-    print("\n--- Fixed Point Analysis (Manual flipflop_fixed_points.py style) ---")
+    # 2. Run model to get trajectories (Membrane potential 'x')
+    _, traj_states = model(jnp.array(inputs_all))
+    traj_states = np.array(traj_states)  # (51, 400, 200)
 
+    # 3. Initialize Finder
+    # Input-Dependent Fixed Points: Run Finder separately for each frequency condition
     finder = FixedPointFinder(
         model,
         method="joint",
-        max_iters=2000,
-        lr_init=0.02,
-        tol_q=1e-5,
-        final_q_threshold=1e-6,
-        tol_unique=0.3,
-        do_compute_jacobians=True,
-        do_decompose_jacobians=True,
+        max_iters=50000,
+        tol_q=1e-6,
         verbose=True,
         super_verbose=True,
+        n_iters_per_print_update=500,
+        lr_init=0.1,
+        lr_patience=1000,
+        lr_factor=0.8,
+        final_q_threshold=1e-6,
+        tol_unique=0.5
     )
 
-    #n_inputs = model.input_size
-    n_inputs = getattr(model, "input_size", 1)
-    #constant_input = np.zeros((1, n_inputs), dtype=np.float32)
-    constant_input = np.zeros((1, int(n_inputs)), dtype=np.float32)
-    print(f"[DEBUG] constant_input shape={constant_input.shape}, dtype={constant_input.dtype}")
-    print(f"[DEBUG] constant_input values:\n{constant_input}")
-    print(f"[DEBUG] constant_input min={float(np.min(constant_input))}, max={float(np.max(constant_input))}")
+    all_fps_list = []
+    valid_freq_count = 0
 
-    print(f"Searching for fixed points with {constant_input.shape} constant input...")
+    print(f"Finding fixed points for each frequency condition...")
 
-    unique_fps, all_fps = finder.find_fixed_points(
-        state_traj=find_hiddens_np,
-        inputs=constant_input,
-        n_inits=1024,
-        noise_scale=0.4
-    )
+    for i in range(Config.N_FREQS):
+        # Use current trajectory for initialization
+        curr_traj = traj_states[i]  # (400, 200)
+        curr_u = inputs_all[i, 0, :]  # (1,)
 
-    # Print and visualize
-    print("\n--- Fixed Point Analysis Results ---")
-    unique_fps.print_summary()  #
+        # Adapt input shape for Finder: (1, 1)
+        u_for_finder = curr_u[None, :]
+        center_guess = np.mean(curr_traj, axis=0, keepdims=True)  # (1, 200)
+        fake_traj_for_init = np.tile(center_guess, (1, 10, 1))
 
-    if unique_fps.n > 0:
-        print(f"\nDetailed Fixed Point Information (Top 10):")
-        print(f"{'#':<4} {'q-value':<12} {'Stability':<12} {'Max |eig|':<12}")
-        print("-" * 45)
-        for i in range(min(10, unique_fps.n)):
-            stability_str = "Stable" if unique_fps.is_stable[i] else "Unstable"
-            max_eig = np.max(np.abs(unique_fps.eigval_J_xstar[i]))
-            print(
-                f"{i + 1:<4} {unique_fps.qstar[i]:<12.2e} {stability_str:<12} {max_eig:<12.4f}"
-            )
-
-        save_path_2d = "sine_wave_predictor_fixed_points_2d.png"
-        config_2d = PlotConfig(
-            title="Sine Wave Predictor Fixed Points (2D PCA)",
-            xlabel="PC 1", ylabel="PC 2", figsize=(10, 8),
-            save_path=save_path_2d, show=False
+        # Run optimization
+        unique_fps, _ = finder.find_fixed_points(
+            state_traj=fake_traj_for_init,
+            inputs=u_for_finder,
+            n_inits=32,
+            noise_scale=0.1,
+            valid_bxt=None
         )
-        plot_fixed_points_2d(unique_fps, plot_hiddens_np, config=config_2d, plot_start_time=10) # 忽略前 10 个时间步
-        print(f"\nSaved 2D plot to: {save_path_2d}")
 
-    print("\n--- Analysis complete ---")
+        if unique_fps.n > 0:
+            # Select the slowest point (min qstar)
+            best_idx = np.argmin(unique_fps.qstar)
+            best_fp = unique_fps.xstar[best_idx]
+            best_q = unique_fps.qstar[best_idx]
+
+            all_fps_list.append(best_fp)
+            valid_freq_count += 1
+
+            if i % 10 == 0:
+                print(f"Freq {i}/{Config.N_FREQS}: Found FP with q={best_q:.2e}")
+        else:
+            if i % 10 == 0:
+                print(f"Freq {i}/{Config.N_FREQS}: No FP found.")
+
+    print(f"Found fixed points for {valid_freq_count} / {Config.N_FREQS} frequencies.")
+
+    if not all_fps_list:
+        return
+
+    # 4. Visualization (PCA)
+    print("Plotting Manifold...")
+    fp_array = np.array(all_fps_list)
+
+    # Flatten trajectories for PCA training
+    traj_flat = traj_states.reshape(-1, Config.HIDDEN_SIZE)
+
+    # Fit PCA on mixed data
+    combined_data = np.concatenate([traj_flat, fp_array], axis=0)
+    pca = PCA(n_components=3)
+    pca.fit(combined_data)
+
+    traj_pca = pca.transform(traj_states.reshape(-1, Config.HIDDEN_SIZE)).reshape(Config.N_FREQS, Config.N_STEPS, 3)
+    fp_pca = pca.transform(fp_array)
+
+    # Plot
+    fig = plt.figure(figsize=(10, 8))
+    ax = fig.add_subplot(111, projection='3d')
+
+    # Scatter Fixed Points (Red X)
+    ax.scatter(fp_pca[:, 0], fp_pca[:, 1], fp_pca[:, 2],
+               color='red', marker='x', s=50, label='Fixed Points', alpha=0.9, zorder=1)
+
+    # Plot Trajectories (Blue Lines)
+    for i in range(0, Config.N_FREQS, 5):
+        ax.plot(traj_pca[i, 50:, 0], traj_pca[i, 50:, 1], traj_pca[i, 50:, 2],
+                color='blue', alpha=0.3, lw=0.8, zorder=1)
+
+    ax.set_title(f"BrainState CTRNN: Sine Generator Manifold (N={Config.N_FREQS})")
+    ax.set_xlabel("PC1")
+    ax.set_ylabel("PC2")
+    ax.set_zlabel("PC3")
+    ax.legend()
+
+    plt.savefig("sine_ctrnn_repro.png", dpi=150)
+    print("Saved 'sine_ctrnn_repro.png'. Analysis Complete.")
+
+
+def main():
+    np.random.seed(Config.SEED)
+    random.seed(Config.SEED)
+
+    # Initialize Model
+    model = SineWaveCTRNN(Config.HIDDEN_SIZE, seed=Config.SEED)
+
+    # Train
+    train(model)
+
+    # Analyze
+    analyze_and_plot(model)
+
+
+if __name__ == '__main__':
+    main()
