@@ -19,7 +19,7 @@
 
 > 英文版说明请参见 [README.md](README.md)
 
-CANNs 是一个构建于脑模拟生态（`brainstate`, `brainunit`）之上的 Python 库，旨在加速连续吸引子神经网络（Continuous Attractor Neural Networks, CANNs）及相关类脑模型的实验研究。它提供可直接使用的模型、任务生成器、分析工具与流水线（pipelines），让神经科学与人工智能研究者从想法到可复现仿真更加高效。
+CANNs 是一个构建于脑模拟生态（`brainstate`, `brainunit`）之上的 Python 库，并通过专门的 Rust 后端（`canns-lib`）加速部分性能敏感模块，旨在提升连续吸引子神经网络（Continuous Attractor Neural Networks, CANNs）及相关类脑模型的实验效率。它提供可直接使用的模型、任务生成器、分析工具与流水线（pipelines），让神经科学与人工智能研究者从想法到可复现仿真更加高效。
 
 ## 亮点概览
 
