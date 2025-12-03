@@ -19,7 +19,7 @@
 
 > 中文说明请见 [README_zh.md](README_zh.md)
 
-CANNs is a Python library built on top of the Brain Simulation Ecosystem (`brainstate`, `brainunit`) that streamlines experimentation with continuous attractor neural networks and related brain-inspired models. It delivers ready-to-use models, task generators, analysis tools, and pipelines so neuroscience and AI researchers can move from ideas to reproducible simulations quickly.
+CANNs is a Python library built on top of the Brain Simulation Ecosystem (`brainstate`, `brainunit`) with performance‑critical modules accelerated by a dedicated Rust backend (`canns-lib`). It streamlines experimentation with continuous attractor neural networks and related brain‑inspired models, providing ready‑to‑use models, task generators, analysis tools, and pipelines so neuroscience and AI researchers can move from ideas to reproducible simulations quickly.
 
 ## Highlights
 
