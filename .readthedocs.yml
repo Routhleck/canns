@@ -11,6 +11,10 @@ build:
     python: "3.11"
   apt_packages:
     - pandoc
+    - texlive-latex-recommended  # PDF generation
+    - texlive-fonts-recommended  # Font support
+    - texlive-latex-extra        # Extra LaTeX packages
+    - latexmk                    # LaTeX build tool
   jobs:
     post_create_environment:
       # Install any version from git tags

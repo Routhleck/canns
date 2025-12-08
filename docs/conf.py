@@ -186,3 +186,30 @@ napoleon_use_rtype = True
 napoleon_preprocess_types = False
 napoleon_type_aliases = None
 napoleon_attr_annotations = True
+
+# -- Options for LaTeX/PDF output -------------------------------------------
+latex_engine = 'pdflatex'  # Use pdflatex for PDF generation
+
+latex_elements = {
+    'papersize': 'a4paper',
+    'pointsize': '11pt',
+    'preamble': r'''
+        \usepackage{bookmark}
+        \usepackage{microtype}
+    ''',
+    'fncychap': '\\usepackage[Bjornstrup]{fncychap}',
+    'printindex': '\\footnotesize\\raggedright\\printindex',
+}
+
+# LaTeX document configuration
+latex_documents = [
+    ('index', 'canns.tex', 'CANNs Documentation',
+     'Sichao He', 'manual'),
+]
+
+# -- Options for ePub output -------------------------------------------------
+epub_title = project
+epub_author = author
+epub_publisher = author
+epub_copyright = copyright
+epub_exclude_files = ['search.html']
