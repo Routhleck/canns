@@ -1,7 +1,7 @@
 import inspect
 from collections.abc import Sequence
 
-import brainunit as u
+import brainpy.math as bm
 import numpy as np
 from tqdm import tqdm
 
@@ -69,7 +69,7 @@ class TrackingTask(Task):
         self.total_duration = np.sum(self.duration)
         self.total_steps = np.ceil(self.total_duration / self.time_step).astype(dtype=int)
 
-        self.run_steps = u.math.arange(0, self.total_duration, self.time_step)
+        self.run_steps = bm.arange(0, self.total_duration, self.time_step)
 
         # checks
         if self.Iext is None or not isinstance(self.Iext, Sequence):

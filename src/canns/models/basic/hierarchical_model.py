@@ -1253,11 +1253,6 @@ class HierarchicalNetwork(BasicModelGroup):
         loc_input_stre = bm.ones((indices.shape[0],)) * loc_input_stre
 
         for i, model in enumerate(self.MEC_model_list):
-            if pbar is None:
-                pbar = bp.transform.ProgressBar(
-                    total=indices.shape[0], desc=f"Module {i + 1}/{self.num_module}"
-                )
-
             def run_single_module(velocity, loc, loc_input_stre):
                 model(velocity=velocity, loc=loc, loc_input_stre=loc_input_stre)
                 return (
@@ -1273,7 +1268,6 @@ class HierarchicalNetwork(BasicModelGroup):
                     velocities,
                     positions,
                     loc_input_stre,
-                    pbar=pbar,
                 )
             )
             band_x_r = band_x_r.at[:, i, :].set(single_band_x_r)

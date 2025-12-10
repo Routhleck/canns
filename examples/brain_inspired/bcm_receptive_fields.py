@@ -5,7 +5,7 @@ This example demonstrates:
 - BCMTrainer with sliding threshold plasticity
 - Receptive field formation from natural stimuli
 - LTP/LTD regime visualization
-- JAX-accelerated training with brainstate
+- JAX-accelerated training with brainpy
 - Tuning curve visualization using canns.analyzer
 """
 

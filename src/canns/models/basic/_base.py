@@ -17,7 +17,7 @@ class BasicModel(bp.DynamicalSystem):
     Key Features:
         - Automatic state management through BrainState
         - JAX-compatible for GPU/TPU acceleration
-        - Support for compiled execution via brainstate.transform
+        - Support for compiled execution via brainpy transforms
         - Compatible with visualization and analysis tools
 
     Expected Subclass Implementation:
