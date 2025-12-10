@@ -1,6 +1,7 @@
 import brainpy as bp
 import brainpy.math as bm
 import jax
+import jax.numpy as jnp
 
 from ...task.open_loop_navigation import map2pi
 from ._base import BasicModel, BasicModelGroup
@@ -41,10 +42,10 @@ class GaussRecUnits(BasicModel):
         dx (float): The stimulus density (feature space range per neuron).
         J (float): The final connection strength, scaled by J0.
         conn_mat (bm.math.ndarray): The connection matrix.
-        r (bp.State): The firing rates of the neurons.
-        u (bp.State): The synaptic inputs to the neurons.
-        center (bp.State): The decoded center of the activity bump.
-        input (bp.State): The external input to the network.
+        r (bm.Variable): The firing rates of the neurons.
+        u (bm.Variable): The synaptic inputs to the neurons.
+        center (bm.Variable): The decoded center of the activity bump.
+        input (bm.Variable): The external input to the network.
     """
 
     def __init__(
@@ -71,7 +72,7 @@ class GaussRecUnits(BasicModel):
             noise (float, optional): The level of noise in the system. Defaults to 2.0.
         """
         self.size = size
-        super().__init__(size)
+        super().__init__()
         self.tau = tau  # The time constant
         self.k = k  # The inhibition strength
         self.a = a  # The width of the Gaussian connection
@@ -88,16 +89,15 @@ class GaussRecUnits(BasicModel):
         self.J = J0 * self.Jc()  # The connection strength
         self.conn_mat = self.make_conn()  # The connection matrix
 
-    def init_state(self):
-        self.r = bp.State(bm.zeros(self.size))  # The neural firing rate
-        self.u = bp.State(bm.zeros(self.size))  # The neural synaptic input
-        self.center = bp.State(
+        self.r = bm.Variable(bm.zeros(self.size))  # The neural firing rate
+        self.u = bm.Variable(bm.zeros(self.size))  # The neural synaptic input
+        self.center = bm.Variable(
             bm.zeros(
                 1,
             )
         )  # The center of the bump
 
-        self.input = bp.State(bm.zeros(self.size))  # The external input
+        self.input = bm.Variable(bm.zeros(self.size))  # The external input
 
         # initialize the neural activity
         self.u.value = (
@@ -110,6 +110,7 @@ class GaussRecUnits(BasicModel):
             * bm.exp(-0.5 * bm.square((self.x - 0) / self.a))
             / (bm.sqrt(2 * bm.pi) * self.a)
         )
+        
 
     # make the connection matrix
     def make_conn(self):
@@ -175,7 +176,7 @@ class GaussRecUnits(BasicModel):
         Irec = bm.dot(self.conn_mat, self.r.value)
         self.u.value = (
             self.u.value
-            + (-self.u.value + Irec + self.input.value) / self.tau * bp.environ.get_dt()
+            + (-self.u.value + Irec + self.input.value) / self.tau * bm.get_dt()
         )
         self.input.value = self.input.value.at[:].set(0.0)
         self.center.value = self.center.value.at[0].set(self.decode(self.u.value))
@@ -195,12 +196,12 @@ class NonRecUnits(BasicModel):
         z_min (float): The minimum value of the encoded feature space.
         z_max (float): The maximum value of the encoded feature space.
         z_range (float): The range of the feature space.
-        x (bm.math.ndarray): The preferred feature values for each neuron.
+        x (bm.ndarray): The preferred feature values for each neuron.
         rho (float): The neural density.
         dx (float): The stimulus density.
-        r (bp.State): The firing rates of the neurons.
-        u (bp.State): The synaptic inputs to the neurons.
-        input (bp.State): The external input to the neurons.
+        r (bm.Variable): The firing rates of the neurons.
+        u (bm.Variable): The synaptic inputs to the neurons.
+        input (bm.Variable): The external input to the neurons.
     """
 
     def __init__(
@@ -220,7 +221,7 @@ class NonRecUnits(BasicModel):
             z_max (float, optional): The maximum value of the feature space. Defaults to pi.
             noise (float, optional): The level of noise in the system. Defaults to 2.0.
         """
-        super().__init__(size)
+        super().__init__()
         self.size = size
         self.noise_0 = noise  # The noise level
 
@@ -234,10 +235,9 @@ class NonRecUnits(BasicModel):
         self.rho = size / self.z_range  # The neural density
         self.dx = self.z_range / size  # The stimulus density
 
-    def init_state(self):
-        self.r = bp.State(bm.zeros(self.size))  # The neural firing rate
-        self.u = bp.State(bm.zeros(self.size))  # The neural synaptic input
-        self.input = bp.State(bm.zeros(self.size))  # The external input
+        self.r = bm.Variable(bm.zeros(self.size))  # The neural firing rate
+        self.u = bm.Variable(bm.zeros(self.size))  # The neural synaptic input
+        self.input = bm.Variable(bm.zeros(self.size))  # The external input
 
     # choose the activation function
     def activate(self, x):
@@ -279,7 +279,7 @@ class NonRecUnits(BasicModel):
         # )
         self.u.value = (
             self.u.value
-            + (-self.u.value + self.input.value) / self.tau * bp.environ.get_dt()
+            + (-self.u.value + self.input.value) / self.tau * bm.get_dt()
         )
         self.input.value = self.input.value.at[:].set(0.0)
         return self.r.value
@@ -310,8 +310,8 @@ class BandCell(BasicModel):
         w_L2S (float): Connection weight from band cells to left/right units.
         w_S2L (float): Connection weight from left/right units to band cells.
         gain (float): A gain factor for velocity-modulated input.
-        center_ideal (bp.State): The ideal, noise-free center based on velocity integration.
-        center (bp.State): The actual decoded center of the band cell activity bump.
+        center_ideal (bm.Variable): The ideal, noise-free center based on velocity integration.
+        center (bm.Variable): The actual decoded center of the band cell activity bump.
     """
 
     def __init__(
@@ -354,7 +354,7 @@ class BandCell(BasicModel):
             **kwargs: Additional keyword arguments for the base class.
         """
         self.size = size  # The number of neurons in each neuron group except DN
-        super().__init__(size, **kwargs)
+        super().__init__(**kwargs)
 
         # feature space
         self.z_min = z_min
@@ -398,23 +398,17 @@ class BandCell(BasicModel):
         self.gain = gain
         self.synapses()
 
-    def init_state(self, *args, **kwargs):
-        self.center_ideal = bp.State(
+        self.center_ideal = bm.Variable(
             bm.zeros(
                 1,
             )
         )  # The center of v-
-        self.center = bp.State(
+        self.center = bm.Variable(
             bm.zeros(
                 1,
             )
         )  # The center of v-
 
-        # init heading direction
-        self.band_cells.init_state()
-        # init left and right neurons
-        self.left.init_state()
-        self.right.init_state()
 
     # define the synapses
     def synapses(self):
@@ -427,10 +421,10 @@ class BandCell(BasicModel):
         self.W_PENl2EPG = self.w_S2L * self.make_conn(self.phase_shift)
         self.W_PENr2EPG = self.w_S2L * self.make_conn(-self.phase_shift)
         # synapses
-        self.syn_Band2Left = bp.OneToOne(self.size, self.w_L2S)
-        self.syn_Band2Right = bp.OneToOne(self.size, self.w_L2S)
-        self.syn_Left2Band = bp.Linear(self.size, self.size, self.W_PENl2EPG)
-        self.syn_Right2Band = bp.Linear(self.size, self.size, self.W_PENr2EPG)
+        self.syn_Band2Left = bp.dnn.OneToOne(self.size, self.w_L2S)
+        self.syn_Band2Right = bp.dnn.OneToOne(self.size, self.w_L2S)
+        self.syn_Left2Band = bp.dnn.Linear(self.size, self.size, self.W_PENl2EPG)
+        self.syn_Right2Band = bp.dnn.Linear(self.size, self.size, self.W_PENr2EPG)
 
     def dist(self, d):
         """Calculates the periodic distance in the feature space.
@@ -532,7 +526,7 @@ class BandCell(BasicModel):
         loc_input = jax.lax.cond(
             loc_input_stre != 0.0,
             lambda op: self.get_stimulus_by_pos(op[0]) * op[1],
-            lambda op: bm.zeros(self.size, dtype=float),
+            lambda op: bm.zeros(self.size, dtype=float).value,
             operand=(loc, loc_input_stre),
         )
         # if loc_input_stre != 0.:
@@ -541,7 +535,7 @@ class BandCell(BasicModel):
         #     loc_input = bm.zeros(self.size)
 
         v_phi = bm.dot(velocity, self.proj_k)
-        center_ideal = self.center_ideal.value + v_phi * bp.environ.get_dt()
+        center_ideal = self.center_ideal.value + v_phi * bm.get_dt()
         self.center_ideal.value = map2pi(center_ideal)
         # EPG output last time step
         Band_output = self.band_cells.r.value
@@ -582,10 +576,10 @@ class GridCell(BasicModel):
         angle (float): The orientation of the grid.
         value_grid (bm.math.ndarray): The (x, y) preferred phase coordinates for each neuron.
         conn_mat (bm.math.ndarray): The connection matrix.
-        r (bp.State): The firing rates of the neurons.
-        u (bp.State): The synaptic inputs to the neurons.
-        v (bp.State): The adaptation variables for the neurons.
-        center (bp.State): The decoded 2D center of the activity bump.
+        r (bm.Variable): The firing rates of the neurons.
+        u (bm.Variable): The synaptic inputs to the neurons.
+        v (bm.Variable): The adaptation variables for the neurons.
+        center (bm.Variable): The decoded 2D center of the activity bump.
     """
 
     def __init__(
@@ -616,7 +610,7 @@ class GridCell(BasicModel):
             mbar (float, optional): The base strength of adaptation. Defaults to 1.0.
         """
         self.num = num**2
-        super().__init__(self.num)
+        super().__init__()
         # dynamics parameters
         self.tau = tau  # The synaptic time constant
         self.tau_v = tau_v
@@ -649,17 +643,24 @@ class GridCell(BasicModel):
         # initialize conn matrix
         self.conn_mat = self.make_conn()
 
-    def init_state(self, *args, **kwargs):
-        self.r = bp.State(bm.zeros(self.num))
-        self.u = bp.State(bm.zeros(self.num))
-        self.v = bp.State(bm.zeros(self.num))
+        self.r = bm.Variable(bm.zeros(self.num))
+        self.u = bm.Variable(bm.zeros(self.num))
+        self.v = bm.Variable(bm.zeros(self.num))
 
-        self.input = bp.State(bm.zeros(self.num))
-        self.center = bp.State(
+        self.input = bm.Variable(bm.zeros(self.num))
+        self.center = bm.Variable(
             bm.zeros(
                 2,
             )
         )
+
+        self.integral = bp.odeint(method='exp_euler', f=self.derivative)
+
+    @property
+    def derivative(self):
+        du = lambda u, t, Irec: (-u + Irec + self.input - self.v) / self.tau
+        dv = lambda v, t: (-v + self.m * self.u) / self.tau_v
+        return bp.JointEq([du, dv])
 
     def reset_state(self, *args, **kwargs):
         """Resets the state variables of the model to zeros."""
@@ -742,25 +743,18 @@ class GridCell(BasicModel):
         self.input.value = input
         Irec = bm.dot(self.conn_mat, self.r.value)
         # Update neural state
-        _u = exp_euler_step(
-            lambda u, Irec: (-u + Irec + self.input.value - self.v.value) / self.tau,
-            self.u.value,
-            Irec,
-        )
-        _v = exp_euler_step(
-            lambda v: (-v + self.m * self.u.value) / self.tau_v,
-            self.v.value,
-        )
+        _u, _v = self.integral(self.u, self.v, bp.share['t'], Irec, bm.dt)
+
         self.u.value = bm.where(_u > 0, _u, 0)
         self.v.value = _v
         # self.u.value += (
         #     (-self.u.value + Irec + self.input.value - self.v.value)
         #     / self.tau
-        #     * bp.environ.get_dt()
+        #     * bm.get_dt()
         # )
         # self.u.value = bm.where(self.u.value > 0, self.u.value, 0)
         # self.v.value += (
-        #     (-self.v.value + self.m * self.u.value) / self.tau_v * bp.environ.get_dt()
+        #     (-self.v.value + self.m * self.u.value) / self.tau_v * bm.get_dt()
         # )
         r1 = bm.square(self.u.value)
         r2 = 1.0 + self.k * bm.sum(r1)
@@ -785,7 +779,7 @@ class HierarchicalPathIntegrationModel(BasicModelGroup):
         grid_cell (GridCell): The grid cell module driven by the band cells.
         place_center (bm.math.ndarray): The center locations of the target place cells.
         Wg2p (bm.math.ndarray): The connection weights from grid cells to place cells.
-        grid_output (bp.State): The activity of the place cells.
+        grid_output (bm.Variable): The activity of the place cells.
     """
 
     def __init__(
@@ -909,13 +903,8 @@ class HierarchicalPathIntegrationModel(BasicModelGroup):
         self.num_place = place_center.shape[0]
         self.coor_transform = bm.array([[1, -1 / bm.sqrt(3)], [0, 2 / bm.sqrt(3)]])
 
-    def init_state(self, *args, **kwargs):
-        self.grid_output = bp.State(bm.zeros(self.num_place))
+        self.grid_output = bm.Variable(bm.zeros(self.num_place))
 
-        self.band_cell_x.init_state()
-        self.band_cell_y.init_state()
-        self.band_cell_z.init_state()
-        self.grid_cell.init_state()
 
     def make_conn(self):
         """Creates the connection matrices from the band cells to the grid cells.
@@ -980,7 +969,7 @@ class HierarchicalPathIntegrationModel(BasicModelGroup):
         """
         phase_place = self.Postophase(self.place_center)
         phase_grid = self.grid_cell.value_grid
-        d = phase_place[:, bm.newaxis, :] - phase_grid[bm.newaxis, :, :]
+        d = phase_place[:, jnp.newaxis, :] - phase_grid[jnp.newaxis, :, :]
         d = map2pi(d)
         delta_x = d[:, :, 0]
         delta_y = (d[:, :, 1] - 1 / 2 * d[:, :, 0]) * 2 / bm.sqrt(3)
@@ -1074,11 +1063,11 @@ class HierarchicalNetwork(BasicModelGroup):
         num_place (int): The number of place cells in the output layer.
         place_center (bm.math.ndarray): The center locations of the place cells.
         MEC_model_list (list): A list containing all the `HierarchicalPathIntegrationModel` instances.
-        grid_fr (bp.State): The firing rates of the grid cell population.
-        band_x_fr (bp.State): The firing rates of the x-oriented band cell population.
-        band_y_fr (bp.State): The firing rates of the y-oriented band cell population.
-        place_fr (bp.State): The firing rates of the place cell population.
-        decoded_pos (bp.State): The final decoded 2D position.
+        grid_fr (bm.Variable): The firing rates of the grid cell population.
+        band_x_fr (bm.Variable): The firing rates of the x-oriented band cell population.
+        band_y_fr (bm.Variable): The firing rates of the y-oriented band cell population.
+        place_fr (bm.Variable): The firing rates of the place cell population.
+        decoded_pos (bm.Variable): The final decoded 2D position.
 
     References:
         Anonymous Author(s) "Unfolding the Black Box of Recurrent Neural Networks for Path Integration" (under review).
@@ -1189,15 +1178,12 @@ class HierarchicalNetwork(BasicModelGroup):
             # self.W_g2p_list.append(W_g2p)
         self.MEC_model_list = MEC_model_list
 
-    def init_state(self, *args, **kwargs):
-        self.place_fr = bp.State(bm.zeros(self.num_place))
-        self.grid_fr = bp.State(bm.zeros((self.num_module, 20**2)))
-        self.band_x_fr = bp.State(bm.zeros((self.num_module, 180)))
-        self.band_y_fr = bp.State(bm.zeros((self.num_module, 180)))
-        self.decoded_pos = bp.State(bm.zeros(2))
+        self.place_fr = bm.Variable(bm.zeros(self.num_place))
+        self.grid_fr = bm.Variable(bm.zeros((self.num_module, 20 ** 2)))
+        self.band_x_fr = bm.Variable(bm.zeros((self.num_module, 180)))
+        self.band_y_fr = bm.Variable(bm.zeros((self.num_module, 180)))
+        self.decoded_pos = bm.Variable(bm.zeros(2))
 
-        for i in range(self.num_module):
-            self.MEC_model_list[i].init_state()
 
     def update(self, velocity, loc, loc_input_stre=0.0):
         grid_output = bm.zeros(self.num_place)
@@ -1226,7 +1212,7 @@ class HierarchicalNetwork(BasicModelGroup):
         # grid_output = grid_output**2/(1+bm.sum(grid_output**2))
         # max_id = bm.argmax(grid_output)
         # center = self.place_center[max_id]
-        center = bm.sum(self.place_center * u_place[:, bm.newaxis], axis=0) / (
+        center = bm.sum(self.place_center * u_place[:, jnp.newaxis], axis=0) / (
             1e-5 + bm.sum(u_place)
         )
         self.decoded_pos.value = center

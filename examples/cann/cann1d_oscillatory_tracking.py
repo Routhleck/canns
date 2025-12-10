@@ -23,9 +23,7 @@ def run_step(t, inputs):
 
 us, inps = bm.for_loop(
     run_step,
-    task_st.run_steps,
-    task_st.data,
-    pbar=None
+    operands=(task_st.run_steps, task_st.data),
 )
 
 # Using new config-based approach

@@ -51,7 +51,7 @@ class BaseCANN(BasicModel):
             self.shape = shape
         else:
             raise TypeError("shape must be an int or a tuple of ints")
-        super().__init__(math.prod(self.shape), **kwargs)
+        super().__init__(**kwargs)
 
     def make_conn(self):
         """
@@ -197,18 +197,23 @@ class CANN1D(BaseCANN1D):
         Wu, S., Hamaguchi, K., & Amari, S. I. (2008). Dynamics and computation of continuous attractors.
         Neural computation, 20(4), 994-1025.
     """
+    def __init__(self, *args, **kwargs):
+        """
+        Initializes the 1D CANN model.
 
-    def init_state(self, *args, **kwargs):
-        """Initializes the state variables of the model."""
-        # --- State Variables ---
+        Args:
+            (Parameters are inherited from BaseCANN1D)
+        """
         # Firing rate of the neurons.
-        self.r = bp.State(bm.zeros(self.varshape))
+        self.r = bm.Variable(bm.zeros(self.shape))
         # Synaptic input to the neurons.
-        self.u = bp.State(bm.zeros(self.varshape))
+        self.u = bm.Variable(bm.zeros(self.shape))
 
         # --- Inputs ---
         # External input to the network.
-        self.inp = bp.State(bm.zeros(self.varshape))
+        self.inp = bm.Variable(bm.zeros(self.shape))
+        super().__init__(*args, **kwargs)
+
 
     def update(self, inp):
         """
@@ -272,16 +277,14 @@ class CANN1D_SFA(BaseCANN1D):
         self.tau_v = tau_v  # Time constant of the adaptation variable.
         self.m = m  # Strength of the adaptation.
 
-    def init_state(self, *args, **kwargs):
-        """Initializes the state variables of the model, including the adaptation variable."""
-        # --- State Variables ---
-        self.r = bp.State(bm.zeros(self.varshape))  # Firing rate.
-        self.u = bp.State(bm.zeros(self.varshape))  # Synaptic inputs.
+        self.r = bm.Variable(bm.zeros(self.shape))  # Firing rate.
+        self.u = bm.Variable(bm.zeros(self.shape))  # Synaptic inputs.
         # self.v: The adaptation variable, which tracks the synaptic inputs 'u' and provides negative feedback.
-        self.v = bp.State(bm.zeros(self.varshape))
+        self.v = bm.Variable(bm.zeros(self.shape))
 
         # --- Inputs ---
-        self.inp = bp.State(bm.zeros(self.varshape))  # External input.
+        self.inp = bm.Variable(bm.zeros(self.shape))  # External input.
+
 
     def update(self, inp):
         """
@@ -476,19 +479,23 @@ class CANN2D(BaseCANN2D):
         Neural computation, 20(4), 994-1025.
     """
 
-    def init_state(self, *args, **kwargs):
+    def __init__(self, *args, **kwargs):
         """
-        Initializes the state variables of the model.
+        Initializes the 2D CANN model.
+
+        Args:
+            (Parameters are inherited from BaseCANN2D)
         """
-        # --- State Variables ---
         # Firing rate of the neurons.
-        self.r = bp.State(bm.zeros((self.length, self.length)))
+        self.r = bm.Variable(bm.zeros((self.length, self.length)))
         # Synaptic input to the neurons.
-        self.u = bp.State(bm.zeros((self.length, self.length)))
+        self.u = bm.Variable(bm.zeros((self.length, self.length)))
 
         # --- Inputs ---
         # External input to the neurons
-        self.inp = bp.State(bm.zeros((self.length, self.length)))
+        self.inp = bm.Variable(bm.zeros((self.length, self.length)))
+
+        super().__init__(*args, **kwargs)
 
     def update(self, inp):
         """
@@ -543,16 +550,13 @@ class CANN2D_SFA(BaseCANN2D):
         self.tau_v = tau_v  # Time Constant of the adaptation variable.
         self.m = m  # Strength of the adaptation.
 
-    def init_state(self, *args, **kwargs):
-        """Initializes the state variables of the model, including the adaptation variable."""
-        # --- State Variables ---
-        self.r = bp.State(bm.zeros((self.length, self.length)))  # Firing rate.
-        self.u = bp.State(bm.zeros((self.length, self.length)))  # Synaptic input.
+        self.r = bm.Variable(bm.zeros((self.length, self.length)))  # Firing rate.
+        self.u = bm.Variable(bm.zeros((self.length, self.length)))  # Synaptic input.
         # self.v: The adaptation variable, which tracks the synaptic inputs 'u' and provides negative feedback.
-        self.v = bp.State(bm.zeros((self.length, self.length)))
+        self.v = bm.Variable(bm.zeros((self.length, self.length)))
 
         # --- Inputs ---
-        self.inp = bp.State(bm.zeros((self.length, self.length)))  # External input.
+        self.inp = bm.Variable(bm.zeros((self.length, self.length)))  # External input.
 
     def update(self, inp):
         """

@@ -2,13 +2,13 @@
 
 import os
 
-import brainpy as bp as bst
+import brainpy as bp
 import braintools as bts
 
 __all__ = ["save_checkpoint", "load_checkpoint"]
 
 
-def save_checkpoint(model: bst.nn.Module, filepath: str) -> None:
+def save_checkpoint(model: bp.DynamicalSystem, filepath: str) -> None:
     """Save model parameters to a checkpoint file using BrainState checkpointing.
 
     Args:
@@ -20,17 +20,18 @@ def save_checkpoint(model: bst.nn.Module, filepath: str) -> None:
         >>> save_checkpoint(rnn, "my_model.msgpack")
         Saved checkpoint to: my_model.msgpack
     """
-    # Create directory if it doesn't exist
-    os.makedirs(os.path.dirname(filepath) if os.path.dirname(filepath) else ".", exist_ok=True)
+    # TODO: Implement in BrainPy
+    # # Create directory if it doesn't exist
+    # os.makedirs(os.path.dirname(filepath) if os.path.dirname(filepath) else ".", exist_ok=True)
+    #
+    # # Use BrainState's built-in checkpointing
+    # states = bst.graph.states(model)
+    # checkpoint = states[0].to_nest() if isinstance(states, tuple) else states.to_nest()
+    # bts.file.msgpack_save(filepath, checkpoint)
+    # print(f"Saved checkpoint to: {filepath}")
 
-    # Use BrainState's built-in checkpointing
-    states = bst.graph.states(model)
-    checkpoint = states[0].to_nest() if isinstance(states, tuple) else states.to_nest()
-    bts.file.msgpack_save(filepath, checkpoint)
-    print(f"Saved checkpoint to: {filepath}")
 
-
-def load_checkpoint(model: bst.nn.Module, filepath: str) -> bool:
+def load_checkpoint(model: bp.DynamicalSystem, filepath: str) -> bool:
     """Load model parameters from a checkpoint file using BrainState checkpointing.
 
     Args:
@@ -49,12 +50,13 @@ def load_checkpoint(model: bst.nn.Module, filepath: str) -> bool:
         Loaded checkpoint from: my_model.msgpack
         Loaded successfully
     """
-    if not os.path.exists(filepath):
-        return False
-
-    # Use BrainState's built-in checkpointing
-    states = bst.graph.states(model)
-    checkpoint = states[0].to_nest() if isinstance(states, tuple) else states.to_nest()
-    bts.file.msgpack_load(filepath, checkpoint)
-    print(f"Loaded checkpoint from: {filepath}")
-    return True
+    # TODO: Implement in BrainPy
+    # if not os.path.exists(filepath):
+    #     return False
+    #
+    # # Use BrainState's built-in checkpointing
+    # states = bst.graph.states(model)
+    # checkpoint = states[0].to_nest() if isinstance(states, tuple) else states.to_nest()
+    # bts.file.msgpack_load(filepath, checkpoint)
+    # print(f"Loaded checkpoint from: {filepath}")
+    # return True

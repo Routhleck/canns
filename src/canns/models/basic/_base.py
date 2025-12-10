@@ -28,7 +28,6 @@ class BasicModel(bp.DynamicalSystem):
         - ``cell_coords()``: Return neuron coordinates in feature space (for CANNs)
 
     Example:
-        >>> import brainpy as bp
         >>> import brainpy.math as bm
         >>> from canns.models.basic import CANN1D
         >>>
@@ -83,7 +82,6 @@ class BasicModelGroup(bp.DynSysGroup):
         will automatically track and manage.
 
     Example:
-        >>> import brainpy as bp
         >>> import brainpy.math as bm
         >>> from canns.models.basic import HierarchicalNetwork
         >>>

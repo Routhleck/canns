@@ -2,7 +2,8 @@
 
 import time
 
-import brainpy as bp as bst
+import brainpy as bp
+import brainpy.math as bm
 import jax
 import jax.numpy as jnp
 import numpy as np
@@ -23,7 +24,7 @@ class FixedPointFinder:
 
     def __init__(
         self,
-        rnn_model: bst.nn.Module,
+        rnn_model: bp.DynamicalSystem,
         method: str = "joint",
         max_iters: int = 5000,
         tol_q: float = 1e-12,
@@ -302,11 +303,11 @@ class FixedPointFinder:
         u = jnp.array(inputs, dtype=self.jax_dtype)
 
         # Create optimization variables as BrainState State
-        x_state = bst.ParamState(x_init)
+        x_state = bm.Variable(x_init)
 
         # Create optimizer
-        optimizer = bst.optim.Adam(lr=self.lr_init)
-        optimizer.register_trainable_weights({"x": x_state})
+        optimizer = bp.optim.Adam(lr=self.lr_init)
+        optimizer.register_train_vars({"x": x_state})
 
         # Track learning rate manually (simplified scheduler)
         current_lr = self.lr_init
@@ -341,7 +342,7 @@ class FixedPointFinder:
                 dx_opt = x_opt - F_x_opt
                 return jnp.mean(0.5 * jnp.sum(dx_opt**2, axis=1))
 
-            grads_raw = bst.augment.grad(loss_fn, grad_states=x_state)()
+            grads_raw = bm.grad(loss_fn, grad_vars=x_state)()
 
             # Wrap gradients in dictionary for optimizer
             grads = {"x": grads_raw}

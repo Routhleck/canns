@@ -29,17 +29,16 @@ task_sn = OpenLoopNavigationTask(
 trajectory_file_path = os.path.join(PATH, 'trajectory_test.npz')
 trajectory_graph_file_path = os.path.join(PATH, 'trajectory_graph.png')
 
-if os.path.exists(trajectory_file_path):
-    print(f"Loading trajectory from {trajectory_file_path}")
-    task_sn.load_data(trajectory_file_path)
-else:
-    print(f"Generating new trajectory and saving to {trajectory_file_path}")
-    task_sn.get_data()
-    task_sn.show_data(show=False, save_path=trajectory_graph_file_path)
-    task_sn.save_data(trajectory_file_path)
+# if os.path.exists(trajectory_file_path):
+#     print(f"Loading trajectory from {trajectory_file_path}")
+#     task_sn.load_data(trajectory_file_path)
+# else:
+print(f"Generating new trajectory and saving to {trajectory_file_path}")
+task_sn.get_data()
+task_sn.show_data(show=False, save_path=trajectory_graph_file_path)
+# task_sn.save_data(trajectory_file_path)
 
 hierarchical_net = HierarchicalNetwork(num_module=5, num_place=30)
-hierarchical_net.init_state()
 
 def initialize(t, input_stre):
     hierarchical_net(
@@ -54,9 +53,10 @@ input_stre = np.zeros(init_time)
 input_stre[:400]=100.
 bm.for_loop(
     initialize,
-    bm.asarray(indices),
-    bm.asarray(input_stre),
-    pbar=None
+    (
+        bm.asarray(indices), bm.asarray(input_stre)
+    ),
+    progress_bar=100
 )
 
 def run_step(t, vel, loc):
@@ -73,22 +73,24 @@ indices = np.arange(total_time)
 
 band_x_r, band_y_r, grid_r, place_r = bm.for_loop(
     run_step,
-    bm.asarray(indices),
-    bm.asarray(task_sn.data.velocity),
-    bm.asarray(task_sn.data.position),
-    pbar=None
+    (
+        bm.asarray(indices),
+        bm.asarray(task_sn.data.velocity),
+        bm.asarray(task_sn.data.position)
+    ),
+    progress_bar=10000
 )
 
 
-activity_file_path = os.path.join(PATH, 'band_grid_place_activity.npz')
-
-np.savez(
-    activity_file_path,
-    band_x_r=band_x_r,
-    band_y_r=band_y_r,
-    grid_r=grid_r,
-    place_r=place_r,
-)
+# activity_file_path = os.path.join(PATH, 'band_grid_place_activity.npz')
+#
+# np.savez(
+#     activity_file_path,
+#     band_x_r=band_x_r,
+#     band_y_r=band_y_r,
+#     grid_r=grid_r,
+#     place_r=place_r,
+# )
 
 #### Visualization
 from tqdm import tqdm
@@ -100,15 +102,15 @@ from canns.analyzer.plotting import PlotConfig, plot_firing_field_heatmap
 np.random.seed(10)
 
 
-trajectory = np.load(trajectory_file_path)
-loc = trajectory['position']
+# trajectory = np.load(trajectory_file_path)
+loc = task_sn.data.position
 
 # load the neuron activity
-data = np.load(activity_file_path)
-band_x_r = data['band_x_r']
-band_y_r = data['band_y_r']
-grid_r = data['grid_r']
-place_r = data['place_r']
+# data = np.load(activity_file_path)
+# band_x_r = data['band_x_r']
+# band_y_r = data['band_y_r']
+# grid_r = data['grid_r']
+# place_r = data['place_r']
 
 loc = np.array(loc)
 width = 5
@@ -118,29 +120,38 @@ K = int(height * 10)
 
 T = grid_r.shape[0]
 
-grid_r = np.array(grid_r).reshape(T, -1)
-band_x_r = np.array(band_x_r).reshape(T, -1)
-band_y_r = np.array(band_y_r).reshape(T, -1)
-place_r = np.array(place_r).reshape(T, -1)
+print(f"{time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())} - Reshaping data...")
+
+# Reshape directly without unnecessary np.array() conversion
+grid_r = grid_r.reshape(T, -1)
+band_x_r = band_x_r.reshape(T, -1)
+band_y_r = band_y_r.reshape(T, -1)
+place_r = place_r.reshape(T, -1)
+
+print(f"{time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())} - Computing heatmaps...")
 
 heatmaps_grid = compute_firing_field(grid_r, loc, width, height, M, K)
 heatmaps_band_x = compute_firing_field(band_x_r, loc, width, height, M, K)
 heatmaps_band_y = compute_firing_field(band_y_r, loc, width, height, M, K)
 heatmaps_place = compute_firing_field(place_r, loc, width, height, M, K)
 
-heatmap_file_path = os.path.join(PATH, 'band_grid_place_heatmap.npz')
-np.savez(
-    heatmap_file_path,
-    heatmaps_grid=heatmaps_grid,
-    heatmaps_band_x=heatmaps_band_x,
-    heatmaps_band_y=heatmaps_band_y,
-    heatmaps_place=heatmaps_place,
-)
+# heatmap_file_path = os.path.join(PATH, 'band_grid_place_heatmap.npz')
+# np.savez(
+#     heatmap_file_path,
+#     heatmaps_grid=heatmaps_grid,
+#     heatmaps_band_x=heatmaps_band_x,
+#     heatmaps_band_y=heatmaps_band_y,
+#     heatmaps_place=heatmaps_place,
+# )
+
+print(f"{time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())} - Plotting heatmaps...")
 
 heatmaps_grid = gaussian_smooth_heatmaps(heatmaps_grid)
 heatmaps_band_x = gaussian_smooth_heatmaps(heatmaps_band_x)
 heatmaps_band_y = gaussian_smooth_heatmaps(heatmaps_band_y)
 heatmaps_place = gaussian_smooth_heatmaps(heatmaps_place)
+
+print(f"{time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())} - Reshaping heatmaps...")
 
 heatmaps_band_x = heatmaps_band_x.reshape(5, -1, M, K)
 heatmaps_band_y = heatmaps_band_y.reshape(5, -1, M, K)
@@ -156,17 +167,17 @@ os.makedirs(output_dir, exist_ok=True)
 #   - [0]: Save only module 0
 #   - [0, 1, 2]: Save modules 0, 1, and 2
 #   - None: Save all modules (default behavior)
-SAVE_MODULES = [0]
+SAVE_MODULES = None
 
 # SAVE_CELLS: List of cell indices to save within each module
 #   - [0, 1, 2]: Save only cells 0, 1, and 2 from each selected module
 #   - None: Save all cells in each selected module (default behavior)
-SAVE_CELLS = None
+SAVE_CELLS = [0, 1, 2, 3, 4]
 
 # SAVE_PLACE_CELLS: List of place cell indices to save
 #   - [0, 5, 10]: Save only place cells 0, 5, and 10
 #   - None: Save all place cells (default behavior)
-SAVE_PLACE_CELLS = None
+SAVE_PLACE_CELLS = [0, 5, 10, 15, 20]
 
 
 # Save band cell heatmaps

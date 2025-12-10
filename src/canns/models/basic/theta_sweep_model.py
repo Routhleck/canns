@@ -2,7 +2,8 @@ import brainpy as bp
 import brainpy.math as bm
 import jax
 import numpy as np
-from bp.nn import exp_euler_step
+from brainpy.integrators.ode import exponential
+# TODO: exp_euler_step should be implemented in BrainPy
 
 from ._base import BasicModel
 
@@ -401,7 +402,7 @@ class GridCellNetwork(BasicModel):
 
         # inverse, which is bm.array([[1.0, 1.0 / 2],[0.0,  bm.sqrt(3.0) / 2]])
         # Note that coor_transform_inv is to map a square to a parallelogram with a 60-degree angle
-        self.coor_transform_inv = u.linalg.inv(self.coor_transform)
+        self.coor_transform_inv = bm.inv(self.coor_transform)
 
         # feature space
         x_bins = bm.linspace(-bm.pi, bm.pi, num_gc_x + 1)
