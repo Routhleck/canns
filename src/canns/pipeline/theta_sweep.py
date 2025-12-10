@@ -9,8 +9,8 @@ the underlying implementation details.
 from pathlib import Path
 from typing import Any
 
-import brainstate
-import brainunit as u
+import brainpy as bp
+import brainpy.math as bm
 import numpy as np
 
 from ..analyzer.plotting import PlotConfig
@@ -255,7 +255,7 @@ class ThetaSweepPipeline(Pipeline):
                 - theta_phase: Theta oscillation phase over time
         """
         # Set BrainState environment
-        brainstate.environ.set(dt=1.0)
+        bm.set_dt(dt=1.0)
 
         # Extract data from spatial navigation task
         snt_data = self.spatial_nav_task.data
@@ -296,14 +296,14 @@ class ThetaSweepPipeline(Pipeline):
             )
 
         # Run compiled simulation loop
-        results = brainstate.transform.for_loop(
+        results = bm.for_loop(
             run_step,
-            u.math.arange(len(position)),
+            bm.arange(len(position)),
             position,
             direction,
             linear_speed_gains,
             ang_speed_gains,
-            pbar=brainstate.transform.ProgressBar(10),
+            pbar=None,
         )
 
         # Unpack results

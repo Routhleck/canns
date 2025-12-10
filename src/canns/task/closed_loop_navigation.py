@@ -118,7 +118,7 @@ class TMazeClosedLoopNavigationTask(ClosedLoopNavigationTask):
             l_arm: Length of each arm (default: 0.75)
             t: Thickness of the walls (default: 0.3)
             start_pos: Starting position of the agent (default: (0.0, 0.15))
-            dt: Time step (default: None, uses brainstate.environ.get_dt())
+            dt: Time step (default: None, uses bm.get_dt())
             **kwargs: Additional keyword arguments passed to ClosedLoopNavigationTask
         """
         hw = w / 2
@@ -175,7 +175,7 @@ class TMazeRecessClosedLoopNavigationTask(TMazeClosedLoopNavigationTask):
             recess_width: Width of recesses at stem-arm junctions (default: t/4)
             recess_depth: Depth of recesses extending downward (default: t/4)
             start_pos: Starting position of the agent (default: (0.0, 0.15))
-            dt: Time step (default: None, uses brainstate.environ.get_dt())
+            dt: Time step (default: None, uses bm.get_dt())
             **kwargs: Additional keyword arguments passed to ClosedLoopNavigationTask
         """
         hw = w / 2

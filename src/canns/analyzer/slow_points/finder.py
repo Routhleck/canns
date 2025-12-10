@@ -2,7 +2,7 @@
 
 import time
 
-import brainstate as bst
+import brainpy as bp as bst
 import jax
 import jax.numpy as jnp
 import numpy as np

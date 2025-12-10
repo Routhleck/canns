@@ -1,7 +1,7 @@
 import copy
 from dataclasses import dataclass
 
-import brainunit as u
+import brainpy.math as bm
 import numpy as np
 import seaborn as sns
 from canns_lib.spatial import Agent, Environment
@@ -20,8 +20,8 @@ __all__ = [
 
 
 def map2pi(a):
-    b = u.math.where(a > np.pi, a - np.pi * 2, a)
-    c = u.math.where(b < -np.pi, b + np.pi * 2, b)
+    b = bm.where(a > np.pi, a - np.pi * 2, a)
+    c = bm.where(b < -np.pi, b + np.pi * 2, b)
     return c
 
 
@@ -637,7 +637,7 @@ class TMazeOpenLoopNavigationTask(OpenLoopNavigationTask):
             t: Thickness of the walls (default: 0.3)
             start_pos: Starting position of the agent (default: (0.0, 0.15))
             duration: Duration of the trajectory in seconds (default: 20.0)
-            dt: Time step (default: None, uses brainstate.environ.get_dt())
+            dt: Time step (default: None, uses bm.get_dt())
             **kwargs: Additional keyword arguments passed to OpenLoopNavigationTask
         """
         hw = w / 2
@@ -697,7 +697,7 @@ class TMazeRecessOpenLoopNavigationTask(TMazeOpenLoopNavigationTask):
             recess_depth: Depth of recesses extending downward (default: t/4)
             start_pos: Starting position of the agent (default: (0.0, 0.15))
             duration: Duration of the trajectory in seconds (default: 20.0)
-            dt: Time step (default: None, uses brainstate.environ.get_dt())
+            dt: Time step (default: None, uses bm.get_dt())
             **kwargs: Additional keyword arguments passed to OpenLoopNavigationTask
         """
         hw = w / 2

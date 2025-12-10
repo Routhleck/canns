@@ -2,7 +2,7 @@
 
 import os
 
-import brainstate as bst
+import brainpy as bp as bst
 import braintools as bts
 
 __all__ = ["save_checkpoint", "load_checkpoint"]

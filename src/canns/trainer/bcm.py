@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Iterable
 
-import brainstate
+import brainpy as bp
 import jax.numpy as jnp
 
 from ..models.brain_inspired import BrainInspiredModel
@@ -90,7 +90,7 @@ class BCMTrainer(Trainer):
 
     def _train_compiled(self, train_data: Iterable, weight_param):
         """
-        JIT-compiled training loop using brainstate.transform.scan.
+        JIT-compiled training loop using bp.transform.scan.
 
         Args:
             train_data: Iterable of input patterns
@@ -129,7 +129,7 @@ class BCMTrainer(Trainer):
             return (W, theta), None
 
         # Run compiled scan
-        (W_final, theta_final), _ = brainstate.transform.scan(
+        (W_final, theta_final), _ = bp.transform.scan(
             train_step, (W_init, theta_init), patterns
         )
 

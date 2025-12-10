@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-import brainstate
+import brainpy as bp
 import jax
 import jax.numpy as jnp
 
@@ -63,18 +63,18 @@ class LinearLayer(BrainInspiredModel):
         """Initialize layer parameters and state variables."""
         # Weight matrix W: (output_size, input_size)
         # Initialize with small random values to break symmetry
-        key = brainstate.random.get_key()
-        self.W = brainstate.ParamState(
+        key = bm.random.get_key()
+        self.W = bp.State(
             jax.random.normal(key, (self.output_size, self.input_size), dtype=jnp.float32) * 0.01
         )
         # Input state (for training)
-        self.x = brainstate.HiddenState(jnp.zeros(self.input_size, dtype=jnp.float32))
+        self.x = bp.State(jnp.zeros(self.input_size, dtype=jnp.float32))
         # Output state
-        self.y = brainstate.HiddenState(jnp.zeros(self.output_size, dtype=jnp.float32))
+        self.y = bp.State(jnp.zeros(self.output_size, dtype=jnp.float32))
 
         # Optional sliding threshold for BCM learning
         if self.use_bcm_threshold:
-            self.theta = brainstate.HiddenState(jnp.ones(self.output_size, dtype=jnp.float32) * 0.1)
+            self.theta = bp.State(jnp.ones(self.output_size, dtype=jnp.float32) * 0.1)
 
     def forward(self, x: jnp.ndarray) -> jnp.ndarray:
         """
@@ -157,7 +157,7 @@ class LinearLayer(BrainInspiredModel):
         if hasattr(self, "W"):
             self.W.value = new_W
         else:
-            self.W = brainstate.ParamState(new_W)
+            self.W = bp.State(new_W)
 
         # Update threshold if using BCM
         if self.use_bcm_threshold:
@@ -169,15 +169,15 @@ class LinearLayer(BrainInspiredModel):
             if hasattr(self, "theta"):
                 self.theta.value = new_theta
             else:
-                self.theta = brainstate.HiddenState(new_theta)
+                self.theta = bp.State(new_theta)
 
         # Update state variables
         if hasattr(self, "x"):
             self.x.value = jnp.zeros(self.input_size, dtype=jnp.float32)
         else:
-            self.x = brainstate.HiddenState(jnp.zeros(self.input_size, dtype=jnp.float32))
+            self.x = bp.State(jnp.zeros(self.input_size, dtype=jnp.float32))
 
         if hasattr(self, "y"):
             self.y.value = jnp.zeros(self.output_size, dtype=jnp.float32)
         else:
-            self.y = brainstate.HiddenState(jnp.zeros(self.output_size, dtype=jnp.float32))
+            self.y = bp.State(jnp.zeros(self.output_size, dtype=jnp.float32))

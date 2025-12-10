@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Iterable
 
-import brainstate
+import brainpy as bp
 import jax.numpy as jnp
 
 from ..models.brain_inspired import BrainInspiredModel
@@ -84,7 +84,7 @@ class SangerTrainer(Trainer):
 
     def _train_compiled(self, train_data: Iterable, weight_param):
         """
-        JIT-compiled training loop using brainstate.transform.scan.
+        JIT-compiled training loop using bp.transform.scan.
 
         Args:
             train_data: Iterable of input patterns
@@ -132,7 +132,7 @@ class SangerTrainer(Trainer):
             return W, None
 
         # Run compiled scan
-        W_final, _ = brainstate.transform.scan(train_step, W_init, patterns)
+        W_final, _ = bp.transform.scan(train_step, W_init, patterns)
 
         # Update model parameters
         weight_param.value = W_final

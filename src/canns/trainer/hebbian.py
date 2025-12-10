@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from collections.abc import Callable, Iterable
 
-import brainstate
+import brainpy as bp
 import jax
 import jax.numpy as jnp
 from tqdm import tqdm  # type: ignore
@@ -22,7 +22,7 @@ class HebbianTrainer(Trainer):
       standard Hebbian update. If unavailable, falls back to the model's
       ``apply_hebbian_learning``.
     - Works with models that expose a parameter object with a ``.value`` ndarray of shape
-      (N, N) (e.g., ``brainstate.ParamState``).
+      (N, N) (e.g., ``bp.State``).
 
     Generic rule
     - For patterns ``x`` (shape: (N,)), compute optional mean activity ``rho`` and update
@@ -434,7 +434,7 @@ class HebbianTrainer(Trainer):
             return new_s, new_energy, iteration + 1
 
         initial_carry = (self._get_state_vector(state_param), initial_energy, 0)
-        final_s, _, _ = brainstate.transform.while_loop(
+        final_s, _, _ = bp.transform.while_loop(
             cond_fn,
             body_fn,
             initial_carry,
