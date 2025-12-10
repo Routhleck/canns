@@ -8,8 +8,9 @@ multiple times. Removing the guard would cause the entire script to run once per
 worker when using the parallel GIF renderer.
 """
 
-import brainstate
-import brainunit as u
+import brainpy as bp
+import brainpy.math as bm
+import brainpy.math as bm
 import numpy as np
 
 from canns.analyzer.plotting.spikes import population_activity_heatmap
@@ -23,7 +24,7 @@ def main() -> None:
     np.random.seed(10)
     simulate_time = 3.0
     dt = 0.001
-    brainstate.environ.set(dt=1.0)
+    bm.set_dt(dt=1.0)
 
     # Create and run spatial navigation task with T-maze geometry from Chu et al. 2024
     tmazet = TMazeRecessOpenLoopNavigationTask(
@@ -35,7 +36,7 @@ def main() -> None:
         start_pos=(0.0, 0.6),
         recess_width=0.2,
         recess_depth=0.2,
-        initial_head_direction=1 / 2 * u.math.pi,
+        initial_head_direction=1 / 2 * bm.pi,
         speed_mean=1.2,    # Agent speed (m/s)
         speed_std=0.0,
         rotational_velocity_std=0,
@@ -85,19 +86,19 @@ def main() -> None:
         pc_net(position[0], 1.0)  # Run at start position with no theta modulation
         return None
 
-    brainstate.transform.for_loop(
+    bm.for_loop(
         warmup_step,
-        u.math.arange(warmup_steps),
-        pbar=brainstate.transform.ProgressBar(10),
+        bm.arange(warmup_steps),
+        pbar=None
     )
     print("Warmup completed.")
 
     def run_step(i, pos, vel_gain, theta_strength=0.1, theta_cycle_len=100):
-        t = i * brainstate.environ.get_dt()
-        theta_phase = u.math.mod(t, theta_cycle_len) / theta_cycle_len
-        theta_phase = theta_phase * 2 * u.math.pi - u.math.pi
+        t = i * bm.get_dt()
+        theta_phase = bm.mod(t, theta_cycle_len) / theta_cycle_len
+        theta_phase = theta_phase * 2 * bm.pi - bm.pi
 
-        theta_modulation = 1 + theta_strength * vel_gain * u.math.cos(theta_phase)
+        theta_modulation = 1 + theta_strength * vel_gain * bm.cos(theta_phase)
 
         pc_net(pos, theta_modulation)
 
@@ -108,12 +109,12 @@ def main() -> None:
             theta_modulation,
         )
 
-    results = brainstate.transform.for_loop(
+    results = bm.for_loop(
         run_step,
-        u.math.arange(len(position)),
+        bm.arange(len(position)),
         position,
         linear_speed_gains,
-        pbar=brainstate.transform.ProgressBar(10),
+        pbar=None
     )
 
     (

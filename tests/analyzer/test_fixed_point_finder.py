@@ -7,12 +7,13 @@ RNN model to find and analyze fixed points.
 import numpy as np
 import jax
 import jax.numpy as jnp
-import brainstate as bst
+import brainpy as bp
+import brainpy.math as bm
 from canns.analyzer.slow_points import FixedPointFinder, FixedPoints
 
 
 # Define a simple RNN model compatible with BrainState
-class SimpleRNN(bst.nn.Module):
+class SimpleRNN(bp.nn.Module):
     """Simple vanilla RNN for testing fixed point finder."""
 
     def __init__(self, n_inputs, n_hidden):
@@ -24,13 +25,13 @@ class SimpleRNN(bst.nn.Module):
         key = jax.random.PRNGKey(0)
         k1, k2, k3 = jax.random.split(key, 3)
 
-        self.w_ih = bst.ParamState(
+        self.w_ih = bp.ParamState(
             jax.random.normal(k1, (n_inputs, n_hidden)) * 0.1
         )
-        self.w_hh = bst.ParamState(
+        self.w_hh = bp.ParamState(
             jax.random.normal(k2, (n_hidden, n_hidden)) * 0.5
         )
-        self.b_h = bst.ParamState(jnp.zeros(n_hidden))
+        self.b_h = bp.ParamState(jnp.zeros(n_hidden))
 
     def __call__(self, inputs, hidden):
         """Forward pass.

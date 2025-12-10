@@ -12,7 +12,8 @@ Sussillo, D., & Barak, O. (2013). Opening the black box: low-dimensional
 dynamics in high-dimensional recurrent neural networks. Neural Computation.
 """
 
-import brainstate as bst
+import brainpy as bp
+import brainpy.math as bm
 import braintools as bts  #
 import jax
 import jax.numpy as jnp
@@ -34,7 +35,7 @@ def generate_sine_wave_data(n_trials=128, n_steps=100):
         "targets": targets[..., None].astype(np.float32)
     }
 
-class SineWaveRNN(bst.nn.Module):
+class SineWaveRNN(bp.nn.Module):
     """
     A simple RNN for sine wave prediction
     """
@@ -57,18 +58,18 @@ class SineWaveRNN(bst.nn.Module):
             return gain * q
 
         # Input weights use small random values
-        self.w_ih = bst.ParamState(
+        self.w_ih = bp.ParamState(
             jax.random.normal(k1, (self.input_size, self.hidden_size)) * 0.1
         )
 
         # Promote sustained oscillation
-        self.w_hh = bst.ParamState(orthogonal(k2, (self.hidden_size, self.hidden_size), gain=1.1))
-        self.b_h = bst.ParamState(jnp.zeros(self.hidden_size))
-        self.w_out = bst.ParamState(
+        self.w_hh = bp.ParamState(orthogonal(k2, (self.hidden_size, self.hidden_size), gain=1.1))
+        self.b_h = bp.ParamState(jnp.zeros(self.hidden_size))
+        self.w_out = bp.ParamState(
             jax.random.normal(k3, (self.hidden_size, self.n_outputs)) * 0.1
         )
-        self.b_out = bst.ParamState(jnp.zeros(self.n_outputs))
-        self.h0 = bst.ParamState(jnp.zeros(self.hidden_size))
+        self.b_out = bp.ParamState(jnp.zeros(self.n_outputs))
+        self.h0 = bp.ParamState(jnp.zeros(self.hidden_size))
 
     def step(self, x_t, h):
         """Single RNN step (Tanh)."""
@@ -127,7 +128,7 @@ def train_sine_wave_rnn(rnn, train_data, valid_data,
         return '.'.join(key) if isinstance(key, tuple) else key
 
     trainable_states = {flatten_key(name): state for name, state in rnn.states().items() if
-                        isinstance(state, bst.ParamState)}
+                        isinstance(state, bp.ParamState)}
     trainable_params = {name: state.value for name, state in trainable_states.items()}
 
     optimizer = bts.optim.Adam(lr=learning_rate)
@@ -177,7 +178,7 @@ def train_sine_wave_rnn(rnn, train_data, valid_data,
             optimizer.update(grads)
 
             trainable_params = {flatten_key(name): state.value for name, state in rnn.states().items() if
-                                isinstance(state, bst.ParamState)}
+                                isinstance(state, bp.ParamState)}
             epoch_loss += float(loss_val)
 
         epoch_loss /= n_batches

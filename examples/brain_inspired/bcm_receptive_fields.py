@@ -9,7 +9,8 @@ This example demonstrates:
 - Tuning curve visualization using canns.analyzer
 """
 
-import brainstate
+import brainpy as bp
+import brainpy.math as bm
 import jax.numpy as jnp
 import numpy as np
 from matplotlib import pyplot as plt
@@ -19,7 +20,7 @@ from canns.models.brain_inspired import LinearLayer
 from canns.trainer import BCMTrainer
 
 np.random.seed(42)
-brainstate.random.seed(42)
+bm.random.seed(42)
 
 
 def create_oriented_bar(angle, size=16):

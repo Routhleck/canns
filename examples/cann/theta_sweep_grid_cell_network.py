@@ -9,8 +9,9 @@ worker when using the parallel GIF renderer.
 """
 
 import numpy as np
-import brainstate
-import brainunit as u
+import brainpy as bp
+import brainpy.math as bm
+import brainpy.math as bm
 
 from canns.analyzer.theta_sweep import (
     create_theta_sweep_grid_cell_animation,
@@ -32,12 +33,12 @@ def main() -> None:
     Env_size = 1.5
     simulate_time = 2.0
     dt = 0.001
-    brainstate.environ.set(dt=1.0)
+    bm.set_dt(dt=1.0)
 
     # Create and run spatial navigation task
     snt = OpenLoopNavigationTask(
         duration=simulate_time,
-        initial_head_direction=11 / 12 * u.math.pi,
+        initial_head_direction=11 / 12 * bm.pi,
         width=Env_size,
         height=Env_size,
         start_pos=[Env_size * 15 / 16, Env_size * 1 / 16],
@@ -109,14 +110,14 @@ def main() -> None:
             theta_modulation_gc,
         )
 
-    results = brainstate.transform.for_loop(
+    results = bm.for_loop(
         run_step,
-        u.math.arange(len(position)),
+        bm.arange(len(position)),
         position,
         direction,
         linear_speed_gains,
         ang_speed_gains,
-        pbar=brainstate.transform.ProgressBar(10),
+        pbar=None
     )
 
     (

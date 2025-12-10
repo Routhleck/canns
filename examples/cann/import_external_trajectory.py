@@ -6,7 +6,7 @@ into OpenLoopNavigationTask instead of using the built-in random motion model.
 """
 
 import numpy as np
-import brainunit as u
+import brainpy.math as bm
 from canns.task.open_loop_navigation import OpenLoopNavigationTask
 
 # Environment parameters

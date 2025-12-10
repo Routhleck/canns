@@ -9,7 +9,8 @@ This example demonstrates:
 - Weight evolution visualization showing timing-dependent changes
 """
 
-import brainstate
+import brainpy as bp
+import brainpy.math as bm
 import numpy as np
 from matplotlib import pyplot as plt
 
@@ -17,7 +18,7 @@ from canns.models.brain_inspired import SpikingLayer
 from canns.trainer import STDPTrainer
 
 np.random.seed(42)
-brainstate.random.seed(42)
+bm.random.seed(42)
 
 # ========================================================================
 # Generate temporal spike patterns

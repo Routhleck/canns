@@ -8,7 +8,8 @@ This example demonstrates:
 - Comparison with sklearn PCA
 """
 
-import brainstate
+import brainpy as bp
+import brainpy.math as bm
 import numpy as np
 from matplotlib import pyplot as plt
 
@@ -16,7 +17,7 @@ from canns.models.brain_inspired import LinearLayer
 from canns.trainer import OjaTrainer
 
 np.random.seed(42)
-brainstate.random.seed(42)
+bm.random.seed(42)
 
 # Generate synthetic data with clear principal components
 n_samples = 500

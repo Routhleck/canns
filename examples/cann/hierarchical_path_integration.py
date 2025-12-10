@@ -1,7 +1,8 @@
 import time
 
-import brainstate
-import brainunit as u
+import brainpy as bp
+import brainpy.math as bm
+import brainpy.math as bm
 import jax
 import numpy as np
 import os
@@ -12,7 +13,7 @@ from canns.task.open_loop_navigation import OpenLoopNavigationTask
 PATH = os.path.dirname(os.path.abspath(__file__))
 
 
-brainstate.environ.set(dt=0.05)
+bm.set_dt(dt=0.05)
 task_sn = OpenLoopNavigationTask(
     width=5,
     height=5,
@@ -42,7 +43,7 @@ hierarchical_net.init_state()
 
 def initialize(t, input_stre):
     hierarchical_net(
-        velocity=u.math.zeros(2, ),
+        velocity=bm.zeros(2, ),
         loc=task_sn.data.position[0],
         loc_input_stre=input_stre,
     )
@@ -51,11 +52,11 @@ init_time = 500
 indices = np.arange(init_time)
 input_stre = np.zeros(init_time)
 input_stre[:400]=100.
-brainstate.transform.for_loop(
+bm.for_loop(
     initialize,
-    u.math.asarray(indices),
-    u.math.asarray(input_stre),
-    pbar=brainstate.transform.ProgressBar(10),
+    bm.asarray(indices),
+    bm.asarray(input_stre),
+    pbar=None
 )
 
 def run_step(t, vel, loc):
@@ -70,12 +71,12 @@ total_time = task_sn.data.velocity.shape[0]
 indices = np.arange(total_time)
 
 
-band_x_r, band_y_r, grid_r, place_r = brainstate.transform.for_loop(
+band_x_r, band_y_r, grid_r, place_r = bm.for_loop(
     run_step,
-    u.math.asarray(indices),
-    u.math.asarray(task_sn.data.velocity),
-    u.math.asarray(task_sn.data.position),
-    pbar=brainstate.transform.ProgressBar(10),
+    bm.asarray(indices),
+    bm.asarray(task_sn.data.velocity),
+    bm.asarray(task_sn.data.position),
+    pbar=None
 )
 
 

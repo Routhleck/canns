@@ -8,7 +8,8 @@ across multiple channels, flipping each channel's state when it receives an inpu
 Based on the PyTorch implementation by Matt Golub.
 """
 
-import brainstate as bst
+import brainpy as bp
+import brainpy.math as bm
 import braintools as bts
 import jax
 import jax.numpy as jnp
@@ -77,7 +78,7 @@ class FlipFlopData:
         }
 
 
-class FlipFlopRNN(bst.nn.Module):
+class FlipFlopRNN(bp.nn.Module):
     """RNN model for the flip-flop memory task."""
 
     def __init__(self, n_inputs, n_hidden, n_outputs, rnn_type="gru", seed=0):
@@ -102,48 +103,48 @@ class FlipFlopRNN(bst.nn.Module):
 
         if rnn_type == "tanh":
             # Simple tanh RNN
-            self.w_ih = bst.ParamState(
+            self.w_ih = bp.ParamState(
                 jax.random.normal(k1, (n_inputs, n_hidden)) * 0.1
             )
-            self.w_hh = bst.ParamState(
+            self.w_hh = bp.ParamState(
                 jax.random.normal(k2, (n_hidden, n_hidden)) * 0.5
             )
-            self.b_h = bst.ParamState(jnp.zeros(n_hidden))
+            self.b_h = bp.ParamState(jnp.zeros(n_hidden))
         elif rnn_type == "gru":
             # GRU cell
-            self.w_ir = bst.ParamState(
+            self.w_ir = bp.ParamState(
                 jax.random.normal(k1, (n_inputs, n_hidden)) * 0.1
             )
-            self.w_hr = bst.ParamState(
+            self.w_hr = bp.ParamState(
                 jax.random.normal(k2, (n_hidden, n_hidden)) * 0.5
             )
-            self.w_iz = bst.ParamState(
+            self.w_iz = bp.ParamState(
                 jax.random.normal(k3, (n_inputs, n_hidden)) * 0.1
             )
-            self.w_hz = bst.ParamState(
+            self.w_hz = bp.ParamState(
                 jax.random.normal(k4, (n_hidden, n_hidden)) * 0.5
             )
             k5, k6, k7, k8 = jax.random.split(k4, 4)
-            self.w_in = bst.ParamState(
+            self.w_in = bp.ParamState(
                 jax.random.normal(k5, (n_inputs, n_hidden)) * 0.1
             )
-            self.w_hn = bst.ParamState(
+            self.w_hn = bp.ParamState(
                 jax.random.normal(k6, (n_hidden, n_hidden)) * 0.5
             )
-            self.b_r = bst.ParamState(jnp.zeros(n_hidden))
-            self.b_z = bst.ParamState(jnp.zeros(n_hidden))
-            self.b_n = bst.ParamState(jnp.zeros(n_hidden))
+            self.b_r = bp.ParamState(jnp.zeros(n_hidden))
+            self.b_z = bp.ParamState(jnp.zeros(n_hidden))
+            self.b_n = bp.ParamState(jnp.zeros(n_hidden))
         else:
             raise ValueError(f"Unsupported rnn_type: {rnn_type}")
 
         # Readout layer
-        self.w_out = bst.ParamState(
+        self.w_out = bp.ParamState(
             jax.random.normal(k3, (n_hidden, n_outputs)) * 0.1
         )
-        self.b_out = bst.ParamState(jnp.zeros(n_outputs))
+        self.b_out = bp.ParamState(jnp.zeros(n_outputs))
 
         # Initial hidden state
-        self.h0 = bst.ParamState(jnp.zeros(n_hidden))
+        self.h0 = bp.ParamState(jnp.zeros(n_hidden))
 
     def step(self, x_t, h):
         """Single RNN step.
@@ -234,7 +235,7 @@ def train_flipflop_rnn(rnn, train_data, valid_data,
         return '.'.join(key) if isinstance(key, tuple) else key
 
     trainable_states = {flatten_key(name): state for name, state in rnn.states().items() if
-                        isinstance(state, bst.ParamState)}
+                        isinstance(state, bp.ParamState)}
     trainable_params = {name: state.value for name, state in trainable_states.items()}
 
     optimizer = bts.optim.Adam(
@@ -294,7 +295,7 @@ def train_flipflop_rnn(rnn, train_data, valid_data,
             loss_val, grads = grad_step(trainable_params, batch_inputs, batch_targets)
             optimizer.update(grads)
             trainable_params = {flatten_key(name): state.value for name, state in rnn.states().items() if
-                                isinstance(state, bst.ParamState)}
+                                isinstance(state, bp.ParamState)}
             epoch_loss += float(loss_val)
         epoch_loss /= n_batches
         losses.append(epoch_loss)

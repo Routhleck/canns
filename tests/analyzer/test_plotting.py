@@ -1,6 +1,7 @@
 import os
 
-import brainstate
+import brainpy as bp
+import brainpy.math as bm
 import numpy as np
 
 from canns.analyzer.plotting import (
@@ -20,7 +21,7 @@ from canns.models.basic import CANN1D, CANN2D
 
 
 def test_energy_landscape_1d():
-    brainstate.environ.set(dt=0.1)
+    bm.set_dt(dt=0.1)
     cann = CANN1D(num=32)
     cann.init_state()
 
@@ -30,7 +31,7 @@ def test_energy_landscape_1d():
         after_duration=10.,
         duration=20.,
         Iext=0.,
-        time_step=brainstate.environ.get_dt(),
+        time_step=bm.get_dt(),
     )
     task_pc.get_data()
 
@@ -38,7 +39,7 @@ def test_energy_landscape_1d():
         cann(inputs)
         return cann.u.value, cann.inp.value
 
-    us, inps = brainstate.transform.for_loop(run_step, task_pc.run_steps, task_pc.data, pbar=brainstate.transform.ProgressBar(10))
+    us, inps = bm.for_loop(run_step, task_pc.run_steps, task_pc.data)
 
     # Test with new config-based approach
     output_path_static = 'test_energy_landscape_1d_static.png'
@@ -86,7 +87,7 @@ def test_energy_landscape_1d():
     assert os.path.isfile(output_path_animation), f"Output file {output_path_animation} was not created."
 
 def test_energy_landscape_2d():
-    brainstate.environ.set(dt=0.1)
+    bm.set_dt(dt=0.1)
     cann = CANN2D(length=4)
     cann.init_state()
 
@@ -96,7 +97,7 @@ def test_energy_landscape_2d():
         after_duration=10.,
         duration=20.,
         Iext=[0., 0.],
-        time_step=brainstate.environ.get_dt(),
+        time_step=bm.get_dt(),
     )
     task_pc.get_data()
 
@@ -104,7 +105,7 @@ def test_energy_landscape_2d():
         cann(inputs)
         return cann.u.value, cann.r.value, cann.inp.value
 
-    us, rs, inps = brainstate.transform.for_loop(run_step, task_pc.run_steps, task_pc.data, pbar=brainstate.transform.ProgressBar(10))
+    us, rs, inps = bm.for_loop(run_step, task_pc.run_steps, task_pc.data)
 
     # Test with new config-based approach
     output_path_static = 'test_energy_landscape_2d_static.png'
@@ -142,7 +143,7 @@ def test_energy_landscape_2d():
     assert os.path.isfile(output_path_animation), f"Output file {output_path_animation} was not created."
 
 def test_raster_plot():
-    brainstate.environ.set(dt=0.1)
+    bm.set_dt(dt=0.1)
     cann = CANN1D(num=32)
     cann.init_state()
 
@@ -150,7 +151,7 @@ def test_raster_plot():
         cann_instance=cann,
         Iext=(1., 0.75, 2., 1.75, 3.),
         duration=(10., 10., 10., 10.),
-        time_step=brainstate.environ.get_dt(),
+        time_step=bm.get_dt(),
     )
     task_st.get_data()
 
@@ -158,8 +159,8 @@ def test_raster_plot():
         cann(inputs)
         return cann.u.value, cann.r.value
 
-    us, rs = brainstate.transform.for_loop(run_step, task_st.run_steps, task_st.data,
-                                           pbar=brainstate.transform.ProgressBar(10))
+    us, rs = bm.for_loop(run_step, task_st.run_steps, task_st.data,
+                                           pbar=None)
     spike_trains = firing_rate_to_spike_train(normalize_firing_rates(rs), dt_rate=0.1, dt_spike=0.1)
 
     # Test with new config-based approach
@@ -178,7 +179,7 @@ def test_raster_plot():
     assert os.path.isfile(output_path), f"Output file {output_path} was not created."
 
 def test_average_firing_rate():
-    brainstate.environ.set(dt=0.1)
+    bm.set_dt(dt=0.1)
     cann = CANN1D(num=32)
     cann.init_state()
 
@@ -188,7 +189,7 @@ def test_average_firing_rate():
         after_duration=10.,
         duration=20.,
         Iext=0.,
-        time_step=brainstate.environ.get_dt(),
+        time_step=bm.get_dt(),
     )
     task_pc.get_data()
 
@@ -196,8 +197,8 @@ def test_average_firing_rate():
         cann(inputs)
         return cann.u.value, cann.r.value
 
-    us, rs = brainstate.transform.for_loop(run_step, task_pc.run_steps, task_pc.data,
-                                           pbar=brainstate.transform.ProgressBar(10))
+    us, rs = bm.for_loop(run_step, task_pc.run_steps, task_pc.data,
+                                           pbar=None)
 
     # Test with new config-based approach
     output_path_population = 'test_average_firing_rate_population.png'
@@ -229,7 +230,7 @@ def test_average_firing_rate():
 
 
 def test_tuning_curve():
-    brainstate.environ.set(dt=0.1)
+    bm.set_dt(dt=0.1)
     cann = CANN1D(num=32)
     cann.init_state()
 
@@ -237,7 +238,7 @@ def test_tuning_curve():
         cann_instance=cann,
         Iext=(0., 0., np.pi, 2*np.pi),
         duration=(2., 20., 20.),
-        time_step=brainstate.environ.get_dt(),
+        time_step=bm.get_dt(),
     )
     task_st.get_data()
 
@@ -245,8 +246,8 @@ def test_tuning_curve():
         cann(inputs)
         return cann.r.value, cann.inp.value
 
-    rs, inps = brainstate.transform.for_loop(run_step, task_st.run_steps, task_st.data,
-                                           pbar=brainstate.transform.ProgressBar(10))
+    rs, inps = bm.for_loop(run_step, task_st.run_steps, task_st.data,
+                                           pbar=None)
 
     # Test with new config-based approach
     neuron_indices_to_plot = [0, 8, 16]

@@ -1,12 +1,13 @@
-import brainstate
-import brainunit as u
+import brainpy as bp
+import brainpy.math as bm
+import brainpy.math as bm
 import numpy as np
 
 from canns.models.basic import HierarchicalNetwork
 from canns.task.open_loop_navigation import OpenLoopNavigationTask
 
 def test_path_integration():
-    brainstate.environ.set(dt=0.1)
+    bm.set_dt(dt=0.1)
     task_sn = OpenLoopNavigationTask(
         width=5,
         height=5,
@@ -25,7 +26,7 @@ def test_path_integration():
 
     def initialize(t, input_stre):
         hierarchical_net(
-            velocity = u.math.zeros(2,),
+            velocity = bm.zeros(2,),
             loc=task_sn.data.position[0],
             loc_input_stre=input_stre,
         )
@@ -34,10 +35,10 @@ def test_path_integration():
     indices = np.arange(init_time)
     input_stre = np.zeros(init_time)
     input_stre[:5] = 100.
-    brainstate.transform.for_loop(
+    bm.for_loop(
         initialize,
-        u.math.asarray(indices),
-        u.math.asarray(input_stre),
-        pbar=brainstate.transform.ProgressBar(10),
+        bm.asarray(indices),
+        bm.asarray(input_stre),
+        pbar=None
     )
 
