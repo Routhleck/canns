@@ -56,7 +56,8 @@ BaseCANN (abstract)
 All simulations follow this JAX-compiled loop pattern:
 ```python
 # 1. Initialize environment and model
-brainstate.environ.set(dt=0.1)
+import brainpy.math as bm
+bm.set_dt(0.1)
 model.init_state()
 
 # 2. Define step function
@@ -65,9 +66,8 @@ def run_step(t, inputs):
     return model.u.value, model.r.value
 
 # 3. Run compiled loop
-results = brainstate.transform.for_loop(
-    run_step, time_steps, data,
-    pbar=brainstate.transform.ProgressBar(10)
+results = bm.for_loop(
+    run_step, time_steps, data
 )
 ```
 

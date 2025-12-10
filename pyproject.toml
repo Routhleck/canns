@@ -38,7 +38,7 @@ classifiers = [
 # ---- Main dependencies ----
 
 dependencies = [
-    "BrainX[cpu]",
+    "brainpy[cpu]",
     "canns-lib>=0.6.2",
     "furo>=2025.7.19",
     "notebook>=7.4.4",
@@ -78,16 +78,16 @@ docs = [
 
 [project.optional-dependencies]
 cpu = [
-    "BrainX[cpu]"
+    "brainpy[cpu]"
 ]
 cuda12 = [
-    "BrainX[cuda12]; platform_system == 'Linux'"
+    "brainpy[cuda12]; platform_system == 'Linux'"
 ]
 cuda13 = [
-    "BrainX[cuda13]; platform_system == 'Linux'"
+    "brainpy[cuda13]; platform_system == 'Linux'"
 ]
 tpu = [
-    "BrainX[tpu]; platform_system == 'Linux'"
+    "brainpy[tpu]; platform_system == 'Linux'"
 ]
 
 [project.scripts]

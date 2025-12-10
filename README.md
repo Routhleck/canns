@@ -19,7 +19,7 @@
 
 > 中文说明请见 [README_zh.md](README_zh.md)
 
-CANNs is a Python library built on top of the Brain Simulation Ecosystem (`brainstate`, `brainunit`) with performance‑critical modules accelerated by a dedicated Rust backend (`canns-lib`). It streamlines experimentation with continuous attractor neural networks and related brain‑inspired models, providing ready‑to‑use models, task generators, analysis tools, and pipelines so neuroscience and AI researchers can move from ideas to reproducible simulations quickly.
+CANNs is a Python library built on top of brainpy with performance‑critical modules accelerated by a dedicated Rust backend (`canns-lib`). It streamlines experimentation with continuous attractor neural networks and related brain‑inspired models, providing ready‑to‑use models, task generators, analysis tools, and pipelines so neuroscience and AI researchers can move from ideas to reproducible simulations quickly.
 
 ## Highlights
 
@@ -82,11 +82,12 @@ pip install canns[tpu]
 ## Quick Start
 
 ```python
-import brainstate
+import brainpy as bp
+import brainpy.math as bm
 from canns.models.basic import CANN1D
 from canns.task.tracking import SmoothTracking1D
 
-brainstate.environ.set(dt=0.1)
+bm.set_dt(0.1)
 
 cann = CANN1D(num=512)
 cann.init_state()
@@ -95,7 +96,7 @@ task = SmoothTracking1D(
     cann_instance=cann,
     Iext=(0.0, 0.5, 1.0, 1.5),
     duration=(5.0, 5.0, 5.0, 5.0),
-    time_step=brainstate.environ.get_dt(),
+    time_step=bm.get_dt(),
 )
 task.get_data()
 
@@ -103,11 +104,10 @@ def step(t, stimulus):
     cann(stimulus)
     return cann.u.value, cann.inp.value
 
-us, inputs = brainstate.transform.for_loop(
+us, inputs = bm.for_loop(
     step,
     task.run_steps,
     task.data,
-    pbar=brainstate.transform.ProgressBar(10),
 )
 ```
 

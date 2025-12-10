@@ -19,7 +19,7 @@
 
 > 英文版说明请参见 [README.md](README.md)
 
-CANNs 是一个构建于脑模拟生态（`brainstate`, `brainunit`）之上的 Python 库，并通过专门的 Rust 后端（`canns-lib`）加速部分性能敏感模块，旨在提升连续吸引子神经网络（Continuous Attractor Neural Networks, CANNs）及相关类脑模型的实验效率。它提供可直接使用的模型、任务生成器、分析工具与流水线（pipelines），让神经科学与人工智能研究者从想法到可复现仿真更加高效。
+CANNs 是一个构建于 brainpy 之上的 Python 库，并通过专门的 Rust 后端（`canns-lib`）加速部分性能敏感模块，旨在提升连续吸引子神经网络（Continuous Attractor Neural Networks, CANNs）及相关类脑模型的实验效率。它提供可直接使用的模型、任务生成器、分析工具与流水线（pipelines），让神经科学与人工智能研究者从想法到可复现仿真更加高效。
 
 ## 亮点概览
 
@@ -82,11 +82,12 @@ pip install canns[tpu]
 ## 快速开始
 
 ```python
-import brainstate
+import brainpy as bp
+import brainpy.math as bm
 from canns.models.basic import CANN1D
 from canns.task.tracking import SmoothTracking1D
 
-brainstate.environ.set(dt=0.1)
+bm.set_dt(0.1)
 
 cann = CANN1D(num=512)
 cann.init_state()
@@ -95,7 +96,7 @@ task = SmoothTracking1D(
     cann_instance=cann,
     Iext=(0.0, 0.5, 1.0, 1.5),
     duration=(5.0, 5.0, 5.0, 5.0),
-    time_step=brainstate.environ.get_dt(),
+    time_step=bm.get_dt(),
 )
 task.get_data()
 
@@ -103,11 +104,10 @@ def step(t, stimulus):
     cann(stimulus)
     return cann.u.value, cann.inp.value
 
-us, inputs = brainstate.transform.for_loop(
+us, inputs = bm.for_loop(
     step,
     task.run_steps,
     task.data,
-    pbar=brainstate.transform.ProgressBar(10),
 )
 ```
 

@@ -1,7 +1,7 @@
-import brainstate
+import brainpy as bp
 
 
-class BasicModel(brainstate.nn.Dynamics):
+class BasicModel(bp.DynamicalSystem):
     """
     Base class for all basic CANN models.
 
@@ -28,11 +28,12 @@ class BasicModel(brainstate.nn.Dynamics):
         - ``cell_coords()``: Return neuron coordinates in feature space (for CANNs)
 
     Example:
-        >>> import brainstate
+        >>> import brainpy as bp
+        >>> import brainpy.math as bm
         >>> from canns.models.basic import CANN1D
         >>>
         >>> # Create a 1D CANN with 512 neurons
-        >>> brainstate.environ.set(dt=0.1)
+        >>> bm.set_dt(0.1)
         >>> model = CANN1D(num=512)
         >>> model.init_state()
         >>>
@@ -48,7 +49,7 @@ class BasicModel(brainstate.nn.Dynamics):
     pass
 
 
-class BasicModelGroup(brainstate.nn.DynamicsGroup):
+class BasicModelGroup(bp.DynSysGroup):
     """
     Base class for groups of basic CANN models.
 
@@ -82,11 +83,12 @@ class BasicModelGroup(brainstate.nn.DynamicsGroup):
         will automatically track and manage.
 
     Example:
-        >>> import brainstate
+        >>> import brainpy as bp
+        >>> import brainpy.math as bm
         >>> from canns.models.basic import HierarchicalNetwork
         >>>
         >>> # Create hierarchical network with 4 grid modules and 64 place cells
-        >>> brainstate.environ.set(dt=0.1)
+        >>> bm.set_dt(0.1)
         >>> network = HierarchicalNetwork(num_module=4, num_place=64)
         >>> network.init_state()
         >>>
@@ -97,7 +99,7 @@ class BasicModelGroup(brainstate.nn.DynamicsGroup):
 
     See Also:
         - :class:`~canns.models.basic.HierarchicalNetwork`: Example implementation
-        - :class:`~brainstate.nn.DynamicsGroup`: Parent class from BrainState
+        - :class:`~bp.DynSysGroup`: Parent class from BrainPy
     """
 
     pass
