@@ -32,7 +32,6 @@ try:
 except ImportError:
     HAS_NUMPY = False
 
-
 # Default data directory
 DEFAULT_DATA_DIR = Path.home() / ".canns" / "data"
 

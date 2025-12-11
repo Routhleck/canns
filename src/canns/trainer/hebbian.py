@@ -7,8 +7,8 @@ import jax
 import jax.numpy as jnp
 from tqdm import tqdm  # type: ignore
 
-from ..models.brain_inspired import BrainInspiredModel
 from ._base import Trainer
+from ..models.brain_inspired import BrainInspiredModel
 
 __all__ = ["HebbianTrainer", "AntiHebbianTrainer"]
 

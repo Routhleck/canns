@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import brainpy as bp
 import brainpy.math as bm
 import jax
 import jax.numpy as jnp
@@ -87,7 +86,6 @@ class SpikingLayer(BrainInspiredModel):
         # Spike traces (exponentially decaying spike history)
         self.trace_pre = bm.Variable(jnp.zeros(self.input_size, dtype=jnp.float32))
         self.trace_post = bm.Variable(jnp.zeros(self.output_size, dtype=jnp.float32))
-
 
     def forward(self, x: jnp.ndarray) -> jnp.ndarray:
         """

@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import brainpy as bp
 import brainpy.math as bm
 import jax
 import jax.numpy as jnp
@@ -75,7 +74,6 @@ class LinearLayer(BrainInspiredModel):
         if self.use_bcm_threshold:
             self.theta = bm.Variable(jnp.ones(self.output_size, dtype=jnp.float32) * 0.1)
 
-
     def forward(self, x: jnp.ndarray) -> jnp.ndarray:
         """
         Forward pass through the layer.
@@ -100,7 +98,7 @@ class LinearLayer(BrainInspiredModel):
         if not self.use_bcm_threshold:
             return
 
-        y_squared = self.y.value**2
+        y_squared = self.y.value ** 2
         alpha = 1.0 / self.threshold_tau if self.threshold_tau > 0 else 1.0
         self.theta.value = self.theta.value + alpha * (y_squared - self.theta.value)
 

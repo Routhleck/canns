@@ -10,12 +10,6 @@ import numpy as np
 from canns_lib.ripser import ripser
 from matplotlib import animation, cm, gridspec
 from numpy.exceptions import AxisError
-
-from canns.analyzer.plotting.jupyter_utils import (
-    display_animation_in_jupyter,
-    is_jupyter_environment,
-)
-
 # from ripser import ripser
 from scipy import signal
 from scipy.ndimage import (
@@ -33,6 +27,10 @@ from scipy.stats import binned_statistic_2d, multivariate_normal
 from sklearn import preprocessing
 from tqdm import tqdm
 
+from canns.analyzer.plotting.jupyter_utils import (
+    display_animation_in_jupyter,
+    is_jupyter_environment,
+)
 # Import PlotConfig for unified plotting
 from ..plotting import PlotConfig
 
@@ -170,6 +168,7 @@ except ImportError:
         "Try numba by `pip install numba` to speed up the process.",
     )
 
+
     # Create dummy decorators if numba is not available
     def jit(*args, **kwargs):
         def decorator(func):
@@ -177,11 +176,13 @@ except ImportError:
 
         return decorator
 
+
     def njit(*args, **kwargs):
         def decorator(func):
             return func
 
         return decorator
+
 
     def prange(x):
         return range(x)
@@ -705,7 +706,7 @@ def _load_pos(t, x, y, res=100000, dt=1000):
     yys = _gaussian_filter1d(yy - np.min(yy), sigma=100)
     dx = (xxs[1:] - xxs[:-1]) * 100
     dy = (yys[1:] - yys[:-1]) * 100
-    speed = np.sqrt(dx**2 + dy**2) / 0.01
+    speed = np.sqrt(dx ** 2 + dy ** 2) / 0.01
     speed = np.concatenate(([speed[0]], speed))
     return xx, yy, tt, speed
 
@@ -797,7 +798,7 @@ def _gaussian_kernel1d(sigma, order, radius):
     exponent_range = np.arange(order + 1)
     sigma2 = sigma * sigma
     x = np.arange(-radius, radius + 1)
-    phi_x = np.exp(-0.5 / sigma2 * x**2)
+    phi_x = np.exp(-0.5 / sigma2 * x ** 2)
     phi_x = phi_x / phi_x.sum()
 
     if order == 0:
@@ -1668,11 +1669,11 @@ def decode_circular_coordinates(
 
     a = np.zeros((len(sspikes[:, 0]), 2, num_neurons))
     for n in range(num_neurons):
-        a[:, :, n] = np.multiply(dspk[:, n : n + 1], np.sum(centcosall[n, :, :], 1))
+        a[:, :, n] = np.multiply(dspk[:, n: n + 1], np.sum(centcosall[n, :, :], 1))
 
     c = np.zeros((len(sspikes[:, 0]), 2, num_neurons))
     for n in range(num_neurons):
-        c[:, :, n] = np.multiply(dspk[:, n : n + 1], np.sum(centsinall[n, :, :], 1))
+        c[:, :, n] = np.multiply(dspk[:, n: n + 1], np.sum(centsinall[n, :, :], 1))
 
     mtot2 = np.sum(c, 2)
     mtot1 = np.sum(a, 2)
@@ -1694,11 +1695,11 @@ def decode_circular_coordinates(
 
         a = np.zeros((len(times_box), 2, num_neurons))
         for n in range(num_neurons):
-            a[:, :, n] = np.multiply(dspk[:, n : n + 1], np.sum(centcosall[n, :, :], 1))
+            a[:, :, n] = np.multiply(dspk[:, n: n + 1], np.sum(centcosall[n, :, :], 1))
 
         c = np.zeros((len(times_box), 2, num_neurons))
         for n in range(num_neurons):
-            c[:, :, n] = np.multiply(dspk[:, n : n + 1], np.sum(centsinall[n, :, :], 1))
+            c[:, :, n] = np.multiply(dspk[:, n: n + 1], np.sum(centsinall[n, :, :], 1))
 
         mtot2 = np.sum(c, 2)
         mtot1 = np.sum(a, 2)
@@ -2176,7 +2177,7 @@ def _smooth_tuning_map(mtot, numangsint, sig, bClose=True):
     mtot_out = np.zeros_like(mtot)
     mtemp1_4 = np.concatenate((mtemp1_3, mtemp1_3, mtemp1_3), 1)
     mtemp1_5 = np.zeros_like(mtemp1_4)
-    mtemp1_5[:, :mid] = mtemp1_4[:, (numangsint_1) * 3 - mid :]
+    mtemp1_5[:, :mid] = mtemp1_4[:, (numangsint_1) * 3 - mid:]
     mtemp1_5[:, mid:] = mtemp1_4[:, : (numangsint_1) * 3 - mid]
     if bClose:
         mtemp1_6 = _smooth_image(np.concatenate((mtemp1_5, mtemp1_4, mtemp1_5)), sigma=sig)
@@ -2185,7 +2186,7 @@ def _smooth_tuning_map(mtot, numangsint, sig, bClose=True):
     for i in range(numangsint_1):
         mtot_out[i, :] = mtemp1_6[
             (numangsint_1) + i,
-            (numangsint_1) + (int(i / 2) + 1) : (numangsint_1) * 2 + (int(i / 2) + 1),
+            (numangsint_1) + (int(i / 2) + 1): (numangsint_1) * 2 + (int(i / 2) + 1),
         ]
     return mtot_out
 
@@ -2207,7 +2208,7 @@ def _smooth_image(img, sigma):
 
     pos = np.dstack((xx, yy))
 
-    var = multivariate_normal(mean=[0, 0], cov=[[sigma**2, 0], [0, sigma**2]])
+    var = multivariate_normal(mean=[0, 0], cov=[[sigma ** 2, 0], [0, sigma ** 2]])
     k = var.pdf(pos)
     k = k / np.sum(k)
 
@@ -2221,7 +2222,7 @@ def _smooth_image(img, sigma):
     radius = 1
     L = np.arange(-radius, radius + 1)
     X, Y = np.meshgrid(L, L)
-    dk = np.array((X**2 + Y**2) <= radius**2, dtype=bool)
+    dk = np.array((X ** 2 + Y ** 2) <= radius ** 2, dtype=bool)
     imgE = np.zeros((filterSize + 2, filterSize + 2))
     imgE[1:-1, 1:-1] = imgD
     imgE = binary_closing(imgE, iterations=1, structure=dk)

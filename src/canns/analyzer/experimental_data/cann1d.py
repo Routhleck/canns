@@ -25,6 +25,7 @@ except ImportError:
         "Try numba by `pip install numba` to speed up the process.",
     )
 
+
     # Create dummy decorators if numba is not available
     def jit(*args, **kwargs):
         def decorator(func):
@@ -32,15 +33,16 @@ except ImportError:
 
         return decorator
 
+
     def njit(*args, **kwargs):
         def decorator(func):
             return func
 
         return decorator
 
+
     def prange(x):
         return range(x)
-
 
 from canns.data.loaders import load_roi_data
 
@@ -190,7 +192,7 @@ def bump_fits(data, config: BumpFitsConfig | None = None, save_path=None, **kwar
 
         # MCMC parameters
         sigcoup = 2 * np.pi / config.n_roi
-        sigcoup2 = sigcoup**2
+        sigcoup2 = sigcoup ** 2
 
         nbt = data.shape[0]
         flat_data = data.flatten()
@@ -230,10 +232,10 @@ def bump_fits(data, config: BumpFitsConfig | None = None, save_path=None, **kwar
         for t, bump in enumerate(bumps):
             # 1. fills fits_array
             if bump.nbump > 0:
-                fits_array[fits_idx : fits_idx + bump.nbump, 0] = t
-                fits_array[fits_idx : fits_idx + bump.nbump, 1] = bump.pos[: bump.nbump]
-                fits_array[fits_idx : fits_idx + bump.nbump, 2] = bump.ampli[: bump.nbump]
-                fits_array[fits_idx : fits_idx + bump.nbump, 3] = bump.kappa[: bump.nbump]
+                fits_array[fits_idx: fits_idx + bump.nbump, 0] = t
+                fits_array[fits_idx: fits_idx + bump.nbump, 1] = bump.pos[: bump.nbump]
+                fits_array[fits_idx: fits_idx + bump.nbump, 2] = bump.ampli[: bump.nbump]
+                fits_array[fits_idx: fits_idx + bump.nbump, 3] = bump.kappa[: bump.nbump]
                 fits_idx += bump.nbump
 
             # 2. fills nbump_array
@@ -270,7 +272,7 @@ def bump_fits(data, config: BumpFitsConfig | None = None, save_path=None, **kwar
 
             # 3. fills centrbump_array
             if bump.nbump > 0:
-                data_segment = flat_data[t * config.n_roi : (t + 1) * config.n_roi]
+                data_segment = flat_data[t * config.n_roi: (t + 1) * config.n_roi]
 
                 # get distances and normalized amplitudes
                 for i in range(bump.nbump):
@@ -456,7 +458,7 @@ def create_1d_bump_animation(
             sigma = width_range / 2
 
             # Vectorized kernel application using precomputed offsets
-            gauss_weights = np.exp(-(offsets_array**2) / (2 * sigma**2))
+            gauss_weights = np.exp(-(offsets_array ** 2) / (2 * sigma ** 2))
             # Filter out negligible contributions
             significant_mask = gauss_weights >= 0.01
             significant_offsets = offsets_array[significant_mask]
@@ -582,7 +584,7 @@ def _von_mises_kernel(pos, kappa, ampli, x_roi):
         i0_approx = np.exp(kappa) / np.sqrt(2 * np.pi * kappa)
     else:
         # For small kappa, use Taylor expansion
-        i0_approx = 1.0 + (kappa * kappa / 4.0) + (kappa**4 / 64.0)
+        i0_approx = 1.0 + (kappa * kappa / 4.0) + (kappa ** 4 / 64.0)
 
     result = ampli * np.exp(kappa * np.cos(angle)) / (2 * np.pi * i0_approx)
     return result
@@ -607,7 +609,7 @@ def _compute_predicted_intensity(positions, kappas, amplis, n_bumps, n_roi):
             if kappa > 3.75:
                 i0_approx = np.exp(kappa) / np.sqrt(2 * np.pi * kappa)
             else:
-                i0_approx = 1.0 + (kappa * kappa / 4.0) + (kappa**4 / 64.0)
+                i0_approx = 1.0 + (kappa * kappa / 4.0) + (kappa ** 4 / 64.0)
 
             predicted[j] += ampli * np.exp(kappa * np.cos(angle)) / (2 * np.pi * i0_approx)
 
@@ -631,7 +633,7 @@ def _compute_predicted_intensity_parallel(positions, kappas, amplis, n_bumps, n_
             if kappa > 3.75:
                 i0_approx = np.exp(kappa) / np.sqrt(2 * np.pi * kappa)
             else:
-                i0_approx = 1.0 + (kappa * kappa / 4.0) + (kappa**4 / 64.0)
+                i0_approx = 1.0 + (kappa * kappa / 4.0) + (kappa ** 4 / 64.0)
 
             predicted[j] += ampli * np.exp(kappa * np.cos(angle)) / (2 * np.pi * i0_approx)
 
@@ -681,7 +683,7 @@ def _site_logl(
 
     # Likelihood from residuals
     residuals = intens - predicted
-    logl -= 0.5 * np.sum(residuals**2) / sig2
+    logl -= 0.5 * np.sum(residuals ** 2) / sig2
 
     return beta * logl
 
@@ -775,7 +777,7 @@ def _interf_logl(
             # Fallback to vectorized version
             dist_matrix = np.abs(pos1[:, None] - pos2)
             circular_dist = np.minimum(dist_matrix, 2 * np.pi - dist_matrix)
-        cost_matrix = -np.exp(-0.5 * circular_dist**2 / sigcoup2)
+        cost_matrix = -np.exp(-0.5 * circular_dist ** 2 / sigcoup2)
         row_indices, col_indices = linear_sum_assignment(cost_matrix)
         max_links = min(b1.nbump, b2.nbump, n_bump_max)
         n_matches = min(len(row_indices), max_links)
@@ -931,7 +933,7 @@ def _mcmc(
     # Initial likelihood calculation
     total_logl = 0.0
     for i in range(ntime):
-        data_seg = data[i * n_roi : (i + 1) * n_roi]
+        data_seg = data[i * n_roi: (i + 1) * n_roi]
         bumps[i].logl = _site_logl(data_seg, bumps[i], n_roi, penbump, sig2, beta)
         total_logl += bumps[i].logl
 
@@ -974,7 +976,7 @@ def _mcmc(
             # If operation succeeded (not failed)
             if not operation_failed:
                 # Calculate local likelihood for new state
-                data_seg = data[j * n_roi : (j + 1) * n_roi]
+                data_seg = data[j * n_roi: (j + 1) * n_roi]
                 loglt = _site_logl(data_seg, proposal, n_roi, penbump, sig2, beta)
 
                 # Calculate coupling changes

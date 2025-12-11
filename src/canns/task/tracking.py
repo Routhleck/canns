@@ -5,9 +5,9 @@ import brainpy.math as bm
 import numpy as np
 from tqdm import tqdm
 
+from ._base import Task
 from ..models.basic.cann import BaseCANN, BaseCANN1D, BaseCANN2D
 from ..typing import Iext_pair_type, Iext_type, time_type
-from ._base import Task
 
 __all__ = [
     "PopulationCoding1D",

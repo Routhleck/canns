@@ -1,12 +1,9 @@
-import math
-
-import brainpy as bp
 import brainpy.math as bm
 import jax
 from matplotlib import pyplot as plt
 
-from ...typing import time_type
 from ._base import BasicModel
+from ...typing import time_type
 
 __all__ = [
     # Base Model
@@ -197,6 +194,7 @@ class CANN1D(BaseCANN1D):
         Wu, S., Hamaguchi, K., & Amari, S. I. (2008). Dynamics and computation of continuous attractors.
         Neural computation, 20(4), 994-1025.
     """
+
     def __init__(self, *args, **kwargs):
         """
         Initializes the 1D CANN model.
@@ -214,7 +212,6 @@ class CANN1D(BaseCANN1D):
         # --- Inputs ---
         # External input to the network.
         self.inp = bm.Variable(bm.zeros(self.shape))
-
 
     def update(self, inp):
         """
@@ -285,7 +282,6 @@ class CANN1D_SFA(BaseCANN1D):
 
         # --- Inputs ---
         self.inp = bm.Variable(bm.zeros(self.shape))  # External input.
-
 
     def update(self, inp):
         """
@@ -497,7 +493,6 @@ class CANN2D(BaseCANN2D):
         # --- Inputs ---
         # External input to the neurons
         self.inp = bm.Variable(bm.zeros((self.length, self.length)))
-
 
     def update(self, inp):
         """

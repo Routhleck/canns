@@ -1,4 +1,3 @@
-import brainpy as bp
 import brainpy.math as bm
 import jax
 import jax.numpy as jnp
@@ -79,7 +78,6 @@ class AmariHopfieldNetwork(BrainInspiredModel):
             return lambda x: jax.nn.sigmoid(x / self.temperature)
         else:
             raise ValueError(f"Unknown activation type: {activation}")
-
 
     def update(self, e_old):
         """
