@@ -57,7 +57,7 @@ class SpikingLayer(BrainInspiredModel):
             dt: Time step size
             **kwargs: Additional arguments passed to parent class
         """
-        super().__init__(in_size=input_size, **kwargs)
+        super().__init__(**kwargs)
 
         self.input_size = input_size
         self.output_size = output_size
