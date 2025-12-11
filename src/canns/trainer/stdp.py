@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Iterable
 
-import brainpy as bp
+import brainpy.math as bm
 import jax.numpy as jnp
 
 from ._base import Trainer
@@ -164,7 +164,7 @@ class STDPTrainer(Trainer):
             return (W, trace_pre, trace_post, v), None
 
         # Run compiled scan
-        (W_final, trace_pre_final, trace_post_final, v_final), _ = bp.transform.scan(
+        (W_final, trace_pre_final, trace_post_final, v_final), _ = bm.scan(
             train_step, (W_init, trace_pre_init, trace_post_init, v_init), patterns
         )
 

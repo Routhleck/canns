@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Iterable
 
-import brainpy as bp
+import brainpy.math as bm
 import jax.numpy as jnp
 
 from ._base import Trainer
@@ -132,7 +132,7 @@ class SangerTrainer(Trainer):
             return W, None
 
         # Run compiled scan
-        W_final, _ = bp.transform.scan(train_step, W_init, patterns)
+        W_final, _ = bm.scan(train_step, W_init, patterns)
 
         # Update model parameters
         weight_param.value = W_final

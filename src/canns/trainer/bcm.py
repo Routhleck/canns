@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Iterable
 
-import brainpy as bp
+import brainpy.math as bm
 import jax.numpy as jnp
 
 from ._base import Trainer
@@ -129,7 +129,7 @@ class BCMTrainer(Trainer):
             return (W, theta), None
 
         # Run compiled scan
-        (W_final, theta_final), _ = bp.transform.scan(
+        (W_final, theta_final), _ = bm.scan(
             train_step, (W_init, theta_init), patterns
         )
 

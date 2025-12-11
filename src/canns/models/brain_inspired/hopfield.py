@@ -51,7 +51,7 @@ class AmariHopfieldNetwork(BrainInspiredModel):
             temperature: Temperature parameter for continuous activations
             **kwargs: Additional arguments passed to parent class
         """
-        super().__init__(in_size=num_neurons, **kwargs)
+        super().__init__(**kwargs)
 
         self.num_neurons = num_neurons
         self.asyn = asyn

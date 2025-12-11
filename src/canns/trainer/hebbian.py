@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from collections.abc import Callable, Iterable
 
-import brainpy as bp
+import brainpy.math as bm
 import jax
 import jax.numpy as jnp
 from tqdm import tqdm  # type: ignore
@@ -403,9 +403,9 @@ class HebbianTrainer(Trainer):
 
     def _predict_generic_compiled(self, num_iter: int, state_param):
         """
-        Run prediction with JAX-compiled while loop for maximum performance.
+        Run prediction with JAX-compiled for loop for maximum performance.
 
-        Uses jax.lax.while_loop for efficient execution on GPU/TPU.
+        Uses bm.for_loop for efficient execution on GPU/TPU.
         No early stopping or progress tracking for compilation compatibility.
 
         Args:
@@ -418,28 +418,16 @@ class HebbianTrainer(Trainer):
         # Initial energy
         initial_energy = jnp.float32(self.model.energy)
 
-        def cond_fn(carry):
-            _, _, iteration = carry
-            return iteration < num_iter
+        def step_fn(i):
+            # Single update step (model.update modifies state in-place)
+            self.model.update(self.model.energy)
+            return None
 
-        def body_fn(carry):
-            s, prev_energy, iteration = carry
-            # Set current state
-            state_param.value = s
-            # Single update step
-            self.model.update(prev_energy)
-            # New state and energy
-            new_s = jnp.array(state_param.value, dtype=jnp.float32)
-            new_energy = jnp.float32(self.model.energy)
-            return new_s, new_energy, iteration + 1
+        # Run loop (modifies model state in-place)
+        bm.for_loop(step_fn, bm.arange(num_iter))
 
-        initial_carry = (self._get_state_vector(state_param), initial_energy, 0)
-        final_s, _, _ = bp.transform.while_loop(
-            cond_fn,
-            body_fn,
-            initial_carry,
-        )
-        return final_s
+        # Return final state
+        return self._get_state_vector(state_param)
 
     def _predict_generic_uncompiled(
         self,
