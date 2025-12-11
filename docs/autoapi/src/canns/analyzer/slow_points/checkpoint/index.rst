@@ -5,7 +5,7 @@ src.canns.analyzer.slow_points.checkpoint
 
 .. autoapi-nested-parse::
 
-   Checkpoint utilities for saving and loading trained RNN models using BrainState's built-in checkpointing.
+   Checkpoint utilities for saving and loading trained RNN models using BrainPy's built-in checkpointing.
 
 
 
@@ -23,9 +23,9 @@ Module Contents
 
 .. py:function:: load_checkpoint(model, filepath)
 
-   Load model parameters from a checkpoint file using BrainState checkpointing.
+   Load model parameters from a checkpoint file using BrainPy checkpointing.
 
-   :param model: BrainState model to load parameters into.
+   :param model: BrainPy model to load parameters into.
    :param filepath: Path to the checkpoint file.
 
    :returns: True if checkpoint was loaded successfully, False otherwise.
@@ -43,9 +43,9 @@ Module Contents
 
 .. py:function:: save_checkpoint(model, filepath)
 
-   Save model parameters to a checkpoint file using BrainState checkpointing.
+   Save model parameters to a checkpoint file using BrainPy checkpointing.
 
-   :param model: BrainState model to save.
+   :param model: BrainPy model to save.
    :param filepath: Path to save the checkpoint file.
 
    .. rubric:: Example

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-import brainstate
+import brainpy.math as bm
 import jax
 import jax.numpy as jnp
 
@@ -52,29 +52,26 @@ class LinearLayer(BrainInspiredModel):
             threshold_tau: Time constant for threshold sliding average (only used if use_bcm_threshold=True)
             **kwargs: Additional arguments passed to parent class
         """
-        super().__init__(in_size=input_size, **kwargs)
+        super().__init__(**kwargs)
 
         self.input_size = input_size
         self.output_size = output_size
         self.use_bcm_threshold = use_bcm_threshold
         self.threshold_tau = threshold_tau
 
-    def init_state(self):
-        """Initialize layer parameters and state variables."""
         # Weight matrix W: (output_size, input_size)
         # Initialize with small random values to break symmetry
-        key = brainstate.random.get_key()
-        self.W = brainstate.ParamState(
-            jax.random.normal(key, (self.output_size, self.input_size), dtype=jnp.float32) * 0.01
+        self.W = bm.Variable(
+            bm.random.normal(size=(self.output_size, self.input_size), dtype=jnp.float32) * 0.01
         )
         # Input state (for training)
-        self.x = brainstate.HiddenState(jnp.zeros(self.input_size, dtype=jnp.float32))
+        self.x = bm.Variable(jnp.zeros(self.input_size, dtype=jnp.float32))
         # Output state
-        self.y = brainstate.HiddenState(jnp.zeros(self.output_size, dtype=jnp.float32))
+        self.y = bm.Variable(jnp.zeros(self.output_size, dtype=jnp.float32))
 
         # Optional sliding threshold for BCM learning
         if self.use_bcm_threshold:
-            self.theta = brainstate.HiddenState(jnp.ones(self.output_size, dtype=jnp.float32) * 0.1)
+            self.theta = bm.Variable(jnp.ones(self.output_size, dtype=jnp.float32) * 0.1)
 
     def forward(self, x: jnp.ndarray) -> jnp.ndarray:
         """
@@ -157,7 +154,7 @@ class LinearLayer(BrainInspiredModel):
         if hasattr(self, "W"):
             self.W.value = new_W
         else:
-            self.W = brainstate.ParamState(new_W)
+            self.W = bm.Variable(new_W)
 
         # Update threshold if using BCM
         if self.use_bcm_threshold:
@@ -169,15 +166,15 @@ class LinearLayer(BrainInspiredModel):
             if hasattr(self, "theta"):
                 self.theta.value = new_theta
             else:
-                self.theta = brainstate.HiddenState(new_theta)
+                self.theta = bm.Variable(new_theta)
 
         # Update state variables
         if hasattr(self, "x"):
             self.x.value = jnp.zeros(self.input_size, dtype=jnp.float32)
         else:
-            self.x = brainstate.HiddenState(jnp.zeros(self.input_size, dtype=jnp.float32))
+            self.x = bm.Variable(jnp.zeros(self.input_size, dtype=jnp.float32))
 
         if hasattr(self, "y"):
             self.y.value = jnp.zeros(self.output_size, dtype=jnp.float32)
         else:
-            self.y = brainstate.HiddenState(jnp.zeros(self.output_size, dtype=jnp.float32))
+            self.y = bm.Variable(jnp.zeros(self.output_size, dtype=jnp.float32))

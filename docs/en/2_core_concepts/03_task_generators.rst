@@ -143,7 +143,7 @@ Task Components
 
       * **Target positions**: Where the stimulus appears or moves to
       * **Durations**: How long each segment lasts
-      * **Time step**: Temporal resolution (from ``brainstate.environ.get_dt()``)
+      * **Time step**: Temporal resolution (from ``bm.get_dt()``)
       * **Additional parameters**: Speed profiles, noise levels, initial conditions
 
    .. grid-item-card:: 📊 Data Generation
@@ -217,13 +217,13 @@ Design Considerations
    .. grid-item-card:: ⏱️ Time Step Consistency
       :class-header: bg-warning text-dark text-center
 
-      Tasks use ``brainstate.environ.get_dt()`` to ensure temporal resolution matches the simulation environment.
+      Tasks use ``bm.get_dt()`` to ensure temporal resolution matches the simulation environment.
 
       **Always set the global time step before creating tasks:**
 
       .. code-block:: python
 
-         brainstate.environ.set(dt=0.1)
+         bm.set_dt(0.1)
          task = SmoothTracking1D(...)
 
    .. grid-item-card:: 🎯 Position Encoding

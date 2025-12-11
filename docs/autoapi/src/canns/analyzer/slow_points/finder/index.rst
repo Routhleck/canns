@@ -5,7 +5,7 @@ src.canns.analyzer.slow_points.finder
 
 .. autoapi-nested-parse::
 
-   Fixed point finder for BrainState RNN models.
+   Fixed point finder for BrainPy RNN models.
 
 
 
@@ -28,12 +28,12 @@ Module Contents
    in recurrent neural networks. It uses gradient descent to minimize the
    objective q = 0.5 * ||x - F(x, u)||^2, where F is the RNN transition function.
 
-   The implementation is compatible with BrainState RNN models and uses JAX for
+   The implementation is compatible with BrainPy RNN models and uses JAX for
    automatic differentiation and optimization.
 
    Initialize the FixedPointFinder.
 
-   :param rnn_model: A BrainState RNN model with __call__(inputs, hidden) signature.
+   :param rnn_model: A BrainPy RNN model with __call__(inputs, hidden) signature.
    :param method: Optimization method ('joint' or 'sequential').
    :param max_iters: Maximum optimization iterations.
    :param tol_q: Tolerance for q value convergence.

@@ -208,7 +208,6 @@ def main():
     # Build Hopfield model (discrete sign activation). n = image_size^2.
     n = train_pm1[0].size
     model = AmariHopfieldNetwork(num_neurons=n, threshold=80.0, asyn=False, activation="sign")
-    model.init_state()
 
     # Trainer: generic Hebbian (subtract mean, zero diagonal, normalize by patterns)
     trainer = HebbianTrainer(model, compiled_prediction=True)

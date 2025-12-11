@@ -207,7 +207,7 @@ Module Contents
    :param t: Thickness of the walls (default: 0.3)
    :param start_pos: Starting position of the agent (default: (0.0, 0.15))
    :param duration: Duration of the trajectory in seconds (default: 20.0)
-   :param dt: Time step (default: None, uses brainstate.environ.get_dt())
+   :param dt: Time step (default: None, uses bm.get_dt())
    :param \*\*kwargs: Additional keyword arguments passed to OpenLoopNavigationTask
 
 
@@ -232,7 +232,7 @@ Module Contents
    :param recess_depth: Depth of recesses extending downward (default: t/4)
    :param start_pos: Starting position of the agent (default: (0.0, 0.15))
    :param duration: Duration of the trajectory in seconds (default: 20.0)
-   :param dt: Time step (default: None, uses brainstate.environ.get_dt())
+   :param dt: Time step (default: None, uses bm.get_dt())
    :param \*\*kwargs: Additional keyword arguments passed to OpenLoopNavigationTask
 
 

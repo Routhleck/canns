@@ -45,7 +45,6 @@ print(f"Storing {n_patterns} patterns")
 
 # Create model and trainer
 model = AmariHopfieldNetwork(num_neurons=n_neurons, asyn=False, activation="sign")
-model.init_state()
 
 trainer = HebbianTrainer(
     model, subtract_mean=True, zero_diagonal=True, normalize_by_patterns=True
@@ -187,7 +186,6 @@ pattern_counts = [5, 10, 15, 20, 25]
 for n_test_patterns in pattern_counts:
     # Create fresh network
     test_model = AmariHopfieldNetwork(num_neurons=n_neurons, asyn=False, activation="sign")
-    test_model.init_state()
     test_trainer = HebbianTrainer(test_model)
 
     # Store patterns

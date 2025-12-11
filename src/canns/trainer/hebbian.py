@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from collections.abc import Callable, Iterable
 
-import brainstate
+import brainpy.math as bm
 import jax
 import jax.numpy as jnp
 from tqdm import tqdm  # type: ignore
@@ -22,7 +22,7 @@ class HebbianTrainer(Trainer):
       standard Hebbian update. If unavailable, falls back to the model's
       ``apply_hebbian_learning``.
     - Works with models that expose a parameter object with a ``.value`` ndarray of shape
-      (N, N) (e.g., ``brainstate.ParamState``).
+      (N, N) (e.g., ``bm.Variable``).
 
     Generic rule
     - For patterns ``x`` (shape: (N,)), compute optional mean activity ``rho`` and update
@@ -403,9 +403,9 @@ class HebbianTrainer(Trainer):
 
     def _predict_generic_compiled(self, num_iter: int, state_param):
         """
-        Run prediction with JAX-compiled while loop for maximum performance.
+        Run prediction with JAX-compiled for loop for maximum performance.
 
-        Uses jax.lax.while_loop for efficient execution on GPU/TPU.
+        Uses bm.for_loop for efficient execution on GPU/TPU.
         No early stopping or progress tracking for compilation compatibility.
 
         Args:
@@ -418,28 +418,18 @@ class HebbianTrainer(Trainer):
         # Initial energy
         initial_energy = jnp.float32(self.model.energy)
 
-        def cond_fn(carry):
-            _, _, iteration = carry
-            return iteration < num_iter
-
-        def body_fn(carry):
-            s, prev_energy, iteration = carry
-            # Set current state
-            state_param.value = s
-            # Single update step
+        def step_fn(prev_energy, i):
+            # Single update step with previous energy
             self.model.update(prev_energy)
-            # New state and energy
-            new_s = jnp.array(state_param.value, dtype=jnp.float32)
+            # Return new energy for next iteration (carry) and None (output)
             new_energy = jnp.float32(self.model.energy)
-            return new_s, new_energy, iteration + 1
+            return new_energy, None
 
-        initial_carry = (self._get_state_vector(state_param), initial_energy, 0)
-        final_s, _, _ = brainstate.transform.while_loop(
-            cond_fn,
-            body_fn,
-            initial_carry,
-        )
-        return final_s
+        # Run scan (modifies model state in-place, carries energy forward)
+        final_energy, _ = bm.scan(step_fn, initial_energy, bm.arange(num_iter))
+
+        # Return final state
+        return self._get_state_vector(state_param)
 
     def _predict_generic_uncompiled(
         self,
@@ -559,7 +549,6 @@ class AntiHebbianTrainer(HebbianTrainer):
 
     Example
         >>> model = AmariHopfieldNetwork(num_neurons=100, activation="tanh")
-        >>> model.init_state()
         >>> # Train with Hebbian first
         >>> hebb_trainer = HebbianTrainer(model)
         >>> hebb_trainer.train(all_patterns)

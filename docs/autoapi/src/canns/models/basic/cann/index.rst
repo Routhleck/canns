@@ -69,7 +69,7 @@ Module Contents
 
 
 
-.. py:class:: BaseCANN1D(num, tau = 1.0, k = 8.1, a = 0.5, A = 10, J0 = 4.0, z_min = -u.math.pi, z_max = u.math.pi, **kwargs)
+.. py:class:: BaseCANN1D(num, tau = 1.0, k = 8.1, a = 0.5, A = 10, J0 = 4.0, z_min = -bm.pi, z_max = bm.pi, **kwargs)
 
    Bases: :py:obj:`BaseCANN`
 
@@ -171,8 +171,6 @@ Module Contents
 
 
    .. py:attribute:: x
-      :value: None
-
 
 
    .. py:attribute:: z_max
@@ -184,7 +182,7 @@ Module Contents
    .. py:attribute:: z_range
 
 
-.. py:class:: BaseCANN2D(length, tau = 1.0, k = 8.1, a = 0.5, A = 10, J0 = 4.0, z_min = -u.math.pi, z_max = u.math.pi, **kwargs)
+.. py:class:: BaseCANN2D(length, tau = 1.0, k = 8.1, a = 0.5, A = 10, J0 = 4.0, z_min = -bm.pi, z_max = bm.pi, **kwargs)
 
    Bases: :py:obj:`BaseCANN`
 
@@ -302,8 +300,6 @@ Module Contents
 
 
    .. py:attribute:: x
-      :value: None
-
 
 
    .. py:attribute:: z_max
@@ -315,7 +311,7 @@ Module Contents
    .. py:attribute:: z_range
 
 
-.. py:class:: CANN1D(num, tau = 1.0, k = 8.1, a = 0.5, A = 10, J0 = 4.0, z_min = -u.math.pi, z_max = u.math.pi, **kwargs)
+.. py:class:: CANN1D(*args, **kwargs)
 
    Bases: :py:obj:`BaseCANN1D`
 
@@ -328,31 +324,9 @@ Module Contents
        Wu, S., Hamaguchi, K., & Amari, S. I. (2008). Dynamics and computation of continuous attractors.
        Neural computation, 20(4), 994-1025.
 
-   Initializes the base 1D CANN model.
+   Initializes the 1D CANN model.
 
-   :param num: The number of neurons in the network.
-   :type num: int
-   :param tau: The synaptic time constant, controlling how quickly the membrane potential changes.
-   :type tau: float
-   :param k: A parameter controlling the strength of the global inhibition.
-   :type k: float
-   :param a: The half-width of the excitatory connection range. It defines the "spread" of local connections.
-   :type a: float
-   :param A: The magnitude (amplitude) of the external stimulus.
-   :type A: float
-   :param J0: The maximum connection strength between neurons.
-   :type J0: float
-   :param z_min: The minimum value of the feature space (e.g., -pi for an angle).
-   :type z_min: float
-   :param z_max: The maximum value of the feature space (e.g., +pi for an angle).
-   :type z_max: float
-   :param \*\*kwargs: Additional keyword arguments passed to the parent BasicModel.
-
-
-   .. py:method:: init_state(*args, **kwargs)
-
-      Initializes the state variables of the model.
-
+   :param (Parameters are inherited from BaseCANN1D):
 
 
    .. py:method:: update(inp)
@@ -364,7 +338,16 @@ Module Contents
 
 
 
-.. py:class:: CANN1D_SFA(num, tau = 1.0, tau_v = 50.0, k = 8.1, a = 0.3, A = 0.2, J0 = 1.0, z_min = -u.math.pi, z_max = u.math.pi, m = 0.3, **kwargs)
+   .. py:attribute:: inp
+
+
+   .. py:attribute:: r
+
+
+   .. py:attribute:: u
+
+
+.. py:class:: CANN1D_SFA(num, tau = 1.0, tau_v = 50.0, k = 8.1, a = 0.3, A = 0.2, J0 = 1.0, z_min = -bm.pi, z_max = bm.pi, m = 0.3, **kwargs)
 
    Bases: :py:obj:`BaseCANN1D`
 
@@ -387,12 +370,6 @@ Module Contents
    :param (Other parameters are inherited from BaseCANN1D):
 
 
-   .. py:method:: init_state(*args, **kwargs)
-
-      Initializes the state variables of the model, including the adaptation variable.
-
-
-
    .. py:method:: update(inp)
 
       The main update function for the SFA model. It includes dynamics for both
@@ -403,9 +380,15 @@ Module Contents
 
 
 
+   .. py:attribute:: inp
+
+
    .. py:attribute:: m
       :value: 0.3
 
+
+
+   .. py:attribute:: r
 
 
    .. py:attribute:: tau_v
@@ -413,7 +396,13 @@ Module Contents
 
 
 
-.. py:class:: CANN2D(length, tau = 1.0, k = 8.1, a = 0.5, A = 10, J0 = 4.0, z_min = -u.math.pi, z_max = u.math.pi, **kwargs)
+   .. py:attribute:: u
+
+
+   .. py:attribute:: v
+
+
+.. py:class:: CANN2D(*args, **kwargs)
 
    Bases: :py:obj:`BaseCANN2D`
 
@@ -426,31 +415,9 @@ Module Contents
        Wu, S., Hamaguchi, K., & Amari, S. I. (2008). Dynamics and computation of continuous attractors.
        Neural computation, 20(4), 994-1025.
 
-   Initializes the base 2D CANN model.
+   Initializes the 2D CANN model.
 
-   :param length: The number of neurons in one dimension of the network (the network is square).
-   :type length: int
-   :param tau: The synaptic time constant, controlling how quickly the membrane potential changes.
-   :type tau: float
-   :param k: A parameter controlling the strength of the global inhibition.
-   :type k: float
-   :param a: The half-width of the excitatory connection range. It defines the "spread" of local connections.
-   :type a: float
-   :param A: The magnitude (amplitude) of the external stimulus.
-   :type A: float
-   :param J0: The maximum connection strength between neurons.
-   :type J0: float
-   :param z_min: The minimum value of the feature space (e.g., -pi for an angle).
-   :type z_min: float
-   :param z_max: The maximum value of the feature space (e.g., +pi for an angle).
-   :type z_max: float
-   :param \*\*kwargs: Additional keyword arguments passed to the parent BasicModel.
-
-
-   .. py:method:: init_state(*args, **kwargs)
-
-      Initializes the state variables of the model.
-
+   :param (Parameters are inherited from BaseCANN2D):
 
 
    .. py:method:: update(inp)
@@ -462,7 +429,16 @@ Module Contents
 
 
 
-.. py:class:: CANN2D_SFA(length, tau = 1.0, tau_v = 50.0, k = 8.1, a = 0.3, A = 0.2, J0 = 1.0, z_min = -u.math.pi, z_max = u.math.pi, m = 0.3, **kwargs)
+   .. py:attribute:: inp
+
+
+   .. py:attribute:: r
+
+
+   .. py:attribute:: u
+
+
+.. py:class:: CANN2D_SFA(length, tau = 1.0, tau_v = 50.0, k = 8.1, a = 0.3, A = 0.2, J0 = 1.0, z_min = -bm.pi, z_max = bm.pi, m = 0.3, **kwargs)
 
    Bases: :py:obj:`BaseCANN2D`
 
@@ -472,12 +448,6 @@ Module Contents
    This model extends the base CANN2D class to include SFA-specific dynamics.
 
    Initializes the 2D CANN model with SFA dynamics.
-
-
-   .. py:method:: init_state(*args, **kwargs)
-
-      Initializes the state variables of the model, including the adaptation variable.
-
 
 
    .. py:method:: update(inp)
@@ -490,13 +460,25 @@ Module Contents
 
 
 
+   .. py:attribute:: inp
+
+
    .. py:attribute:: m
       :value: 0.3
 
 
 
+   .. py:attribute:: r
+
+
    .. py:attribute:: tau_v
       :value: 50.0
 
+
+
+   .. py:attribute:: u
+
+
+   .. py:attribute:: v
 
 

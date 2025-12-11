@@ -20,10 +20,10 @@ Overview
 --------
 
 :doc:`01_design_philosophy`
-   Understanding the library's architecture, core design principles, and the four core application scenarios. Learn about separation of concerns, extensibility, BrainState integration, and performance strategies.
+   Understanding the library's architecture, core design principles, and the four core application scenarios. Learn about separation of concerns, extensibility, BrainPy integration, and performance strategies.
 
 :doc:`02_model_collections`
-   Explore the three model categories: Basic CANN models, Brain-Inspired models with learning mechanisms, and Hybrid models combining CANN with ANNs. Understand the BrainState foundation and how to implement custom models.
+   Explore the three model categories: Basic CANN models, Brain-Inspired models with learning mechanisms, and Hybrid models combining CANN with ANNs. Understand the BrainPy foundation and how to implement custom models.
 
 :doc:`03_task_generators`
    Task generation philosophy and available paradigms. Learn about tracking tasks (population coding, template matching, smooth tracking) and navigation tasks (closed-loop, open-loop). Understand model-task coupling and design considerations.

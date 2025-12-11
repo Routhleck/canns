@@ -30,7 +30,7 @@ pattern2 = np.cos(np.linspace(0, 6 * np.pi, dim)).astype(np.float32)
 # Pattern 3: smooth random pattern (smoothed with moving average)
 random_vals = np.random.randn(dim).astype(np.float32)
 window = 10
-pattern3 = np.convolve(random_vals, np.ones(window)/window, mode='same')
+pattern3 = np.convolve(random_vals, np.ones(window) / window, mode='same')
 pattern3 = np.tanh(pattern3)  # Normalize to [-1, 1]
 
 # Pattern 4: triangular wave pattern
@@ -53,9 +53,9 @@ model = AmariHopfieldNetwork(
     activation="tanh",
     temperature=0.5  # Lower temperature for sharper transitions
 )
-model.init_state()
 trainer = HebbianTrainer(model)
 trainer.train(data_list)
+
 
 # Generate testset with Gaussian noise
 def add_gaussian_noise(pattern, noise_std=0.3):
@@ -64,10 +64,12 @@ def add_gaussian_noise(pattern, noise_std=0.3):
     # Clip to [-1, 1] range
     return np.clip(noisy, -1.0, 1.0)
 
+
 tests = [add_gaussian_noise(d, noise_std=0.3) for d in data_list]
 
 # Predict corrupted patterns (compiled for speed, show sample-level progress)
 predicted = trainer.predict_batch(tests, show_sample_progress=True)
+
 
 # Display predict results for 1D vectors
 def plot_1d_patterns(data, test, predicted, figsize=(12, 8)):
@@ -83,7 +85,7 @@ def plot_1d_patterns(data, test, predicted, figsize=(12, 8)):
         # Plot as line plots
         axes[i, 0].plot(data[i], 'b-', linewidth=1)
         axes[i, 0].set_ylim([-1.5, 1.5])
-        axes[i, 0].set_ylabel(f'Pattern {i+1}', fontsize=10)
+        axes[i, 0].set_ylabel(f'Pattern {i + 1}', fontsize=10)
         axes[i, 0].grid(True, alpha=0.3)
 
         axes[i, 1].plot(test[i], 'r-', linewidth=1)
@@ -118,7 +120,7 @@ for i in range(len(data_list)):
     recovery_mse = np.mean((original - recovered) ** 2)
     correlation = np.corrcoef(original, recovered)[0, 1]
 
-    print(f"Pattern {i+1}:")
+    print(f"Pattern {i + 1}:")
     print(f"  Noise MSE: {noise_mse:.4f} → Recovery MSE: {recovery_mse:.4f}")
     print(f"  Correlation with original: {correlation:.4f}")
 

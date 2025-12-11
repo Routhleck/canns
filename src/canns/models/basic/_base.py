@@ -1,7 +1,7 @@
-import brainstate
+import brainpy as bp
 
 
-class BasicModel(brainstate.nn.Dynamics):
+class BasicModel(bp.DynamicalSystem):
     """
     Base class for all basic CANN models.
 
@@ -17,24 +17,22 @@ class BasicModel(brainstate.nn.Dynamics):
     Key Features:
         - Automatic state management through BrainState
         - JAX-compatible for GPU/TPU acceleration
-        - Support for compiled execution via brainstate.transform
+        - Support for compiled execution via brainpy transforms
         - Compatible with visualization and analysis tools
 
     Expected Subclass Implementation:
         Subclasses should implement the following methods:
 
-        - ``init_state(*args, **kwargs)``: Initialize model state variables
         - ``update(inp)``: Define single-step dynamics given external input
         - ``cell_coords()``: Return neuron coordinates in feature space (for CANNs)
 
     Example:
-        >>> import brainstate
+        >>> import brainpy.math as bm
         >>> from canns.models.basic import CANN1D
         >>>
         >>> # Create a 1D CANN with 512 neurons
-        >>> brainstate.environ.set(dt=0.1)
+        >>> bm.set_dt(0.1)
         >>> model = CANN1D(num=512)
-        >>> model.init_state()
         >>>
         >>> # Run a single update step
         >>> model.update(inp=0.5)
@@ -48,7 +46,7 @@ class BasicModel(brainstate.nn.Dynamics):
     pass
 
 
-class BasicModelGroup(brainstate.nn.DynamicsGroup):
+class BasicModelGroup(bp.DynSysGroup):
     """
     Base class for groups of basic CANN models.
 
@@ -73,7 +71,6 @@ class BasicModelGroup(brainstate.nn.DynamicsGroup):
         Subclasses should implement:
 
         - ``__init__(...)``: Create and register sub-model instances
-        - ``init_state(*args, **kwargs)``: Initialize states of all sub-models
         - ``update(...)``: Define update logic coordinating all sub-models
         - Custom methods for inter-model communication if needed
 
@@ -82,13 +79,12 @@ class BasicModelGroup(brainstate.nn.DynamicsGroup):
         will automatically track and manage.
 
     Example:
-        >>> import brainstate
+        >>> import brainpy.math as bm
         >>> from canns.models.basic import HierarchicalNetwork
         >>>
         >>> # Create hierarchical network with 4 grid modules and 64 place cells
-        >>> brainstate.environ.set(dt=0.1)
+        >>> bm.set_dt(0.1)
         >>> network = HierarchicalNetwork(num_module=4, num_place=64)
-        >>> network.init_state()
         >>>
         >>> # Update with velocity and position inputs
         >>> velocity = [0.1, 0.2]  # [vx, vy]
@@ -97,7 +93,7 @@ class BasicModelGroup(brainstate.nn.DynamicsGroup):
 
     See Also:
         - :class:`~canns.models.basic.HierarchicalNetwork`: Example implementation
-        - :class:`~brainstate.nn.DynamicsGroup`: Parent class from BrainState
+        - :class:`~bp.DynSysGroup`: Parent class from BrainPy
     """
 
     pass

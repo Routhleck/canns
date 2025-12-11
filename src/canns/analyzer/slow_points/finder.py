@@ -1,8 +1,9 @@
-"""Fixed point finder for BrainState RNN models."""
+"""Fixed point finder for BrainPy RNN models."""
 
 import time
 
-import brainstate as bst
+import brainpy as bp
+import brainpy.math as bm
 import jax
 import jax.numpy as jnp
 import numpy as np
@@ -17,13 +18,13 @@ class FixedPointFinder:
     in recurrent neural networks. It uses gradient descent to minimize the
     objective q = 0.5 * ||x - F(x, u)||^2, where F is the RNN transition function.
 
-    The implementation is compatible with BrainState RNN models and uses JAX for
+    The implementation is compatible with BrainPy RNN models and uses JAX for
     automatic differentiation and optimization.
     """
 
     def __init__(
         self,
-        rnn_model: bst.nn.Module,
+        rnn_model: bp.DynamicalSystem,
         method: str = "joint",
         max_iters: int = 5000,
         tol_q: float = 1e-12,
@@ -49,7 +50,7 @@ class FixedPointFinder:
         """Initialize the FixedPointFinder.
 
         Args:
-            rnn_model: A BrainState RNN model with __call__(inputs, hidden) signature.
+            rnn_model: A BrainPy RNN model with __call__(inputs, hidden) signature.
             method: Optimization method ('joint' or 'sequential').
             max_iters: Maximum optimization iterations.
             tol_q: Tolerance for q value convergence.
@@ -301,12 +302,12 @@ class FixedPointFinder:
         x_init = jnp.array(initial_states, dtype=self.jax_dtype)
         u = jnp.array(inputs, dtype=self.jax_dtype)
 
-        # Create optimization variables as BrainState State
-        x_state = bst.ParamState(x_init)
+        # Create optimization variables as BrainPy Variable
+        x_state = bm.Variable(x_init)
 
         # Create optimizer
-        optimizer = bst.optim.Adam(lr=self.lr_init)
-        optimizer.register_trainable_weights({"x": x_state})
+        optimizer = bp.optim.Adam(lr=self.lr_init)
+        optimizer.register_train_vars({"x": x_state})
 
         # Track learning rate manually (simplified scheduler)
         current_lr = self.lr_init
@@ -341,7 +342,7 @@ class FixedPointFinder:
                 dx_opt = x_opt - F_x_opt
                 return jnp.mean(0.5 * jnp.sum(dx_opt**2, axis=1))
 
-            grads_raw = bst.augment.grad(loss_fn, grad_states=x_state)()
+            grads_raw = bm.grad(loss_fn, grad_vars=x_state)()
 
             # Wrap gradients in dictionary for optimizer
             grads = {"x": grads_raw}

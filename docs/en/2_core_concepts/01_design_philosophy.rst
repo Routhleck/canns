@@ -72,7 +72,7 @@ The CANNs library supports four distinct workflows, each addressing different re
 
       1. **Model Building**: Create and configure CANN (``CANN1D()``, ``CANN2D()``)
       2. **Task Data Generation**: Generate inputs (``SmoothTracking1D``)
-      3. **Simulation Experiment**: Run dynamics (``brainstate.compile.for_loop``)
+      3. **Simulation Experiment**: Run dynamics (``bm.for_loop``)
       4. **Model Analysis**: Visualize (``animate_dynamics()``, ``energy_landscape_1d()``)
 
       **Use cases**: Testing CANN theories, parameter exploration, understanding attractor dynamics
@@ -145,27 +145,27 @@ Module Interaction Pattern
 
    This consistent structure makes the library intuitive while supporting diverse research workflows.
 
-BrainState Integration
-----------------------
+BrainPy Integration
+-------------------
 
-The CANNs library builds on BrainState (``brainstate``), the core framework from the Brain Simulation Ecosystem. BrainState provides:
+The CANNs library builds on BrainPy (``brainpy``), a powerful framework for brain dynamics programming. BrainPy provides:
 
 :⚙️ **Dynamics Abstraction**:
-   ``brainstate.nn.Dynamics`` base class for neural systems
+   ``bp.DynamicalSystem`` base class for neural systems
 
 :💾 **State Management**:
-   ``brainstate.State``, ``brainstate.HiddenState``, and ``brainstate.ParamState`` containers
+   ``bm.Variable`` containers for all state variables (replacing separate State, HiddenState, ParamState)
 
 :⏱️ **Time Step Control**:
-   ``brainstate.environ.set(dt=...)`` for unified temporal management
+   ``bm.set_dt(...)`` and ``bm.get_dt()`` for unified temporal management
 
 :⚡ **JIT Compilation**:
-   ``brainstate.compile.for_loop`` for high-performance simulation
+   ``bm.for_loop`` for high-performance simulation
 
 :🎲 **Random Number Management**:
-   ``brainstate.random`` for reproducible stochasticity
+   ``bm.random`` for reproducible stochasticity
 
-With BrainState, CANN models only need to define variables and update equations. Time stepping, parallelization, and compilation are handled automatically, significantly reducing implementation complexity.
+With BrainPy, CANN models only need to define variables and update equations. Time stepping, parallelization, and compilation are handled automatically, significantly reducing implementation complexity.
 
 Module Relationships
 ====================
@@ -219,13 +219,13 @@ Performance vs. Simplicity
 
 The library achieves high performance through a multi-layered strategy:
 
-Python Layer (BrainState/JAX)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Python Layer (BrainPy/JAX)
+~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 JAX-based compilation provides GPU/TPU acceleration but requires functional programming patterns. The library abstracts this complexity by:
 
-* Encapsulating JIT compilation in BrainState's ``for_loop``
-* Managing state through explicit containers
+* Encapsulating JIT compilation in BrainPy's ``bm.for_loop``
+* Managing state through ``bm.Variable`` containers
 * Providing utility functions that handle common patterns
 
 Users benefit from GPU/TPU acceleration without writing JAX-specific code directly.
@@ -277,7 +277,7 @@ Creating Custom Tasks
 
    Tasks should generate input sequences compatible with model expectations. Key considerations:
 
-   * Use ``brainstate.environ.get_dt()`` for time step consistency
+   * Use ``bm.get_dt()`` for time step consistency
    * Return data in formats expected by models
    * Provide trajectory information for analysis
 
@@ -319,7 +319,7 @@ The CANNs library achieves its goals through careful architectural choices:
 
       3️⃣
       ^^^
-      **BrainState integration** provides performance without complexity
+      **BrainPy integration** provides performance without complexity
 
    .. grid-item-card::
       :class-header: bg-light text-center

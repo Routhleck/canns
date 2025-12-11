@@ -11,11 +11,6 @@ from canns_lib.ripser import ripser
 from matplotlib import animation, cm, gridspec
 from numpy.exceptions import AxisError
 
-from canns.analyzer.plotting.jupyter_utils import (
-    display_animation_in_jupyter,
-    is_jupyter_environment,
-)
-
 # from ripser import ripser
 from scipy import signal
 from scipy.ndimage import (
@@ -32,6 +27,11 @@ from scipy.spatial.distance import pdist, squareform
 from scipy.stats import binned_statistic_2d, multivariate_normal
 from sklearn import preprocessing
 from tqdm import tqdm
+
+from canns.analyzer.plotting.jupyter_utils import (
+    display_animation_in_jupyter,
+    is_jupyter_environment,
+)
 
 # Import PlotConfig for unified plotting
 from ..plotting import PlotConfig

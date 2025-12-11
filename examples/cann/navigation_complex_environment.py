@@ -88,7 +88,6 @@ def main(output_dir: str = "figures/closed_loop_complex", dx: float = 0.1, dy: f
         save_path=geodesic_path,
     )
 
-
     accessible = int(grid.accessible_mask.sum())
     total_cells = grid.costs.size
     print(f"Movement-cost overlay saved to {movement_path}")

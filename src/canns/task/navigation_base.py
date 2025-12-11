@@ -5,7 +5,7 @@ import heapq
 from collections.abc import Sequence
 from dataclasses import dataclass
 
-import brainstate
+import brainpy.math as bm
 import numpy as np
 from canns_lib.spatial import Agent, Environment
 from matplotlib import colors
@@ -535,7 +535,7 @@ class BaseNavigationTask(Task):
         super().__init__(data_class=data_class)
 
         # time settings
-        self.dt = dt if dt is not None else brainstate.environ.get_dt()
+        self.dt = dt if dt is not None else bm.get_dt()
 
         # environment settings
         self.width = width

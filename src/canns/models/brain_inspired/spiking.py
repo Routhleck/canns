@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-import brainstate
+import brainpy.math as bm
 import jax
 import jax.numpy as jnp
 
@@ -57,7 +57,7 @@ class SpikingLayer(BrainInspiredModel):
             dt: Time step size
             **kwargs: Additional arguments passed to parent class
         """
-        super().__init__(in_size=input_size, **kwargs)
+        super().__init__(**kwargs)
 
         self.input_size = input_size
         self.output_size = output_size
@@ -67,27 +67,25 @@ class SpikingLayer(BrainInspiredModel):
         self.trace_decay = trace_decay
         self.dt = dt
 
-    def init_state(self):
-        """Initialize layer parameters and state variables."""
         # Weight matrix W: (output_size, input_size)
         # Initialize with small random values
-        key = brainstate.random.get_key()
-        self.W = brainstate.ParamState(
+        key = bm.random.get_key()
+        self.W = bm.Variable(
             jax.random.normal(key, (self.output_size, self.input_size), dtype=jnp.float32) * 0.05
         )
 
         # Input spikes (for training)
-        self.x = brainstate.HiddenState(jnp.zeros(self.input_size, dtype=jnp.float32))
+        self.x = bm.Variable(jnp.zeros(self.input_size, dtype=jnp.float32))
 
         # Membrane potential
-        self.v = brainstate.HiddenState(jnp.zeros(self.output_size, dtype=jnp.float32))
+        self.v = bm.Variable(jnp.zeros(self.output_size, dtype=jnp.float32))
 
         # Output spikes
-        self.spike = brainstate.HiddenState(jnp.zeros(self.output_size, dtype=jnp.float32))
+        self.spike = bm.Variable(jnp.zeros(self.output_size, dtype=jnp.float32))
 
         # Spike traces (exponentially decaying spike history)
-        self.trace_pre = brainstate.HiddenState(jnp.zeros(self.input_size, dtype=jnp.float32))
-        self.trace_post = brainstate.HiddenState(jnp.zeros(self.output_size, dtype=jnp.float32))
+        self.trace_pre = bm.Variable(jnp.zeros(self.input_size, dtype=jnp.float32))
+        self.trace_post = bm.Variable(jnp.zeros(self.output_size, dtype=jnp.float32))
 
     def forward(self, x: jnp.ndarray) -> jnp.ndarray:
         """
