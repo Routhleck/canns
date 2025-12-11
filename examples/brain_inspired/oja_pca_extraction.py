@@ -46,7 +46,6 @@ print(f"\nTrue PCA explained variance ratio: {true_pca.explained_variance_ratio_
 
 # Train Oja's rule to extract principal components
 model = LinearLayer(input_size=n_features, output_size=n_components)
-model.init_state()
 
 # Create OjaTrainer with JIT compilation enabled (default: compiled=True)
 # JIT compilation provides significant speedup for training loops

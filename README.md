@@ -4,18 +4,17 @@
   <img src="images/logo.svg" alt="CANNs Logo" width="350">
 </div>
 
-[<img src="https://badges.ws/badge/status-beta-yellow" />](https://github.com/routhleck/canns)
+[`<img src="https://badges.ws/badge/status-beta-yellow" />`](https://github.com/routhleck/canns)
 ![PyPI - Python Version](https://img.shields.io/pypi/pyversions/canns)
-[<img src="https://badges.ws/maintenance/yes/2025" />](https://github.com/routhleck/canns)
-<picture><img src="https://badges.ws/github/release/routhleck/canns" /></picture>
-<picture><img src="https://badges.ws/github/license/routhleck/canns" /></picture>
+[`<img src="https://badges.ws/maintenance/yes/2025" />`](https://github.com/routhleck/canns)
+`<picture><img src="https://badges.ws/github/release/routhleck/canns" />``</picture>`
+`<picture><img src="https://badges.ws/github/license/routhleck/canns" />``</picture>`
 [![DOI](https://zenodo.org/badge/1001781809.svg)](https://doi.org/10.5281/zenodo.17412545)
 
-
-<picture><img src="https://badges.ws/github/stars/routhleck/canns?logo=github" /></picture>
+`<picture><img src="https://badges.ws/github/stars/routhleck/canns?logo=github" />``</picture>`
 [![PyPI Downloads](https://static.pepy.tech/personalized-badge/canns?period=total&units=INTERNATIONAL_SYSTEM&left_color=BLACK&right_color=GREEN&left_text=downloads)](https://pepy.tech/projects/canns)
 [![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/Routhleck/canns)
-[<img src="https://badges.ws/badge/Buy_Me_a_Coffee-ff813f?icon=buymeacoffee" />](https://buymeacoffee.com/forrestcai6)
+[`<img src="https://badges.ws/badge/Buy_Me_a_Coffee-ff813f?icon=buymeacoffee" />`](https://buymeacoffee.com/forrestcai6)
 
 > 中文说明请见 [README_zh.md](README_zh.md)
 
@@ -90,7 +89,6 @@ from canns.task.tracking import SmoothTracking1D
 bm.set_dt(0.1)
 
 cann = CANN1D(num=512)
-cann.init_state()
 
 task = SmoothTracking1D(
     cann_instance=cann,
@@ -106,8 +104,10 @@ def step(t, stimulus):
 
 us, inputs = bm.for_loop(
     step,
-    task.run_steps,
-    task.data,
+    (
+	task.run_steps,
+	task.data,
+    )
 )
 ```
 

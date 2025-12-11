@@ -13,7 +13,6 @@ from canns.trainer import SangerTrainer
 def test_sanger_trainer_initialization():
     """Test SangerTrainer initialization."""
     model = LinearLayer(input_size=10, output_size=3)
-    model.init_state()
 
     trainer = SangerTrainer(model, learning_rate=0.01, normalize_weights=True)
 
@@ -28,7 +27,6 @@ def test_sanger_trainer_basic_training():
     """Test basic Sanger training on synthetic data."""
     # Create model
     model = LinearLayer(input_size=4, output_size=2)
-    model.init_state()
 
     # Create trainer
     trainer = SangerTrainer(model, learning_rate=0.1, normalize_weights=True)
@@ -55,7 +53,6 @@ def test_sanger_trainer_basic_training():
 def test_sanger_trainer_without_normalization():
     """Test Sanger training without weight normalization."""
     model = LinearLayer(input_size=3, output_size=2)
-    model.init_state()
 
     trainer = SangerTrainer(model, learning_rate=0.05, normalize_weights=False)
 
@@ -74,7 +71,6 @@ def test_sanger_trainer_without_normalization():
 def test_sanger_trainer_predict():
     """Test Sanger trainer prediction."""
     model = LinearLayer(input_size=3, output_size=2)
-    model.init_state()
 
     # Set some non-zero weights
     model.W.value = jnp.array([[1.0, 0.5, 0.0], [0.0, 0.5, 1.0]])
@@ -103,7 +99,6 @@ def test_sanger_orthogonality():
     """
     # Create model with multiple output neurons
     model = LinearLayer(input_size=5, output_size=3)
-    model.init_state()
 
     trainer = SangerTrainer(model, learning_rate=0.01, normalize_weights=True)
 
@@ -155,8 +150,7 @@ def test_sanger_multiple_pcs():
 
     # Create model
     model = LinearLayer(input_size=6, output_size=2)
-    model.init_state()
-
+    
     trainer = SangerTrainer(model, learning_rate=0.001, normalize_weights=True)
 
     # Train - more epochs for numerical stability across Python versions
@@ -187,9 +181,7 @@ def test_sanger_compiled_vs_uncompiled():
 
     # Initialize with same random seed
     np.random.seed(42)
-    model_compiled.init_state()
     np.random.seed(42)
-    model_uncompiled.init_state()
 
     # Create trainers
     trainer_compiled = SangerTrainer(model_compiled, learning_rate=0.01, compiled=True)

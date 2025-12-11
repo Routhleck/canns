@@ -12,7 +12,6 @@ from canns.trainer import BCMTrainer
 def test_bcm_trainer_initialization():
     """Test BCMTrainer initialization."""
     model = LinearLayer(input_size=10, output_size=5, use_bcm_threshold=True)
-    model.init_state()
     
     trainer = BCMTrainer(model, learning_rate=0.01)
     
@@ -24,7 +23,6 @@ def test_bcm_trainer_initialization():
 def test_bcm_trainer_basic_training():
     """Test basic BCM training."""
     model = LinearLayer(input_size=4, output_size=2, use_bcm_threshold=True)
-    model.init_state()
     
     trainer = BCMTrainer(model, learning_rate=0.05)
     
@@ -50,7 +48,6 @@ def test_bcm_trainer_basic_training():
 def test_bcm_threshold_adaptation():
     """Test that BCM threshold adapts to activity."""
     model = LinearLayer(input_size=3, output_size=2, use_bcm_threshold=True, threshold_tau=10.0)
-    model.init_state()
     
     initial_theta = model.theta.value.copy()
     
@@ -73,7 +70,6 @@ def test_bcm_threshold_adaptation():
 def test_bcm_trainer_predict():
     """Test BCM trainer prediction."""
     model = LinearLayer(input_size=3, output_size=2)
-    model.init_state()
     
     # Set some weights
     model.W.value = jnp.array([[1.0, 0.5, 0.0], [0.0, 0.5, 1.0]])
@@ -95,7 +91,6 @@ def test_bcm_trainer_predict():
 def test_bcm_layer_forward():
     """Test BCMLayer forward pass."""
     model = LinearLayer(input_size=4, output_size=3)
-    model.init_state()
     
     # Set known weights
     model.W.value = jnp.eye(3, 4)
@@ -112,7 +107,6 @@ def test_bcm_layer_forward():
 def test_bcm_potentiation_depression():
     """Test BCM potentiation vs depression regimes."""
     model = LinearLayer(input_size=2, output_size=1, use_bcm_threshold=True, threshold_tau=100.0)
-    model.init_state()
     
     # Set initial weight
     model.W.value = jnp.array([[0.5, 0.5]])

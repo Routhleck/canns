@@ -49,7 +49,6 @@ model = AmariHopfieldNetwork(
     asyn=False,
     activation="sign"
 )
-model.init_state()
 
 # Add binary noise by flipping pixels
 def get_corrupted_input(pattern, corruption_level):

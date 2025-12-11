@@ -40,7 +40,6 @@ data_list = [camera, astronaut, horse, coffee]
 
 # Create model and unified trainer (discrete mode by default)
 model = AmariHopfieldNetwork(num_neurons=data_list[0].shape[0], asyn=False, activation="sign")
-model.init_state()
 trainer = HebbianTrainer(model)
 trainer.train(data_list)
 

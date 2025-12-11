@@ -1,7 +1,7 @@
-"""Fixed point finder for BrainState RNN models.
+"""Fixed point finder for BrainPy RNN models.
 
 This module provides tools for identifying and analyzing fixed points
-in recurrent neural networks using JAX/BrainState.
+in recurrent neural networks using JAX/BrainPy.
 """
 
 from .checkpoint import load_checkpoint, save_checkpoint

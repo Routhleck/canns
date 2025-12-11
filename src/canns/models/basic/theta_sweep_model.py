@@ -1,11 +1,13 @@
 import brainpy as bp
 import brainpy.math as bm
 import jax
+import jax.numpy as jnp
 import numpy as np
-from brainpy.integrators.ode import exponential
-# TODO: exp_euler_step should be implemented in BrainPy
 
 from ._base import BasicModel
+
+
+# TODO: exp_euler_step should be implemented in BrainPy
 
 
 def calculate_theta_modulation(
@@ -96,12 +98,11 @@ class DirectionCellNetwork(BasicModel):
         m (float): Effective adaptation strength (adaptation_strength * tau / tau_v)
 
     Example:
-        >>> import brainpy as bp
+        >>> import brainpy.math as bm
         >>> from canns.models.basic.theta_sweep_model import DirectionCellNetwork
         >>>
-        >>> bp.environ.set(dt=1.0)  # 1ms time step
+        >>> bm.set_dt(1.)  # 1ms time step
         >>> dc_net = DirectionCellNetwork(num=60)
-        >>> dc_net.init_state()
         >>>
         >>> # Update with head direction and theta modulation
         >>> head_direction = 0.5  # radians
@@ -130,7 +131,7 @@ class DirectionCellNetwork(BasicModel):
         z_max: float = bm.pi,
         conn_noise: float = 0.0,
     ):
-        super().__init__(in_size=num)
+        super().__init__()
         self.num = num
 
         self.tau = tau
@@ -159,7 +160,6 @@ class DirectionCellNetwork(BasicModel):
         noise_connection = np.random.normal(0, conn_noise, size=(num, num))
         self.conn_mat = base_connection + noise_connection
 
-    def init_state(self, *args, **kwargs):
         """
         Initialize network state variables.
 
@@ -170,11 +170,19 @@ class DirectionCellNetwork(BasicModel):
         - center: Current bump center (zero)
         - centerI: Input bump center (zero)
         """
-        self.r = bp.State(bm.zeros(self.num))
-        self.v = bp.State(bm.zeros(self.num))
-        self.u = bp.State(bm.zeros(self.num))
-        self.center = bp.State(bm.zeros(1))
-        self.centerI = bp.State(bm.zeros(1))
+        self.r = bm.Variable(bm.zeros(self.num))
+        self.v = bm.Variable(bm.zeros(self.num))
+        self.u = bm.Variable(bm.zeros(self.num))
+        self.center = bm.Variable(bm.zeros(1))
+        self.centerI = bm.Variable(bm.zeros(1))
+
+        self.integral = bp.odeint(method='exp_euler', f=self.derivative)
+
+    @property
+    def derivative(self):
+        du = lambda u, t, input: (-u + input - self.v) / self.tau
+        dv = lambda v, t: (-v + self.m * self.u) / self.tau_v
+        return bp.JointEq([du, dv])
 
     def update(self, head_direction, theta_input):
         """
@@ -190,16 +198,7 @@ class DirectionCellNetwork(BasicModel):
         noise = bm.random.randn(self.num) * self.noise_strength
         input_total = Iext + Irec + noise
 
-        _u = exp_euler_step(
-            lambda u, input: (-u + input - self.v.value) / self.tau,
-            self.u.value,
-            input_total,
-        )
-
-        _v = exp_euler_step(
-            lambda v: (-v + self.m * self.u.value) / self.tau_v,
-            self.v.value,
-        )
+        _u, _v = self.integral(self.u, self.v, bp.share['t'], input_total, bm.dt)
         self.u.value = bm.where(_u > 0, _u, 0)
         self.v.value = _v
 
@@ -330,12 +329,11 @@ class GridCellNetwork(BasicModel):
         gc_bump (State): Grid cell bump activity pattern
 
     Example:
-        >>> import brainpy as bp
+        >>> import brainpy.math as bm
         >>> from canns.models.basic.theta_sweep_model import GridCellNetwork
         >>>
-        >>> bp.environ.set(dt=1.0)
+        >>> bm.set_dt(1.0)
         >>> gc_net = GridCellNetwork(num_dc=60, num_gc_x=30, mapping_ratio=1.5)
-        >>> gc_net.init_state()
         >>>
         >>> # Update with position, direction activity, and theta modulation
         >>> position = [0.5, 0.3]  # animal position
@@ -371,7 +369,7 @@ class GridCellNetwork(BasicModel):
         phase_offset: float = 1.0 / 20,  # relative to -pi~pi range
     ):
         self.num = num_gc_x * num_gc_x
-        super().__init__(in_size=self.num)
+        super().__init__()
 
         self.num_dc = num_dc
         self.num_gc_1side = num_gc_x
@@ -402,7 +400,7 @@ class GridCellNetwork(BasicModel):
 
         # inverse, which is bm.array([[1.0, 1.0 / 2],[0.0,  bm.sqrt(3.0) / 2]])
         # Note that coor_transform_inv is to map a square to a parallelogram with a 60-degree angle
-        self.coor_transform_inv = bm.inv(self.coor_transform)
+        self.coor_transform_inv = bm.linalg.inv(self.coor_transform)
 
         # feature space
         x_bins = bm.linspace(-bm.pi, bm.pi, num_gc_x + 1)
@@ -421,7 +419,6 @@ class GridCellNetwork(BasicModel):
         noise_connection = np.random.normal(0, conn_noise, size=(self.num, self.num))
         self.conn_mat = base_connection + noise_connection
 
-    def init_state(self, *args, **kwargs):
         """
         Initialize network state variables.
 
@@ -434,13 +431,21 @@ class GridCellNetwork(BasicModel):
         - center_phase: Bump center in phase space (shape: 2)
         - center_position: Decoded position in real space (shape: 2)
         """
-        self.r = bp.State(bm.zeros(self.num))
-        self.v = bp.State(bm.zeros(self.num))
-        self.u = bp.State(bm.zeros(self.num))
-        self.gc_bump = bp.State(bm.zeros(self.num))
-        self.conj_input = bp.State(bm.zeros(self.num))
-        self.center_phase = bp.State(bm.zeros(2))
-        self.center_position = bp.State(bm.zeros(2))
+        self.r = bm.Variable(bm.zeros(self.num))
+        self.v = bm.Variable(bm.zeros(self.num))
+        self.u = bm.Variable(bm.zeros(self.num))
+        self.gc_bump = bm.Variable(bm.zeros(self.num))
+        self.conj_input = bm.Variable(bm.zeros(self.num))
+        self.center_phase = bm.Variable(bm.zeros(2))
+        self.center_position = bm.Variable(bm.zeros(2))
+
+        self.integral = bp.odeint(method='exp_euler', f=self.derivative)
+
+    @property
+    def derivative(self):
+        du = lambda u, t, input: (-u + input - self.v) / self.tau
+        dv = lambda v, t: (-v + self.m * self.u) / self.tau_v
+        return bp.JointEq([du, dv])
 
     def make_connection(self):
         """
@@ -551,15 +556,7 @@ class GridCellNetwork(BasicModel):
         total_net_input = Irec + conj_input + input_noise
 
         # integrate
-        _u = exp_euler_step(
-            lambda u, input: (-u + input - self.v.value) / self.tau,
-            self.u.value,
-            total_net_input,
-        )
-        _v = exp_euler_step(
-            lambda v: (-v + self.m * self.u.value) / self.tau_v,
-            self.v.value,
-        )
+        _u, _v = self.integral(self.u, self.v, bp.share['t'], total_net_input, bm.dt)
         self.u.value = bm.where(_u > 0.0, _u, 0.0)
         self.v.value = _v
 
@@ -742,7 +739,7 @@ class PlaceCellNetwork(BasicModel):
         # assume square grid cells
         self.x = bm.arange(self.cell_num) * self.dx
 
-        super().__init__(in_size=self.cell_num)
+        super().__init__()
 
         # Store parameters
         self.tau = tau
@@ -763,7 +760,6 @@ class PlaceCellNetwork(BasicModel):
         noise_connection = np.random.normal(0, conn_noise, size=(self.cell_num, self.cell_num))
         self.conn_mat = base_connection + noise_connection
 
-    def init_state(self, *args, **kwargs):
         """
         Initialize network state variables.
 
@@ -773,10 +769,18 @@ class PlaceCellNetwork(BasicModel):
         - v: Adaptation variables (all zeros)
         - center: Current bump center (zero)
         """
-        self.r = bp.State(bm.zeros(self.cell_num))
-        self.v = bp.State(bm.zeros(self.cell_num))
-        self.u = bp.State(bm.zeros(self.cell_num))
-        self.center = bp.State(bm.zeros(1))
+        self.r = bm.Variable(bm.zeros(self.cell_num))
+        self.v = bm.Variable(bm.zeros(self.cell_num))
+        self.u = bm.Variable(bm.zeros(self.cell_num))
+        self.center = bm.Variable(bm.zeros(1))
+
+        self.integral = bp.odeint(method='exp_euler', f=self.derivative)
+
+    @property
+    def derivative(self):
+        du = lambda u, t, input: (-u + input - self.v) / self.tau
+        dv = lambda v, t: (-v + self.m * self.u) / self.tau_v
+        return bp.JointEq([du, dv])
 
     def make_connection(self):
         """
@@ -792,7 +796,7 @@ class PlaceCellNetwork(BasicModel):
         @jax.vmap
         def kernel_row(d):
             # d: (cell_num,) distances from one cell to all others
-            return self.J0 * bm.exp(-d / (2 * self.a**2)) / ((2 * bm.pi) * self.a**2)
+            return self.J0 * bm.exp(-d / (2 * self.a ** 2)) / ((2 * bm.pi) * self.a ** 2)
 
         return kernel_row(self.D)
 
@@ -850,7 +854,7 @@ class PlaceCellNetwork(BasicModel):
         # Zero out the input if the position was invalid (cell_idx < 0)
         # This is JAX-compatible
         is_valid = cell_idx >= 0
-        bump = self.A * bm.exp(-d / (2 * self.a**2))
+        bump = self.A * bm.exp(-d / (2 * self.a ** 2))
         return bm.where(is_valid, bump, bm.zeros_like(bump))
 
     def update(self, animal_pos, theta_input):
@@ -867,16 +871,7 @@ class PlaceCellNetwork(BasicModel):
         noise = bm.random.randn(self.cell_num) * self.noise_strength
         input_total = Iext + Irec + noise
 
-        _u = exp_euler_step(
-            lambda u, input: (-u + input - self.v.value) / self.tau,
-            self.u.value,
-            input_total,
-        )
-
-        _v = exp_euler_step(
-            lambda v: (-v + self.m * self.u.value) / self.tau_v,
-            self.v.value,
-        )
+        _u, _v = self.integral(self.u, self.v, bp.share['t'], input_total, bm.dt)
         self.u.value = bm.where(_u > 0, _u, 0)
         self.v.value = _v
 

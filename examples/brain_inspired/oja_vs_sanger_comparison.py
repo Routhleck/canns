@@ -54,7 +54,6 @@ print("Training Oja's Rule")
 print("=" * 70)
 
 model_oja = LinearLayer(input_size=n_features, output_size=n_components)
-model_oja.init_state()
 
 trainer_oja = OjaTrainer(model_oja, learning_rate=0.001, normalize_weights=True, compiled=True)
 
@@ -79,7 +78,6 @@ print("Training Sanger's Rule")
 print("=" * 70)
 
 model_sanger = LinearLayer(input_size=n_features, output_size=n_components)
-model_sanger.init_state()
 
 trainer_sanger = SangerTrainer(
     model_sanger, learning_rate=0.001, normalize_weights=True, compiled=True

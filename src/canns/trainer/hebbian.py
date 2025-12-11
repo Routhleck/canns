@@ -22,7 +22,7 @@ class HebbianTrainer(Trainer):
       standard Hebbian update. If unavailable, falls back to the model's
       ``apply_hebbian_learning``.
     - Works with models that expose a parameter object with a ``.value`` ndarray of shape
-      (N, N) (e.g., ``bp.State``).
+      (N, N) (e.g., ``bm.Variable``).
 
     Generic rule
     - For patterns ``x`` (shape: (N,)), compute optional mean activity ``rho`` and update
@@ -559,7 +559,6 @@ class AntiHebbianTrainer(HebbianTrainer):
 
     Example
         >>> model = AmariHopfieldNetwork(num_neurons=100, activation="tanh")
-        >>> model.init_state()
         >>> # Train with Hebbian first
         >>> hebb_trainer = HebbianTrainer(model)
         >>> hebb_trainer.train(all_patterns)

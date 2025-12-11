@@ -1,18 +1,14 @@
 import brainpy as bp
 import brainpy.math as bm
-import brainpy as bp
-import brainpy.math as bm.transform
-import brainpy.math as bm
 import jax
 
 from canns.analyzer.plotting import PlotConfigs, energy_landscape_2d_animation
 from canns.models.basic import CANN2D
 from canns.task.tracking import SmoothTracking2D
 
-bp.environ.set(dt=0.1)
+bm.set(dt=0.1)
 
 cann = CANN2D(length=100)
-cann.init_state()
 
 task_st = SmoothTracking2D(
     cann_instance=cann,
@@ -23,15 +19,15 @@ task_st = SmoothTracking2D(
 task_st.get_data()
 
 def run_step(t, Iext):
-    with bp.environ.context(t=t):
-        cann(Iext)
-        return cann.u.value, cann.r.value, cann.inp.value
+    cann(Iext)
+    return cann.u.value, cann.r.value, cann.inp.value
 
-cann_us, cann_rs, inps = bp.compile.for_loop(
+cann_us, cann_rs, inps = bm.for_loop(
     run_step,
-    task_st.run_steps,
-    task_st.data,
-    pbar=None
+    (
+        task_st.run_steps,
+        task_st.data,
+    ),
 )
 
 # Using new config-based approach

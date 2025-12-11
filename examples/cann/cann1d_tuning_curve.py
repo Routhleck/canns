@@ -8,7 +8,6 @@ from canns.task.tracking import SmoothTracking1D
 
 bm.set_dt(dt=0.1)
 cann = CANN1D(num=512, z_min=-np.pi, z_max=np.pi)
-cann.init_state()
 
 task_st = SmoothTracking1D(
     cann_instance=cann,
@@ -24,9 +23,11 @@ def run_step(t, inputs):
 
 rs, inps = bm.for_loop(
     run_step,
-    task_st.run_steps,
-    task_st.data,
-    pbar=None
+    (
+        task_st.run_steps,
+        task_st.data,
+    ),
+    progress_bar=10
 )
 
 # Example of using config-based approach for energy landscape animation

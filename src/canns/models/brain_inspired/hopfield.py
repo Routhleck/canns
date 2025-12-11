@@ -62,6 +62,13 @@ class AmariHopfieldNetwork(BrainInspiredModel):
         # Set activation function based on type
         self.activation = self._get_activation_fn(activation)
 
+        self.s = bm.Variable(
+            jnp.ones(self.num_neurons, dtype=jnp.float32)
+        )  # Binary states (+1/-1)
+        self.W = bm.Variable(
+            jnp.zeros((self.num_neurons, self.num_neurons), dtype=jnp.float32)
+        )  # Weight matrix as trainable parameter
+
     def _get_activation_fn(self, activation: str):
         """Get activation function based on activation type."""
         if activation == "sign":
@@ -73,14 +80,6 @@ class AmariHopfieldNetwork(BrainInspiredModel):
         else:
             raise ValueError(f"Unknown activation type: {activation}")
 
-    def init_state(self):
-        """Initialize network state variables."""
-        self.s = bp.State(
-            jnp.ones(self.num_neurons, dtype=jnp.float32)
-        )  # Binary states (+1/-1)
-        self.W = bp.State(
-            jnp.zeros((self.num_neurons, self.num_neurons), dtype=jnp.float32)
-        )  # Weight matrix as trainable parameter
 
     def update(self, e_old):
         """
@@ -150,12 +149,12 @@ class AmariHopfieldNetwork(BrainInspiredModel):
             old_W.value = new_W
         else:
             # In case resize called before init_state
-            self.W = bp.State(new_W)
+            self.W = bm.Variable(new_W)
 
         if old_s is not None and hasattr(old_s, "value"):
             old_s.value = new_s
         else:
-            self.s = bp.State(new_s)
+            self.s = bm.Variable(new_s)
 
     # Predict methods intentionally removed: use HebbianTrainer.predict for unified API.
 

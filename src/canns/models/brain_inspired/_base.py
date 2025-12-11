@@ -8,7 +8,7 @@ class BrainInspiredModel(BasicModel):
     Trainer compatibility notes
     - If a model wants to support generic Hebbian training, expose a weight parameter
       attribute with a ``.value`` array of shape (N, N) (commonly a
-      ``bp.State``). The recommended attribute name is ``W``.
+      ``bm.Variable``). The recommended attribute name is ``W``.
     - Override ``weight_attr`` to declare a different attribute name if needed. Models
       that use standard backprop may omit this entirely.
     - Implementing ``apply_hebbian_learning`` is optional; prefer letting the trainer

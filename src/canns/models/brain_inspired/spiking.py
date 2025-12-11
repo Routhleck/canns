@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import brainpy as bp
+import brainpy.math as bm
 import jax
 import jax.numpy as jnp
 
@@ -67,27 +68,26 @@ class SpikingLayer(BrainInspiredModel):
         self.trace_decay = trace_decay
         self.dt = dt
 
-    def init_state(self):
-        """Initialize layer parameters and state variables."""
         # Weight matrix W: (output_size, input_size)
         # Initialize with small random values
         key = bm.random.get_key()
-        self.W = bp.State(
+        self.W = bm.Variable(
             jax.random.normal(key, (self.output_size, self.input_size), dtype=jnp.float32) * 0.05
         )
 
         # Input spikes (for training)
-        self.x = bp.State(jnp.zeros(self.input_size, dtype=jnp.float32))
+        self.x = bm.Variable(jnp.zeros(self.input_size, dtype=jnp.float32))
 
         # Membrane potential
-        self.v = bp.State(jnp.zeros(self.output_size, dtype=jnp.float32))
+        self.v = bm.Variable(jnp.zeros(self.output_size, dtype=jnp.float32))
 
         # Output spikes
-        self.spike = bp.State(jnp.zeros(self.output_size, dtype=jnp.float32))
+        self.spike = bm.Variable(jnp.zeros(self.output_size, dtype=jnp.float32))
 
         # Spike traces (exponentially decaying spike history)
-        self.trace_pre = bp.State(jnp.zeros(self.input_size, dtype=jnp.float32))
-        self.trace_post = bp.State(jnp.zeros(self.output_size, dtype=jnp.float32))
+        self.trace_pre = bm.Variable(jnp.zeros(self.input_size, dtype=jnp.float32))
+        self.trace_post = bm.Variable(jnp.zeros(self.output_size, dtype=jnp.float32))
+
 
     def forward(self, x: jnp.ndarray) -> jnp.ndarray:
         """

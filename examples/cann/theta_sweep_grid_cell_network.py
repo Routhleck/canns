@@ -79,8 +79,6 @@ def main() -> None:
         mapping_ratio=mapping_ratio,
         noise_strength=0.0,
     )
-    dc_net.init_state()
-    gc_net.init_state()
 
     def run_step(i, pos, hd_angle, linear_gain, ang_gain):
         theta_phase, theta_modulation_hd, theta_modulation_gc = calculate_theta_modulation(
@@ -112,12 +110,13 @@ def main() -> None:
 
     results = bm.for_loop(
         run_step,
-        bm.arange(len(position)),
-        position,
-        direction,
-        linear_speed_gains,
-        ang_speed_gains,
-        pbar=None
+        (
+            bm.arange(len(position)),
+            position,
+            direction,
+            linear_speed_gains,
+            ang_speed_gains,
+        )
     )
 
     (

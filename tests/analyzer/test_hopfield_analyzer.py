@@ -13,7 +13,6 @@ from canns.trainer import HebbianTrainer
 def test_hopfield_analyzer_initialization():
     """Test HopfieldAnalyzer initialization."""
     model = AmariHopfieldNetwork(num_neurons=10)
-    model.init_state()
 
     analyzer = HopfieldAnalyzer(model)
 
@@ -25,7 +24,6 @@ def test_hopfield_analyzer_initialization():
 def test_hopfield_analyzer_with_patterns():
     """Test analyzer with provided patterns."""
     model = AmariHopfieldNetwork(num_neurons=5)
-    model.init_state()
 
     patterns = [
         jnp.array([1.0, -1.0, 1.0, -1.0, 1.0]),
@@ -46,7 +44,6 @@ def test_hopfield_analyzer_with_patterns():
 def test_hopfield_analyzer_set_patterns():
     """Test setting patterns after initialization."""
     model = AmariHopfieldNetwork(num_neurons=4)
-    model.init_state()
 
     analyzer = HopfieldAnalyzer(model)
 
@@ -65,7 +62,6 @@ def test_hopfield_analyzer_set_patterns():
 def test_hopfield_overlap_computation():
     """Test overlap computation between patterns."""
     model = AmariHopfieldNetwork(num_neurons=4)
-    model.init_state()
 
     analyzer = HopfieldAnalyzer(model)
 
@@ -88,7 +84,6 @@ def test_hopfield_overlap_computation():
 def test_hopfield_pattern_recall_analysis():
     """Test pattern recall analysis with HebbianTrainer and HopfieldAnalyzer."""
     model = AmariHopfieldNetwork(num_neurons=5, asyn=False, activation="sign")
-    model.init_state()
 
     # Train with HebbianTrainer
     trainer = HebbianTrainer(model)
@@ -115,7 +110,6 @@ def test_hopfield_pattern_recall_analysis():
 def test_hopfield_capacity_estimation():
     """Test storage capacity estimation."""
     model = AmariHopfieldNetwork(num_neurons=100)
-    model.init_state()
 
     analyzer = HopfieldAnalyzer(model)
 
@@ -130,7 +124,6 @@ def test_hopfield_capacity_estimation():
 def test_hopfield_pattern_statistics():
     """Test pattern statistics computation."""
     model = AmariHopfieldNetwork(num_neurons=8)
-    model.init_state()
 
     # Train with patterns
     patterns = [
@@ -157,7 +150,6 @@ def test_hopfield_pattern_statistics():
 def test_hopfield_weight_symmetry():
     """Test weight symmetry error computation."""
     model = AmariHopfieldNetwork(num_neurons=5)
-    model.init_state()
 
     # Train with HebbianTrainer (should produce symmetric weights)
     trainer = HebbianTrainer(model)

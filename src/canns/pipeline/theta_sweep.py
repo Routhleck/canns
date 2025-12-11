@@ -234,10 +234,6 @@ class ThetaSweepPipeline(Pipeline):
         grid_params["num_dc"] = self.direction_network.num
         self.grid_network = GridCellNetwork(**grid_params)
 
-        # Initialize network states
-        self.direction_network.init_state()
-        self.grid_network.init_state()
-
     def _run_simulation(self):
         """
         Run the main theta sweep simulation loop.

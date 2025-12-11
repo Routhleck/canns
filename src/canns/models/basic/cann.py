@@ -204,6 +204,8 @@ class CANN1D(BaseCANN1D):
         Args:
             (Parameters are inherited from BaseCANN1D)
         """
+        super().__init__(*args, **kwargs)
+
         # Firing rate of the neurons.
         self.r = bm.Variable(bm.zeros(self.shape))
         # Synaptic input to the neurons.
@@ -212,7 +214,6 @@ class CANN1D(BaseCANN1D):
         # --- Inputs ---
         # External input to the network.
         self.inp = bm.Variable(bm.zeros(self.shape))
-        super().__init__(*args, **kwargs)
 
 
     def update(self, inp):
@@ -486,6 +487,8 @@ class CANN2D(BaseCANN2D):
         Args:
             (Parameters are inherited from BaseCANN2D)
         """
+        super().__init__(*args, **kwargs)
+
         # Firing rate of the neurons.
         self.r = bm.Variable(bm.zeros((self.length, self.length)))
         # Synaptic input to the neurons.
@@ -495,7 +498,6 @@ class CANN2D(BaseCANN2D):
         # External input to the neurons
         self.inp = bm.Variable(bm.zeros((self.length, self.length)))
 
-        super().__init__(*args, **kwargs)
 
     def update(self, inp):
         """

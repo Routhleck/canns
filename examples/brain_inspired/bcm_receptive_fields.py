@@ -70,7 +70,6 @@ n_neurons = 4  # Learn 4 different receptive fields
 model = LinearLayer(
     input_size=size * size, output_size=n_neurons, use_bcm_threshold=True, threshold_tau=50.0
 )
-model.init_state()
 
 # Create BCMTrainer
 trainer = BCMTrainer(model, learning_rate=0.00001)

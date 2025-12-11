@@ -22,7 +22,6 @@ def test_path_integration():
     task_sn.show_data(show=False, save_path='trajectory_test.png')
 
     hierarchical_net = HierarchicalNetwork(num_module=5, num_place=30)
-    hierarchical_net.init_state()
 
     def initialize(t, input_stre):
         hierarchical_net(
@@ -37,8 +36,9 @@ def test_path_integration():
     input_stre[:5] = 100.
     bm.for_loop(
         initialize,
-        bm.asarray(indices),
-        bm.asarray(input_stre),
-        pbar=None
+        (
+            bm.asarray(indices),
+            bm.asarray(input_stre),
+        ),
     )
 

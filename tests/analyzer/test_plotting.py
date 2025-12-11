@@ -23,7 +23,6 @@ from canns.models.basic import CANN1D, CANN2D
 def test_energy_landscape_1d():
     bm.set_dt(dt=0.1)
     cann = CANN1D(num=32)
-    cann.init_state()
 
     task_pc = PopulationCoding1D(
         cann_instance=cann,
@@ -39,7 +38,13 @@ def test_energy_landscape_1d():
         cann(inputs)
         return cann.u.value, cann.inp.value
 
-    us, inps = bm.for_loop(run_step, task_pc.run_steps, task_pc.data)
+    us, inps = bm.for_loop(
+        run_step,
+        (
+            task_pc.run_steps,
+            task_pc.data
+        )
+    )
 
     # Test with new config-based approach
     output_path_static = 'test_energy_landscape_1d_static.png'
@@ -89,7 +94,6 @@ def test_energy_landscape_1d():
 def test_energy_landscape_2d():
     bm.set_dt(dt=0.1)
     cann = CANN2D(length=4)
-    cann.init_state()
 
     task_pc = PopulationCoding2D(
         cann_instance=cann,
@@ -105,7 +109,13 @@ def test_energy_landscape_2d():
         cann(inputs)
         return cann.u.value, cann.r.value, cann.inp.value
 
-    us, rs, inps = bm.for_loop(run_step, task_pc.run_steps, task_pc.data)
+    us, rs, inps = bm.for_loop(
+        run_step,
+        (
+            task_pc.run_steps,
+            task_pc.data
+        )
+    )
 
     # Test with new config-based approach
     output_path_static = 'test_energy_landscape_2d_static.png'
@@ -145,7 +155,6 @@ def test_energy_landscape_2d():
 def test_raster_plot():
     bm.set_dt(dt=0.1)
     cann = CANN1D(num=32)
-    cann.init_state()
 
     task_st = SmoothTracking1D(
         cann_instance=cann,
@@ -159,8 +168,13 @@ def test_raster_plot():
         cann(inputs)
         return cann.u.value, cann.r.value
 
-    us, rs = bm.for_loop(run_step, task_st.run_steps, task_st.data,
-                                           pbar=None)
+    us, rs = bm.for_loop(
+        run_step,
+        (
+            task_st.run_steps,
+            task_st.data
+        ),
+    )
     spike_trains = firing_rate_to_spike_train(normalize_firing_rates(rs), dt_rate=0.1, dt_spike=0.1)
 
     # Test with new config-based approach
@@ -181,7 +195,6 @@ def test_raster_plot():
 def test_average_firing_rate():
     bm.set_dt(dt=0.1)
     cann = CANN1D(num=32)
-    cann.init_state()
 
     task_pc = PopulationCoding1D(
         cann_instance=cann,
@@ -197,8 +210,13 @@ def test_average_firing_rate():
         cann(inputs)
         return cann.u.value, cann.r.value
 
-    us, rs = bm.for_loop(run_step, task_pc.run_steps, task_pc.data,
-                                           pbar=None)
+    us, rs = bm.for_loop(
+        run_step,
+        (
+            task_pc.run_steps,
+            task_pc.data,
+        )
+    )
 
     # Test with new config-based approach
     output_path_population = 'test_average_firing_rate_population.png'
@@ -232,7 +250,6 @@ def test_average_firing_rate():
 def test_tuning_curve():
     bm.set_dt(dt=0.1)
     cann = CANN1D(num=32)
-    cann.init_state()
 
     task_st = SmoothTracking1D(
         cann_instance=cann,
@@ -246,8 +263,13 @@ def test_tuning_curve():
         cann(inputs)
         return cann.r.value, cann.inp.value
 
-    rs, inps = bm.for_loop(run_step, task_st.run_steps, task_st.data,
-                                           pbar=None)
+    rs, inps = bm.for_loop(
+        run_step,
+        (
+            task_st.run_steps,
+            task_st.data,
+        )
+    )
 
     # Test with new config-based approach
     neuron_indices_to_plot = [0, 8, 16]

@@ -8,8 +8,6 @@ multiple times. Removing the guard would cause the entire script to run once per
 worker when using the parallel GIF renderer.
 """
 
-import brainpy as bp
-import brainpy.math as bm
 import brainpy.math as bm
 import numpy as np
 
@@ -75,7 +73,6 @@ def main() -> None:
         g=20.0,            # Excitatory gain
         conn_noise=0.0,
     )
-    pc_net.init_state()
 
     # Warmup period: run network for 0.3s at starting position (MATLAB t_start=300ms)
     warmup_time = 0.1  # seconds
@@ -89,7 +86,6 @@ def main() -> None:
     bm.for_loop(
         warmup_step,
         bm.arange(warmup_steps),
-        pbar=None
     )
     print("Warmup completed.")
 
@@ -111,10 +107,11 @@ def main() -> None:
 
     results = bm.for_loop(
         run_step,
-        bm.arange(len(position)),
-        position,
-        linear_speed_gains,
-        pbar=None
+        (
+            bm.arange(len(position)),
+            position,
+            linear_speed_gains,
+        )
     )
 
     (

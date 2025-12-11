@@ -1,4 +1,4 @@
-"""Fixed point finder for BrainState RNN models."""
+"""Fixed point finder for BrainPy RNN models."""
 
 import time
 
@@ -18,7 +18,7 @@ class FixedPointFinder:
     in recurrent neural networks. It uses gradient descent to minimize the
     objective q = 0.5 * ||x - F(x, u)||^2, where F is the RNN transition function.
 
-    The implementation is compatible with BrainState RNN models and uses JAX for
+    The implementation is compatible with BrainPy RNN models and uses JAX for
     automatic differentiation and optimization.
     """
 
@@ -50,7 +50,7 @@ class FixedPointFinder:
         """Initialize the FixedPointFinder.
 
         Args:
-            rnn_model: A BrainState RNN model with __call__(inputs, hidden) signature.
+            rnn_model: A BrainPy RNN model with __call__(inputs, hidden) signature.
             method: Optimization method ('joint' or 'sequential').
             max_iters: Maximum optimization iterations.
             tol_q: Tolerance for q value convergence.
@@ -302,7 +302,7 @@ class FixedPointFinder:
         x_init = jnp.array(initial_states, dtype=self.jax_dtype)
         u = jnp.array(inputs, dtype=self.jax_dtype)
 
-        # Create optimization variables as BrainState State
+        # Create optimization variables as BrainPy Variable
         x_state = bm.Variable(x_init)
 
         # Create optimizer

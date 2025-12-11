@@ -7,7 +7,6 @@ from canns.task.tracking import SmoothTracking1D
 
 bm.set_dt(dt=0.1)
 cann = CANN1D(num=512)
-cann.init_state()
 
 task_st = SmoothTracking1D(
     cann_instance=cann,

@@ -53,7 +53,6 @@ model = AmariHopfieldNetwork(
     activation="tanh",
     temperature=0.5  # Lower temperature for sharper transitions
 )
-model.init_state()
 trainer = HebbianTrainer(model)
 trainer.train(data_list)
 

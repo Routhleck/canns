@@ -1,18 +1,17 @@
-"""Checkpoint utilities for saving and loading trained RNN models using BrainState's built-in checkpointing."""
+"""Checkpoint utilities for saving and loading trained RNN models using BrainPy's built-in checkpointing."""
 
 import os
 
 import brainpy as bp
-import braintools as bts
 
 __all__ = ["save_checkpoint", "load_checkpoint"]
 
 
 def save_checkpoint(model: bp.DynamicalSystem, filepath: str) -> None:
-    """Save model parameters to a checkpoint file using BrainState checkpointing.
+    """Save model parameters to a checkpoint file using BrainPy checkpointing.
 
     Args:
-        model: BrainState model to save.
+        model: BrainPy model to save.
         filepath: Path to save the checkpoint file.
 
     Example:
@@ -20,22 +19,21 @@ def save_checkpoint(model: bp.DynamicalSystem, filepath: str) -> None:
         >>> save_checkpoint(rnn, "my_model.msgpack")
         Saved checkpoint to: my_model.msgpack
     """
-    # TODO: Implement in BrainPy
-    # # Create directory if it doesn't exist
-    # os.makedirs(os.path.dirname(filepath) if os.path.dirname(filepath) else ".", exist_ok=True)
-    #
-    # # Use BrainState's built-in checkpointing
-    # states = bst.graph.states(model)
-    # checkpoint = states[0].to_nest() if isinstance(states, tuple) else states.to_nest()
-    # bts.file.msgpack_save(filepath, checkpoint)
-    # print(f"Saved checkpoint to: {filepath}")
+    # Extract all states from model (parameters and state variables)
+    states = bp.save_state(model)
+
+    # Save to disk using BrainPy's checkpoint system (automatically creates parent directories)
+    bp.checkpoints.save_pytree(filepath, states, overwrite=True)
+
+    # Print confirmation message
+    print(f"Saved checkpoint to: {filepath}")
 
 
 def load_checkpoint(model: bp.DynamicalSystem, filepath: str) -> bool:
-    """Load model parameters from a checkpoint file using BrainState checkpointing.
+    """Load model parameters from a checkpoint file using BrainPy checkpointing.
 
     Args:
-        model: BrainState model to load parameters into.
+        model: BrainPy model to load parameters into.
         filepath: Path to the checkpoint file.
 
     Returns:
@@ -50,13 +48,21 @@ def load_checkpoint(model: bp.DynamicalSystem, filepath: str) -> bool:
         Loaded checkpoint from: my_model.msgpack
         Loaded successfully
     """
-    # TODO: Implement in BrainPy
-    # if not os.path.exists(filepath):
-    #     return False
-    #
-    # # Use BrainState's built-in checkpointing
-    # states = bst.graph.states(model)
-    # checkpoint = states[0].to_nest() if isinstance(states, tuple) else states.to_nest()
-    # bts.file.msgpack_load(filepath, checkpoint)
-    # print(f"Loaded checkpoint from: {filepath}")
-    # return True
+    # Check if file exists
+    if not os.path.exists(filepath):
+        return False
+
+    try:
+        # Load state dictionary from disk
+        state_dict = bp.checkpoints.load_pytree(filepath)
+
+        # Load state into model
+        bp.load_state(model, state_dict)
+
+        # Print confirmation message
+        print(f"Loaded checkpoint from: {filepath}")
+        return True
+
+    except (ValueError, FileNotFoundError, OSError):
+        # Handle file not found, corrupt file, or permission errors
+        return False

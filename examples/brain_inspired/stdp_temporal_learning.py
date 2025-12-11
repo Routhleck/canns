@@ -76,7 +76,6 @@ model = SpikingLayer(
     trace_decay=0.90,  # Trace decay determines STDP time window
     dt=1.0,
 )
-model.init_state()
 
 # Store initial weights for comparison
 initial_weights = model.W.value.copy()
