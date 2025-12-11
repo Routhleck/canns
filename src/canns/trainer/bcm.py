@@ -7,8 +7,8 @@ from collections.abc import Iterable
 import brainpy.math as bm
 import jax.numpy as jnp
 
-from ._base import Trainer
 from ..models.brain_inspired import BrainInspiredModel
+from ._base import Trainer
 
 __all__ = ["BCMTrainer"]
 
@@ -122,16 +122,14 @@ class BCMTrainer(Trainer):
             W = jnp.clip(W, -10.0, 10.0)
 
             # Update threshold: θ ← θ + (1/τ) * (y² - θ)
-            y_squared = y ** 2
+            y_squared = y**2
             alpha = 1.0 / threshold_tau if threshold_tau > 0 else 1.0
             theta = theta + alpha * (y_squared - theta)
 
             return (W, theta), None
 
         # Run compiled scan
-        (W_final, theta_final), _ = bm.scan(
-            train_step, (W_init, theta_init), patterns
-        )
+        (W_final, theta_final), _ = bm.scan(train_step, (W_init, theta_init), patterns)
 
         # Update model parameters
         weight_param.value = W_final

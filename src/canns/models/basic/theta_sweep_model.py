@@ -5,7 +5,6 @@ import numpy as np
 
 from ._base import BasicModel
 
-
 # TODO: exp_euler_step should be implemented in BrainPy
 
 
@@ -175,7 +174,7 @@ class DirectionCellNetwork(BasicModel):
         self.center = bm.Variable(bm.zeros(1))
         self.centerI = bm.Variable(bm.zeros(1))
 
-        self.integral = bp.odeint(method='exp_euler', f=self.derivative)
+        self.integral = bp.odeint(method="exp_euler", f=self.derivative)
 
     @property
     def derivative(self):
@@ -197,7 +196,7 @@ class DirectionCellNetwork(BasicModel):
         noise = bm.random.randn(self.num) * self.noise_strength
         input_total = Iext + Irec + noise
 
-        _u, _v = self.integral(self.u, self.v, bp.share['t'], input_total, bm.dt)
+        _u, _v = self.integral(self.u, self.v, bp.share["t"], input_total, bm.dt)
         self.u.value = bm.where(_u > 0, _u, 0)
         self.v.value = _v
 
@@ -238,11 +237,7 @@ class DirectionCellNetwork(BasicModel):
         @jax.vmap
         def get_J(xbins):
             d = self.calculate_dist(xbins - self.x)
-            Jxx = (
-                self.J0
-                * bm.exp(-0.5 * bm.square(d / self.a))
-                / (bm.sqrt(2 * bm.pi) * self.a)
-            )
+            Jxx = self.J0 * bm.exp(-0.5 * bm.square(d / self.a)) / (bm.sqrt(2 * bm.pi) * self.a)
             return Jxx
 
         return get_J(self.x)
@@ -393,9 +388,7 @@ class GridCellNetwork(BasicModel):
         # coordinate transforms (hex -> rect)
         # Note that coor_transform is to map a parallelogram with a 60-degree angle back to a square
         # The logic is to partition the 2D space into parallelograms, each of which contains one lattice of grid cells, and repeat the parallelogram to tile the whole space
-        self.coor_transform = bm.array(
-            [[1.0, -1.0 / bm.sqrt(3.0)], [0.0, 2.0 / bm.sqrt(3.0)]]
-        )
+        self.coor_transform = bm.array([[1.0, -1.0 / bm.sqrt(3.0)], [0.0, 2.0 / bm.sqrt(3.0)]])
 
         # inverse, which is bm.array([[1.0, 1.0 / 2],[0.0,  bm.sqrt(3.0) / 2]])
         # Note that coor_transform_inv is to map a square to a parallelogram with a 60-degree angle
@@ -438,7 +431,7 @@ class GridCellNetwork(BasicModel):
         self.center_phase = bm.Variable(bm.zeros(2))
         self.center_position = bm.Variable(bm.zeros(2))
 
-        self.integral = bp.odeint(method='exp_euler', f=self.derivative)
+        self.integral = bp.odeint(method="exp_euler", f=self.derivative)
 
     @property
     def derivative(self):
@@ -555,7 +548,7 @@ class GridCellNetwork(BasicModel):
         total_net_input = Irec + conj_input + input_noise
 
         # integrate
-        _u, _v = self.integral(self.u, self.v, bp.share['t'], total_net_input, bm.dt)
+        _u, _v = self.integral(self.u, self.v, bp.share["t"], total_net_input, bm.dt)
         self.u.value = bm.where(_u > 0.0, _u, 0.0)
         self.v.value = _v
 
@@ -589,9 +582,7 @@ class GridCellNetwork(BasicModel):
         center_phase = center_phase.at[1].set(bm.angle(bm.sum(exppos_y * activity_masked)))
 
         # --- map back to real space, snap to nearest candidate ---
-        center_pos_residual = (
-            bm.matmul(self.coor_transform_inv, center_phase) / self.mapping_ratio
-        )
+        center_pos_residual = bm.matmul(self.coor_transform_inv, center_phase) / self.mapping_ratio
         candidate_pos_all = self.candidate_centers + center_pos_residual
         distances = bm.linalg.norm(candidate_pos_all - animal_posistion, axis=1)
         center_position = candidate_pos_all[bm.argmin(distances)]
@@ -627,9 +618,7 @@ class GridCellNetwork(BasicModel):
         # lagvec = -bm.array([bm.cos(head_direction), bm.sin(head_direction)]) * self.params.phase_offset * 1.4
         # offset = bm.array([bm.cos(direction_bin), bm.sin(direction_bin)]) * self.params.phase_offset + lagvec.reshape(-1, 1)
 
-        offset = (
-            bm.array([bm.cos(direction_bin), bm.sin(direction_bin)]) * self.phase_offset
-        )
+        offset = bm.array([bm.cos(direction_bin), bm.sin(direction_bin)]) * self.phase_offset
 
         center_conj = self.position2phase(animal_pos.reshape(-1, 1) + offset.reshape(-1, num_dc))
 
@@ -773,7 +762,7 @@ class PlaceCellNetwork(BasicModel):
         self.u = bm.Variable(bm.zeros(self.cell_num))
         self.center = bm.Variable(bm.zeros(1))
 
-        self.integral = bp.odeint(method='exp_euler', f=self.derivative)
+        self.integral = bp.odeint(method="exp_euler", f=self.derivative)
 
     @property
     def derivative(self):
@@ -795,7 +784,7 @@ class PlaceCellNetwork(BasicModel):
         @jax.vmap
         def kernel_row(d):
             # d: (cell_num,) distances from one cell to all others
-            return self.J0 * bm.exp(-d / (2 * self.a ** 2)) / ((2 * bm.pi) * self.a ** 2)
+            return self.J0 * bm.exp(-d / (2 * self.a**2)) / ((2 * bm.pi) * self.a**2)
 
         return kernel_row(self.D)
 
@@ -853,7 +842,7 @@ class PlaceCellNetwork(BasicModel):
         # Zero out the input if the position was invalid (cell_idx < 0)
         # This is JAX-compatible
         is_valid = cell_idx >= 0
-        bump = self.A * bm.exp(-d / (2 * self.a ** 2))
+        bump = self.A * bm.exp(-d / (2 * self.a**2))
         return bm.where(is_valid, bump, bm.zeros_like(bump))
 
     def update(self, animal_pos, theta_input):
@@ -870,7 +859,7 @@ class PlaceCellNetwork(BasicModel):
         noise = bm.random.randn(self.cell_num) * self.noise_strength
         input_total = Iext + Irec + noise
 
-        _u, _v = self.integral(self.u, self.v, bp.share['t'], input_total, bm.dt)
+        _u, _v = self.integral(self.u, self.v, bp.share["t"], input_total, bm.dt)
         self.u.value = bm.where(_u > 0, _u, 0)
         self.v.value = _v
 

@@ -98,7 +98,7 @@ class LinearLayer(BrainInspiredModel):
         if not self.use_bcm_threshold:
             return
 
-        y_squared = self.y.value ** 2
+        y_squared = self.y.value**2
         alpha = 1.0 / self.threshold_tau if self.threshold_tau > 0 else 1.0
         self.theta.value = self.theta.value + alpha * (y_squared - self.theta.value)
 

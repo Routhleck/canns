@@ -5,13 +5,13 @@ import heapq
 from collections.abc import Sequence
 from dataclasses import dataclass
 
+import brainpy.math as bm
 import numpy as np
 from canns_lib.spatial import Agent, Environment
 from matplotlib import colors
 from matplotlib import pyplot as plt
 from matplotlib.path import Path
 from tqdm import tqdm
-import brainpy.math as bm
 
 from ._base import Task
 
@@ -23,7 +23,6 @@ try:
 except ImportError:
     NUMBA_AVAILABLE = False
 
-
     # Fallback: njit and prange become no-op
     def njit(*args, **kwargs):
         def decorator(func):
@@ -32,7 +31,6 @@ except ImportError:
         if len(args) == 1 and callable(args[0]):
             return args[0]
         return decorator
-
 
     # prange fallback to regular range
     prange = range
@@ -119,7 +117,7 @@ def _dijkstra_numba(costs: np.ndarray, dx: float, dy: float, start_linear_index:
     queue_node[0] = start_linear_index
     queue_size = 1
 
-    diag_dist = np.sqrt(dx ** 2 + dy ** 2)
+    diag_dist = np.sqrt(dx**2 + dy**2)
 
     while queue_size > 0:
         # Find minimum (simple linear search - still fast with JIT)

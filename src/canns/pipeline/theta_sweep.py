@@ -12,7 +12,6 @@ from typing import Any
 import brainpy.math as bm
 import numpy as np
 
-from ._base import Pipeline
 from ..analyzer.plotting import PlotConfig
 from ..analyzer.theta_sweep import (
     create_theta_sweep_grid_cell_animation,
@@ -24,6 +23,7 @@ from ..models.basic.theta_sweep_model import (
     calculate_theta_modulation,
 )
 from ..task.open_loop_navigation import OpenLoopNavigationTask
+from ._base import Pipeline
 
 
 class ThetaSweepPipeline(Pipeline):

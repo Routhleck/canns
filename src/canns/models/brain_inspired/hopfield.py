@@ -61,9 +61,7 @@ class AmariHopfieldNetwork(BrainInspiredModel):
         # Set activation function based on type
         self.activation = self._get_activation_fn(activation)
 
-        self.s = bm.Variable(
-            jnp.ones(self.num_neurons, dtype=jnp.float32)
-        )  # Binary states (+1/-1)
+        self.s = bm.Variable(jnp.ones(self.num_neurons, dtype=jnp.float32))  # Binary states (+1/-1)
         self.W = bm.Variable(
             jnp.zeros((self.num_neurons, self.num_neurons), dtype=jnp.float32)
         )  # Weight matrix as trainable parameter

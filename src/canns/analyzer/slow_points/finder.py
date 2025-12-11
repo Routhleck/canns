@@ -331,7 +331,7 @@ class FixedPointFinder:
 
             # Compute q = 0.5 * ||x - F(x)||^2
             dx = x_current - F_x
-            q = 0.5 * jnp.sum(dx ** 2, axis=1)
+            q = 0.5 * jnp.sum(dx**2, axis=1)
             q_mean = jnp.mean(q)
             dq = jnp.abs(q - q_prev)
 
@@ -340,7 +340,7 @@ class FixedPointFinder:
                 x_opt = x_state.value
                 F_x_opt = self._compute_F(x_opt, u)
                 dx_opt = x_opt - F_x_opt
-                return jnp.mean(0.5 * jnp.sum(dx_opt ** 2, axis=1))
+                return jnp.mean(0.5 * jnp.sum(dx_opt**2, axis=1))
 
             grads_raw = bm.grad(loss_fn, grad_vars=x_state)()
 
@@ -447,11 +447,11 @@ class FixedPointFinder:
         for i in range(n_inits):
             self._print_if_verbose(f"\n\tInitialization {i + 1} of {n_inits}:")
 
-            cond_id_i = None if cond_ids is None else cond_ids[i: i + 1]
+            cond_id_i = None if cond_ids is None else cond_ids[i : i + 1]
 
             fps_i = self._run_joint_optimization(
-                initial_states[i: i + 1, :],
-                inputs[i: i + 1, :],
+                initial_states[i : i + 1, :],
+                inputs[i : i + 1, :],
                 cond_id_i,
             )
             fps_list.append(fps_i)

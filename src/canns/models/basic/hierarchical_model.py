@@ -3,8 +3,8 @@ import brainpy.math as bm
 import jax
 import jax.numpy as jnp
 
-from ._base import BasicModel, BasicModelGroup
 from ...task.open_loop_navigation import map2pi
+from ._base import BasicModel, BasicModelGroup
 
 __all__ = [
     # Base Units
@@ -101,14 +101,10 @@ class GaussRecUnits(BasicModel):
 
         # initialize the neural activity
         self.u.value = (
-            10.0
-            * bm.exp(-0.5 * bm.square((self.x - 0) / self.a))
-            / (bm.sqrt(2 * bm.pi) * self.a)
+            10.0 * bm.exp(-0.5 * bm.square((self.x - 0) / self.a)) / (bm.sqrt(2 * bm.pi) * self.a)
         )
         self.r.value = (
-            30.0
-            * bm.exp(-0.5 * bm.square((self.x - 0) / self.a))
-            / (bm.sqrt(2 * bm.pi) * self.a)
+            30.0 * bm.exp(-0.5 * bm.square((self.x - 0) / self.a)) / (bm.sqrt(2 * bm.pi) * self.a)
         )
 
     # make the connection matrix
@@ -120,11 +116,7 @@ class GaussRecUnits(BasicModel):
         """
         dis = self.x[:, None] - self.x[None, :]
         d = self.dist(dis)
-        return (
-            self.J
-            * bm.exp(-0.5 * bm.square(d / self.a))
-            / (bm.sqrt(2 * bm.pi) * self.a)
-        )
+        return self.J * bm.exp(-0.5 * bm.square(d / self.a)) / (bm.sqrt(2 * bm.pi) * self.a)
 
     # critical connection strength
     def Jc(self):
@@ -174,8 +166,7 @@ class GaussRecUnits(BasicModel):
         self.r.value = r1 / r2
         Irec = bm.dot(self.conn_mat, self.r.value)
         self.u.value = (
-            self.u.value
-            + (-self.u.value + Irec + self.input.value) / self.tau * bm.get_dt()
+            self.u.value + (-self.u.value + Irec + self.input.value) / self.tau * bm.get_dt()
         )
         self.input.value = self.input.value.at[:].set(0.0)
         self.center.value = self.center.value.at[0].set(self.decode(self.u.value))
@@ -276,10 +267,7 @@ class NonRecUnits(BasicModel):
         # self.r.value = self.activate(self.u.value) + self.noise_0 * bm.random.randn(
         #     self.size
         # )
-        self.u.value = (
-            self.u.value
-            + (-self.u.value + self.input.value) / self.tau * bm.get_dt()
-        )
+        self.u.value = self.u.value + (-self.u.value + self.input.value) / self.tau * bm.get_dt()
         self.input.value = self.input.value.at[:].set(0.0)
         return self.r.value
 
@@ -365,10 +353,7 @@ class BandCell(BasicModel):
         self.spacing = spacing
         self.angle = angle
         self.proj_k = (
-            bm.array([bm.cos(angle - bm.pi / 2), bm.sin(angle - bm.pi / 2)])
-            * 2
-            * bm.pi
-            / spacing
+            bm.array([bm.cos(angle - bm.pi / 2), bm.sin(angle - bm.pi / 2)]) * 2 * bm.pi / spacing
         )
 
         # shifts
@@ -607,7 +592,7 @@ class GridCell(BasicModel):
             J0 (float, optional): The maximum connection strength. Defaults to 1.0.
             mbar (float, optional): The base strength of adaptation. Defaults to 1.0.
         """
-        self.num = num ** 2
+        self.num = num**2
         super().__init__()
         # dynamics parameters
         self.tau = tau  # The synaptic time constant
@@ -628,7 +613,7 @@ class GridCell(BasicModel):
         self.x_grid = x_grid.flatten()
         self.y_grid = y_grid.flatten()
         self.value_grid = bm.stack([self.x_grid, self.y_grid]).T
-        self.rho = self.num / (self.x_range ** 2)  # The neural density
+        self.rho = self.num / (self.x_range**2)  # The neural density
         self.dxy = 1 / self.rho  # The stimulus density
         self.coor_transform = bm.array([[1, -1 / bm.sqrt(3)], [0, 2 / bm.sqrt(3)]])
         self.rot = bm.array(
@@ -652,7 +637,7 @@ class GridCell(BasicModel):
             )
         )
 
-        self.integral = bp.odeint(method='exp_euler', f=self.derivative)
+        self.integral = bp.odeint(method="exp_euler", f=self.derivative)
 
     @property
     def derivative(self):
@@ -687,7 +672,7 @@ class GridCell(BasicModel):
         d = map2pi(d)
         delta_x = d[:, 0]
         delta_y = (d[:, 1] - 1 / 2 * d[:, 0]) * 2 / bm.sqrt(3)
-        return bm.sqrt(delta_x ** 2 + delta_y ** 2)
+        return bm.sqrt(delta_x**2 + delta_y**2)
 
     def make_conn(self):
         """Constructs the connection matrix for the 2D attractor network.
@@ -702,11 +687,7 @@ class GridCell(BasicModel):
         @jax.vmap
         def get_J(v):
             d = self.dist(v - self.value_grid)
-            Jxx = (
-                self.J0
-                * bm.exp(-0.5 * bm.square(d / self.a))
-                / (bm.sqrt(2 * bm.pi) * self.a)
-            )
+            Jxx = self.J0 * bm.exp(-0.5 * bm.square(d / self.a)) / (bm.sqrt(2 * bm.pi) * self.a)
             return Jxx
 
         return get_J(self.value_grid)
@@ -741,7 +722,7 @@ class GridCell(BasicModel):
         self.input.value = input
         Irec = bm.dot(self.conn_mat, self.r.Òvalue)
         # Update neural state
-        _u, _v = self.integral(self.u, self.v, bp.share['t'], Irec, bm.dt)
+        _u, _v = self.integral(self.u, self.v, bp.share["t"], Irec, bm.dt)
 
         self.u.value = bm.where(_u > 0, _u, 0)
         self.v.value = _v
@@ -972,7 +953,7 @@ class HierarchicalPathIntegrationModel(BasicModelGroup):
         delta_y = (d[:, :, 1] - 1 / 2 * d[:, :, 0]) * 2 / bm.sqrt(3)
         # delta_x = d[:,:,0] + d[:,:,1]/2
         # delta_y = d[:,:,1] * bm.sqrt(3) / 2
-        dis = bm.sqrt(delta_x ** 2 + delta_y ** 2)
+        dis = bm.sqrt(delta_x**2 + delta_y**2)
         Wg2p = bm.exp(-0.5 * bm.square(dis / self.band_cell_x.band_cells.a)) / (
             bm.sqrt(2 * bm.pi) * self.band_cell_x.band_cells.a
         )
@@ -990,7 +971,7 @@ class HierarchicalPathIntegrationModel(BasicModelGroup):
         d = map2pi(d)
         delta_x = d[:, 0]
         delta_y = (d[:, 1] - 1 / 2 * d[:, 0]) * 2 / bm.sqrt(3)
-        return bm.sqrt(delta_x ** 2 + delta_y ** 2)
+        return bm.sqrt(delta_x**2 + delta_y**2)
 
     def get_input(self, Phase):
         """Generates a stimulus input for the grid cell based on a 2D phase.
@@ -1130,7 +1111,7 @@ class HierarchicalNetwork(BasicModelGroup):
         """
         super().__init__()
         self.num_module = num_module
-        self.num_place = num_place ** 2
+        self.num_place = num_place**2
         # randomly sample num_place place field centers from a square arena (5m x 5m)
         x = bm.linspace(0, 5, num_place)
         X, Y = bm.meshgrid(x, x)
@@ -1176,7 +1157,7 @@ class HierarchicalNetwork(BasicModelGroup):
         self.MEC_model_list = MEC_model_list
 
         self.place_fr = bm.Variable(bm.zeros(self.num_place))
-        self.grid_fr = bm.Variable(bm.zeros((self.num_module, 20 ** 2)))
+        self.grid_fr = bm.Variable(bm.zeros((self.num_module, 20**2)))
         self.band_x_fr = bm.Variable(bm.zeros((self.num_module, 180)))
         self.band_y_fr = bm.Variable(bm.zeros((self.num_module, 180)))
         self.decoded_pos = bm.Variable(bm.zeros(2))
@@ -1212,7 +1193,7 @@ class HierarchicalNetwork(BasicModelGroup):
             1e-5 + bm.sum(u_place)
         )
         self.decoded_pos.value = center
-        self.place_fr.value = u_place ** 2 / (1 + bm.sum(u_place ** 2))
+        self.place_fr.value = u_place**2 / (1 + bm.sum(u_place**2))
         # self.place_fr = softmax(grid_output)
 
     # the optimized run function is not run well(the performance is not good enough, as the original one),

@@ -1,3 +1,5 @@
+from ...data.loaders import load_grid_data, load_roi_data, validate_grid_data, validate_roi_data
+from ..plotting import PlotConfig
 from .cann1d import CANN1DPlotConfig, bump_fits, create_1d_bump_animation
 from .cann2d import (
     CANN2DPlotConfig,
@@ -9,8 +11,6 @@ from .cann2d import (
     plot_projection,
     tda_vis,
 )
-from ..plotting import PlotConfig
-from ...data.loaders import load_grid_data, load_roi_data, validate_grid_data, validate_roi_data
 
 __all__ = [
     # CANN1D functions

@@ -2,8 +2,8 @@ import brainpy.math as bm
 import jax
 from matplotlib import pyplot as plt
 
-from ._base import BasicModel
 from ...typing import time_type
+from ._base import BasicModel
 
 __all__ = [
     # Base Model
@@ -164,11 +164,7 @@ class BaseCANN1D(BaseCANN):
         d = self.dist(x_left - x_right)
         # Compute the connection strengths using a Gaussian (normal distribution) function.
         # Neurons with similar feature preferences will have stronger excitatory connections.
-        return (
-            self.J0
-            * bm.exp(-0.5 * bm.square(d / self.a))
-            / (bm.sqrt(2 * bm.pi) * self.a)
-        )
+        return self.J0 * bm.exp(-0.5 * bm.square(d / self.a)) / (bm.sqrt(2 * bm.pi) * self.a)
 
     def get_stimulus_by_pos(self, pos):
         """
@@ -231,9 +227,7 @@ class CANN1D(BaseCANN1D):
         Irec = bm.dot(self.conn_mat, self.r.value)
         # Update the synaptic inputs using Euler's method. The change depends on a leak
         # current (-u), recurrent input (Irec), and external input (inp).
-        self.u.value += (
-            (-self.u.value + Irec + self.inp.value) / self.tau * bm.get_dt()
-        )
+        self.u.value += (-self.u.value + Irec + self.inp.value) / self.tau * bm.get_dt()
 
 
 class CANN1D_SFA(BaseCANN1D):
@@ -300,15 +294,11 @@ class CANN1D_SFA(BaseCANN1D):
         Irec = bm.dot(self.conn_mat, self.r.value)
         # Update the synaptic input. Note the additional '- self.v.value' term,
         self.u.value += (
-            (-self.u.value + Irec + self.inp.value - self.v.value)
-            / self.tau
-            * bm.get_dt()
+            (-self.u.value + Irec + self.inp.value - self.v.value) / self.tau * bm.get_dt()
         )
         # Update the adaptation variable 'v'. It slowly tracks the membrane potential 'u'
         # and has its own decay, creating a slow negative feedback loop.
-        self.v.value += (
-            (-self.v.value + self.m * self.u.value) / self.tau_v * bm.get_dt()
-        )
+        self.v.value += (-self.v.value + self.m * self.u.value) / self.tau_v * bm.get_dt()
 
 
 class BaseCANN2D(BaseCANN):
@@ -511,9 +501,7 @@ class CANN2D(BaseCANN2D):
         # Calculate the recurrent input from other neurons in the network.
         Irec = (self.r.value.flatten() @ self.conn_mat).reshape((self.length, self.length))
         # Update the synaptic input based on the recurrent input and external input.
-        self.u.value += (
-            (-self.u.value + Irec + self.inp.value) / self.tau * bm.get_dt()
-        )
+        self.u.value += (-self.u.value + Irec + self.inp.value) / self.tau * bm.get_dt()
 
 
 class CANN2D_SFA(BaseCANN2D):
@@ -572,12 +560,8 @@ class CANN2D_SFA(BaseCANN2D):
         Irec = (self.r.value.flatten() @ self.conn_mat).reshape((self.length, self.length))
         # Update the synaptic input. Note the additional '- self.v.value' term,
         self.u.value += (
-            (-self.u.value + Irec + self.inp.value - self.v.value)
-            / self.tau
-            * bm.get_dt()
+            (-self.u.value + Irec + self.inp.value - self.v.value) / self.tau * bm.get_dt()
         )
         # Update the adaptation variable 'v'. It slowly tracks the membrane potential 'u'
         # and has its own decay, creating a slow negative feedback loop.
-        self.v.value += (
-            (-self.v.value + self.m * self.u.value) / self.tau_v * bm.get_dt()
-        )
+        self.v.value += (-self.v.value + self.m * self.u.value) / self.tau_v * bm.get_dt()

@@ -7,9 +7,9 @@ from collections.abc import Iterable
 import brainpy.math as bm
 import jax.numpy as jnp
 
+from ..models.brain_inspired import BrainInspiredModel
 from ._base import Trainer
 from .utils import normalize_weight_rows
-from ..models.brain_inspired import BrainInspiredModel
 
 __all__ = ["OjaTrainer"]
 

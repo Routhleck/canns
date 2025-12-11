@@ -7,8 +7,8 @@ from collections.abc import Iterable
 import brainpy.math as bm
 import jax.numpy as jnp
 
-from ._base import Trainer
 from ..models.brain_inspired import BrainInspiredModel
+from ._base import Trainer
 
 __all__ = ["STDPTrainer"]
 

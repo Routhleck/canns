@@ -7,8 +7,8 @@ import jax
 import jax.numpy as jnp
 from tqdm import tqdm  # type: ignore
 
-from ._base import Trainer
 from ..models.brain_inspired import BrainInspiredModel
+from ._base import Trainer
 
 __all__ = ["HebbianTrainer", "AntiHebbianTrainer"]
 
@@ -418,13 +418,15 @@ class HebbianTrainer(Trainer):
         # Initial energy
         initial_energy = jnp.float32(self.model.energy)
 
-        def step_fn(i):
-            # Single update step (model.update modifies state in-place)
-            self.model.update(self.model.energy)
-            return None
+        def step_fn(prev_energy, i):
+            # Single update step with previous energy
+            self.model.update(prev_energy)
+            # Return new energy for next iteration (carry) and None (output)
+            new_energy = jnp.float32(self.model.energy)
+            return new_energy, None
 
-        # Run loop (modifies model state in-place)
-        bm.for_loop(step_fn, bm.arange(num_iter))
+        # Run scan (modifies model state in-place, carries energy forward)
+        final_energy, _ = bm.scan(step_fn, initial_energy, bm.arange(num_iter))
 
         # Return final state
         return self._get_state_vector(state_param)
