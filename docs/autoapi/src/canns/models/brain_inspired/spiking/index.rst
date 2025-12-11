@@ -67,12 +67,6 @@ Module Contents
 
 
 
-   .. py:method:: init_state()
-
-      Initialize layer parameters and state variables.
-
-
-
    .. py:method:: reset_state()
 
       Reset membrane potentials and spike traces.
@@ -83,6 +77,9 @@ Module Contents
 
       Update method for trainer compatibility (no-op for spiking layer).
 
+
+
+   .. py:attribute:: W
 
 
    .. py:attribute:: dt
@@ -115,6 +112,9 @@ Module Contents
       Name of output state for prediction.
 
 
+   .. py:attribute:: spike
+
+
    .. py:attribute:: threshold
       :value: 1.0
 
@@ -123,6 +123,15 @@ Module Contents
    .. py:attribute:: trace_decay
       :value: 0.95
 
+
+
+   .. py:attribute:: trace_post
+
+
+   .. py:attribute:: trace_pre
+
+
+   .. py:attribute:: v
 
 
    .. py:attribute:: v_reset
@@ -135,5 +144,8 @@ Module Contents
 
 
       Name of weight parameter for generic training.
+
+
+   .. py:attribute:: x
 
 

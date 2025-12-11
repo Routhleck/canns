@@ -5,10 +5,10 @@ src.canns.analyzer.slow_points
 
 .. autoapi-nested-parse::
 
-   Fixed point finder for BrainState RNN models.
+   Fixed point finder for BrainPy RNN models.
 
    This module provides tools for identifying and analyzing fixed points
-   in recurrent neural networks using JAX/BrainState.
+   in recurrent neural networks using JAX/BrainPy.
 
 
 
@@ -55,12 +55,12 @@ Package Contents
    in recurrent neural networks. It uses gradient descent to minimize the
    objective q = 0.5 * ||x - F(x, u)||^2, where F is the RNN transition function.
 
-   The implementation is compatible with BrainState RNN models and uses JAX for
+   The implementation is compatible with BrainPy RNN models and uses JAX for
    automatic differentiation and optimization.
 
    Initialize the FixedPointFinder.
 
-   :param rnn_model: A BrainState RNN model with __call__(inputs, hidden) signature.
+   :param rnn_model: A BrainPy RNN model with __call__(inputs, hidden) signature.
    :param method: Optimization method ('joint' or 'sequential').
    :param max_iters: Maximum optimization iterations.
    :param tol_q: Tolerance for q value convergence.
@@ -398,9 +398,9 @@ Package Contents
 
 .. py:function:: load_checkpoint(model, filepath)
 
-   Load model parameters from a checkpoint file using BrainState checkpointing.
+   Load model parameters from a checkpoint file using BrainPy checkpointing.
 
-   :param model: BrainState model to load parameters into.
+   :param model: BrainPy model to load parameters into.
    :param filepath: Path to the checkpoint file.
 
    :returns: True if checkpoint was loaded successfully, False otherwise.
@@ -466,9 +466,9 @@ Package Contents
 
 .. py:function:: save_checkpoint(model, filepath)
 
-   Save model parameters to a checkpoint file using BrainState checkpointing.
+   Save model parameters to a checkpoint file using BrainPy checkpointing.
 
-   :param model: BrainState model to save.
+   :param model: BrainPy model to save.
    :param filepath: Path to save the checkpoint file.
 
    .. rubric:: Example

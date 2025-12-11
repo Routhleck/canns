@@ -27,15 +27,15 @@ def main() -> None:
     # Create and run spatial navigation task with T-maze geometry from Chu et al. 2024
     tmazet = TMazeRecessOpenLoopNavigationTask(
         duration=simulate_time,
-        w=0.84,            # Corridor width (m)
-        l_s=3.64,          # Stem length (m)
-        l_arm=2.36,        # Arm length (m)
-        t=1.0,             # T-junction thickness (m)
+        w=0.84,  # Corridor width (m)
+        l_s=3.64,  # Stem length (m)
+        l_arm=2.36,  # Arm length (m)
+        t=1.0,  # T-junction thickness (m)
         start_pos=(0.0, 0.6),
         recess_width=0.2,
         recess_depth=0.2,
         initial_head_direction=1 / 2 * bm.pi,
-        speed_mean=1.2,    # Agent speed (m/s)
+        speed_mean=1.2,  # Agent speed (m/s)
         speed_std=0.0,
         rotational_velocity_std=0,
         dt=dt,
@@ -62,15 +62,15 @@ def main() -> None:
     # Create networks with T-maze parameters from Chu et al. 2024 Table 3
     pc_net = PlaceCellNetwork(
         geodesic_result,
-        tau=3.0,           # Fast neural time constant (ms)
-        tau_v=150.0,       # Slow adaptation time constant (ms)
+        tau=3.0,  # Fast neural time constant (ms)
+        tau_v=150.0,  # Slow adaptation time constant (ms)
         noise_strength=0.05,
-        k=1.40,            # Global inhibition strength
-        m=1.1,             # Gives effective m ≈ 3.96
-        a=0.3,             # Local excitation range
-        A=2.3,             # Local excitation strength
-        J0=0.25,         # Baseline excitation
-        g=20.0,            # Excitatory gain
+        k=1.40,  # Global inhibition strength
+        m=1.1,  # Gives effective m ≈ 3.96
+        a=0.3,  # Local excitation range
+        A=2.3,  # Local excitation strength
+        J0=0.25,  # Baseline excitation
+        g=20.0,  # Excitatory gain
         conn_noise=0.0,
     )
 

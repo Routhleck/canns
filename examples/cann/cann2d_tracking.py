@@ -1,6 +1,4 @@
-import brainpy as bp
 import brainpy.math as bm
-import jax
 
 from canns.analyzer.plotting import PlotConfigs, energy_landscape_2d_animation
 from canns.models.basic import CANN2D
@@ -13,14 +11,16 @@ cann = CANN2D(length=100)
 task_st = SmoothTracking2D(
     cann_instance=cann,
     Iext=([0., 0.], [1., 1.], [0.75, 0.75], [2., 2.], [1.75, 1.75], [3., 3.]),
-    duration=(10. ,10., 10., 10., 10.),
+    duration=(10., 10., 10., 10., 10.),
     time_step=bm.get_dt(),
 )
 task_st.get_data()
 
+
 def run_step(t, Iext):
     cann(Iext)
     return cann.u.value, cann.r.value, cann.inp.value
+
 
 cann_us, cann_rs, inps = bm.for_loop(
     run_step,

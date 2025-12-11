@@ -19,6 +19,7 @@ from canns.trainer import HebbianTrainer
 
 np.random.seed(42)
 
+
 def preprocess_image(img, w=128, h=128) -> np.ndarray:
     """Resize, grayscale (if needed), threshold to binary, then map to {-1,+1}."""
     if img.ndim == 3:
@@ -29,6 +30,7 @@ def preprocess_image(img, w=128, h=128) -> np.ndarray:
     binary = img > thresh
     shift = np.where(binary, 1.0, -1.0).astype(np.float32)
     return shift.reshape(w * h)
+
 
 # Training data from skimage
 camera = preprocess_image(skimage.data.camera())
@@ -43,6 +45,7 @@ model = AmariHopfieldNetwork(num_neurons=data_list[0].shape[0], asyn=False, acti
 trainer = HebbianTrainer(model)
 trainer.train(data_list)
 
+
 # Generate testset
 def get_corrupted_input(input, corruption_level):
     corrupted = np.copy(input)
@@ -52,10 +55,12 @@ def get_corrupted_input(input, corruption_level):
             corrupted[i] = -1 * v
     return corrupted
 
+
 tests = [get_corrupted_input(d, 0.3) for d in data_list]
 
 # Predict corrupted patterns (compiled for speed, show sample-level progress)
 predicted = trainer.predict_batch(tests, show_sample_progress=True)
+
 
 # display predict results
 def plot(data, test, predicted, figsize=(5, 6)):
@@ -70,7 +75,7 @@ def plot(data, test, predicted, figsize=(5, 6)):
 
     fig, axarr = plt.subplots(len(data), 3, figsize=figsize)
     for i in range(len(data)):
-        if i==0:
+        if i == 0:
             axarr[i, 0].set_title('Train data')
             axarr[i, 1].set_title("Input data")
             axarr[i, 2].set_title('Output data')

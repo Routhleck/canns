@@ -8,17 +8,15 @@ multiple times. Removing the guard would cause the entire script to run once per
 worker when using the parallel GIF renderer.
 """
 
+import brainpy.math as bm
 import numpy as np
-import brainpy as bp
-import brainpy.math as bm
-import brainpy.math as bm
 
+from canns.analyzer.plotting import PlotConfigs
 from canns.analyzer.theta_sweep import (
     create_theta_sweep_grid_cell_animation,
     plot_grid_cell_manifold,
     plot_population_activity_with_theta,
 )
-from canns.analyzer.plotting import PlotConfigs
 from canns.models.basic.theta_sweep_model import (
     DirectionCellNetwork,
     GridCellNetwork,

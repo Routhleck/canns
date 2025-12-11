@@ -1,8 +1,7 @@
-import brainpy as bp
 import brainpy.math as bm
 
 from canns.analyzer.plotting import PlotConfigs, energy_landscape_1d_animation
-from canns.models.basic import CANN1D, CANN1D_SFA
+from canns.models.basic import CANN1D
 from canns.task.tracking import SmoothTracking1D
 
 bm.set_dt(dt=0.1)
@@ -16,9 +15,11 @@ task_st = SmoothTracking1D(
 )
 task_st.get_data()
 
+
 def run_step(t, inputs):
     cann(inputs)
     return cann.u.value, cann.inp.value
+
 
 us, inps = bm.for_loop(
     run_step,

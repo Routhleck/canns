@@ -85,12 +85,6 @@ Package Contents
 
 
 
-   .. py:method:: init_state()
-
-      Initialize network state variables.
-
-
-
    .. py:method:: resize(num_neurons, preserve_submatrix = True)
 
       Resize the network dimension and state/weights.
@@ -107,6 +101,9 @@ Package Contents
 
 
 
+   .. py:attribute:: W
+
+
    .. py:attribute:: activation
 
 
@@ -121,6 +118,9 @@ Package Contents
 
 
    .. py:attribute:: num_neurons
+
+
+   .. py:attribute:: s
 
 
    .. py:property:: storage_capacity
@@ -140,7 +140,7 @@ Package Contents
 
 
 
-.. py:class:: BrainInspiredModel(in_size, name = None)
+.. py:class:: BrainInspiredModel(name = None, mode = None)
 
    Bases: :py:obj:`src.canns.models.basic._base.BasicModel`
 
@@ -150,7 +150,7 @@ Package Contents
    Trainer compatibility notes
    - If a model wants to support generic Hebbian training, expose a weight parameter
      attribute with a ``.value`` array of shape (N, N) (commonly a
-     ``brainstate.ParamState``). The recommended attribute name is ``W``.
+     ``bm.Variable``). The recommended attribute name is ``W``.
    - Override ``weight_attr`` to declare a different attribute name if needed. Models
      that use standard backprop may omit this entirely.
    - Implementing ``apply_hebbian_learning`` is optional; prefer letting the trainer
@@ -228,7 +228,7 @@ Package Contents
       Override in subclasses if the weight parameter is not named ``W``.
 
 
-.. py:class:: BrainInspiredModelGroup
+.. py:class:: BrainInspiredModelGroup(*children_as_tuple, name = None, mode = None, child_type = DynamicalSystem, **children_as_dict)
 
    Bases: :py:obj:`src.canns.models.basic._base.BasicModelGroup`
 
@@ -284,12 +284,6 @@ Package Contents
 
 
 
-   .. py:method:: init_state()
-
-      Initialize layer parameters and state variables.
-
-
-
    .. py:method:: resize(input_size, output_size = None, preserve_submatrix = True)
 
       Resize layer dimensions.
@@ -313,6 +307,9 @@ Package Contents
       This method should be called by BCMTrainer after each forward pass.
       Updates θ using: θ ← θ + (1/τ) * (y² - θ)
 
+
+
+   .. py:attribute:: W
 
 
    .. py:property:: energy
@@ -350,6 +347,12 @@ Package Contents
 
 
       Name of weight parameter for generic training.
+
+
+   .. py:attribute:: x
+
+
+   .. py:attribute:: y
 
 
 .. py:class:: SpikingLayer(input_size, output_size, threshold = 1.0, v_reset = 0.0, leak = 0.9, trace_decay = 0.95, dt = 1.0, **kwargs)
@@ -399,12 +402,6 @@ Package Contents
 
 
 
-   .. py:method:: init_state()
-
-      Initialize layer parameters and state variables.
-
-
-
    .. py:method:: reset_state()
 
       Reset membrane potentials and spike traces.
@@ -415,6 +412,9 @@ Package Contents
 
       Update method for trainer compatibility (no-op for spiking layer).
 
+
+
+   .. py:attribute:: W
 
 
    .. py:attribute:: dt
@@ -447,6 +447,9 @@ Package Contents
       Name of output state for prediction.
 
 
+   .. py:attribute:: spike
+
+
    .. py:attribute:: threshold
       :value: 1.0
 
@@ -455,6 +458,15 @@ Package Contents
    .. py:attribute:: trace_decay
       :value: 0.95
 
+
+
+   .. py:attribute:: trace_post
+
+
+   .. py:attribute:: trace_pre
+
+
+   .. py:attribute:: v
 
 
    .. py:attribute:: v_reset
@@ -467,5 +479,8 @@ Package Contents
 
 
       Name of weight parameter for generic training.
+
+
+   .. py:attribute:: x
 
 

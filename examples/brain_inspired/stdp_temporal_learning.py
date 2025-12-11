@@ -9,7 +9,6 @@ This example demonstrates:
 - Weight evolution visualization showing timing-dependent changes
 """
 
-import brainpy as bp
 import brainpy.math as bm
 import numpy as np
 from matplotlib import pyplot as plt
@@ -128,7 +127,7 @@ for epoch in range(n_epochs):
 
     if (epoch + 1) % 5 == 0:
         weight_history.append(model.W.value.copy())
-        print(f"Epoch {epoch+1}/{n_epochs}: Avg spikes/pattern = {spike_counts_history[-1]:.2f}")
+        print(f"Epoch {epoch + 1}/{n_epochs}: Avg spikes/pattern = {spike_counts_history[-1]:.2f}")
 
 print("\nTraining complete!")
 
@@ -205,7 +204,7 @@ plt.colorbar(im2, ax=ax2)
 # Plot 3: Weight change (heatmap)
 ax3 = fig.add_subplot(gs[0, 2])
 im3 = ax3.imshow(weight_change, aspect="auto", cmap="RdBu_r",
-                  vmin=-np.max(np.abs(weight_change)), vmax=np.max(np.abs(weight_change)))
+                 vmin=-np.max(np.abs(weight_change)), vmax=np.max(np.abs(weight_change)))
 ax3.set_xlabel("Input Neuron")
 ax3.set_ylabel("Output Neuron")
 ax3.set_title("Weight Change (ΔW)")

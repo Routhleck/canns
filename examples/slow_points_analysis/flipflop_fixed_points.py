@@ -8,15 +8,18 @@ across multiple channels, flipping each channel's state when it receives an inpu
 Based on the PyTorch implementation by Matt Golub.
 """
 
+import random
+
 import brainpy as bp
-import brainpy.math as bm
 import braintools as bts
 import jax
 import jax.numpy as jnp
 import numpy as np
-import random
+
 from canns.analyzer.plotting import PlotConfig
-from canns.analyzer.slow_points import FixedPointFinder, save_checkpoint, load_checkpoint, plot_fixed_points_2d, plot_fixed_points_3d
+from canns.analyzer.slow_points import FixedPointFinder, load_checkpoint, plot_fixed_points_2d, \
+    plot_fixed_points_3d
+
 
 class FlipFlopData:
     """Generator for flip-flop memory task data."""
@@ -212,6 +215,7 @@ class FlipFlopRNN(bp.nn.Module):
 
         return outputs, hiddens
 
+
 def train_flipflop_rnn(rnn, train_data, valid_data,
                        learning_rate=0.08,
                        batch_size=128,
@@ -249,6 +253,7 @@ def train_flipflop_rnn(rnn, train_data, valid_data,
     @jax.jit
     def grad_step(params, batch_inputs, batch_targets):
         """Pure function to compute loss and gradients"""
+
         def forward_pass(p, inputs):
             batch_size = inputs.shape[0]
             h = jnp.tile(p['h0'], (batch_size, 1))
@@ -320,27 +325,30 @@ def train_flipflop_rnn(rnn, train_data, valid_data,
     print(f"Total epochs: {epoch + 1}")
     return losses
 
+
 # Configuration Dictionary
 TASK_CONFIGS = {
     "2_bit": {
         "n_bits": 2,
         "n_hidden": 3,
         "n_trials_train": 512,
-        "n_inits":1024,
+        "n_inits": 1024,
     },
     "3_bit": {
         "n_bits": 3,
         "n_hidden": 4,
         "n_trials_train": 512,
-        "n_inits":1024,
+        "n_inits": 1024,
     },
     "4_bit": {
         "n_bits": 4,
         "n_hidden": 6,
         "n_trials_train": 512,
-        "n_inits":1024,
+        "n_inits": 1024,
     },
 }
+
+
 # seed,7582,8356,9071,
 def main(config_name="4_bit", seed=np.random.randint(1, 10000)):
     """Main function to train RNN and find fixed points."""
@@ -360,7 +368,6 @@ def main(config_name="4_bit", seed=np.random.randint(1, 10000)):
     n_hidden = config["n_hidden"]
     n_trials_train = config["n_trials_train"]
     n_inits = config["n_inits"]
-
 
     n_time = 64
     n_trials_valid = 128
@@ -403,7 +410,6 @@ def main(config_name="4_bit", seed=np.random.randint(1, 10000)):
     inputs_jax = jnp.array(test_data["inputs"])
     outputs, hiddens = rnn(inputs_jax)
     hiddens_np = np.array(hiddens)
-
 
     # Find fixed points
     finder = FixedPointFinder(

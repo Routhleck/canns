@@ -9,9 +9,7 @@ This example demonstrates:
 - Tuning curve visualization using canns.analyzer
 """
 
-import brainpy as bp
 import brainpy.math as bm
-import jax.numpy as jnp
 import numpy as np
 from matplotlib import pyplot as plt
 
@@ -92,7 +90,7 @@ for epoch in range(n_epochs):
         threshold_history.append(model.theta.value.copy())
         weight_history.append(model.W.value.copy())
         print(
-            f"Epoch {epoch+1}/{n_epochs}: "
+            f"Epoch {epoch + 1}/{n_epochs}: "
             f"Thresholds: [{model.theta.value.min():.4f}, {model.theta.value.max():.4f}], "
             f"Weight range: [{model.W.value.min():.3f}, {model.W.value.max():.3f}]"
         )
@@ -107,7 +105,7 @@ ax1 = plt.subplot(3, 2, 1)
 threshold_history_arr = np.array(threshold_history)
 epochs_checkpointed = np.arange(checkpoint_interval, n_epochs + 1, checkpoint_interval)
 for i in range(n_neurons):
-    ax1.plot(epochs_checkpointed, threshold_history_arr[:, i], label=f"Neuron {i+1}", marker='o', markersize=3)
+    ax1.plot(epochs_checkpointed, threshold_history_arr[:, i], label=f"Neuron {i + 1}", marker='o', markersize=3)
 ax1.set_xlabel("Epoch")
 ax1.set_ylabel("Threshold θ")
 ax1.set_title("BCM Threshold Evolution")
@@ -119,7 +117,7 @@ ax2 = plt.subplot(3, 2, 2)
 weight_norms = [np.linalg.norm(w, axis=1) for w in weight_history]
 weight_norms_arr = np.array(weight_norms)
 for i in range(n_neurons):
-    ax2.plot(epochs_checkpointed, weight_norms_arr[:, i], label=f"Neuron {i+1}", marker='o', markersize=3)
+    ax2.plot(epochs_checkpointed, weight_norms_arr[:, i], label=f"Neuron {i + 1}", marker='o', markersize=3)
 ax2.set_xlabel("Epoch")
 ax2.set_ylabel("Weight Norm")
 ax2.set_title("Weight Magnitude Evolution")
@@ -132,7 +130,7 @@ for i in range(n_neurons):
     ax = plt.subplot(3, 2, 3 + i)
     rf = final_weights[i].reshape(size, size)
     im = ax.imshow(rf, cmap="RdBu_r", interpolation="nearest")
-    ax.set_title(f"Neuron {i+1} Receptive Field")
+    ax.set_title(f"Neuron {i + 1} Receptive Field")
     ax.axis("off")
     plt.colorbar(im, ax=ax, fraction=0.046)
 
@@ -184,4 +182,4 @@ for i in range(n_neurons):
     preferred_idx = np.argmax(firing_rates[:, i])
     preferred_angle_rad = stimulus_angles[preferred_idx]
     preferred_angle_deg = np.degrees(preferred_angle_rad)
-    print(f"Neuron {i+1} prefers orientation: {preferred_angle_deg:.1f}° ({preferred_angle_rad:.3f} rad)")
+    print(f"Neuron {i + 1} prefers orientation: {preferred_angle_deg:.1f}° ({preferred_angle_rad:.3f} rad)")

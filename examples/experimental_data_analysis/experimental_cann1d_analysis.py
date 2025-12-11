@@ -7,10 +7,10 @@ from the experimental data analyzer to analyze 1D CANN bumps.
 """
 
 import numpy as np
+
 from canns.analyzer.experimental_data import (
     bump_fits, create_1d_bump_animation, load_roi_data, CANN1DPlotConfig
 )
-
 
 # Generate sample data for demonstration
 # In practice, you would load your experimental data

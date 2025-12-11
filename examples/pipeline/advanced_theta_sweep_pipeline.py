@@ -24,7 +24,7 @@ def _catmull_rom_chain(control_points: np.ndarray, samples: int) -> np.ndarray:
         seg_samples = sample_bins[seg_idx + 1] - sample_bins[seg_idx]
         if seg_samples <= 0:
             continue
-        p0, p1, p2, p3 = extended[seg_idx : seg_idx + 4]
+        p0, p1, p2, p3 = extended[seg_idx: seg_idx + 4]
         t_values = np.linspace(0.0, 1.0, seg_samples, endpoint=seg_idx == segment_count - 1)
         for t in t_values:
             t2 = t * t

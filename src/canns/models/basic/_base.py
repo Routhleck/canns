@@ -23,7 +23,6 @@ class BasicModel(bp.DynamicalSystem):
     Expected Subclass Implementation:
         Subclasses should implement the following methods:
 
-        - ``init_state(*args, **kwargs)``: Initialize model state variables
         - ``update(inp)``: Define single-step dynamics given external input
         - ``cell_coords()``: Return neuron coordinates in feature space (for CANNs)
 
@@ -34,7 +33,6 @@ class BasicModel(bp.DynamicalSystem):
         >>> # Create a 1D CANN with 512 neurons
         >>> bm.set_dt(0.1)
         >>> model = CANN1D(num=512)
-        >>> model.init_state()
         >>>
         >>> # Run a single update step
         >>> model.update(inp=0.5)
@@ -73,7 +71,6 @@ class BasicModelGroup(bp.DynSysGroup):
         Subclasses should implement:
 
         - ``__init__(...)``: Create and register sub-model instances
-        - ``init_state(*args, **kwargs)``: Initialize states of all sub-models
         - ``update(...)``: Define update logic coordinating all sub-models
         - Custom methods for inter-model communication if needed
 
@@ -88,7 +85,6 @@ class BasicModelGroup(bp.DynSysGroup):
         >>> # Create hierarchical network with 4 grid modules and 64 place cells
         >>> bm.set_dt(0.1)
         >>> network = HierarchicalNetwork(num_module=4, num_place=64)
-        >>> network.init_state()
         >>>
         >>> # Update with velocity and position inputs
         >>> velocity = [0.1, 0.2]  # [vx, vy]

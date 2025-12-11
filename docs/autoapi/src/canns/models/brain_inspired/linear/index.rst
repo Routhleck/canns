@@ -65,12 +65,6 @@ Module Contents
 
 
 
-   .. py:method:: init_state()
-
-      Initialize layer parameters and state variables.
-
-
-
    .. py:method:: resize(input_size, output_size = None, preserve_submatrix = True)
 
       Resize layer dimensions.
@@ -94,6 +88,9 @@ Module Contents
       This method should be called by BCMTrainer after each forward pass.
       Updates θ using: θ ← θ + (1/τ) * (y² - θ)
 
+
+
+   .. py:attribute:: W
 
 
    .. py:property:: energy
@@ -131,5 +128,11 @@ Module Contents
 
 
       Name of weight parameter for generic training.
+
+
+   .. py:attribute:: x
+
+
+   .. py:attribute:: y
 
 

@@ -12,15 +12,16 @@ Sussillo, D., & Barak, O. (2013). Opening the black box: low-dimensional
 dynamics in high-dimensional recurrent neural networks. Neural Computation.
 """
 
+import random
+
 import brainpy as bp
-import brainpy.math as bm
 import braintools as bts  #
 import jax
 import jax.numpy as jnp
 import numpy as np
-import random
+
 from canns.analyzer.plotting import PlotConfig
-from canns.analyzer.slow_points import FixedPointFinder, save_checkpoint, load_checkpoint, plot_fixed_points_2d, plot_fixed_points_3d
+from canns.analyzer.slow_points import FixedPointFinder, plot_fixed_points_2d
 
 
 def generate_sine_wave_data(n_trials=128, n_steps=100):
@@ -34,6 +35,7 @@ def generate_sine_wave_data(n_trials=128, n_steps=100):
         "inputs": inputs[..., None].astype(np.float32),
         "targets": targets[..., None].astype(np.float32)
     }
+
 
 class SineWaveRNN(bp.nn.Module):
     """
@@ -106,6 +108,7 @@ class SineWaveRNN(bp.nn.Module):
         hiddens = hiddens_seq.transpose(1, 0, 2)
 
         return outputs, hiddens
+
 
 def train_sine_wave_rnn(rnn, train_data, valid_data,
                         learning_rate=0.01,
@@ -197,6 +200,7 @@ def train_sine_wave_rnn(rnn, train_data, valid_data,
     print("\nTraining complete!")
     return losses
 
+
 if __name__ == '__main__':
     seed = np.random.randint(1, 10000)
     np.random.seed(seed)
@@ -280,9 +284,9 @@ if __name__ == '__main__':
         super_verbose=True,
     )
 
-    #n_inputs = model.input_size
+    # n_inputs = model.input_size
     n_inputs = getattr(model, "input_size", 1)
-    #constant_input = np.zeros((1, n_inputs), dtype=np.float32)
+    # constant_input = np.zeros((1, n_inputs), dtype=np.float32)
     constant_input = np.zeros((1, int(n_inputs)), dtype=np.float32)
     print(f"[DEBUG] constant_input shape={constant_input.shape}, dtype={constant_input.dtype}")
     print(f"[DEBUG] constant_input values:\n{constant_input}")
@@ -318,7 +322,7 @@ if __name__ == '__main__':
             xlabel="PC 1", ylabel="PC 2", figsize=(10, 8),
             save_path=save_path_2d, show=False
         )
-        plot_fixed_points_2d(unique_fps, plot_hiddens_np, config=config_2d, plot_start_time=10) # 忽略前 10 个时间步
+        plot_fixed_points_2d(unique_fps, plot_hiddens_np, config=config_2d, plot_start_time=10)  # 忽略前 10 个时间步
         print(f"\nSaved 2D plot to: {save_path_2d}")
 
     print("\n--- Analysis complete ---")

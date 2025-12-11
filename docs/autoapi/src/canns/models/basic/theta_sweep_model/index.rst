@@ -25,7 +25,7 @@ Functions
 Module Contents
 ---------------
 
-.. py:class:: DirectionCellNetwork(num, tau = 10.0, tau_v = 100.0, noise_strength = 0.1, k = 0.2, adaptation_strength = 15.0, a = 0.7, A = 3.0, J0 = 1.0, g = 1.0, z_min = -u.math.pi, z_max = u.math.pi, conn_noise = 0.0)
+.. py:class:: DirectionCellNetwork(num, tau = 10.0, tau_v = 100.0, noise_strength = 0.1, k = 0.2, adaptation_strength = 15.0, a = 0.7, A = 3.0, J0 = 1.0, g = 1.0, z_min = -bm.pi, z_max = bm.pi, conn_noise = 0.0)
 
    Bases: :py:obj:`src.canns.models.basic._base.BasicModel`
 
@@ -109,12 +109,11 @@ Module Contents
 
    .. rubric:: Example
 
-   >>> import brainstate
+   >>> import brainpy.math as bm
    >>> from canns.models.basic.theta_sweep_model import DirectionCellNetwork
    >>>
-   >>> brainstate.environ.set(dt=1.0)  # 1ms time step
+   >>> bm.set_dt(1.)  # 1ms time step
    >>> dc_net = DirectionCellNetwork(num=60)
-   >>> dc_net.init_state()
    >>>
    >>> # Update with head direction and theta modulation
    >>> head_direction = 0.5  # radians
@@ -153,19 +152,6 @@ Module Contents
 
    .. py:method:: handle_periodic_condition(A)
       :staticmethod:
-
-
-
-   .. py:method:: init_state(*args, **kwargs)
-
-      Initialize network state variables.
-
-      Creates and initializes:
-      - r: Firing rates (all zeros)
-      - u: Membrane potentials (all zeros)
-      - v: Adaptation variables (all zeros)
-      - center: Current bump center (zero)
-      - centerI: Input bump center (zero)
 
 
 
@@ -220,7 +206,22 @@ Module Contents
 
 
 
+   .. py:attribute:: center
+
+
+   .. py:attribute:: centerI
+
+
    .. py:attribute:: conn_mat
+
+      Initialize network state variables.
+
+      Creates and initializes:
+      - r: Firing rates (all zeros)
+      - u: Membrane potentials (all zeros)
+      - v: Adaptation variables (all zeros)
+      - center: Current bump center (zero)
+      - centerI: Input bump center (zero)
 
 
    .. py:attribute:: conn_noise
@@ -228,9 +229,15 @@ Module Contents
 
 
 
+   .. py:property:: derivative
+
+
    .. py:attribute:: g
       :value: 1.0
 
+
+
+   .. py:attribute:: integral
 
 
    .. py:attribute:: k
@@ -251,6 +258,9 @@ Module Contents
    .. py:attribute:: num
 
 
+   .. py:attribute:: r
+
+
    .. py:attribute:: tau
       :value: 10.0
 
@@ -259,6 +269,12 @@ Module Contents
    .. py:attribute:: tau_v
       :value: 100.0
 
+
+
+   .. py:attribute:: u
+
+
+   .. py:attribute:: v
 
 
    .. py:attribute:: x
@@ -387,12 +403,11 @@ Module Contents
 
    .. rubric:: Example
 
-   >>> import brainstate
+   >>> import brainpy.math as bm
    >>> from canns.models.basic.theta_sweep_model import GridCellNetwork
    >>>
-   >>> brainstate.environ.set(dt=1.0)
+   >>> bm.set_dt(1.0)
    >>> gc_net = GridCellNetwork(num_dc=60, num_gc_x=30, mapping_ratio=1.5)
-   >>> gc_net.init_state()
    >>>
    >>> # Update with position, direction activity, and theta modulation
    >>> position = [0.5, 0.3]  # animal position
@@ -454,21 +469,6 @@ Module Contents
       :param d: Phase values (any shape)
 
       :returns: Wrapped phase values in [-π, π]
-
-
-
-   .. py:method:: init_state(*args, **kwargs)
-
-      Initialize network state variables.
-
-      Creates and initializes:
-      - r: Firing rates (shape: num)
-      - u: Membrane potentials (shape: num)
-      - v: Adaptation variables (shape: num)
-      - gc_bump: Grid cell bump pattern (shape: num)
-      - conj_input: Conjunctive cell input (shape: num)
-      - center_phase: Bump center in phase space (shape: 2)
-      - center_position: Decoded position in real space (shape: 2)
 
 
 
@@ -552,7 +552,27 @@ Module Contents
    .. py:attribute:: candidate_centers
 
 
+   .. py:attribute:: center_phase
+
+
+   .. py:attribute:: center_position
+
+
+   .. py:attribute:: conj_input
+
+
    .. py:attribute:: conn_mat
+
+      Initialize network state variables.
+
+      Creates and initializes:
+      - r: Firing rates (shape: num)
+      - u: Membrane potentials (shape: num)
+      - v: Adaptation variables (shape: num)
+      - gc_bump: Grid cell bump pattern (shape: num)
+      - conj_input: Conjunctive cell input (shape: num)
+      - center_phase: Bump center in phase space (shape: 2)
+      - center_position: Decoded position in real space (shape: 2)
 
 
    .. py:attribute:: conn_noise
@@ -566,9 +586,18 @@ Module Contents
    .. py:attribute:: coor_transform_inv
 
 
+   .. py:property:: derivative
+
+
    .. py:attribute:: g
       :value: 1000.0
 
+
+
+   .. py:attribute:: gc_bump
+
+
+   .. py:attribute:: integral
 
 
    .. py:attribute:: k
@@ -611,6 +640,9 @@ Module Contents
 
 
 
+   .. py:attribute:: r
+
+
    .. py:attribute:: tau
       :value: 10.0
 
@@ -619,6 +651,12 @@ Module Contents
    .. py:attribute:: tau_v
       :value: 100.0
 
+
+
+   .. py:attribute:: u
+
+
+   .. py:attribute:: v
 
 
    .. py:attribute:: value_bump
@@ -754,18 +792,6 @@ Module Contents
 
 
 
-   .. py:method:: init_state(*args, **kwargs)
-
-      Initialize network state variables.
-
-      Creates and initializes:
-      - r: Firing rates (all zeros)
-      - u: Membrane potentials (all zeros)
-      - v: Adaptation variables (all zeros)
-      - center: Current bump center (zero)
-
-
-
    .. py:method:: input_bump(animal_pos)
 
       Generate Gaussian bump external input centered on the animal's current position.
@@ -821,7 +847,18 @@ Module Contents
    .. py:attribute:: cell_num
 
 
+   .. py:attribute:: center
+
+
    .. py:attribute:: conn_mat
+
+      Initialize network state variables.
+
+      Creates and initializes:
+      - r: Firing rates (all zeros)
+      - u: Membrane potentials (all zeros)
+      - v: Adaptation variables (all zeros)
+      - center: Current bump center (zero)
 
 
    .. py:attribute:: conn_noise
@@ -832,12 +869,18 @@ Module Contents
    .. py:attribute:: cost_grid
 
 
+   .. py:property:: derivative
+
+
    .. py:attribute:: g
       :value: 1.0
 
 
 
    .. py:attribute:: geodesic_result
+
+
+   .. py:attribute:: integral
 
 
    .. py:attribute:: k
@@ -855,6 +898,9 @@ Module Contents
 
 
 
+   .. py:attribute:: r
+
+
    .. py:attribute:: tau
       :value: 10.0
 
@@ -863,6 +909,12 @@ Module Contents
    .. py:attribute:: tau_v
       :value: 100.0
 
+
+
+   .. py:attribute:: u
+
+
+   .. py:attribute:: v
 
 
    .. py:attribute:: x
@@ -878,7 +930,7 @@ Module Contents
    :param theta_strength_hd: Theta modulation strength for head direction cells
    :param theta_strength_gc: Theta modulation strength for grid cells
    :param theta_cycle_len: Length of theta cycle in time units
-   :param dt: Time step size (if None, uses brainstate.environ.get_dt())
+   :param dt: Time step size (if None, uses bm.get_dt())
 
    :returns:
 

@@ -1,17 +1,13 @@
+import os
 import time
 
-import brainpy as bp
 import brainpy.math as bm
-import brainpy.math as bm
-import jax
 import numpy as np
-import os
 
 from canns.models.basic import HierarchicalNetwork
 from canns.task.open_loop_navigation import OpenLoopNavigationTask
 
 PATH = os.path.dirname(os.path.abspath(__file__))
-
 
 bm.set_dt(dt=0.05)
 task_sn = OpenLoopNavigationTask(
@@ -24,7 +20,6 @@ task_sn = OpenLoopNavigationTask(
     start_pos=(2.5, 2.5),
     progress_bar=True,
 )
-
 
 trajectory_file_path = os.path.join(PATH, 'trajectory_test.npz')
 trajectory_graph_file_path = os.path.join(PATH, 'trajectory_graph.png')
@@ -40,6 +35,7 @@ task_sn.show_data(show=False, save_path=trajectory_graph_file_path)
 
 hierarchical_net = HierarchicalNetwork(num_module=5, num_place=30)
 
+
 def initialize(t, input_stre):
     hierarchical_net(
         velocity=bm.zeros(2, ),
@@ -47,10 +43,11 @@ def initialize(t, input_stre):
         loc_input_stre=input_stre,
     )
 
+
 init_time = 500
 indices = np.arange(init_time)
 input_stre = np.zeros(init_time)
-input_stre[:400]=100.
+input_stre[:400] = 100.
 bm.for_loop(
     initialize,
     (
@@ -58,6 +55,7 @@ bm.for_loop(
     ),
     progress_bar=100
 )
+
 
 def run_step(t, vel, loc):
     hierarchical_net(velocity=vel, loc=loc, loc_input_stre=0.)
@@ -67,9 +65,9 @@ def run_step(t, vel, loc):
     place_r = hierarchical_net.place_fr.value
     return band_x_r, band_y_r, grid_r, place_r
 
+
 total_time = task_sn.data.velocity.shape[0]
 indices = np.arange(total_time)
-
 
 band_x_r, band_y_r, grid_r, place_r = bm.for_loop(
     run_step,
@@ -80,7 +78,6 @@ band_x_r, band_y_r, grid_r, place_r = bm.for_loop(
     ),
     progress_bar=10000
 )
-
 
 # activity_file_path = os.path.join(PATH, 'band_grid_place_activity.npz')
 #
@@ -98,9 +95,7 @@ from tqdm import tqdm
 from canns.analyzer.spatial import compute_firing_field, gaussian_smooth_heatmaps
 from canns.analyzer.plotting import PlotConfig, plot_firing_field_heatmap
 
-
 np.random.seed(10)
-
 
 # trajectory = np.load(trajectory_file_path)
 loc = task_sn.data.position
@@ -179,11 +174,10 @@ SAVE_CELLS = [0, 1, 2, 3, 4]
 #   - None: Save all place cells (default behavior)
 SAVE_PLACE_CELLS = [0, 5, 10, 15, 20]
 
-
 # Save band cell heatmaps
 for heatmaps, prefix in [(heatmaps_band_x, 'heatmap_band_x'),
-                          (heatmaps_band_y, 'heatmap_band_y'),
-                          (heatmaps_grid, 'heatmap_grid')]:
+                         (heatmaps_band_y, 'heatmap_band_y'),
+                         (heatmaps_grid, 'heatmap_grid')]:
     num_modules, num_cells = heatmaps.shape[:2]
 
     # Determine which modules and cells to save

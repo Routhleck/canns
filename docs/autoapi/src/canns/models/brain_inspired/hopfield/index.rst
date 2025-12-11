@@ -61,12 +61,6 @@ Module Contents
 
 
 
-   .. py:method:: init_state()
-
-      Initialize network state variables.
-
-
-
    .. py:method:: resize(num_neurons, preserve_submatrix = True)
 
       Resize the network dimension and state/weights.
@@ -83,6 +77,9 @@ Module Contents
 
 
 
+   .. py:attribute:: W
+
+
    .. py:attribute:: activation
 
 
@@ -97,6 +94,9 @@ Module Contents
 
 
    .. py:attribute:: num_neurons
+
+
+   .. py:attribute:: s
 
 
    .. py:property:: storage_capacity

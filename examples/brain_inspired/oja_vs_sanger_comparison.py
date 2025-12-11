@@ -11,7 +11,6 @@ This directly answers why in the Oja example, only component 1 aligns well
 with PCA (>90%), while components 2-3 don't (~45%, ~30%).
 """
 
-import brainpy as bp
 import brainpy.math as bm
 import numpy as np
 from matplotlib import pyplot as plt
@@ -66,7 +65,7 @@ for epoch in range(n_epochs):
         # Compute variance explained
         outputs = np.array([trainer_oja.predict(x) for x in data])
         var_explained = np.var(outputs, axis=0)
-        print(f"Epoch {epoch+1}: Variance explained by each neuron: {var_explained}")
+        print(f"Epoch {epoch + 1}: Variance explained by each neuron: {var_explained}")
 
 print("\nOja training complete!")
 
@@ -91,7 +90,7 @@ for epoch in range(n_epochs):
         # Compute variance explained
         outputs = np.array([trainer_sanger.predict(x) for x in data])
         var_explained = np.var(outputs, axis=0)
-        print(f"Epoch {epoch+1}: Variance explained by each neuron: {var_explained}")
+        print(f"Epoch {epoch + 1}: Variance explained by each neuron: {var_explained}")
 
 print("\nSanger training complete!")
 
@@ -125,6 +124,7 @@ sanger_alignment = compute_alignment(sanger_weights, pca_components)
 print("\nAlignment with PCA (cosine similarity):")
 print(f"  Oja:    {[f'{s:.3f}' for s in oja_alignment]}")
 print(f"  Sanger: {[f'{s:.3f}' for s in sanger_alignment]}")
+
 
 # Compute orthogonality between learned components
 

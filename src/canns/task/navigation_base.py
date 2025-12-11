@@ -11,6 +11,7 @@ from matplotlib import colors
 from matplotlib import pyplot as plt
 from matplotlib.path import Path
 from tqdm import tqdm
+import brainpy.math as bm
 
 from ._base import Task
 
