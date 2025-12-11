@@ -4,25 +4,37 @@
 
 .DEFAULT_GOAL := default
 
-.PHONY: default install install-dev install-docs install-all lint test upgrade build clean docs docs-autoapi
+.PHONY: default install install-dev install-docs install-all install-cuda12 install-cuda13 install-tpu lint test upgrade upgrade-dev build clean docs docs-autoapi
 
 default: install lint test
 
-# Install only production dependencies
+# Install only production dependencies (CPU-only by default)
 install:
-	uv sync --all-extras
+	uv sync --extra cpu
 
-# Install production + dev dependencies
+# Install production + dev dependencies (CPU-only)
 install-dev:
-	uv sync --all-extras --group dev
+	uv sync --extra cpu --group dev
 
-# Install production + docs dependencies
+# Install production + docs dependencies (CPU-only)
 install-docs:
-	uv sync --all-extras --group docs
+	uv sync --extra cpu --group docs
 
-# Install all dependencies (production + all groups)
+# Install all dependencies (production + all groups, CPU-only)
 install-all:
-	uv sync --all-extras --all-groups
+	uv sync --extra cpu --all-groups
+
+# Install with CUDA 12 support (Linux only)
+install-cuda12:
+	uv sync --extra cuda12 --group dev
+
+# Install with CUDA 13 support (Linux only)
+install-cuda13:
+	uv sync --extra cuda13 --group dev
+
+# Install with TPU support (Linux only)
+install-tpu:
+	uv sync --extra tpu --group dev
 
 lint:
 	uv run python devtools/lint.py
@@ -30,13 +42,13 @@ lint:
 test:
 	uv run pytest
 
-# Upgrade all dependencies
+# Upgrade all dependencies (CPU-only)
 upgrade:
-	uv sync --upgrade --all-extras --all-groups
+	uv sync --upgrade --extra cpu --all-groups
 
-# Upgrade specific group
+# Upgrade specific group (CPU-only)
 upgrade-dev:
-	uv sync --upgrade --all-extras --group dev
+	uv sync --upgrade --extra cpu --group dev
 
 build:
 	uv build
