@@ -61,9 +61,8 @@ class LinearLayer(BrainInspiredModel):
 
         # Weight matrix W: (output_size, input_size)
         # Initialize with small random values to break symmetry
-        key = bm.random.get_key()
         self.W = bm.Variable(
-            jax.random.normal(key, (self.output_size, self.input_size), dtype=jnp.float32) * 0.01
+            bm.random.normal(size=(self.output_size, self.input_size), dtype=jnp.float32) * 0.01
         )
         # Input state (for training)
         self.x = bm.Variable(jnp.zeros(self.input_size, dtype=jnp.float32))

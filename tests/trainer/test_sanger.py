@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import brainpy.math as bm
 import jax.numpy as jnp
 import numpy as np
 import pytest
@@ -175,13 +176,14 @@ def test_sanger_multiple_pcs():
 
 def test_sanger_compiled_vs_uncompiled():
     """Test that compiled and uncompiled training produce similar results."""
-    # Create identical models
+    # Create identical models with same random seed
+    bm.random.seed(42)
     model_compiled = LinearLayer(input_size=4, output_size=2)
+    bm.random.seed(42)
     model_uncompiled = LinearLayer(input_size=4, output_size=2)
 
-    # Initialize with same random seed
-    np.random.seed(42)
-    np.random.seed(42)
+    # Verify initial weights are identical
+    assert jnp.allclose(model_compiled.W.value, model_uncompiled.W.value)
 
     # Create trainers
     trainer_compiled = SangerTrainer(model_compiled, learning_rate=0.01, compiled=True)

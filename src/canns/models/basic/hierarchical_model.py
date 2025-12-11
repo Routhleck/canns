@@ -720,7 +720,7 @@ class GridCell(BasicModel):
 
     def update(self, input):
         self.input.value = input
-        Irec = bm.dot(self.conn_mat, self.r.Òvalue)
+        Irec = bm.dot(self.conn_mat, self.r.value)
         # Update neural state
         _u, _v = self.integral(self.u, self.v, bp.share["t"], Irec, bm.dt)
 
