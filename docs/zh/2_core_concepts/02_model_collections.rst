@@ -18,7 +18,7 @@
 **混合模型** ( ``canns.models.hybrid`` )
    CANN与人工神经网络的组合
 
-所有模型都基于BrainState的动力学框架构建，该框架提供状态管理、时间步进和JIT编译功能。
+所有模型都基于BrainPy的动力学框架构建，该框架提供状态管理、时间步进和JIT编译功能。
 
 基础模型
 ============
@@ -118,11 +118,11 @@ Theta扫描模型 (theta_sweep_model.py)
    - 使用高斯凸起或类似的局部化模式
 
 **状态初始化** ( ``init_state()`` )
-   使用BrainState容器注册状态变量：
+   使用BrainPy容器注册状态变量：
 
-   - ``self.u`` ：膜电位（ ``brainstate.HiddenState`` ）
-   - ``self.r`` ：放电率（ ``brainstate.HiddenState`` ）
-   - ``self.inp`` ：外部输入（ ``brainstate.State`` ）
+   - ``self.u`` ：膜电位（ ``bm.Variable`` ）
+   - ``self.r`` ：放电率（ ``bm.Variable`` ）
+   - ``self.inp`` ：外部输入（ ``bm.Variable`` ）
 
    变体的额外状态（例如SFA的 ``self.v`` ）。
 
@@ -131,7 +131,7 @@ Theta扫描模型 (theta_sweep_model.py)
 
    - 读取当前状态
    - 基于CANN方程计算导数
-   - 应用时间步长： ``new_state = old_state + derivative * brainstate.environ.get_dt()``
+   - 应用时间步长： ``new_state = old_state + derivative * bm.get_dt()``
    - 写入更新的状态
 
 **诊断属性**
@@ -183,10 +183,10 @@ Theta扫描模型 (theta_sweep_model.py)
 
 在 ``init_state()`` 中注册状态变量和可训练权重：
 
-- ``self.s`` ：状态向量（通常为 ``brainstate.HiddenState`` ）
-- ``self.W`` ：连接权重（通常为 ``brainstate.ParamState`` ）
+- ``self.s`` ：状态向量（ ``bm.Variable`` ）
+- ``self.W`` ：连接权重（ ``bm.Variable`` ）
 
-对权重使用 ``ParamState`` 允许训练器在学习期间修改它们。
+所有状态和权重变量在BrainPy中都使用 ``bm.Variable`` 。
 
 权重属性
 ~~~~~~~~~~~~~~~~
@@ -239,15 +239,15 @@ Hebbian学习
 
    当前状态： ``canns.models.hybrid`` 中存在占位符模块结构以供未来实现。
 
-BrainState基础
+BrainPy基础
 =====================
 
-所有模型都利用BrainState的基础设施：
+所有模型都利用BrainPy的基础设施：
 
 动力学抽象
 --------------------
 
-``brainstate.nn.Dynamics`` 提供：
+``bp.DynamicalSystem`` 提供：
 
 - 自动状态跟踪
 - JIT编译支持
@@ -256,31 +256,25 @@ BrainState基础
 状态容器
 ----------------
 
-``brainstate.State``
-   仿真期间可变
-
-``brainstate.HiddenState``
-   内部网络状态
-
-``brainstate.ParamState``
-   可学习参数
+``bm.Variable``
+   所有状态变量的通用容器（可变的、内部的或可学习的参数）
 
 这些容器在保持直观的面向对象语法的同时实现透明的JAX转换。
 
 时间管理
 ---------------
 
-``brainstate.environ`` 提供全局配置：
+``brainpy.math`` 提供时间步长管理：
 
-- ``brainstate.environ.set(dt=0.1)`` ：设置仿真时间步长
-- ``brainstate.environ.get_dt()`` ：检索当前时间步长
+- ``bm.set_dt(0.1)`` ：设置仿真时间步长
+- ``bm.get_dt()`` ：检索当前时间步长
 
 这确保了模型、任务和训练器之间的一致性。
 
 编译仿真
 -------------------
 
-``brainstate.compile.for_loop`` 实现高效仿真：
+``bm.for_loop`` 实现高效仿真：
 
 - GPU/TPU加速的JIT编译
 - 自动微分支持
@@ -295,4 +289,4 @@ CANNs模型集合提供：
 2. **脑启发模型** - 具有局部学习能力的网络
 3. **混合模型** - 与深度学习的未来集成（开发中）
 
-每个类别都通过基类继承遵循一致的模式，使库既强大又可扩展。BrainState基础处理复杂性，使用户可以专注于定义神经动力学而不是实现细节。
+每个类别都通过基类继承遵循一致的模式，使库既强大又可扩展。BrainPy基础处理复杂性，使用户可以专注于定义神经动力学而不是实现细节。

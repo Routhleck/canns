@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Iterable
 
-import brainstate
+import brainpy.math as bm
 import jax.numpy as jnp
 
 from ..models.brain_inspired import BrainInspiredModel
@@ -108,7 +108,7 @@ class STDPTrainer(Trainer):
 
     def _train_compiled(self, train_data: Iterable, weight_param):
         """
-        JIT-compiled training loop using brainstate.transform.scan.
+        JIT-compiled training loop using bp.transform.scan.
 
         Args:
             train_data: Iterable of input spike patterns
@@ -164,7 +164,7 @@ class STDPTrainer(Trainer):
             return (W, trace_pre, trace_post, v), None
 
         # Run compiled scan
-        (W_final, trace_pre_final, trace_post_final, v_final), _ = brainstate.transform.scan(
+        (W_final, trace_pre_final, trace_post_final, v_final), _ = bm.scan(
             train_step, (W_init, trace_pre_init, trace_post_init, v_init), patterns
         )
 

@@ -11,7 +11,7 @@ This directly answers why in the Oja example, only component 1 aligns well
 with PCA (>90%), while components 2-3 don't (~45%, ~30%).
 """
 
-import brainstate
+import brainpy.math as bm
 import numpy as np
 from matplotlib import pyplot as plt
 
@@ -19,7 +19,7 @@ from canns.models.brain_inspired import LinearLayer
 from canns.trainer import OjaTrainer, SangerTrainer
 
 np.random.seed(42)
-brainstate.random.seed(42)
+bm.random.seed(42)
 
 # Generate synthetic data with 3 clear principal components
 n_samples = 500
@@ -53,7 +53,6 @@ print("Training Oja's Rule")
 print("=" * 70)
 
 model_oja = LinearLayer(input_size=n_features, output_size=n_components)
-model_oja.init_state()
 
 trainer_oja = OjaTrainer(model_oja, learning_rate=0.001, normalize_weights=True, compiled=True)
 
@@ -66,7 +65,7 @@ for epoch in range(n_epochs):
         # Compute variance explained
         outputs = np.array([trainer_oja.predict(x) for x in data])
         var_explained = np.var(outputs, axis=0)
-        print(f"Epoch {epoch+1}: Variance explained by each neuron: {var_explained}")
+        print(f"Epoch {epoch + 1}: Variance explained by each neuron: {var_explained}")
 
 print("\nOja training complete!")
 
@@ -78,7 +77,6 @@ print("Training Sanger's Rule")
 print("=" * 70)
 
 model_sanger = LinearLayer(input_size=n_features, output_size=n_components)
-model_sanger.init_state()
 
 trainer_sanger = SangerTrainer(
     model_sanger, learning_rate=0.001, normalize_weights=True, compiled=True
@@ -92,7 +90,7 @@ for epoch in range(n_epochs):
         # Compute variance explained
         outputs = np.array([trainer_sanger.predict(x) for x in data])
         var_explained = np.var(outputs, axis=0)
-        print(f"Epoch {epoch+1}: Variance explained by each neuron: {var_explained}")
+        print(f"Epoch {epoch + 1}: Variance explained by each neuron: {var_explained}")
 
 print("\nSanger training complete!")
 
@@ -126,6 +124,7 @@ sanger_alignment = compute_alignment(sanger_weights, pca_components)
 print("\nAlignment with PCA (cosine similarity):")
 print(f"  Oja:    {[f'{s:.3f}' for s in oja_alignment]}")
 print(f"  Sanger: {[f'{s:.3f}' for s in sanger_alignment]}")
+
 
 # Compute orthogonality between learned components
 

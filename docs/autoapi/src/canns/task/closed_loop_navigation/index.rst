@@ -58,7 +58,7 @@ Module Contents
    :param l_arm: Length of each arm (default: 0.75)
    :param t: Thickness of the walls (default: 0.3)
    :param start_pos: Starting position of the agent (default: (0.0, 0.15))
-   :param dt: Time step (default: None, uses brainstate.environ.get_dt())
+   :param dt: Time step (default: None, uses bm.get_dt())
    :param \*\*kwargs: Additional keyword arguments passed to ClosedLoopNavigationTask
 
 
@@ -82,7 +82,7 @@ Module Contents
    :param recess_width: Width of recesses at stem-arm junctions (default: t/4)
    :param recess_depth: Depth of recesses extending downward (default: t/4)
    :param start_pos: Starting position of the agent (default: (0.0, 0.15))
-   :param dt: Time step (default: None, uses brainstate.environ.get_dt())
+   :param dt: Time step (default: None, uses bm.get_dt())
    :param \*\*kwargs: Additional keyword arguments passed to ClosedLoopNavigationTask
 
 

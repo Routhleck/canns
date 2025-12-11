@@ -13,7 +13,6 @@ from canns.trainer import STDPTrainer
 def test_stdp_trainer_initialization():
     """Test STDPTrainer initialization."""
     model = SpikingLayer(input_size=10, output_size=5)
-    model.init_state()
 
     trainer = STDPTrainer(
         model, learning_rate=0.01, A_plus=0.005, A_minus=0.00525, w_min=0.0, w_max=1.0
@@ -33,7 +32,6 @@ def test_stdp_trainer_basic_training():
     """Test basic STDP training on spike data."""
     # Create model
     model = SpikingLayer(input_size=4, output_size=2, threshold=0.5)
-    model.init_state()
 
     # Create trainer
     trainer = STDPTrainer(model, learning_rate=0.01, A_plus=0.01, A_minus=0.01)
@@ -64,7 +62,6 @@ def test_stdp_trainer_basic_training():
 def test_stdp_trainer_without_weight_bounds():
     """Test STDP training with different weight bounds."""
     model = SpikingLayer(input_size=3, output_size=2, threshold=0.5)
-    model.init_state()
 
     # Allow weights to go negative
     trainer = STDPTrainer(model, learning_rate=0.05, w_min=-1.0, w_max=2.0)
@@ -85,7 +82,6 @@ def test_stdp_trainer_without_weight_bounds():
 def test_stdp_trainer_predict():
     """Test STDP trainer prediction."""
     model = SpikingLayer(input_size=3, output_size=2, threshold=0.5, v_reset=0.0, leak=0.9)
-    model.init_state()
 
     # Set some weights
     model.W.value = jnp.array([[0.3, 0.5, 0.0], [0.0, 0.5, 0.8]])
@@ -121,7 +117,6 @@ def test_stdp_ltp_ltd():
         leak=0.8,
         trace_decay=0.9,
     )
-    model.init_state()
 
     # Set initial weight to mid-range
     model.W.value = jnp.array([[0.5, 0.5]])
@@ -170,7 +165,6 @@ def test_stdp_ltp_ltd():
 def test_stdp_weight_saturation():
     """Test that weights saturate at specified bounds."""
     model = SpikingLayer(input_size=2, output_size=1, threshold=0.1)  # Very low threshold
-    model.init_state()
 
     # Start with high initial weights
     model.W.value = jnp.array([[0.95, 0.95]])
@@ -193,7 +187,6 @@ def test_stdp_weight_saturation():
 def test_stdp_trace_updates():
     """Test that spike traces are correctly updated during training."""
     model = SpikingLayer(input_size=3, output_size=2, trace_decay=0.9)
-    model.init_state()
 
     trainer = STDPTrainer(model, learning_rate=0.01)
 
@@ -224,9 +217,7 @@ def test_stdp_compiled_vs_uncompiled():
 
     # Initialize with same random seed
     np.random.seed(42)
-    model_compiled.init_state()
     np.random.seed(42)
-    model_uncompiled.init_state()
 
     # Verify same initialization
     assert jnp.allclose(model_compiled.W.value, model_uncompiled.W.value)
@@ -259,7 +250,6 @@ def test_stdp_compiled_vs_uncompiled():
 def test_stdp_multiple_epochs():
     """Test STDP training over multiple epochs."""
     model = SpikingLayer(input_size=5, output_size=3, threshold=0.5)
-    model.init_state()
 
     trainer = STDPTrainer(model, learning_rate=0.01)
 
@@ -286,7 +276,6 @@ def test_stdp_multiple_epochs():
 def test_stdp_with_no_spikes():
     """Test STDP trainer behavior when there are no spikes."""
     model = SpikingLayer(input_size=3, output_size=2, threshold=10.0)  # Very high threshold
-    model.init_state()
 
     trainer = STDPTrainer(model, learning_rate=0.01, compiled=False)
 

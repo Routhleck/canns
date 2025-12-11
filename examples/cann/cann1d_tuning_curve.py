@@ -1,31 +1,35 @@
-import brainstate
+import brainpy.math as bm
+import brainpy.math as bm
 import numpy as np
 
-from canns.analyzer.plotting import PlotConfigs, energy_landscape_1d_animation, tuning_curve
-from canns.models.basic import CANN1D, CANN1D_SFA
+from canns.analyzer.plotting import PlotConfigs, tuning_curve
+from canns.models.basic import CANN1D
 from canns.task.tracking import SmoothTracking1D
 
-brainstate.environ.set(dt=0.1)
+bm.set_dt(dt=0.1)
 cann = CANN1D(num=512, z_min=-np.pi, z_max=np.pi)
-cann.init_state()
 
 task_st = SmoothTracking1D(
     cann_instance=cann,
-    Iext=(0., 0., np.pi, 2*np.pi),
+    Iext=(0., 0., np.pi, 2 * np.pi),
     duration=(2., 20., 20.),
-    time_step=brainstate.environ.get_dt(),
+    time_step=bm.get_dt(),
 )
 task_st.get_data()
+
 
 def run_step(t, inputs):
     cann(inputs)
     return cann.r.value, cann.inp.value
 
-rs, inps = brainstate.transform.for_loop(
+
+rs, inps = bm.for_loop(
     run_step,
-    task_st.run_steps,
-    task_st.data,
-    pbar=brainstate.transform.ProgressBar(10)
+    (
+        task_st.run_steps,
+        task_st.data,
+    ),
+    progress_bar=10
 )
 
 # Example of using config-based approach for energy landscape animation

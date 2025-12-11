@@ -66,7 +66,7 @@ CANNs库支持四种不同的工作流，每种都针对不同的研究需求。
 
 1. **模型构建**：创建和配置CANN模型（ ``CANN1D()`` , ``CANN2D()`` ）
 2. **任务数据生成**：使用任务生成器生成输入（ ``SmoothTracking1D`` ）
-3. **仿真实验**：使用 ``brainstate.compile.for_loop`` 运行动力学
+3. **仿真实验**：使用 ``bm.for_loop`` 运行动力学
 4. **模型分析**：使用模型分析器可视化（ ``animate_dynamics()`` , ``energy_landscape_1d()`` ）
 
 用例：测试CANN理论、参数探索、理解吸引子动力学
@@ -129,27 +129,27 @@ CANNs库支持四种不同的工作流，每种都针对不同的研究需求。
 
    这种一致的结构使库既直观又支持多样化的研究工作流。
 
-BrainState集成
+BrainPy集成
 ----------------------
 
-CANNs库基于BrainState（ ``brainstate`` ），这是脑仿真生态系统的核心框架。BrainState提供：
+CANNs库基于BrainPy（ ``brainpy`` ），这是一个强大的脑动力学编程框架。BrainPy提供：
 
 **动力学抽象**
-   用于神经系统的 ``brainstate.nn.Dynamics`` 基类
+   用于神经系统的 ``bp.DynamicalSystem`` 基类
 
 **状态管理**
-   ``brainstate.State`` 、 ``brainstate.HiddenState`` 和 ``brainstate.ParamState`` 容器
+   ``bm.Variable`` 容器用于所有状态变量（替代以前分离的 State、HiddenState、ParamState）
 
 **时间步长控制**
-   ``brainstate.environ.set(dt=...)`` 用于统一的时间管理
+   ``bm.set_dt(...)`` 和 ``bm.get_dt()`` 用于统一的时间管理
 
 **JIT编译**
-   ``brainstate.compile.for_loop`` 用于高性能仿真
+   ``bm.for_loop`` 用于高性能仿真
 
 **随机数管理**
-   ``brainstate.random`` 用于可重复的随机性
+   ``bm.random`` 用于可重复的随机性
 
-有了BrainState，CANN模型只需定义变量和更新方程。时间步进、并行化和编译都由BrainState自动处理，显著降低了实现复杂性。
+有了BrainPy，CANN模型只需定义变量和更新方程。时间步进、并行化和编译都由BrainPy自动处理，显著降低了实现复杂性。
 
 模块关系
 ====================
@@ -198,12 +198,12 @@ CANNs库基于BrainState（ ``brainstate`` ），这是脑仿真生态系统的�
 
 库通过多层策略实现高性能：
 
-Python层（BrainState/JAX）
+Python层（BrainPy/JAX）
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 基于JAX的编译提供GPU/TPU加速，但需要函数式编程模式。库通过以下方式抽象这种复杂性：
 
-* 在BrainState的 ``for_loop`` 中封装JIT编译
+* 在BrainPy的 ``for_loop`` 中封装JIT编译
 * 通过显式容器管理状态
 * 提供处理常见模式的实用函数
 
@@ -250,7 +250,7 @@ Python层（BrainState/JAX）
 
    任务应该生成与模型期望兼容的输入序列。关键考虑因素：
 
-   * 使用 ``brainstate.environ.get_dt()`` 确保时间步长一致性
+   * 使用 ``bm.get_dt()`` 确保时间步长一致性
    * 以模型期望的格式返回数据
    * 提供用于分析的轨迹信息
 
@@ -272,7 +272,7 @@ CANNs库通过精心的架构选择实现其目标：
 
 1. **关注点分离** 保持模块专注且独立
 2. **基类继承** 确保一致的接口
-3. **BrainState集成** 在不增加复杂性的情况下提供性能
+3. **BrainPy集成** 在不增加复杂性的情况下提供性能
 4. **灵活耦合** 平衡便利性与模块化
 
 这些原则既支持快速原型开发又支持严格的研究，同时保持代码质量和可扩展性。

@@ -8,8 +8,7 @@ multiple times. Removing the guard would cause the entire script to run once per
 worker when using the parallel GIF renderer.
 """
 
-import brainstate
-import brainunit as u
+import brainpy.math as bm
 import numpy as np
 
 from canns.analyzer.plotting.spikes import population_activity_heatmap
@@ -23,20 +22,20 @@ def main() -> None:
     np.random.seed(10)
     simulate_time = 3.0
     dt = 0.001
-    brainstate.environ.set(dt=1.0)
+    bm.set_dt(dt=1.0)
 
     # Create and run spatial navigation task with T-maze geometry from Chu et al. 2024
     tmazet = TMazeRecessOpenLoopNavigationTask(
         duration=simulate_time,
-        w=0.84,            # Corridor width (m)
-        l_s=3.64,          # Stem length (m)
-        l_arm=2.36,        # Arm length (m)
-        t=1.0,             # T-junction thickness (m)
+        w=0.84,  # Corridor width (m)
+        l_s=3.64,  # Stem length (m)
+        l_arm=2.36,  # Arm length (m)
+        t=1.0,  # T-junction thickness (m)
         start_pos=(0.0, 0.6),
         recess_width=0.2,
         recess_depth=0.2,
-        initial_head_direction=1 / 2 * u.math.pi,
-        speed_mean=1.2,    # Agent speed (m/s)
+        initial_head_direction=1 / 2 * bm.pi,
+        speed_mean=1.2,  # Agent speed (m/s)
         speed_std=0.0,
         rotational_velocity_std=0,
         dt=dt,
@@ -63,18 +62,17 @@ def main() -> None:
     # Create networks with T-maze parameters from Chu et al. 2024 Table 3
     pc_net = PlaceCellNetwork(
         geodesic_result,
-        tau=3.0,           # Fast neural time constant (ms)
-        tau_v=150.0,       # Slow adaptation time constant (ms)
+        tau=3.0,  # Fast neural time constant (ms)
+        tau_v=150.0,  # Slow adaptation time constant (ms)
         noise_strength=0.05,
-        k=1.40,            # Global inhibition strength
-        m=1.1,             # Gives effective m ≈ 3.96
-        a=0.3,             # Local excitation range
-        A=2.3,             # Local excitation strength
-        J0=0.25,         # Baseline excitation
-        g=20.0,            # Excitatory gain
+        k=1.40,  # Global inhibition strength
+        m=1.1,  # Gives effective m ≈ 3.96
+        a=0.3,  # Local excitation range
+        A=2.3,  # Local excitation strength
+        J0=0.25,  # Baseline excitation
+        g=20.0,  # Excitatory gain
         conn_noise=0.0,
     )
-    pc_net.init_state()
 
     # Warmup period: run network for 0.3s at starting position (MATLAB t_start=300ms)
     warmup_time = 0.1  # seconds
@@ -85,19 +83,18 @@ def main() -> None:
         pc_net(position[0], 1.0)  # Run at start position with no theta modulation
         return None
 
-    brainstate.transform.for_loop(
+    bm.for_loop(
         warmup_step,
-        u.math.arange(warmup_steps),
-        pbar=brainstate.transform.ProgressBar(10),
+        bm.arange(warmup_steps),
     )
     print("Warmup completed.")
 
     def run_step(i, pos, vel_gain, theta_strength=0.1, theta_cycle_len=100):
-        t = i * brainstate.environ.get_dt()
-        theta_phase = u.math.mod(t, theta_cycle_len) / theta_cycle_len
-        theta_phase = theta_phase * 2 * u.math.pi - u.math.pi
+        t = i * bm.get_dt()
+        theta_phase = bm.mod(t, theta_cycle_len) / theta_cycle_len
+        theta_phase = theta_phase * 2 * bm.pi - bm.pi
 
-        theta_modulation = 1 + theta_strength * vel_gain * u.math.cos(theta_phase)
+        theta_modulation = 1 + theta_strength * vel_gain * bm.cos(theta_phase)
 
         pc_net(pos, theta_modulation)
 
@@ -108,12 +105,13 @@ def main() -> None:
             theta_modulation,
         )
 
-    results = brainstate.transform.for_loop(
+    results = bm.for_loop(
         run_step,
-        u.math.arange(len(position)),
-        position,
-        linear_speed_gains,
-        pbar=brainstate.transform.ProgressBar(10),
+        (
+            bm.arange(len(position)),
+            position,
+            linear_speed_gains,
+        )
     )
 
     (

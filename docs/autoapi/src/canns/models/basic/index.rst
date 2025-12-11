@@ -30,7 +30,7 @@ Classes
 Package Contents
 ----------------
 
-.. py:class:: CANN1D(num, tau = 1.0, k = 8.1, a = 0.5, A = 10, J0 = 4.0, z_min = -u.math.pi, z_max = u.math.pi, **kwargs)
+.. py:class:: CANN1D(*args, **kwargs)
 
    Bases: :py:obj:`BaseCANN1D`
 
@@ -43,31 +43,9 @@ Package Contents
        Wu, S., Hamaguchi, K., & Amari, S. I. (2008). Dynamics and computation of continuous attractors.
        Neural computation, 20(4), 994-1025.
 
-   Initializes the base 1D CANN model.
+   Initializes the 1D CANN model.
 
-   :param num: The number of neurons in the network.
-   :type num: int
-   :param tau: The synaptic time constant, controlling how quickly the membrane potential changes.
-   :type tau: float
-   :param k: A parameter controlling the strength of the global inhibition.
-   :type k: float
-   :param a: The half-width of the excitatory connection range. It defines the "spread" of local connections.
-   :type a: float
-   :param A: The magnitude (amplitude) of the external stimulus.
-   :type A: float
-   :param J0: The maximum connection strength between neurons.
-   :type J0: float
-   :param z_min: The minimum value of the feature space (e.g., -pi for an angle).
-   :type z_min: float
-   :param z_max: The maximum value of the feature space (e.g., +pi for an angle).
-   :type z_max: float
-   :param \*\*kwargs: Additional keyword arguments passed to the parent BasicModel.
-
-
-   .. py:method:: init_state(*args, **kwargs)
-
-      Initializes the state variables of the model.
-
+   :param (Parameters are inherited from BaseCANN1D):
 
 
    .. py:method:: update(inp)
@@ -79,7 +57,16 @@ Package Contents
 
 
 
-.. py:class:: CANN1D_SFA(num, tau = 1.0, tau_v = 50.0, k = 8.1, a = 0.3, A = 0.2, J0 = 1.0, z_min = -u.math.pi, z_max = u.math.pi, m = 0.3, **kwargs)
+   .. py:attribute:: inp
+
+
+   .. py:attribute:: r
+
+
+   .. py:attribute:: u
+
+
+.. py:class:: CANN1D_SFA(num, tau = 1.0, tau_v = 50.0, k = 8.1, a = 0.3, A = 0.2, J0 = 1.0, z_min = -bm.pi, z_max = bm.pi, m = 0.3, **kwargs)
 
    Bases: :py:obj:`BaseCANN1D`
 
@@ -102,12 +89,6 @@ Package Contents
    :param (Other parameters are inherited from BaseCANN1D):
 
 
-   .. py:method:: init_state(*args, **kwargs)
-
-      Initializes the state variables of the model, including the adaptation variable.
-
-
-
    .. py:method:: update(inp)
 
       The main update function for the SFA model. It includes dynamics for both
@@ -118,9 +99,15 @@ Package Contents
 
 
 
+   .. py:attribute:: inp
+
+
    .. py:attribute:: m
       :value: 0.3
 
+
+
+   .. py:attribute:: r
 
 
    .. py:attribute:: tau_v
@@ -128,7 +115,13 @@ Package Contents
 
 
 
-.. py:class:: CANN2D(length, tau = 1.0, k = 8.1, a = 0.5, A = 10, J0 = 4.0, z_min = -u.math.pi, z_max = u.math.pi, **kwargs)
+   .. py:attribute:: u
+
+
+   .. py:attribute:: v
+
+
+.. py:class:: CANN2D(*args, **kwargs)
 
    Bases: :py:obj:`BaseCANN2D`
 
@@ -141,31 +134,9 @@ Package Contents
        Wu, S., Hamaguchi, K., & Amari, S. I. (2008). Dynamics and computation of continuous attractors.
        Neural computation, 20(4), 994-1025.
 
-   Initializes the base 2D CANN model.
+   Initializes the 2D CANN model.
 
-   :param length: The number of neurons in one dimension of the network (the network is square).
-   :type length: int
-   :param tau: The synaptic time constant, controlling how quickly the membrane potential changes.
-   :type tau: float
-   :param k: A parameter controlling the strength of the global inhibition.
-   :type k: float
-   :param a: The half-width of the excitatory connection range. It defines the "spread" of local connections.
-   :type a: float
-   :param A: The magnitude (amplitude) of the external stimulus.
-   :type A: float
-   :param J0: The maximum connection strength between neurons.
-   :type J0: float
-   :param z_min: The minimum value of the feature space (e.g., -pi for an angle).
-   :type z_min: float
-   :param z_max: The maximum value of the feature space (e.g., +pi for an angle).
-   :type z_max: float
-   :param \*\*kwargs: Additional keyword arguments passed to the parent BasicModel.
-
-
-   .. py:method:: init_state(*args, **kwargs)
-
-      Initializes the state variables of the model.
-
+   :param (Parameters are inherited from BaseCANN2D):
 
 
    .. py:method:: update(inp)
@@ -177,7 +148,16 @@ Package Contents
 
 
 
-.. py:class:: CANN2D_SFA(length, tau = 1.0, tau_v = 50.0, k = 8.1, a = 0.3, A = 0.2, J0 = 1.0, z_min = -u.math.pi, z_max = u.math.pi, m = 0.3, **kwargs)
+   .. py:attribute:: inp
+
+
+   .. py:attribute:: r
+
+
+   .. py:attribute:: u
+
+
+.. py:class:: CANN2D_SFA(length, tau = 1.0, tau_v = 50.0, k = 8.1, a = 0.3, A = 0.2, J0 = 1.0, z_min = -bm.pi, z_max = bm.pi, m = 0.3, **kwargs)
 
    Bases: :py:obj:`BaseCANN2D`
 
@@ -187,12 +167,6 @@ Package Contents
    This model extends the base CANN2D class to include SFA-specific dynamics.
 
    Initializes the 2D CANN model with SFA dynamics.
-
-
-   .. py:method:: init_state(*args, **kwargs)
-
-      Initializes the state variables of the model, including the adaptation variable.
-
 
 
    .. py:method:: update(inp)
@@ -205,9 +179,15 @@ Package Contents
 
 
 
+   .. py:attribute:: inp
+
+
    .. py:attribute:: m
       :value: 0.3
 
+
+
+   .. py:attribute:: r
 
 
    .. py:attribute:: tau_v
@@ -215,7 +195,13 @@ Package Contents
 
 
 
-.. py:class:: HierarchicalNetwork(num_module, num_place, spacing_min=2.0, spacing_max=5.0, module_angle=0.0, band_size=180, band_noise=0.0, band_w_L2S=0.2, band_w_S2L=1.0, band_gain=0.2, grid_num=20, grid_tau=0.1, grid_tau_v=10.0, grid_k=0.005, grid_a=u.math.pi / 9, grid_A=1.0, grid_J0=1.0, grid_mbar=1.0, gauss_tau=1.0, gauss_J0=1.1, gauss_k=0.0005, gauss_a=2 / 9 * u.math.pi, nonrec_tau=0.1)
+   .. py:attribute:: u
+
+
+   .. py:attribute:: v
+
+
+.. py:class:: HierarchicalNetwork(num_module, num_place, spacing_min=2.0, spacing_max=5.0, module_angle=0.0, band_size=180, band_noise=0.0, band_w_L2S=0.2, band_w_S2L=1.0, band_gain=0.2, grid_num=20, grid_tau=0.1, grid_tau_v=10.0, grid_k=0.005, grid_a=bm.pi / 9, grid_A=1.0, grid_J0=1.0, grid_mbar=1.0, gauss_tau=1.0, gauss_J0=1.1, gauss_k=0.0005, gauss_a=2 / 9 * bm.pi, nonrec_tau=0.1)
 
    Bases: :py:obj:`src.canns.models.basic._base.BasicModelGroup`
 
@@ -244,7 +230,7 @@ Package Contents
 
       The center locations of the place cells.
 
-      :type: brainunit.math.ndarray
+      :type: bm.math.ndarray
 
    .. attribute:: MEC_model_list
 
@@ -256,31 +242,31 @@ Package Contents
 
       The firing rates of the grid cell population.
 
-      :type: brainstate.HiddenState
+      :type: bm.Variable
 
    .. attribute:: band_x_fr
 
       The firing rates of the x-oriented band cell population.
 
-      :type: brainstate.HiddenState
+      :type: bm.Variable
 
    .. attribute:: band_y_fr
 
       The firing rates of the y-oriented band cell population.
 
-      :type: brainstate.HiddenState
+      :type: bm.Variable
 
    .. attribute:: place_fr
 
       The firing rates of the place cell population.
 
-      :type: brainstate.HiddenState
+      :type: bm.Variable
 
    .. attribute:: decoded_pos
 
       The final decoded 2D position.
 
-      :type: brainstate.State
+      :type: bm.Variable
 
    .. rubric:: References
 
@@ -336,15 +322,30 @@ Package Contents
    :type nonrec_tau: float, optional
 
 
-   .. py:method:: init_state(*args, **kwargs)
-
-
    .. py:method:: update(velocity, loc, loc_input_stre=0.0)
+
+      Step function of a network.
+
+      In this update function, the update functions in children systems are
+      iteratively called.
+
 
 
    .. py:attribute:: MEC_model_list
       :value: []
 
+
+
+   .. py:attribute:: band_x_fr
+
+
+   .. py:attribute:: band_y_fr
+
+
+   .. py:attribute:: decoded_pos
+
+
+   .. py:attribute:: grid_fr
 
 
    .. py:attribute:: num_module
@@ -354,5 +355,8 @@ Package Contents
 
 
    .. py:attribute:: place_center
+
+
+   .. py:attribute:: place_fr
 
 

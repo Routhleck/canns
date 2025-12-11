@@ -8,7 +8,7 @@ This example demonstrates:
 - Comparison with sklearn PCA
 """
 
-import brainstate
+import brainpy.math as bm
 import numpy as np
 from matplotlib import pyplot as plt
 
@@ -16,7 +16,7 @@ from canns.models.brain_inspired import LinearLayer
 from canns.trainer import OjaTrainer
 
 np.random.seed(42)
-brainstate.random.seed(42)
+bm.random.seed(42)
 
 # Generate synthetic data with clear principal components
 n_samples = 500
@@ -45,7 +45,6 @@ print(f"\nTrue PCA explained variance ratio: {true_pca.explained_variance_ratio_
 
 # Train Oja's rule to extract principal components
 model = LinearLayer(input_size=n_features, output_size=n_components)
-model.init_state()
 
 # Create OjaTrainer with JIT compilation enabled (default: compiled=True)
 # JIT compilation provides significant speedup for training loops
@@ -78,7 +77,7 @@ for epoch in range(n_epochs):
         variance_explained.append(var_explained)
 
         print(
-            f"Epoch {epoch+1}/{n_epochs}: "
+            f"Epoch {epoch + 1}/{n_epochs}: "
             f"Weight norms: [{norms.min():.4f}, {norms.max():.4f}], "
             f"Variance: [{var_explained.min():.2f}, {var_explained.max():.2f}]"
         )
@@ -97,7 +96,7 @@ ax = axes[0, 0]
 epochs_checkpointed = np.arange(checkpoint_interval, n_epochs + 1, checkpoint_interval)
 for i in range(n_components):
     norms = [h[i] for h in weight_norms_history]
-    ax.plot(epochs_checkpointed, norms, label=f"Component {i+1}", marker='o', markersize=4)
+    ax.plot(epochs_checkpointed, norms, label=f"Component {i + 1}", marker='o', markersize=4)
 ax.set_xlabel("Epoch")
 ax.set_ylabel("Weight Norm")
 ax.set_title("Weight Norm Convergence (should be ~1.0)")
@@ -109,7 +108,7 @@ ax.axhline(y=1.0, color="r", linestyle="--", alpha=0.5, label="Target")
 ax = axes[0, 1]
 variance_explained_arr = np.array(variance_explained)
 for i in range(n_components):
-    ax.plot(epochs_checkpointed, variance_explained_arr[:, i], label=f"Component {i+1}", marker='o', markersize=4)
+    ax.plot(epochs_checkpointed, variance_explained_arr[:, i], label=f"Component {i + 1}", marker='o', markersize=4)
 ax.set_xlabel("Epoch")
 ax.set_ylabel("Variance Explained")
 ax.set_title("Variance Explained by Each Component")

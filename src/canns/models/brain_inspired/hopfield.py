@@ -1,5 +1,4 @@
-import brainstate
-import brainunit as u
+import brainpy.math as bm
 import jax
 import jax.numpy as jnp
 import numpy as np
@@ -52,7 +51,7 @@ class AmariHopfieldNetwork(BrainInspiredModel):
             temperature: Temperature parameter for continuous activations
             **kwargs: Additional arguments passed to parent class
         """
-        super().__init__(in_size=num_neurons, **kwargs)
+        super().__init__(**kwargs)
 
         self.num_neurons = num_neurons
         self.asyn = asyn
@@ -62,25 +61,21 @@ class AmariHopfieldNetwork(BrainInspiredModel):
         # Set activation function based on type
         self.activation = self._get_activation_fn(activation)
 
+        self.s = bm.Variable(jnp.ones(self.num_neurons, dtype=jnp.float32))  # Binary states (+1/-1)
+        self.W = bm.Variable(
+            jnp.zeros((self.num_neurons, self.num_neurons), dtype=jnp.float32)
+        )  # Weight matrix as trainable parameter
+
     def _get_activation_fn(self, activation: str):
         """Get activation function based on activation type."""
         if activation == "sign":
-            return u.math.sign
+            return bm.sign
         elif activation == "tanh":
             return lambda x: jnp.tanh(x / self.temperature)
         elif activation == "sigmoid":
             return lambda x: jax.nn.sigmoid(x / self.temperature)
         else:
             raise ValueError(f"Unknown activation type: {activation}")
-
-    def init_state(self):
-        """Initialize network state variables."""
-        self.s = brainstate.HiddenState(
-            jnp.ones(self.num_neurons, dtype=jnp.float32)
-        )  # Binary states (+1/-1)
-        self.W = brainstate.ParamState(
-            jnp.zeros((self.num_neurons, self.num_neurons), dtype=jnp.float32)
-        )  # Weight matrix as trainable parameter
 
     def update(self, e_old):
         """
@@ -97,7 +92,7 @@ class AmariHopfieldNetwork(BrainInspiredModel):
         Implemented with JAX-friendly primitives so it can be used in compiled
         prediction loops. Avoid Python-side mutation of traced indices.
         """
-        key = brainstate.random.get_key()
+        key = bm.random.get_key()
         idxs = jax.random.permutation(key, self.num_neurons)
 
         def body(i, s):
@@ -150,12 +145,12 @@ class AmariHopfieldNetwork(BrainInspiredModel):
             old_W.value = new_W
         else:
             # In case resize called before init_state
-            self.W = brainstate.ParamState(new_W)
+            self.W = bm.Variable(new_W)
 
         if old_s is not None and hasattr(old_s, "value"):
             old_s.value = new_s
         else:
-            self.s = brainstate.HiddenState(new_s)
+            self.s = bm.Variable(new_s)
 
     # Predict methods intentionally removed: use HebbianTrainer.predict for unified API.
 

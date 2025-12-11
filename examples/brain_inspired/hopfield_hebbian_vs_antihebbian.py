@@ -20,6 +20,7 @@ from canns.trainer import AntiHebbianTrainer, HebbianTrainer
 
 np.random.seed(42)
 
+
 def preprocess_image(img, w=128, h=128) -> np.ndarray:
     """Resize, grayscale (if needed), threshold to binary, then map to {-1,+1}."""
     if img.ndim == 3:
@@ -30,6 +31,7 @@ def preprocess_image(img, w=128, h=128) -> np.ndarray:
     binary = img > thresh
     shift = np.where(binary, 1.0, -1.0).astype(np.float32)
     return shift.reshape(w * h)
+
 
 # Training data from skimage
 camera = preprocess_image(skimage.data.camera())
@@ -49,7 +51,7 @@ model = AmariHopfieldNetwork(
     asyn=False,
     activation="sign"
 )
-model.init_state()
+
 
 # Add binary noise by flipping pixels
 def get_corrupted_input(pattern, corruption_level):
@@ -58,6 +60,7 @@ def get_corrupted_input(pattern, corruption_level):
     inv = np.random.binomial(n=1, p=corruption_level, size=len(pattern))
     corrupted[inv == 1] *= -1
     return corrupted
+
 
 tests = [get_corrupted_input(d, 0.4) for d in data_list]
 
@@ -106,9 +109,11 @@ for i in range(len(data_list)):
     marker = " ← UNLEARNED" if i == 1 else ""
     print(f"  {image_names[i]}: MSE={recovery_mse:.4f}, Correlation={correlation:.4f}{marker}")
 
+
 # Visualization
 def plot_comparison(data, test, pred_hebb, pred_anti, names, figsize=(12, 10)):
     """Plot comparison of image recovery before and after anti-Hebbian unlearning."""
+
     def reshape(pattern):
         """Reshape 1D pattern back to 2D image."""
         dim = int(np.sqrt(len(pattern)))
@@ -121,7 +126,7 @@ def plot_comparison(data, test, pred_hebb, pred_anti, names, figsize=(12, 10)):
         axes[i, 0].imshow(reshape(data[i]), cmap='gray', vmin=-1, vmax=1)
         axes[i, 0].axis('off')
         axes[i, 0].set_ylabel(names[i], fontsize=11, fontweight='bold', rotation=0,
-                             labelpad=40, ha='right', va='center')
+                              labelpad=40, ha='right', va='center')
         if i == 0:
             axes[i, 0].set_title('Original', fontsize=12, fontweight='bold')
 
@@ -137,9 +142,9 @@ def plot_comparison(data, test, pred_hebb, pred_anti, names, figsize=(12, 10)):
 
         # Add text annotation
         axes[i, 1].text(0.5, -0.15, f'Corr: {corr_hebb:.3f}',
-                       transform=axes[i, 1].transAxes, fontsize=9,
-                       ha='center', va='top',
-                       bbox=dict(boxstyle='round', facecolor='lightgreen', alpha=0.7))
+                        transform=axes[i, 1].transAxes, fontsize=9,
+                        ha='center', va='top',
+                        bbox=dict(boxstyle='round', facecolor='lightgreen', alpha=0.7))
 
         # Column 3: After Anti-Hebbian on Astronaut
         axes[i, 2].imshow(reshape(pred_anti[i]), cmap='gray', vmin=-1, vmax=1)
@@ -154,13 +159,14 @@ def plot_comparison(data, test, pred_hebb, pred_anti, names, figsize=(12, 10)):
         # Highlight the unlearned image
         facecolor = 'salmon' if i == 1 else 'lightblue'
         axes[i, 2].text(0.5, -0.15, f'Corr: {corr_anti:.3f}',
-                       transform=axes[i, 2].transAxes, fontsize=9,
-                       ha='center', va='top',
-                       bbox=dict(boxstyle='round', facecolor=facecolor, alpha=0.7))
+                        transform=axes[i, 2].transAxes, fontsize=9,
+                        ha='center', va='top',
+                        bbox=dict(boxstyle='round', facecolor=facecolor, alpha=0.7))
 
     plt.tight_layout()
     plt.savefig("hopfield_hebbian_vs_antihebbian.png", dpi=150, bbox_inches='tight')
     print("\nFigure saved to hopfield_hebbian_vs_antihebbian.png")
     plt.show()
+
 
 plot_comparison(data_list, tests, predicted_after_hebb, predicted_after_anti, image_names)

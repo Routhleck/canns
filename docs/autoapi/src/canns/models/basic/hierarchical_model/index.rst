@@ -20,7 +20,7 @@ Classes
 Module Contents
 ---------------
 
-.. py:class:: BandCell(angle, spacing, size=180, z_min=-u.math.pi, z_max=u.math.pi, noise=2.0, w_L2S=0.2, w_S2L=1.0, gain=0.2, gauss_tau=1.0, gauss_J0=1.1, gauss_k=0.0005, gauss_a=2 / 9 * u.math.pi, nonrec_tau=0.1, **kwargs)
+.. py:class:: BandCell(angle, spacing, size=180, z_min=-bm.pi, z_max=bm.pi, noise=2.0, w_L2S=0.2, w_S2L=1.0, gain=0.2, gauss_tau=1.0, gauss_J0=1.1, gauss_k=0.0005, gauss_a=2 / 9 * bm.pi, nonrec_tau=0.1, **kwargs)
 
    Bases: :py:obj:`src.canns.models.basic._base.BasicModel`
 
@@ -56,7 +56,7 @@ Module Contents
 
       The projection vector for converting 2D position/velocity to 1D phase.
 
-      :type: brainunit.math.ndarray
+      :type: bm.math.ndarray
 
    .. attribute:: band_cells
 
@@ -98,13 +98,13 @@ Module Contents
 
       The ideal, noise-free center based on velocity integration.
 
-      :type: brainstate.State
+      :type: bm.Variable
 
    .. attribute:: center
 
       The actual decoded center of the band cell activity bump.
 
-      :type: brainstate.State
+      :type: bm.Variable
 
    Initializes the BandCell model.
 
@@ -187,12 +187,6 @@ Module Contents
 
 
 
-   .. py:method:: init_state(*args, **kwargs)
-
-      State initialization function.
-
-
-
    .. py:method:: make_conn(shift)
 
       Creates a shifted Gaussian connection profile.
@@ -259,6 +253,12 @@ Module Contents
    .. py:attribute:: band_cells
 
 
+   .. py:attribute:: center
+
+
+   .. py:attribute:: center_ideal
+
+
    .. py:attribute:: dx
 
 
@@ -301,8 +301,6 @@ Module Contents
 
 
    .. py:attribute:: x
-      :value: None
-
 
 
    .. py:attribute:: z_max
@@ -314,7 +312,7 @@ Module Contents
    .. py:attribute:: z_range
 
 
-.. py:class:: GaussRecUnits(size, tau = 1.0, J0 = 1.1, k = 0.0005, a = 2 / 9 * u.math.pi, z_min = -u.math.pi, z_max = u.math.pi, noise = 2.0)
+.. py:class:: GaussRecUnits(size, tau = 1.0, J0 = 1.1, k = 0.0005, a = 2 / 9 * bm.pi, z_min = -bm.pi, z_max = bm.pi, noise = 2.0)
 
    Bases: :py:obj:`src.canns.models.basic._base.BasicModel`
 
@@ -378,7 +376,7 @@ Module Contents
 
       The preferred feature values for each neuron.
 
-      :type: brainunit.math.ndarray
+      :type: bm.math.ndarray
 
    .. attribute:: rho
 
@@ -402,31 +400,31 @@ Module Contents
 
       The connection matrix.
 
-      :type: brainunit.math.ndarray
+      :type: bm.math.ndarray
 
    .. attribute:: r
 
       The firing rates of the neurons.
 
-      :type: brainstate.HiddenState
+      :type: bm.Variable
 
    .. attribute:: u
 
       The synaptic inputs to the neurons.
 
-      :type: brainstate.HiddenState
+      :type: bm.Variable
 
    .. attribute:: center
 
       The decoded center of the activity bump.
 
-      :type: brainstate.State
+      :type: bm.Variable
 
    .. attribute:: input
 
       The external input to the network.
 
-      :type: brainstate.State
+      :type: bm.Variable
 
    Initializes the GaussRecUnits model.
 
@@ -482,13 +480,7 @@ Module Contents
       boundaries of the feature space, i.e., [-z_range/2, z_range/2].
 
       :param d: The array of distances.
-      :type d: brainunit.math.ndarray
-
-
-
-   .. py:method:: init_state()
-
-      State initialization function.
+      :type d: bm.math.ndarray
 
 
 
@@ -507,16 +499,23 @@ Module Contents
 
 
 
+
    .. py:attribute:: J
 
 
    .. py:attribute:: a
 
 
+   .. py:attribute:: center
+
+
    .. py:attribute:: conn_mat
 
 
    .. py:attribute:: dx
+
+
+   .. py:attribute:: input
 
 
    .. py:attribute:: k
@@ -527,6 +526,9 @@ Module Contents
    .. py:attribute:: noise_0
       :value: 2.0
 
+
+
+   .. py:attribute:: r
 
 
    .. py:attribute:: rho
@@ -540,9 +542,10 @@ Module Contents
 
 
 
-   .. py:attribute:: x
-      :value: None
+   .. py:attribute:: u
 
+
+   .. py:attribute:: x
 
 
    .. py:attribute:: z_max
@@ -554,7 +557,7 @@ Module Contents
    .. py:attribute:: z_range
 
 
-.. py:class:: GridCell(num, angle, spacing, tau=0.1, tau_v=10.0, k=0.005, a=u.math.pi / 9, A=1.0, J0=1.0, mbar=1.0)
+.. py:class:: GridCell(num, angle, spacing, tau=0.1, tau_v=10.0, k=0.005, a=bm.pi / 9, A=1.0, J0=1.0, mbar=1.0)
 
    Bases: :py:obj:`src.canns.models.basic._base.BasicModel`
 
@@ -624,37 +627,37 @@ Module Contents
 
       The (x, y) preferred phase coordinates for each neuron.
 
-      :type: brainunit.math.ndarray
+      :type: bm.math.ndarray
 
    .. attribute:: conn_mat
 
       The connection matrix.
 
-      :type: brainunit.math.ndarray
+      :type: bm.math.ndarray
 
    .. attribute:: r
 
       The firing rates of the neurons.
 
-      :type: brainstate.HiddenState
+      :type: bm.Variable
 
    .. attribute:: u
 
       The synaptic inputs to the neurons.
 
-      :type: brainstate.HiddenState
+      :type: bm.Variable
 
    .. attribute:: v
 
       The adaptation variables for the neurons.
 
-      :type: brainstate.HiddenState
+      :type: bm.Variable
 
    .. attribute:: center
 
       The decoded 2D center of the activity bump.
 
-      :type: brainstate.State
+      :type: bm.Variable
 
    Initializes the GridCell model.
 
@@ -717,12 +720,6 @@ Module Contents
 
 
 
-   .. py:method:: init_state(*args, **kwargs)
-
-      State initialization function.
-
-
-
    .. py:method:: make_conn()
 
       Constructs the connection matrix for the 2D attractor network.
@@ -747,6 +744,7 @@ Module Contents
 
 
 
+
    .. py:attribute:: A
       :value: 1.0
 
@@ -763,13 +761,25 @@ Module Contents
    .. py:attribute:: angle
 
 
+   .. py:attribute:: center
+
+
    .. py:attribute:: conn_mat
 
 
    .. py:attribute:: coor_transform
 
 
+   .. py:property:: derivative
+
+
    .. py:attribute:: dxy
+
+
+   .. py:attribute:: input
+
+
+   .. py:attribute:: integral
 
 
    .. py:attribute:: k
@@ -783,6 +793,9 @@ Module Contents
 
 
    .. py:attribute:: num
+
+
+   .. py:attribute:: r
 
 
    .. py:attribute:: ratio
@@ -804,12 +817,16 @@ Module Contents
 
 
 
+   .. py:attribute:: u
+
+
+   .. py:attribute:: v
+
+
    .. py:attribute:: value_grid
 
 
    .. py:attribute:: x
-      :value: None
-
 
 
    .. py:attribute:: x_grid
@@ -821,7 +838,7 @@ Module Contents
    .. py:attribute:: y_grid
 
 
-.. py:class:: HierarchicalNetwork(num_module, num_place, spacing_min=2.0, spacing_max=5.0, module_angle=0.0, band_size=180, band_noise=0.0, band_w_L2S=0.2, band_w_S2L=1.0, band_gain=0.2, grid_num=20, grid_tau=0.1, grid_tau_v=10.0, grid_k=0.005, grid_a=u.math.pi / 9, grid_A=1.0, grid_J0=1.0, grid_mbar=1.0, gauss_tau=1.0, gauss_J0=1.1, gauss_k=0.0005, gauss_a=2 / 9 * u.math.pi, nonrec_tau=0.1)
+.. py:class:: HierarchicalNetwork(num_module, num_place, spacing_min=2.0, spacing_max=5.0, module_angle=0.0, band_size=180, band_noise=0.0, band_w_L2S=0.2, band_w_S2L=1.0, band_gain=0.2, grid_num=20, grid_tau=0.1, grid_tau_v=10.0, grid_k=0.005, grid_a=bm.pi / 9, grid_A=1.0, grid_J0=1.0, grid_mbar=1.0, gauss_tau=1.0, gauss_J0=1.1, gauss_k=0.0005, gauss_a=2 / 9 * bm.pi, nonrec_tau=0.1)
 
    Bases: :py:obj:`src.canns.models.basic._base.BasicModelGroup`
 
@@ -850,7 +867,7 @@ Module Contents
 
       The center locations of the place cells.
 
-      :type: brainunit.math.ndarray
+      :type: bm.math.ndarray
 
    .. attribute:: MEC_model_list
 
@@ -862,31 +879,31 @@ Module Contents
 
       The firing rates of the grid cell population.
 
-      :type: brainstate.HiddenState
+      :type: bm.Variable
 
    .. attribute:: band_x_fr
 
       The firing rates of the x-oriented band cell population.
 
-      :type: brainstate.HiddenState
+      :type: bm.Variable
 
    .. attribute:: band_y_fr
 
       The firing rates of the y-oriented band cell population.
 
-      :type: brainstate.HiddenState
+      :type: bm.Variable
 
    .. attribute:: place_fr
 
       The firing rates of the place cell population.
 
-      :type: brainstate.HiddenState
+      :type: bm.Variable
 
    .. attribute:: decoded_pos
 
       The final decoded 2D position.
 
-      :type: brainstate.State
+      :type: bm.Variable
 
    .. rubric:: References
 
@@ -942,15 +959,30 @@ Module Contents
    :type nonrec_tau: float, optional
 
 
-   .. py:method:: init_state(*args, **kwargs)
-
-
    .. py:method:: update(velocity, loc, loc_input_stre=0.0)
+
+      Step function of a network.
+
+      In this update function, the update functions in children systems are
+      iteratively called.
+
 
 
    .. py:attribute:: MEC_model_list
       :value: []
 
+
+
+   .. py:attribute:: band_x_fr
+
+
+   .. py:attribute:: band_y_fr
+
+
+   .. py:attribute:: decoded_pos
+
+
+   .. py:attribute:: grid_fr
 
 
    .. py:attribute:: num_module
@@ -962,7 +994,10 @@ Module Contents
    .. py:attribute:: place_center
 
 
-.. py:class:: HierarchicalPathIntegrationModel(spacing, angle, place_center=None, band_size=180, band_noise=0.0, band_w_L2S=0.2, band_w_S2L=1.0, band_gain=0.2, grid_num=20, grid_tau=0.1, grid_tau_v=10.0, grid_k=0.005, grid_a=u.math.pi / 9, grid_A=1.0, grid_J0=1.0, grid_mbar=1.0, gauss_tau=1.0, gauss_J0=1.1, gauss_k=0.0005, gauss_a=2 / 9 * u.math.pi, nonrec_tau=0.1)
+   .. py:attribute:: place_fr
+
+
+.. py:class:: HierarchicalPathIntegrationModel(spacing, angle, place_center=None, band_size=180, band_noise=0.0, band_w_L2S=0.2, band_w_S2L=1.0, band_gain=0.2, grid_num=20, grid_tau=0.1, grid_tau_v=10.0, grid_k=0.005, grid_a=bm.pi / 9, grid_A=1.0, grid_J0=1.0, grid_mbar=1.0, gauss_tau=1.0, gauss_J0=1.1, gauss_k=0.0005, gauss_a=2 / 9 * bm.pi, nonrec_tau=0.1)
 
    Bases: :py:obj:`src.canns.models.basic._base.BasicModelGroup`
 
@@ -1004,19 +1039,19 @@ Module Contents
 
       The center locations of the target place cells.
 
-      :type: brainunit.math.ndarray
+      :type: bm.math.ndarray
 
    .. attribute:: Wg2p
 
       The connection weights from grid cells to place cells.
 
-      :type: brainunit.math.ndarray
+      :type: bm.math.ndarray
 
    .. attribute:: grid_output
 
       The activity of the place cells.
 
-      :type: brainstate.State
+      :type: bm.Variable
 
    Initializes the HierarchicalPathIntegrationModel.
 
@@ -1026,7 +1061,7 @@ Module Contents
    :type angle: float
    :param place_center: The center locations of the
                         target place cell population. Defaults to a random distribution.
-   :type place_center: brainunit.math.ndarray, optional
+   :type place_center: bm.math.ndarray, optional
    :param band_size: Number of neurons in each BandCell group. Defaults to 180.
    :type band_size: int, optional
    :param band_noise: Noise level for BandCells. Defaults to 0.0.
@@ -1101,9 +1136,6 @@ Module Contents
 
 
 
-   .. py:method:: init_state(*args, **kwargs)
-
-
    .. py:method:: make_Wg2p()
 
       Creates the connection weights from grid cells to place cells.
@@ -1125,6 +1157,12 @@ Module Contents
 
    .. py:method:: update(velocity, loc, loc_input_stre=0.0)
 
+      Step function of a network.
+
+      In this update function, the update functions in children systems are
+      iteratively called.
+
+
 
    .. py:attribute:: band_cell_x
 
@@ -1141,6 +1179,9 @@ Module Contents
    .. py:attribute:: grid_cell
 
 
+   .. py:attribute:: grid_output
+
+
    .. py:attribute:: num_place
 
 
@@ -1153,7 +1194,7 @@ Module Contents
    .. py:attribute:: proj_k_y
 
 
-.. py:class:: NonRecUnits(size, tau = 0.1, z_min = -u.math.pi, z_max = u.math.pi, noise = 2.0)
+.. py:class:: NonRecUnits(size, tau = 0.1, z_min = -bm.pi, z_max = bm.pi, noise = 2.0)
 
    Bases: :py:obj:`src.canns.models.basic._base.BasicModel`
 
@@ -1204,7 +1245,7 @@ Module Contents
 
       The preferred feature values for each neuron.
 
-      :type: brainunit.math.ndarray
+      :type: bm.ndarray
 
    .. attribute:: rho
 
@@ -1222,19 +1263,19 @@ Module Contents
 
       The firing rates of the neurons.
 
-      :type: brainstate.State
+      :type: bm.Variable
 
    .. attribute:: u
 
       The synaptic inputs to the neurons.
 
-      :type: brainstate.State
+      :type: bm.Variable
 
    .. attribute:: input
 
       The external input to the neurons.
 
-      :type: brainstate.State
+      :type: bm.Variable
 
    Initializes the NonRecUnits model.
 
@@ -1277,24 +1318,25 @@ Module Contents
 
 
 
-   .. py:method:: init_state()
-
-      State initialization function.
-
-
-
    .. py:method:: update(input)
 
       The function to specify the updating rule.
 
 
 
+
    .. py:attribute:: dx
+
+
+   .. py:attribute:: input
 
 
    .. py:attribute:: noise_0
       :value: 2.0
 
+
+
+   .. py:attribute:: r
 
 
    .. py:attribute:: rho
@@ -1308,9 +1350,10 @@ Module Contents
 
 
 
-   .. py:attribute:: x
-      :value: None
+   .. py:attribute:: u
 
+
+   .. py:attribute:: x
 
 
    .. py:attribute:: z_max

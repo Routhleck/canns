@@ -1,10 +1,11 @@
-import brainstate
-import brainunit as u
+import brainpy as bp
+import brainpy.math as bm
 import jax
 import numpy as np
-from brainstate.nn import exp_euler_step
 
 from ._base import BasicModel
+
+# TODO: exp_euler_step should be implemented in BrainPy
 
 
 def calculate_theta_modulation(
@@ -26,7 +27,7 @@ def calculate_theta_modulation(
         theta_strength_hd: Theta modulation strength for head direction cells
         theta_strength_gc: Theta modulation strength for grid cells
         theta_cycle_len: Length of theta cycle in time units
-        dt: Time step size (if None, uses brainstate.environ.get_dt())
+        dt: Time step size (if None, uses bm.get_dt())
 
     Returns:
         tuple: (theta_phase, theta_modulation_hd, theta_modulation_gc)
@@ -35,19 +36,19 @@ def calculate_theta_modulation(
             - theta_modulation_gc: Theta modulation for grid cells
     """
     if dt is None:
-        dt = brainstate.environ.get_dt()
+        dt = bm.get_dt()
 
     # Calculate current time and theta phase
     t = time_step * dt
-    theta_phase = u.math.mod(t, theta_cycle_len) / theta_cycle_len
-    theta_phase = theta_phase * 2 * u.math.pi - u.math.pi
+    theta_phase = bm.mod(t, theta_cycle_len) / theta_cycle_len
+    theta_phase = theta_phase * 2 * bm.pi - bm.pi
 
     # Calculate theta modulation for both networks
     # HD network: theta modulation scales with angular speed
-    theta_modulation_hd = 1 + theta_strength_hd * (0.5 + ang_gain) * u.math.cos(theta_phase)
+    theta_modulation_hd = 1 + theta_strength_hd * (0.5 + ang_gain) * bm.cos(theta_phase)
 
     # GC network: theta modulation scales with linear speed
-    theta_modulation_gc = 1 + theta_strength_gc * (0.5 + linear_gain) * u.math.cos(theta_phase)
+    theta_modulation_gc = 1 + theta_strength_gc * (0.5 + linear_gain) * bm.cos(theta_phase)
 
     return theta_phase, theta_modulation_hd, theta_modulation_gc
 
@@ -95,12 +96,11 @@ class DirectionCellNetwork(BasicModel):
         m (float): Effective adaptation strength (adaptation_strength * tau / tau_v)
 
     Example:
-        >>> import brainstate
+        >>> import brainpy.math as bm
         >>> from canns.models.basic.theta_sweep_model import DirectionCellNetwork
         >>>
-        >>> brainstate.environ.set(dt=1.0)  # 1ms time step
+        >>> bm.set_dt(1.)  # 1ms time step
         >>> dc_net = DirectionCellNetwork(num=60)
-        >>> dc_net.init_state()
         >>>
         >>> # Update with head direction and theta modulation
         >>> head_direction = 0.5  # radians
@@ -125,11 +125,11 @@ class DirectionCellNetwork(BasicModel):
         A: float = 3.0,
         J0: float = 1.0,
         g: float = 1.0,
-        z_min: float = -u.math.pi,
-        z_max: float = u.math.pi,
+        z_min: float = -bm.pi,
+        z_max: float = bm.pi,
         conn_noise: float = 0.0,
     ):
-        super().__init__(in_size=num)
+        super().__init__()
         self.num = num
 
         self.tau = tau
@@ -150,7 +150,7 @@ class DirectionCellNetwork(BasicModel):
         self.z_min = z_min
         self.z_max = z_max
         self.z_range = z_max - z_min
-        x1 = u.math.linspace(z_min, z_max, num + 1)
+        x1 = bm.linspace(z_min, z_max, num + 1)
         self.x = x1[:-1]
 
         # connectivity
@@ -158,7 +158,6 @@ class DirectionCellNetwork(BasicModel):
         noise_connection = np.random.normal(0, conn_noise, size=(num, num))
         self.conn_mat = base_connection + noise_connection
 
-    def init_state(self, *args, **kwargs):
         """
         Initialize network state variables.
 
@@ -169,11 +168,19 @@ class DirectionCellNetwork(BasicModel):
         - center: Current bump center (zero)
         - centerI: Input bump center (zero)
         """
-        self.r = brainstate.HiddenState(u.math.zeros(self.num))
-        self.v = brainstate.HiddenState(u.math.zeros(self.num))
-        self.u = brainstate.HiddenState(u.math.zeros(self.num))
-        self.center = brainstate.State(u.math.zeros(1))
-        self.centerI = brainstate.State(u.math.zeros(1))
+        self.r = bm.Variable(bm.zeros(self.num))
+        self.v = bm.Variable(bm.zeros(self.num))
+        self.u = bm.Variable(bm.zeros(self.num))
+        self.center = bm.Variable(bm.zeros(1))
+        self.centerI = bm.Variable(bm.zeros(1))
+
+        self.integral = bp.odeint(method="exp_euler", f=self.derivative)
+
+    @property
+    def derivative(self):
+        du = lambda u, t, input: (-u + input - self.v) / self.tau
+        dv = lambda v, t: (-v + self.m * self.u) / self.tau_v
+        return bp.JointEq([du, dv])
 
     def update(self, head_direction, theta_input):
         """
@@ -186,29 +193,20 @@ class DirectionCellNetwork(BasicModel):
         self.center.value = self.get_bump_center(r=self.r, x=self.x)
         Iext = theta_input * self.input_bump(head_direction)
         Irec = self.conn_mat @ self.r.value
-        noise = brainstate.random.randn(self.num) * self.noise_strength
+        noise = bm.random.randn(self.num) * self.noise_strength
         input_total = Iext + Irec + noise
 
-        _u = exp_euler_step(
-            lambda u, input: (-u + input - self.v.value) / self.tau,
-            self.u.value,
-            input_total,
-        )
-
-        _v = exp_euler_step(
-            lambda v: (-v + self.m * self.u.value) / self.tau_v,
-            self.v.value,
-        )
-        self.u.value = u.math.where(_u > 0, _u, 0)
+        _u, _v = self.integral(self.u, self.v, bp.share["t"], input_total, bm.dt)
+        self.u.value = bm.where(_u > 0, _u, 0)
         self.v.value = _v
 
-        u_sq = u.math.square(self.u.value)
-        self.r.value = self.g * u_sq / (1.0 + self.k * u.math.sum(u_sq))
+        u_sq = bm.square(self.u.value)
+        self.r.value = self.g * u_sq / (1.0 + self.k * bm.sum(u_sq))
 
     @staticmethod
     def handle_periodic_condition(A):
-        B = u.math.where(A > u.math.pi, A - 2 * u.math.pi, A)
-        B = u.math.where(B < -u.math.pi, B + 2 * u.math.pi, B)
+        B = bm.where(A > bm.pi, A - 2 * bm.pi, A)
+        B = bm.where(B < -bm.pi, B + 2 * bm.pi, B)
         return B
 
     def calculate_dist(self, d):
@@ -222,7 +220,7 @@ class DirectionCellNetwork(BasicModel):
             Shortest angular distance considering periodicity
         """
         d = self.handle_periodic_condition(d)
-        d = u.math.where(d > 0.5 * self.z_range, d - self.z_range, d)
+        d = bm.where(d > 0.5 * self.z_range, d - self.z_range, d)
         return d
 
     def make_connection(self):
@@ -239,11 +237,7 @@ class DirectionCellNetwork(BasicModel):
         @jax.vmap
         def get_J(xbins):
             d = self.calculate_dist(xbins - self.x)
-            Jxx = (
-                self.J0
-                * u.math.exp(-0.5 * u.math.square(d / self.a))
-                / (u.math.sqrt(2 * u.math.pi) * self.a)
-            )
+            Jxx = self.J0 * bm.exp(-0.5 * bm.square(d / self.a)) / (bm.sqrt(2 * bm.pi) * self.a)
             return Jxx
 
         return get_J(self.x)
@@ -260,8 +254,8 @@ class DirectionCellNetwork(BasicModel):
         Returns:
             Decoded center position in radians
         """
-        exppos = u.math.exp(1j * x)
-        center = u.math.angle(u.math.sum(exppos * r.value))
+        exppos = bm.exp(1j * x)
+        center = bm.angle(bm.sum(exppos * r.value))
         return center.reshape(
             -1,
         )
@@ -276,8 +270,8 @@ class DirectionCellNetwork(BasicModel):
         Returns:
             Input vector of shape (num,)
         """
-        return self.A * u.math.exp(
-            -0.5 * u.math.square(self.calculate_dist(self.x - head_direction) / self.a)
+        return self.A * bm.exp(
+            -0.5 * bm.square(self.calculate_dist(self.x - head_direction) / self.a)
         )
 
 
@@ -329,12 +323,11 @@ class GridCellNetwork(BasicModel):
         gc_bump (State): Grid cell bump activity pattern
 
     Example:
-        >>> import brainstate
+        >>> import brainpy.math as bm
         >>> from canns.models.basic.theta_sweep_model import GridCellNetwork
         >>>
-        >>> brainstate.environ.set(dt=1.0)
+        >>> bm.set_dt(1.0)
         >>> gc_net = GridCellNetwork(num_dc=60, num_gc_x=30, mapping_ratio=1.5)
-        >>> gc_net.init_state()
         >>>
         >>> # Update with position, direction activity, and theta modulation
         >>> position = [0.5, 0.3]  # animal position
@@ -370,7 +363,7 @@ class GridCellNetwork(BasicModel):
         phase_offset: float = 1.0 / 20,  # relative to -pi~pi range
     ):
         self.num = num_gc_x * num_gc_x
-        super().__init__(in_size=self.num)
+        super().__init__()
 
         self.num_dc = num_dc
         self.num_gc_1side = num_gc_x
@@ -390,27 +383,25 @@ class GridCellNetwork(BasicModel):
 
         # derived parameters
         self.m = adaptation_strength * tau / tau_v
-        self.Lambda = 2 * u.math.pi / mapping_ratio  # grid spacing
+        self.Lambda = 2 * bm.pi / mapping_ratio  # grid spacing
 
         # coordinate transforms (hex -> rect)
         # Note that coor_transform is to map a parallelogram with a 60-degree angle back to a square
         # The logic is to partition the 2D space into parallelograms, each of which contains one lattice of grid cells, and repeat the parallelogram to tile the whole space
-        self.coor_transform = u.math.array(
-            [[1.0, -1.0 / u.math.sqrt(3.0)], [0.0, 2.0 / u.math.sqrt(3.0)]]
-        )
+        self.coor_transform = bm.array([[1.0, -1.0 / bm.sqrt(3.0)], [0.0, 2.0 / bm.sqrt(3.0)]])
 
-        # inverse, which is u.math.array([[1.0, 1.0 / 2],[0.0,  u.math.sqrt(3.0) / 2]])
+        # inverse, which is bm.array([[1.0, 1.0 / 2],[0.0,  bm.sqrt(3.0) / 2]])
         # Note that coor_transform_inv is to map a square to a parallelogram with a 60-degree angle
-        self.coor_transform_inv = u.linalg.inv(self.coor_transform)
+        self.coor_transform_inv = bm.linalg.inv(self.coor_transform)
 
         # feature space
-        x_bins = u.math.linspace(-u.math.pi, u.math.pi, num_gc_x + 1)
-        x_grid, y_grid = u.math.meshgrid(x_bins[:-1], x_bins[:-1])
+        x_bins = bm.linspace(-bm.pi, bm.pi, num_gc_x + 1)
+        x_grid, y_grid = bm.meshgrid(x_bins[:-1], x_bins[:-1])
         self.x_grid = x_grid.reshape(-1)
         self.y_grid = y_grid.reshape(-1)
 
         # positions in (x, y) space and transformed space
-        self.value_grid = u.math.stack([self.x_grid, self.y_grid], axis=1)  # (num, 2)
+        self.value_grid = bm.stack([self.x_grid, self.y_grid], axis=1)  # (num, 2)
         self.value_bump = self.value_grid * 4
         # candidate centers (for center snapping)
         self.candidate_centers = self.make_candidate_centers(self.Lambda)
@@ -420,7 +411,6 @@ class GridCellNetwork(BasicModel):
         noise_connection = np.random.normal(0, conn_noise, size=(self.num, self.num))
         self.conn_mat = base_connection + noise_connection
 
-    def init_state(self, *args, **kwargs):
         """
         Initialize network state variables.
 
@@ -433,13 +423,21 @@ class GridCellNetwork(BasicModel):
         - center_phase: Bump center in phase space (shape: 2)
         - center_position: Decoded position in real space (shape: 2)
         """
-        self.r = brainstate.HiddenState(u.math.zeros(self.num))
-        self.v = brainstate.HiddenState(u.math.zeros(self.num))
-        self.u = brainstate.HiddenState(u.math.zeros(self.num))
-        self.gc_bump = brainstate.State(u.math.zeros(self.num))
-        self.conj_input = brainstate.State(u.math.zeros(self.num))
-        self.center_phase = brainstate.State(u.math.zeros(2))
-        self.center_position = brainstate.State(u.math.zeros(2))
+        self.r = bm.Variable(bm.zeros(self.num))
+        self.v = bm.Variable(bm.zeros(self.num))
+        self.u = bm.Variable(bm.zeros(self.num))
+        self.gc_bump = bm.Variable(bm.zeros(self.num))
+        self.conj_input = bm.Variable(bm.zeros(self.num))
+        self.center_phase = bm.Variable(bm.zeros(2))
+        self.center_position = bm.Variable(bm.zeros(2))
+
+        self.integral = bp.odeint(method="exp_euler", f=self.derivative)
+
+    @property
+    def derivative(self):
+        du = lambda u, t, input: (-u + input - self.v) / self.tau
+        dv = lambda v, t: (-v + self.m * self.u) / self.tau_v
+        return bp.JointEq([du, dv])
 
     def make_connection(self):
         """
@@ -458,8 +456,8 @@ class GridCellNetwork(BasicModel):
             d = self.calculate_dist(v - self.value_grid)  # (N,)
             return (
                 (self.J0 / self.g)
-                * u.math.exp(-0.5 * u.math.square(d / self.a))
-                / (u.math.sqrt(2.0 * u.math.pi) * self.a)
+                * bm.exp(-0.5 * bm.square(d / self.a))
+                / (bm.sqrt(2.0 * bm.pi) * self.a)
             )
 
         return kernel(self.value_grid)  # (N, N)
@@ -473,9 +471,9 @@ class GridCellNetwork(BasicModel):
         d = self.handle_periodic_condition(d)
         # transform to lattice axes
         dist = (
-            u.math.matmul(self.coor_transform_inv, d.T)
+            bm.matmul(self.coor_transform_inv, d.T)
         ).T  # This means the bump on the parallelogram lattice is a Gaussian, while in the square space it is a twisted Gaussian
-        return u.math.sqrt(dist[:, 0] ** 2 + dist[:, 1] ** 2)
+        return bm.sqrt(dist[:, 0] ** 2 + dist[:, 1] ** 2)
 
     def handle_periodic_condition(self, d):
         """
@@ -487,8 +485,8 @@ class GridCellNetwork(BasicModel):
         Returns:
             Wrapped phase values in [-π, π]
         """
-        d = u.math.where(d > u.math.pi, d - 2.0 * u.math.pi, d)
-        d = u.math.where(d < -u.math.pi, d + 2.0 * u.math.pi, d)
+        d = bm.where(d > bm.pi, d - 2.0 * bm.pi, d)
+        d = bm.where(d < -bm.pi, d + 2.0 * bm.pi, d)
         return d
 
     def make_candidate_centers(self, Lambda):
@@ -505,14 +503,14 @@ class GridCellNetwork(BasicModel):
             Array of shape (N_c*N_c, 2): Candidate centers in transformed coordinates
         """
         N_c = 32
-        cc = u.math.zeros((N_c, N_c, 2))
+        cc = bm.zeros((N_c, N_c, 2))
 
         for i in range(N_c):
             for j in range(N_c):
                 cc = cc.at[i, j, 0].set((-N_c // 2 + i) * Lambda)
                 cc = cc.at[i, j, 1].set((-N_c // 2 + j) * Lambda)
 
-        cc_tranformed = u.math.dot(self.coor_transform_inv, cc.reshape(N_c * N_c, 2).T).T
+        cc_tranformed = bm.dot(self.coor_transform_inv, cc.reshape(N_c * N_c, 2).T).T
 
         return cc_tranformed
 
@@ -545,26 +543,18 @@ class GridCellNetwork(BasicModel):
         self.conj_input.value = conj_input
 
         # recurrent + noise
-        Irec = u.math.matmul(self.conn_mat, self.r.value)
-        input_noise = brainstate.random.randn(self.num) * self.noise_strength
+        Irec = bm.matmul(self.conn_mat, self.r.value)
+        input_noise = bm.random.randn(self.num) * self.noise_strength
         total_net_input = Irec + conj_input + input_noise
 
         # integrate
-        _u = exp_euler_step(
-            lambda u, input: (-u + input - self.v.value) / self.tau,
-            self.u.value,
-            total_net_input,
-        )
-        _v = exp_euler_step(
-            lambda v: (-v + self.m * self.u.value) / self.tau_v,
-            self.v.value,
-        )
-        self.u.value = u.math.where(_u > 0.0, _u, 0.0)
+        _u, _v = self.integral(self.u, self.v, bp.share["t"], total_net_input, bm.dt)
+        self.u.value = bm.where(_u > 0.0, _u, 0.0)
         self.v.value = _v
 
         # get neuron firing by global inhibition
-        u_sq = u.math.square(self.u.value)
-        self.r.value = self.g * u_sq / (1.0 + self.k * u.math.sum(u_sq))
+        u_sq = bm.square(self.u.value)
+        self.r.value = self.g * u_sq / (1.0 + self.k * bm.sum(u_sq))
 
     def get_unique_activity_bump(self, network_activity, animal_posistion):
         """
@@ -581,28 +571,26 @@ class GridCellNetwork(BasicModel):
         """
 
         # find bump center in phase space
-        exppos_x = u.math.exp(1j * self.x_grid)
-        exppos_y = u.math.exp(1j * self.y_grid)
-        activity_masked = u.math.where(
-            network_activity > u.math.max(network_activity) * 0.1, network_activity, 0.0
+        exppos_x = bm.exp(1j * self.x_grid)
+        exppos_y = bm.exp(1j * self.y_grid)
+        activity_masked = bm.where(
+            network_activity > bm.max(network_activity) * 0.1, network_activity, 0.0
         )
 
-        center_phase = u.math.zeros((2,))
-        center_phase = center_phase.at[0].set(u.math.angle(u.math.sum(exppos_x * activity_masked)))
-        center_phase = center_phase.at[1].set(u.math.angle(u.math.sum(exppos_y * activity_masked)))
+        center_phase = bm.zeros((2,))
+        center_phase = center_phase.at[0].set(bm.angle(bm.sum(exppos_x * activity_masked)))
+        center_phase = center_phase.at[1].set(bm.angle(bm.sum(exppos_y * activity_masked)))
 
         # --- map back to real space, snap to nearest candidate ---
-        center_pos_residual = (
-            u.math.matmul(self.coor_transform_inv, center_phase) / self.mapping_ratio
-        )
+        center_pos_residual = bm.matmul(self.coor_transform_inv, center_phase) / self.mapping_ratio
         candidate_pos_all = self.candidate_centers + center_pos_residual
-        distances = u.math.linalg.norm(candidate_pos_all - animal_posistion, axis=1)
-        center_position = candidate_pos_all[u.math.argmin(distances)]
+        distances = bm.linalg.norm(candidate_pos_all - animal_posistion, axis=1)
+        center_position = candidate_pos_all[bm.argmin(distances)]
 
         # --- build Gaussian bump template ---
-        d = u.math.asarray(center_position) - self.value_bump
-        dist = u.math.sqrt(d[:, 0] ** 2 + d[:, 1] ** 2)
-        gc_bump = self.A * u.math.exp(-u.math.square(dist / self.a))
+        d = bm.asarray(center_position) - self.value_bump
+        dist = bm.sqrt(d[:, 0] ** 2 + d[:, 1] ** 2)
+        gc_bump = self.A * bm.exp(-bm.square(dist / self.a))
 
         return center_phase, center_position, gc_bump
 
@@ -621,34 +609,32 @@ class GridCellNetwork(BasicModel):
         Returns:
             Array of shape (num_gc,): Weighted conjunctive input to grid cells
         """
-        assert u.math.size(animal_pos) == 2
+        assert bm.size(animal_pos) == 2
         num_dc = self.num_dc
         num_gc = self.num
-        direction_bin = u.math.linspace(-u.math.pi, u.math.pi, num_dc)
+        direction_bin = bm.linspace(-bm.pi, bm.pi, num_dc)
 
         # # lag relative to head direction
-        # lagvec = -u.math.array([u.math.cos(head_direction), u.math.sin(head_direction)]) * self.params.phase_offset * 1.4
-        # offset = u.math.array([u.math.cos(direction_bin), u.math.sin(direction_bin)]) * self.params.phase_offset + lagvec.reshape(-1, 1)
+        # lagvec = -bm.array([bm.cos(head_direction), bm.sin(head_direction)]) * self.params.phase_offset * 1.4
+        # offset = bm.array([bm.cos(direction_bin), bm.sin(direction_bin)]) * self.params.phase_offset + lagvec.reshape(-1, 1)
 
-        offset = (
-            u.math.array([u.math.cos(direction_bin), u.math.sin(direction_bin)]) * self.phase_offset
-        )
+        offset = bm.array([bm.cos(direction_bin), bm.sin(direction_bin)]) * self.phase_offset
 
         center_conj = self.position2phase(animal_pos.reshape(-1, 1) + offset.reshape(-1, num_dc))
 
-        conj_input = u.math.zeros((num_dc, num_gc))
+        conj_input = bm.zeros((num_dc, num_gc))
         for i in range(num_dc):
-            d = self.calculate_dist(u.math.asarray(center_conj[:, i]) - self.value_grid)
-            conj_input = conj_input.at[i].set(self.A * u.math.exp(-0.5 * u.math.square(d / self.a)))
+            d = self.calculate_dist(bm.asarray(center_conj[:, i]) - self.value_grid)
+            conj_input = conj_input.at[i].set(self.A * bm.exp(-0.5 * bm.square(d / self.a)))
 
         # weighting by direction bump activity: keep top one-third (by max) then normalize, I thinking using all direction_activity should also be fine
-        weight = u.math.where(
-            direction_activity > u.math.max(direction_activity) / 3.0, direction_activity, 0.0
+        weight = bm.where(
+            direction_activity > bm.max(direction_activity) / 3.0, direction_activity, 0.0
         )
-        weight = weight / (u.math.sum(weight) + 1e-12)  # avoid div-by-zero, dim: (num_dc,)
+        weight = weight / (bm.sum(weight) + 1e-12)  # avoid div-by-zero, dim: (num_dc,)
 
         return (
-            u.math.matmul(conj_input.T, weight).reshape(-1) * theta_modulation
+            bm.matmul(conj_input.T, weight).reshape(-1) * theta_modulation
         )  # dim: (num_gc, num_dc) x (num_dc,) -> (num_gc,)
 
     def position2phase(self, position):
@@ -666,10 +652,10 @@ class GridCellNetwork(BasicModel):
             Array of shape (2,) or (2, N): Phase coordinates in [-π, π] per axis
         """
         mapped_pos = position * self.mapping_ratio
-        phase = u.math.matmul(self.coor_transform, mapped_pos) + u.math.pi
-        px = u.math.mod(phase[0], 2.0 * u.math.pi) - u.math.pi
-        py = u.math.mod(phase[1], 2.0 * u.math.pi) - u.math.pi
-        return u.math.array([px, py])
+        phase = bm.matmul(self.coor_transform, mapped_pos) + bm.pi
+        px = bm.mod(phase[0], 2.0 * bm.pi) - bm.pi
+        py = bm.mod(phase[1], 2.0 * bm.pi) - bm.pi
+        return bm.array([px, py])
 
 
 class PlaceCellNetwork(BasicModel):
@@ -733,15 +719,15 @@ class PlaceCellNetwork(BasicModel):
         self.cost_grid = geodesic_result.cost_grid
 
         # Extract geodesic distances and accessible indices
-        self.D = u.math.asarray(geodesic_result.distances)  # (cell_num, cell_num)
+        self.D = bm.asarray(geodesic_result.distances)  # (cell_num, cell_num)
         self.accessible_indices = geodesic_result.accessible_indices  # (cell_num, 2)
         self.cell_num = len(self.accessible_indices)
         self.dx, self.dy = geodesic_result.cost_grid.dx, geodesic_result.cost_grid.dy
 
         # assume square grid cells
-        self.x = u.math.arange(self.cell_num) * self.dx
+        self.x = bm.arange(self.cell_num) * self.dx
 
-        super().__init__(in_size=self.cell_num)
+        super().__init__()
 
         # Store parameters
         self.tau = tau
@@ -762,7 +748,6 @@ class PlaceCellNetwork(BasicModel):
         noise_connection = np.random.normal(0, conn_noise, size=(self.cell_num, self.cell_num))
         self.conn_mat = base_connection + noise_connection
 
-    def init_state(self, *args, **kwargs):
         """
         Initialize network state variables.
 
@@ -772,10 +757,18 @@ class PlaceCellNetwork(BasicModel):
         - v: Adaptation variables (all zeros)
         - center: Current bump center (zero)
         """
-        self.r = brainstate.HiddenState(u.math.zeros(self.cell_num))
-        self.v = brainstate.HiddenState(u.math.zeros(self.cell_num))
-        self.u = brainstate.HiddenState(u.math.zeros(self.cell_num))
-        self.center = brainstate.State(u.math.zeros(1))
+        self.r = bm.Variable(bm.zeros(self.cell_num))
+        self.v = bm.Variable(bm.zeros(self.cell_num))
+        self.u = bm.Variable(bm.zeros(self.cell_num))
+        self.center = bm.Variable(bm.zeros(1))
+
+        self.integral = bp.odeint(method="exp_euler", f=self.derivative)
+
+    @property
+    def derivative(self):
+        du = lambda u, t, input: (-u + input - self.v) / self.tau
+        dv = lambda v, t: (-v + self.m * self.u) / self.tau_v
+        return bp.JointEq([du, dv])
 
     def make_connection(self):
         """
@@ -791,7 +784,7 @@ class PlaceCellNetwork(BasicModel):
         @jax.vmap
         def kernel_row(d):
             # d: (cell_num,) distances from one cell to all others
-            return self.J0 * u.math.exp(-d / (2 * self.a**2)) / ((2 * u.math.pi) * self.a**2)
+            return self.J0 * bm.exp(-d / (2 * self.a**2)) / ((2 * bm.pi) * self.a**2)
 
         return kernel_row(self.D)
 
@@ -807,8 +800,8 @@ class PlaceCellNetwork(BasicModel):
         Returns:
             Decoded center index (scalar)
         """
-        denom = u.math.sum(r) + 1e-12
-        center_idx = u.math.sum(r * x) / denom
+        denom = bm.sum(r) + 1e-12
+        center_idx = bm.sum(r * x) / denom
         return center_idx.reshape(
             -1,
         )
@@ -843,14 +836,14 @@ class PlaceCellNetwork(BasicModel):
         # Use geodesic distances from the distance matrix
         # If cell_idx is -1 (invalid), clip to 0 to avoid index error
         # The result will be near-zero anyway due to large distances
-        cell_idx_safe = u.math.maximum(cell_idx, 0)
+        cell_idx_safe = bm.maximum(cell_idx, 0)
         d = self.D[cell_idx_safe]
 
         # Zero out the input if the position was invalid (cell_idx < 0)
         # This is JAX-compatible
         is_valid = cell_idx >= 0
-        bump = self.A * u.math.exp(-d / (2 * self.a**2))
-        return u.math.where(is_valid, bump, u.math.zeros_like(bump))
+        bump = self.A * bm.exp(-d / (2 * self.a**2))
+        return bm.where(is_valid, bump, bm.zeros_like(bump))
 
     def update(self, animal_pos, theta_input):
         """
@@ -862,22 +855,13 @@ class PlaceCellNetwork(BasicModel):
         """
         self.center.value = self.get_bump_center(r=self.r.value, x=self.x)
         Iext = theta_input * self.input_bump(animal_pos)
-        Irec = u.math.matmul(self.conn_mat, self.r.value)
-        noise = brainstate.random.randn(self.cell_num) * self.noise_strength
+        Irec = bm.matmul(self.conn_mat, self.r.value)
+        noise = bm.random.randn(self.cell_num) * self.noise_strength
         input_total = Iext + Irec + noise
 
-        _u = exp_euler_step(
-            lambda u, input: (-u + input - self.v.value) / self.tau,
-            self.u.value,
-            input_total,
-        )
-
-        _v = exp_euler_step(
-            lambda v: (-v + self.m * self.u.value) / self.tau_v,
-            self.v.value,
-        )
-        self.u.value = u.math.where(_u > 0, _u, 0)
+        _u, _v = self.integral(self.u, self.v, bp.share["t"], input_total, bm.dt)
+        self.u.value = bm.where(_u > 0, _u, 0)
         self.v.value = _v
 
-        u_sq = u.math.square(self.u.value)
-        self.r.value = self.g * u_sq / (1.0 + self.k * u.math.sum(u_sq))
+        u_sq = bm.square(self.u.value)
+        self.r.value = self.g * u_sq / (1.0 + self.k * bm.sum(u_sq))

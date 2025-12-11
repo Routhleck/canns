@@ -1,4 +1,5 @@
-import brainstate
+import brainpy as bp
+import brainpy.math as bm
 import numpy as np
 
 from canns.analyzer.plotting import energy_landscape_2d_animation
@@ -7,9 +8,8 @@ from canns.models.basic import CANN2D, CANN2D_SFA
 
 
 def test_population_coding_2d():
-    brainstate.environ.set(dt=0.1)
+    bm.set_dt(dt=0.1)
     cann = CANN2D(length=16)
-    cann.init_state()
 
     task_pc = PopulationCoding2D(
         cann_instance=cann,
@@ -17,7 +17,7 @@ def test_population_coding_2d():
         after_duration=10.,
         duration=20.,
         Iext=[0., 0.],
-        time_step=brainstate.environ.get_dt(),
+        time_step=bm.get_dt(),
     )
     task_pc.get_data()
 
@@ -25,7 +25,13 @@ def test_population_coding_2d():
         cann(inputs)
         return cann.u.value, cann.r.value, cann.inp.value
 
-    us, rs, inps = brainstate.transform.for_loop(run_step, task_pc.run_steps, task_pc.data, pbar=brainstate.transform.ProgressBar(10))
+    us, rs, inps = bm.for_loop(
+        run_step,
+        (
+            task_pc.run_steps,
+            task_pc.data
+        )
+    )
     # energy_landscape_2d_animation(
     #     zs_data=us,
     #     time_steps_per_second=100,
@@ -40,15 +46,14 @@ def test_population_coding_2d():
     # )
 
 def test_template_matching_2d():
-    brainstate.environ.set(dt=0.1)
+    bm.set_dt(dt=0.1)
     cann = CANN2D(length=16)
-    cann.init_state()
 
     task_tm = TemplateMatching2D(
         cann_instance=cann,
         Iext=[0., 0.],
         duration=20.,
-        time_step=brainstate.environ.get_dt(),
+        time_step=bm.get_dt(),
     )
     task_tm.get_data()
 
@@ -56,7 +61,13 @@ def test_template_matching_2d():
         cann(inputs)
         return cann.u.value, cann.r.value, cann.inp.value
 
-    us, rs, inps = brainstate.transform.for_loop(run_step, task_tm.run_steps, task_tm.data, pbar=brainstate.transform.ProgressBar(10))
+    us, rs, inps = bm.for_loop(
+        run_step,
+        (
+            task_tm.run_steps,
+            task_tm.data
+        )
+    )
     # energy_landscape_2d_animation(
     #     zs_data=us,
     #     time_steps_per_second=100,
@@ -71,15 +82,14 @@ def test_template_matching_2d():
     # )
 
 def test_smooth_tracking_2d():
-    brainstate.environ.set(dt=0.1)
+    bm.set_dt(dt=0.1)
     cann = CANN2D_SFA(length=16)
-    cann.init_state()
 
     task_st = SmoothTracking2D(
         cann_instance=cann,
         Iext=([0., 0.], [1., 1.], [0.75, 0.75], [2., 2.], [1.75, 1.75], [3., 3.]),
         duration=(10. ,10., 10., 10., 10.),
-        time_step=brainstate.environ.get_dt(),
+        time_step=bm.get_dt(),
     )
     task_st.get_data()
 
@@ -87,7 +97,13 @@ def test_smooth_tracking_2d():
         cann(inputs)
         return cann.u.value, cann.r.value, cann.inp.value
 
-    us, rs, inps = brainstate.transform.for_loop(run_step, task_st.run_steps, task_st.data, pbar=brainstate.transform.ProgressBar(10))
+    us, rs, inps = bm.for_loop(
+        run_step,
+        (
+            task_st.run_steps,
+            task_st.data
+        )
+    )
     # energy_landscape_2d_animation(
     #     zs_data=us,
     #     time_steps_per_second=100,

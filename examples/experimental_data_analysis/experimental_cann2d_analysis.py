@@ -6,9 +6,8 @@ This example demonstrates how to use the bump_fits and create_1d_bump_animation 
 from the experimental data analyzer to analyze 1D CANN bumps.
 """
 
-import numpy as np
 from canns.analyzer.experimental_data import (
-    bump_fits, create_1d_bump_animation, load_roi_data, embed_spike_trains,
+    embed_spike_trains,
     plot_projection, tda_vis, decode_circular_coordinates, plot_3d_bump_on_torus,
     CANN2DPlotConfig, SpikeEmbeddingConfig, TDAConfig
 )
