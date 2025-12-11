@@ -18,7 +18,7 @@ The models module ( ``canns.models`` ) implements various CANN architectures and
 **Hybrid Models** ( ``canns.models.hybrid`` )
    Combinations of CANN with artificial neural networks
 
-All models are built on BrainState's dynamics framework, which provides state management, time stepping, and JIT compilation capabilities.
+All models are built on BrainPy's dynamics framework, which provides state management, time stepping, and JIT compilation capabilities.
 
 Basic Models
 ============
@@ -118,11 +118,11 @@ Required Methods
    - Uses Gaussian bump or similar localized pattern
 
 **State Initialization** ( ``init_state()`` )
-   Register state variables using BrainState containers:
+   Register state variables using BrainPy containers:
 
-   - ``self.u`` : Membrane potential ( ``brainstate.HiddenState`` )
-   - ``self.r`` : Firing rate ( ``brainstate.HiddenState`` )
-   - ``self.inp`` : External input ( ``brainstate.State`` )
+   - ``self.u`` : Membrane potential ( ``bm.Variable`` )
+   - ``self.r`` : Firing rate ( ``bm.Variable`` )
+   - ``self.inp`` : External input ( ``bm.Variable`` )
 
    Additional states for variants (e.g., ``self.v`` for SFA).
 
@@ -131,7 +131,7 @@ Required Methods
 
    - Read current states
    - Compute derivatives based on CANN equations
-   - Apply time step: ``new_state = old_state + derivative * brainstate.environ.get_dt()``
+   - Apply time step: ``new_state = old_state + derivative * bm.get_dt()``
    - Write updated states
 
 **Diagnostic Properties**
@@ -183,10 +183,10 @@ State and Weight Initialization
 
 Register both state variables and trainable weights in ``init_state()`` :
 
-- ``self.s`` : State vector (commonly ``brainstate.HiddenState`` )
-- ``self.W`` : Connection weights (commonly ``brainstate.ParamState`` )
+- ``self.s`` : State vector ( ``bm.Variable`` )
+- ``self.W`` : Connection weights ( ``bm.Variable`` )
 
-Using ``ParamState`` for weights allows trainers to modify them during learning.
+All state and weight variables use ``bm.Variable`` in BrainPy.
 
 Weight Attribute
 ~~~~~~~~~~~~~~~~
@@ -239,15 +239,15 @@ Hybrid Models
 
    Current status: Placeholder module structure exists in ``canns.models.hybrid`` for future implementations.
 
-BrainState Foundation
-=====================
+BrainPy Foundation
+==================
 
-All models leverage BrainState's infrastructure:
+All models leverage BrainPy's infrastructure:
 
 Dynamics Abstraction
 --------------------
 
-``brainstate.nn.Dynamics`` provides:
+``bp.DynamicalSystem`` provides:
 
 - Automatic state tracking
 - JIT compilation support
@@ -256,31 +256,25 @@ Dynamics Abstraction
 State Containers
 ----------------
 
-``brainstate.State``
-   Mutable during simulation
-
-``brainstate.HiddenState``
-   Internal network states
-
-``brainstate.ParamState``
-   Learnable parameters
+``bm.Variable``
+   Universal container for all state variables (mutable, internal, or learnable parameters)
 
 These containers enable transparent JAX transformations while maintaining intuitive object-oriented syntax.
 
 Time Management
 ---------------
 
-``brainstate.environ`` provides global configuration:
+``brainpy.math`` provides time step management:
 
-- ``brainstate.environ.set(dt=0.1)`` : Set simulation time step
-- ``brainstate.environ.get_dt()`` : Retrieve current time step
+- ``bm.set_dt(0.1)`` : Set simulation time step
+- ``bm.get_dt()`` : Retrieve current time step
 
 This ensures consistency across models, tasks, and trainers.
 
 Compiled Simulation
 -------------------
 
-``brainstate.compile.for_loop`` enables efficient simulation:
+``bm.for_loop`` enables efficient simulation:
 
 - JIT compilation for GPU/TPU acceleration
 - Automatic differentiation support
@@ -295,4 +289,4 @@ The CANNs model collection provides:
 2. **Brain-Inspired Models** - Networks with local learning capabilities
 3. **Hybrid Models** - Future integration with deep learning (in development)
 
-Each category follows consistent patterns through base class inheritance, making the library both powerful and extensible. The BrainState foundation handles complexity, allowing users to focus on defining neural dynamics rather than implementation details.
+Each category follows consistent patterns through base class inheritance, making the library both powerful and extensible. The BrainPy foundation handles complexity, allowing users to focus on defining neural dynamics rather than implementation details.
