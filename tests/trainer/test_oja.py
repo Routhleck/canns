@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import brainpy.math as bm
 import jax.numpy as jnp
 import pytest
 
@@ -89,6 +90,9 @@ def test_oja_trainer_predict():
 
 def test_oja_trainer_convergence():
     """Test that Oja training extracts principal components."""
+    # Set seed for reproducibility
+    bm.random.seed(42)
+
     # Create model
     model = LinearLayer(input_size=3, output_size=1)
     
