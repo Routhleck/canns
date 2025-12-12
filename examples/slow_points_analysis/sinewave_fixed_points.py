@@ -15,7 +15,7 @@ dynamics in high-dimensional recurrent neural networks. Neural Computation.
 import random
 
 import brainpy as bp
-import braintools as bts  #
+import brainpy.math as bm
 import jax
 import jax.numpy as jnp
 import numpy as np
@@ -37,7 +37,7 @@ def generate_sine_wave_data(n_trials=128, n_steps=100):
     }
 
 
-class SineWaveRNN(bp.nn.Module):
+class SineWaveRNN(bp.DynamicalSystem):
     """
     A simple RNN for sine wave prediction
     """
@@ -60,18 +60,18 @@ class SineWaveRNN(bp.nn.Module):
             return gain * q
 
         # Input weights use small random values
-        self.w_ih = bp.ParamState(
+        self.w_ih = bm.Variable(
             jax.random.normal(k1, (self.input_size, self.hidden_size)) * 0.1
         )
 
         # Promote sustained oscillation
-        self.w_hh = bp.ParamState(orthogonal(k2, (self.hidden_size, self.hidden_size), gain=1.1))
-        self.b_h = bp.ParamState(jnp.zeros(self.hidden_size))
-        self.w_out = bp.ParamState(
+        self.w_hh = bm.Variable(orthogonal(k2, (self.hidden_size, self.hidden_size), gain=1.1))
+        self.b_h = bm.Variable(jnp.zeros(self.hidden_size))
+        self.w_out = bm.Variable(
             jax.random.normal(k3, (self.hidden_size, self.n_outputs)) * 0.1
         )
-        self.b_out = bp.ParamState(jnp.zeros(self.n_outputs))
-        self.h0 = bp.ParamState(jnp.zeros(self.hidden_size))
+        self.b_out = bm.Variable(jnp.zeros(self.n_outputs))
+        self.h0 = bm.Variable(jnp.zeros(self.hidden_size))
 
     def step(self, x_t, h):
         """Single RNN step (Tanh)."""
@@ -127,15 +127,16 @@ def train_sine_wave_rnn(rnn, train_data, valid_data,
     n_train = train_inputs.shape[0]
     n_batches = max(1, n_train // batch_size)
 
-    def flatten_key(key):
-        return '.'.join(key) if isinstance(key, tuple) else key
+    # Get trainable variables from the model
+    # Note: vars() returns keys like 'SineWaveRNN0.w_ih', we need just 'w_ih' for computation
+    train_vars = {name: var for name, var in rnn.vars().items() if isinstance(var, bm.Variable)}
+    # Create mapping between short names and full names
+    name_mapping = {name.split('.')[-1]: name for name in train_vars.keys()}
+    # Extract just the parameter name (after the last dot) for gradient computation
+    params = {name.split('.')[-1]: var.value for name, var in train_vars.items()}
 
-    trainable_states = {flatten_key(name): state for name, state in rnn.states().items() if
-                        isinstance(state, bp.ParamState)}
-    trainable_params = {name: state.value for name, state in trainable_states.items()}
-
-    optimizer = bts.optim.Adam(lr=learning_rate)
-    optimizer.register_trainable_weights(trainable_states)
+    # Initialize optimizer with train_vars parameter (modern brainpy API)
+    optimizer = bp.optimizers.Adam(lr=learning_rate, train_vars=train_vars)
 
     @jax.jit
     def grad_step(params, batch_inputs, batch_targets):
@@ -177,11 +178,13 @@ def train_sine_wave_rnn(rnn, train_data, valid_data,
             batch_inputs = train_inputs[perm[start_idx:end_idx]]
             batch_targets = train_targets[perm[start_idx:end_idx]]
 
-            loss_val, grads = grad_step(trainable_params, batch_inputs, batch_targets)
+            loss_val, grads_short = grad_step(params, batch_inputs, batch_targets)
+            # Map gradients back to full names for optimizer
+            grads = {name_mapping[short_name]: grad for short_name, grad in grads_short.items()}
             optimizer.update(grads)
 
-            trainable_params = {flatten_key(name): state.value for name, state in rnn.states().items() if
-                                isinstance(state, bp.ParamState)}
+            # Update params with current variable values (extract parameter names)
+            params = {name.split('.')[-1]: var.value for name, var in train_vars.items()}
             epoch_loss += float(loss_val)
 
         epoch_loss /= n_batches
@@ -191,7 +194,7 @@ def train_sine_wave_rnn(rnn, train_data, valid_data,
             valid_outputs, _ = rnn(valid_inputs)
             valid_loss = float(jnp.mean((valid_outputs - valid_targets) ** 2))
             print(f"Epoch {epoch:4d}: train_loss = {epoch_loss:.6f}, "
-                  f"valid_loss = {valid_loss:.6f}, lr = {optimizer.current_lr:.6f}")
+                  f"valid_loss = {valid_loss:.6f}")
 
         if epoch_loss < min_loss:
             print(f"\nReached target loss {min_loss:.2e} at epoch {epoch}")

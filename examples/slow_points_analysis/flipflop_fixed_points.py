@@ -11,7 +11,7 @@ Based on the PyTorch implementation by Matt Golub.
 import random
 
 import brainpy as bp
-import braintools as bts
+import brainpy.math as bm
 import jax
 import jax.numpy as jnp
 import numpy as np
@@ -81,7 +81,7 @@ class FlipFlopData:
         }
 
 
-class FlipFlopRNN(bp.nn.Module):
+class FlipFlopRNN(bp.DynamicalSystem):
     """RNN model for the flip-flop memory task."""
 
     def __init__(self, n_inputs, n_hidden, n_outputs, rnn_type="gru", seed=0):
@@ -106,48 +106,48 @@ class FlipFlopRNN(bp.nn.Module):
 
         if rnn_type == "tanh":
             # Simple tanh RNN
-            self.w_ih = bp.ParamState(
+            self.w_ih = bm.Variable(
                 jax.random.normal(k1, (n_inputs, n_hidden)) * 0.1
             )
-            self.w_hh = bp.ParamState(
+            self.w_hh = bm.Variable(
                 jax.random.normal(k2, (n_hidden, n_hidden)) * 0.5
             )
-            self.b_h = bp.ParamState(jnp.zeros(n_hidden))
+            self.b_h = bm.Variable(jnp.zeros(n_hidden))
         elif rnn_type == "gru":
             # GRU cell
-            self.w_ir = bp.ParamState(
+            self.w_ir = bm.Variable(
                 jax.random.normal(k1, (n_inputs, n_hidden)) * 0.1
             )
-            self.w_hr = bp.ParamState(
+            self.w_hr = bm.Variable(
                 jax.random.normal(k2, (n_hidden, n_hidden)) * 0.5
             )
-            self.w_iz = bp.ParamState(
+            self.w_iz = bm.Variable(
                 jax.random.normal(k3, (n_inputs, n_hidden)) * 0.1
             )
-            self.w_hz = bp.ParamState(
+            self.w_hz = bm.Variable(
                 jax.random.normal(k4, (n_hidden, n_hidden)) * 0.5
             )
             k5, k6, k7, k8 = jax.random.split(k4, 4)
-            self.w_in = bp.ParamState(
+            self.w_in = bm.Variable(
                 jax.random.normal(k5, (n_inputs, n_hidden)) * 0.1
             )
-            self.w_hn = bp.ParamState(
+            self.w_hn = bm.Variable(
                 jax.random.normal(k6, (n_hidden, n_hidden)) * 0.5
             )
-            self.b_r = bp.ParamState(jnp.zeros(n_hidden))
-            self.b_z = bp.ParamState(jnp.zeros(n_hidden))
-            self.b_n = bp.ParamState(jnp.zeros(n_hidden))
+            self.b_r = bm.Variable(jnp.zeros(n_hidden))
+            self.b_z = bm.Variable(jnp.zeros(n_hidden))
+            self.b_n = bm.Variable(jnp.zeros(n_hidden))
         else:
             raise ValueError(f"Unsupported rnn_type: {rnn_type}")
 
         # Readout layer
-        self.w_out = bp.ParamState(
+        self.w_out = bm.Variable(
             jax.random.normal(k3, (n_hidden, n_outputs)) * 0.1
         )
-        self.b_out = bp.ParamState(jnp.zeros(n_outputs))
+        self.b_out = bm.Variable(jnp.zeros(n_outputs))
 
         # Initial hidden state
-        self.h0 = bp.ParamState(jnp.zeros(n_hidden))
+        self.h0 = bm.Variable(jnp.zeros(n_hidden))
 
     def step(self, x_t, h):
         """Single RNN step.
@@ -223,7 +223,7 @@ def train_flipflop_rnn(rnn, train_data, valid_data,
                        min_loss=1e-4,
                        print_every=10):
     print("\n" + "=" * 70)
-    print("Training FlipFlop RNN (Using bts Scheduler & built-in Grad Clip)")
+    print("Training FlipFlop RNN (Using brainpy optimizer)")
     print("=" * 70)
 
     # Prepare data
@@ -234,20 +234,16 @@ def train_flipflop_rnn(rnn, train_data, valid_data,
     n_train = train_inputs.shape[0]
     n_batches = n_train // batch_size
 
-    # Flatten parameter keys
-    def flatten_key(key):
-        return '.'.join(key) if isinstance(key, tuple) else key
+    # Get trainable variables from the model
+    # Note: vars() returns keys like 'FlipFlopRNN0.w_ih', we need just 'w_ih' for computation
+    train_vars = {name: var for name, var in rnn.vars().items() if isinstance(var, bm.Variable)}
+    # Create mapping between short names and full names
+    name_mapping = {name.split('.')[-1]: name for name in train_vars.keys()}
+    # Extract just the parameter name (after the last dot) for gradient computation
+    params = {name.split('.')[-1]: var.value for name, var in train_vars.items()}
 
-    trainable_states = {flatten_key(name): state for name, state in rnn.states().items() if
-                        isinstance(state, bp.ParamState)}
-    trainable_params = {name: state.value for name, state in trainable_states.items()}
-
-    optimizer = bts.optim.Adam(
-        lr=learning_rate
-    )
-
-    # Register trainable weights
-    optimizer.register_trainable_weights(trainable_states)
+    # Initialize optimizer with train_vars parameter (modern brainpy API)
+    optimizer = bp.optimizers.Adam(lr=learning_rate, train_vars=train_vars)
 
     # Define JIT-compiled gradient step
     @jax.jit
@@ -297,10 +293,12 @@ def train_flipflop_rnn(rnn, train_data, valid_data,
             end_idx = start_idx + batch_size
             batch_inputs = train_inputs[perm[start_idx:end_idx]]
             batch_targets = train_targets[perm[start_idx:end_idx]]
-            loss_val, grads = grad_step(trainable_params, batch_inputs, batch_targets)
+            loss_val, grads_short = grad_step(params, batch_inputs, batch_targets)
+            # Map gradients back to full names for optimizer
+            grads = {name_mapping[short_name]: grad for short_name, grad in grads_short.items()}
             optimizer.update(grads)
-            trainable_params = {flatten_key(name): state.value for name, state in rnn.states().items() if
-                                isinstance(state, bp.ParamState)}
+            # Update params with current variable values (extract parameter names)
+            params = {name.split('.')[-1]: var.value for name, var in train_vars.items()}
             epoch_loss += float(loss_val)
         epoch_loss /= n_batches
         losses.append(epoch_loss)
@@ -309,7 +307,7 @@ def train_flipflop_rnn(rnn, train_data, valid_data,
             valid_outputs, _ = rnn(valid_inputs)
             valid_loss = float(jnp.mean((valid_outputs - valid_targets) ** 2))
             print(f"Epoch {epoch:4d}: train_loss = {epoch_loss:.6f}, "
-                  f"valid_loss = {valid_loss:.6f}, lr = {optimizer.current_lr:.6f}")
+                  f"valid_loss = {valid_loss:.6f}")
         if epoch_loss < min_loss:
             print(f"\nReached target loss {min_loss:.2e} at epoch {epoch}")
             break
@@ -477,7 +475,7 @@ def main(config_name="4_bit", seed=np.random.randint(1, 10000)):
 
 if __name__ == "__main__":
 
-    config_to_run = "2_bit"  # Specify the desired configuration here: "2_bit","3_bit","4_bit"
+    config_to_run = "3_bit"  # Specify the desired configuration here: "2_bit","3_bit","4_bit"
     # Use fixed seed
     seed_to_use = 42
     # Use random seed
