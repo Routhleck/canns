@@ -132,6 +132,7 @@ CANNs（连续吸引子神经网络工具包）是一个基于BrainPy构建的Py
    :maxdepth: 1
    :caption: 资源
 
+   references
    GitHub 仓库 <https://github.com/routhleck/canns>
    GitHub Issues <https://github.com/routhleck/canns/issues>
    讨论区 <https://github.com/routhleck/canns/discussions>

@@ -132,6 +132,7 @@ Documentation Navigation
    :maxdepth: 1
    :caption: Resources
 
+   references
    GitHub Repository <https://github.com/routhleck/canns>
    GitHub Issues <https://github.com/routhleck/canns/issues>
    Discussions <https://github.com/routhleck/canns/discussions>

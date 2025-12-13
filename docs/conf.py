@@ -66,7 +66,13 @@ extensions = [
     'myst_parser',
     'sphinx_design',
     'nbsphinx',  # Jupyter notebook support
+    'sphinxcontrib.bibtex',  # Bibliography support
 ]
+
+# -- Bibliography configuration (sphinxcontrib-bibtex) ----------------------
+bibtex_bibfiles = ['refs/references.bib']
+bibtex_default_style = 'alpha'  # Citation format: [Ama77], [Wu08]
+bibtex_reference_style = 'author_year'  # Author-year style references
 
 templates_path = ['_templates']
 exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
