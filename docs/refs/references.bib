@@ -3,7 +3,7 @@
 % ============================================================================
 % This file contains references for the CANNs documentation.
 % Format: BibTeX
-% Citation style: alpha ([Ama77], [Wu08])
+% Citation style: numeric ([1], [2], [3])
 % Shared by both English and Chinese documentation
 %
 % File Structure:
@@ -168,9 +168,6 @@
   doi={10.1038/nn.3904}
 }
 
-% ---- 🔴 Priority 1: Papers explicitly cited in documentation ----
-% The following papers are key recent works on theta sweeps and phase precession
-
 % Ji et al. (2025) - Phase precession in theta-modulated head direction cells
 % Studies the relationship between phase precession and turning angle
 % Shows how theta modulation affects head direction cell firing
@@ -230,8 +227,6 @@
 % ============================================================================
 % These classic papers define fundamental rules for neural network learning
 
-% ---- 🟠 Priority 2: Classic literature frequently mentioned in documentation ----
-
 % Hebb (1949/2005) - Original theory of Hebbian learning
 % Proposed the famous "Neurons that fire together, wire together" principle
 % This is the 2005 reprint of the 1949 classic work
@@ -277,9 +272,6 @@
   year={1982},
   doi={10.1073/pnas.79.8.2554}
 }
-
-
-% ---- 🟡 Priority 3: Supporting learning rule references ----
 
 % Bi & Poo (1998) - Experimental validation of STDP (Spike-Timing Dependent Plasticity)
 % Demonstrated that synaptic modifications depend on precise spike timing
@@ -349,13 +341,45 @@
 }
 
 
+% Oja (1982) - Oja's learning rule for principal component analysis
+% Introduces simplified neuron model that extracts the first principal component
+% Foundation for unsupervised learning in neural networks
+% Document locations: Referenced in trainer implementations
+% Citation format: :cite:`oja1982simplified`
+@article{oja1982simplified,
+  title={Simplified neuron model as a principal component analyzer},
+  author={Oja, Erkki},
+  journal={Journal of mathematical biology},
+  volume={15},
+  number={3},
+  pages={267--273},
+  year={1982},
+  publisher={Springer},
+  doi={10.1007/BF00275687}
+}
+
+% Sanger (1989) - Sanger's learning rule for multiple principal components
+% Extends Oja's rule to extract multiple principal components sequentially
+% Important for hierarchical unsupervised learning in neural networks
+% Document locations: Referenced in trainer implementations
+% Citation format: :cite:`network1989optimal`
+@article{sanger1989optimal,
+  title={Optimal unsupervised learning in a single-layer linear feedforward neural network},
+  author={Sanger, Terence D},
+  journal={Neural networks},
+  volume={2},
+  number={6},
+  pages={459--473},
+  year={1989},
+  publisher={Elsevier},
+  doi={10.1016/0893-6080(89)90044-0}
+}
+
 
 % ============================================================================
 % 5. Path Integration and Navigation
 % ============================================================================
 % These papers study how the brain achieves spatial navigation through path integration
-
-% ---- 🟡 Priority 3: Supporting navigation research ----
 
 % McNaughton et al. (2006) - Path integration and neural basis of the 'cognitive map'
 % Comprehensive review of path integration mechanisms in the brain
@@ -373,6 +397,41 @@
   publisher={Nature Publishing Group UK London},
   doi={10.1038/nrn1932}
 }
+
+% Samsonovich & McNaughton (1997) - CANN model for path integration and cognitive mapping
+% Early influential computational model of path integration using continuous attractors
+% Demonstrates how grid-like representations can emerge from path integration dynamics
+% Document locations: Tutorial 5, 6, 7 (hierarchical_network.ipynb, theta sweep tutorials)
+% Citation format: :cite:`samsonovich1997path`
+@article{samsonovich1997path,
+  title={Path integration and cognitive mapping in a continuous attractor neural network model},
+  author={Samsonovich, Alexei and McNaughton, Bruce L},
+  journal={Journal of Neuroscience},
+  volume={17},
+  number={15},
+  pages={5900--5920},
+  year={1997},
+  publisher={Society for Neuroscience},
+  doi={10.1523/JNEUROSCI.17-15-05900.1997}
+}
+
+% Etienne & Jeffery (2004) - Path integration in mammals review
+% Comprehensive review of path integration mechanisms across mammalian species
+% Discusses behavioral evidence and neural substrates for self-motion integration
+% Document locations: Background reference for navigation tasks and path integration concepts
+% Citation format: :cite:`etienne2004path`
+@article{etienne2004path,
+  title={Path integration in mammals},
+  author={Etienne, Ariane S and Jeffery, Kathryn J},
+  journal={Hippocampus},
+  volume={14},
+  number={2},
+  pages={180--192},
+  year={2004},
+  publisher={Wiley Online Library},
+  doi={10.1002/hipo.10173}
+}
+
 
 % ============================================================================
 % 6. Computational Frameworks and Tools
@@ -396,8 +455,6 @@
   doi={10.7554/eLife.86365}
 }
 
-% ---- 🔵 Priority 4: Optional framework references ----
-
 % JAX - Google's composable transformations framework
 % Provides high-performance automatic differentiation and JIT compilation
 % Enables GPU/TPU acceleration for neural network simulations
@@ -409,6 +466,73 @@
   url = {http://github.com/jax-ml/jax},
   version = {0.3.13},
   year = {2018},
+}
+
+% ---- Topological Data Analysis (TDA) ----
+% These papers provide foundations for topological analysis of neural activity
+
+% Carlsson (2009) - Topology and data foundations
+% Seminal paper introducing topological data analysis to a broad audience
+% Provides accessible introduction to persistent homology and its applications
+% Document location: Core concepts 4 (analysis_methods.rst, Section 4: TDA)
+% Citation format: :cite:`carlsson2009topology`
+@article{carlsson2009topology,
+  title={Topology and data},
+  author={Carlsson, Gunnar},
+  journal={Bulletin of the American Mathematical Society},
+  volume={46},
+  number={2},
+  pages={255--308},
+  year={2009},
+  doi={10.1090/S0273-0979-09-01249-X}
+}
+
+% Edelsbrunner & Harer (2010) - Computational topology textbook
+% Comprehensive technical reference for computational topology and persistent homology
+% Standard textbook for understanding the algorithmic foundations of TDA
+% Document location: Core concepts 4 (analysis_methods.rst, Section 4: TDA)
+% Citation format: :cite:`edelsbrunner2010computational`
+@book{edelsbrunner2010computational,
+  title={Computational topology: an introduction},
+  author={Edelsbrunner, Herbert and Harer, John},
+  year={2010},
+  publisher={American Mathematical Soc.}
+}
+
+% ---- RNN Dynamics Analysis ----
+% These papers establish methods for analyzing recurrent neural network dynamics
+
+% Sussillo & Barak (2013) - Low-dimensional dynamics in RNNs
+% Pioneering work on fixed point analysis in recurrent neural networks
+% Established methodology for understanding RNN computations through dynamical systems theory
+% Document location: Core concepts 4 (analysis_methods.rst, Section 3: RNN Dynamics)
+% Citation format: :cite:`sussillo2013opening`
+@article{sussillo2013opening,
+  title={Opening the black box: low-dimensional dynamics in high-dimensional recurrent neural networks},
+  author={Sussillo, David and Barak, Omri},
+  journal={Neural computation},
+  volume={25},
+  number={3},
+  pages={626--649},
+  year={2013},
+  publisher={MIT Press One Rogers Street, Cambridge, MA 02142-1209, USA journals-info~…},
+  doi={10.1162/NECO_a_00409}
+}
+
+% Golub & Sussillo (2018) - FixedPointFinder tool
+% Practical TensorFlow implementation for identifying fixed points in RNNs
+% Widely used tool in computational neuroscience for analyzing network dynamics
+% Document location: Core concepts 4 (analysis_methods.rst, Section 3: RNN Dynamics)
+% Citation format: :cite:`golub2018fixedpointfinder`
+@article{golub2018fixedpointfinder,
+  title={FixedPointFinder: A Tensorflow toolbox for identifying and characterizing fixed points in recurrent neural networks},
+  author={Golub, Matthew D and Sussillo, David},
+  journal={Journal of open source software},
+  volume={3},
+  number={31},
+  pages={1003},
+  year={2018},
+  doi={10.21105/joss.01003}
 }
 
 
@@ -434,6 +558,29 @@
 
 
 % ============================================================================
+% 8. Optional Enhancement Citations
+% ============================================================================
+% These citations would further enrich the documentation but are not critical
+
+% O'Keefe & Recce (1993) - Theta phase precession discovery
+% First systematic study of phase relationship between place cell firing and theta rhythm
+% Foundational discovery for understanding temporal coding in hippocampus
+% Document location: Could enhance theta sweep tutorials (Tutorial 6, 7)
+% Citation format: :cite:`o1993phase`
+@article{o1993phase,
+  title={Phase relationship between hippocampal place units and the EEG theta rhythm},
+  author={O'Keefe, John and Recce, Michael L},
+  journal={Hippocampus},
+  volume={3},
+  number={3},
+  pages={317--330},
+  year={1993},
+  publisher={Wiley Online Library},
+  doi={10.1002/hipo.450030307}
+}
+
+
+% ============================================================================
 % Guide for Adding New References
 % ============================================================================
 % 1. Use Google Scholar or DOI to find BibTeX format
@@ -448,3 +595,11 @@
 % - DOI to BibTeX: https://doi2bib.org/
 % - PubMed: https://pubmed.ncbi.nlm.nih.gov/
 % ============================================================================
+@article{chu2025localized,
+  title={Localized Space Coding and Phase Coding Complement Each Other to Achieve Robust and Efficient Spatial Representation},
+  author={Chu, Tianhao and Wu, Yuling and Qiu, Wentao and Jiang, Zihao and Burgess, Neil and Hong, Bo and Wu, Si},
+  journal={bioRxiv},
+  pages={2025--09},
+  year={2025},
+  publisher={Cold Spring Harbor Laboratory}
+}

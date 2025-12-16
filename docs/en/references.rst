@@ -12,9 +12,8 @@ Complete Bibliography
 =====================
 
 .. bibliography::
-   :style: alpha
    :all:
-   :list: enumerated
+   :style: unsrt
 
 How to Cite References
 ======================
@@ -32,12 +31,40 @@ Use the ``:cite:`` role in your text:
 In Jupyter Notebooks
 --------------------
 
-Use the same ``:cite:`` role in markdown cells:
+**Important**: In Jupyter notebooks, you must use **raw cells** with reStructuredText format, not markdown cells.
 
-.. code-block:: markdown
+1. Create a raw cell (Cell → Cell Type → Raw)
+2. Set the cell metadata to indicate RST format:
 
-   The dynamics of continuous attractors were analyzed by :cite:`wu2008dynamics`.
-   Grid cells were discovered by :cite:`hafting2005microstructure`.
+   .. code-block:: json
+
+      {
+        "raw_mimetype": "text/restructuredtext"
+      }
+
+3. Write RST content with citations:
+
+   .. code-block:: rst
+
+      This is a paragraph with citations :cite:p:`amari1977dynamics,wu2008dynamics`.
+
+4. Add a bibliography directive at the end of the notebook (in another raw RST cell):
+
+   .. code-block:: rst
+
+      References
+      ----------
+
+      .. bibliography::
+         :cited:
+         :style: alpha
+
+**Citation Styles**:
+
+- ``:cite:p:`key``` - Parenthetical: (Author, Year) - entire citation is clickable
+- ``:cite:t:`key``` - Textual: Author [Year] - only year is clickable
+
+**Example**: See ``docs/en/0_why_canns.ipynb`` for a complete working example.
 
 Adding New References
 =====================

@@ -109,8 +109,8 @@
 .. code-block:: bash
 
    # 克隆仓库
-   git clone https://github.com/PKU-NIP-Lab/CANNs.git
-   cd CANNs
+   git clone https://github.com/routhleck/canns.git
+   cd canns
 
    # 安装依赖
    pip install -e .[dev]
@@ -129,7 +129,7 @@
 
 - ** 文档 **：完整的API参考可用
 - ** 示例 **：`examples/`目录中的其他示例
-- ** 问题 **：在`GitHub Issues <https://github.com/PKU-NIP-Lab/CANNs/issues>`_上报告问题
+- ** 问题 **：在`GitHub Issues <https://github.com/routhleck/canns/issues>`_上报告问题
 - ** 讨论 **：在GitHub讨论中提问
 
 贡献

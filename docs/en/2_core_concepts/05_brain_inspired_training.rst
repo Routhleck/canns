@@ -40,7 +40,7 @@ The library supports several classic learning rules, each capturing different as
 Hebbian Learning
 ----------------
 
-**The foundational principle: "Neurons that fire together wire together."**
+**The foundational principle: "Neurons that fire together wire together."** :cite:p:`hebb2005organization`
 
 Mechanism
 ~~~~~~~~~
@@ -63,7 +63,7 @@ Use Cases
 STDP (Spike-Timing Dependent Plasticity)
 -----------------------------------------
 
-Weight changes depend on the precise timing of pre- and post-synaptic spikes.
+Weight changes depend on the precise timing of pre- and post-synaptic spikes :cite:p:`bi1998synaptic`.
 
 Mechanism
 ~~~~~~~~~
@@ -82,7 +82,7 @@ Use Cases
 BCM (Bienenstock-Cooper-Munro) Rule
 ------------------------------------
 
-Weight changes depend on post-synaptic activity relative to a sliding threshold.
+Weight changes depend on post-synaptic activity relative to a sliding threshold :cite:p:`bienenstock1982theory`.
 
 Mechanism
 ~~~~~~~~~

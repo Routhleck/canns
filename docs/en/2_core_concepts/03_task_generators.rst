@@ -60,7 +60,7 @@ Tasks are organized into two main categories based on the cognitive function the
 
    .. tab-item:: 🧭 Navigation Tasks
 
-      **Navigation tasks simulate spatial movement scenarios** where the network receives velocity or heading information rather than direct position inputs.
+      **Navigation tasks simulate spatial movement scenarios** :cite:p:`mcnaughton2006path` where the network receives velocity or heading information rather than direct position inputs through path integration :cite:p:`etienne2004path,samsonovich1997path`.
 
       .. grid:: 1
          :gutter: 2

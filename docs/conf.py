@@ -67,12 +67,13 @@ extensions = [
     'sphinx_design',
     'nbsphinx',  # Jupyter notebook support
     'sphinxcontrib.bibtex',  # Bibliography support
+    'sphinx_copybutton',  # Copy button for code blocks
 ]
 
 # -- Bibliography configuration (sphinxcontrib-bibtex) ----------------------
 bibtex_bibfiles = ['refs/references.bib']
-bibtex_default_style = 'alpha'  # Citation format: [Ama77], [Wu08]
-bibtex_reference_style = 'author_year'  # Author-year style references
+bibtex_default_style = 'plain'  # Citation format: [1], [2], [3] (numeric labels)
+# Note: Don't set bibtex_reference_style - let it use default numeric labels
 
 templates_path = ['_templates']
 exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
@@ -82,6 +83,12 @@ nbsphinx_execute = 'never'  # Don't execute notebooks during build (display code
 nbsphinx_allow_errors = False  # Fail build if notebooks have errors
 nbsphinx_timeout = 300  # 5 minutes timeout per notebook
 nbsphinx_kernel_name = 'python3'
+
+# -- Copy button configuration (sphinx-copybutton) ----------------------------
+copybutton_prompt_text = r">>> |\.\.\. |\$ |In \[\d*\]: | {2,5}\.\.\.: | {5,8}: "
+copybutton_prompt_is_regexp = True
+copybutton_remove_prompts = True
+copybutton_line_continuation_character = "\\"
 
 # -- AutoAPI configuration ---------------------------------------------------
 autoapi_dirs = ['../src/']

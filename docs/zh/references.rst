@@ -12,6 +12,7 @@
 ============
 
 .. bibliography::
+   :style: unsrt
    :style: alpha
    :all:
    :list: enumerated
@@ -32,12 +33,40 @@
 在 Jupyter 笔记本中
 -------------------
 
-在 Markdown 单元格中使用相同的 ``:cite:`` 角色:
+**重要提示**: 在 Jupyter 笔记本中,您必须使用 **raw 单元格**,并设置为 reStructuredText 格式,而不是 markdown 单元格。
 
-.. code-block:: markdown
+1. 创建一个 raw 单元格(Cell → Cell Type → Raw)
+2. 设置单元格元数据以指示 RST 格式:
 
-   连续吸引子的动力学由 :cite:`wu2008dynamics` 分析。
-   网格细胞由 :cite:`hafting2005microstructure` 发现。
+   .. code-block:: json
+
+      {
+        "raw_mimetype": "text/restructuredtext"
+      }
+
+3. 编写包含引用的 RST 内容:
+
+   .. code-block:: rst
+
+      这是一个包含引用的段落 :cite:p:`amari1977dynamics,wu2008dynamics`.
+
+4. 在笔记本末尾添加文献列表指令(在另一个 raw RST 单元格中):
+
+   .. code-block:: rst
+
+      参考文献
+      --------
+
+      .. bibliography::
+         :cited:
+         :style: alpha
+
+**引用样式**:
+
+- ``:cite:p:`key``` - 括号式引用:(作者,年份) - 整个引用都是可点击的
+- ``:cite:t:`key``` - 文本式引用:作者 [年份] - 只有年份是可点击的
+
+**示例**: 查看 ``docs/en/0_why_canns.ipynb`` 获取完整的工作示例。
 
 添加新参考文献
 ==============

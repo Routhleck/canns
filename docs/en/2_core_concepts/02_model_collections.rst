@@ -23,7 +23,7 @@ All models are built on BrainPy's dynamics framework, which provides state manag
 Basic Models
 ============
 
-Basic models implement the core CANN dynamics as described in theoretical neuroscience literature. They use predefined connectivity patterns (typically Gaussian kernels) and fixed parameters.
+Basic models implement the core **Wu-Amari-Wong continuous attractor neural networks (CANNs)** dynamics :cite:p:`amari1977dynamics,wu2008dynamics,fung2010moving,wu2016continuous` as described in theoretical neuroscience literature. They use predefined connectivity patterns (typically Gaussian kernels) and fixed parameters.
 
 Available Basic Models
 ----------------------
@@ -36,13 +36,13 @@ Origin CANN (cann.py)
 Core continuous attractor neural network implementations.
 
 ``CANN1D``
-   One-dimensional continuous attractor network. Default 512 neurons arranged on a ring. Gaussian recurrent connections. Suitable for head direction encoding, angular variables.
+   One-dimensional continuous attractor network. Default 512 neurons arranged on a ring. Gaussian recurrent connections. Suitable for head direction encoding :cite:p:`taube1990head`, angular variables.
 
 ``CANN1D_SFA``
    CANN1D with Spike Frequency Adaptation. Adds activity-dependent negative feedback, enables self-sustained wave propagation. Useful for modeling intrinsic dynamics.
 
 ``CANN2D``
-   Two-dimensional continuous attractor network. Neurons arranged on a torus. Suitable for place field encoding, spatial variables.
+   Two-dimensional continuous attractor network. Neurons arranged on a torus. Suitable for place field encoding :cite:p:`o1971hippocampus`, spatial variables.
 
 ``CANN2D_SFA``
    CANN2D with Spike Frequency Adaptation. Supports 2D traveling waves.
@@ -50,7 +50,7 @@ Core continuous attractor neural network implementations.
 Hierarchical Path Integration Model (hierarchical_model.py)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Hierarchical models combining multiple cell types for spatial cognition.
+Hierarchical models :cite:p:`chu2025localized` combining multiple cell types for spatial cognition.
 
 ``GaussRecUnits``
    Recurrent units with Gaussian connectivity.
@@ -62,10 +62,10 @@ Hierarchical models combining multiple cell types for spatial cognition.
    Band cell for 1D path integration.
 
 ``GridCell``
-   Single grid cell module with multiple scales.
+   Single grid cell :cite:p:`hafting2005microstructure` module with multiple scales.
 
 ``HierarchicalPathIntegrationModel``
-   Full path integration system with grid and place cells.
+   Full path integration :cite:p:`mcnaughton2006path` system with grid and place cells.
 
 ``HierarchicalNetwork``
    Combines multiple cell types for spatial cognition.
@@ -73,15 +73,15 @@ Hierarchical models combining multiple cell types for spatial cognition.
 Theta Sweep Model (theta_sweep_model.py)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Models designed for theta rhythm analysis and spatial navigation studies.
+Models designed for theta :cite:p:`chu2024firing,ji2025systems` rhythm analysis and spatial navigation studies :cite:p:`mi2014spike,li2025dynamics,ji2025systems`.
 
-``DirectionCellNetwork``
+``DirectionCellNetwork`` :cite:p:`ji2025phase`
    Head direction cell network.
 
-``GridCellNetwork``
+``GridCellNetwork`` :cite:p:`ji2025systems`
    Network of grid cell modules.
 
-``PlaceCellNetwork``
+``PlaceCellNetwork`` :cite:p:`chu2024firing`
    Place cell network based on grid cell inputs.
 
 Implementing Basic Models
@@ -116,15 +116,6 @@ Required Methods
    - Takes position coordinates as input
    - Returns a stimulus vector matching network size
    - Uses Gaussian bump or similar localized pattern
-
-**State Initialization** ( ``init_state()`` )
-   Register state variables using BrainPy containers:
-
-   - ``self.u`` : Membrane potential ( ``bm.Variable`` )
-   - ``self.r`` : Firing rate ( ``bm.Variable`` )
-   - ``self.inp`` : External input ( ``bm.Variable`` )
-
-   Additional states for variants (e.g., ``self.v`` for SFA).
 
 **Update Dynamics** ( ``update(inputs)`` )
    Define single-step state evolution:
@@ -165,10 +156,10 @@ Available Brain-Inspired Models
 --------------------------------
 
 ``AmariHopfieldNetwork``
-   Classic associative memory model with binary pattern storage. Hebbian learning for weight formation. Content-addressable memory.
+   Classic associative memory model :cite:p:`amari1977neural,hopfield1982neural` with binary pattern storage. Hebbian learning :cite:p:`hebb2005organization` for weight formation. Content-addressable memory.
 
 ``LinearLayer``
-   Linear layer with learnable weights for comparison and testing.
+   Linear layer with learnable weights for comparison and testing. Supports various unsupervised learning rules including Oja's rule :cite:p:`oja1982simplified` for principal component extraction and Sanger's rule :cite:p:`sanger1989optimal` for multiple principal components.
 
 ``SpikingLayer``
    Spiking neural network layer with biologically realistic spike dynamics.
@@ -178,10 +169,10 @@ Implementing Brain-Inspired Models
 
 Inherit from ``canns.models.brain_inspired.BrainInspiredModel`` or ``canns.models.brain_inspired.BrainInspiredModelGroup``.
 
-State and Weight Initialization
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+State and Weight Variables
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Register both state variables and trainable weights in ``init_state()`` :
+Define state variables and trainable weights:
 
 - ``self.s`` : State vector ( ``bm.Variable`` )
 - ``self.W`` : Connection weights ( ``bm.Variable`` )
@@ -242,7 +233,7 @@ Hybrid Models
 BrainPy Foundation
 ==================
 
-All models leverage BrainPy's infrastructure:
+All models leverage BrainPy's :cite:p:`wang2023brainpy` infrastructure:
 
 Dynamics Abstraction
 --------------------
@@ -259,7 +250,7 @@ State Containers
 ``bm.Variable``
    Universal container for all state variables (mutable, internal, or learnable parameters)
 
-These containers enable transparent JAX transformations while maintaining intuitive object-oriented syntax.
+These containers enable transparent JAX :cite:p:`jax2018github` transformations while maintaining intuitive object-oriented syntax.
 
 Time Management
 ---------------

@@ -180,7 +180,7 @@ Capabilities
 RNN Dynamics Analysis
 =====================
 
-This component analyzes recurrent neural networks as dynamical systems, finding fixed points and characterizing the phase space structure.
+This component analyzes recurrent neural networks as dynamical systems :cite:p:`sussillo2013opening`, finding fixed points :cite:p:`golub2018fixedpointfinder` and characterizing the phase space structure.
 
 Purpose
 -------
@@ -241,7 +241,7 @@ Current Scope
 Topological Data Analysis (TDA)
 ================================
 
-TDA tools detect geometric and topological structures in high-dimensional neural activity data.
+TDA tools :cite:p:`carlsson2009topology` detect geometric and topological structures in high-dimensional neural activity data using persistent homology :cite:p:`edelsbrunner2010computational`.
 
 Why TDA for CANNs
 -----------------
@@ -285,7 +285,7 @@ Use Cases
 
       Grid cells encode position on a torus. TDA can:
 
-      * ✅ Verify toroidal structure in neural recordings
+      * ✅ Verify toroidal structure :cite:p:`carlsson2009topology,edelsbrunner2010computational` in neural recordings
       * ✅ Quantify how well activity matches theoretical prediction
       * ✅ Detect deviations from ideal topology
 
@@ -303,7 +303,7 @@ Implementation Notes
 .. admonition:: Technical Details
    :class: tip
 
-   * **Ripser integration** for fast persistent homology
+   * **Ripser integration** for fast persistent homology :cite:p:`carlsson2009topology,edelsbrunner2010computational`
    * **External dependencies** for some advanced methods
    * **Focus on tools** relevant to attractor network research
 

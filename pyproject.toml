@@ -64,6 +64,7 @@ dev = [
     "funlog>=0.2.1",
     "jupyter>=1.1.1",
     "datasets>=4.4.1",
+    "sphinx-copybutton>=0.5.2",
 ]
 docs = [
     "myst-parser>=4.0.1",
