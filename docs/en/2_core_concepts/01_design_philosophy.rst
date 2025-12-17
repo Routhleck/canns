@@ -107,7 +107,7 @@ The CANNs library supports four distinct workflows, each addressing different re
       **Steps:**
 
       1. **Task Dataset**: Prepare training patterns
-      2. **Brain-Inspired Modeling**: Create models with learnable weights (``HopfieldNetwork``)
+      2. **Brain-Inspired Modeling**: Create models with learnable weights (``AmariHopfieldNetwork`` :cite:p:`amari1977neural,hopfield1982neural`)
       3. **Brain-Inspired Training**: Apply Hebbian/STDP/BCM learning via subclasses of ``Trainer``
       4. **Evaluation**: Test pattern completion, measure storage capacity
 
@@ -124,10 +124,10 @@ The CANNs library supports four distinct workflows, each addressing different re
 
       **Steps:**
 
-      1. **Input Config**: Specify parameters via configuration files
-      2. **Pipeline Orchestration**: ``canns.pipeline`` coordinates all modules
-      3. **Auto Execution**: Automatic model creation, simulation, and analysis
-      4. **Output Reports**: Generate comprehensive result summaries
+      5. **Input Config**: Specify parameters via configuration files
+      6. **Pipeline Orchestration**: ``canns.pipeline`` coordinates all modules
+      7. **Auto Execution**: Automatic model creation, simulation, and analysis
+      8. **Output Reports**: Generate comprehensive result summaries
 
       **Use cases**: Systematic parameter sweeps, reproducible experiments, batch processing
 
@@ -148,7 +148,7 @@ Module Interaction Pattern
 BrainPy Integration
 -------------------
 
-The CANNs library builds on BrainPy (``brainpy``), a powerful framework for brain dynamics programming. BrainPy provides:
+The CANNs library builds on BrainPy :cite:p:`wang2023brainpy` (``brainpy``), a powerful framework for brain dynamics programming. BrainPy provides:
 
 :⚙️ **Dynamics Abstraction**:
    ``bp.DynamicalSystem`` base class for neural systems
@@ -165,7 +165,7 @@ The CANNs library builds on BrainPy (``brainpy``), a powerful framework for brai
 :🎲 **Random Number Management**:
    ``bm.random`` for reproducible stochasticity
 
-With BrainPy, CANN models only need to define variables and update equations. Time stepping, parallelization, and compilation are handled automatically, significantly reducing implementation complexity.
+With BrainPy :cite:p:`wang2023brainpy`, CANN models only need to define variables and update equations. Time stepping, parallelization, and compilation are handled automatically, significantly reducing implementation complexity.
 
 Module Relationships
 ====================
@@ -219,10 +219,10 @@ Performance vs. Simplicity
 
 The library achieves high performance through a multi-layered strategy:
 
-Python Layer (BrainPy/JAX)
-~~~~~~~~~~~~~~~~~~~~~~~~~~
+Python Layer (BrainPy/JAX :cite:p:`jax2018github`)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-JAX-based compilation provides GPU/TPU acceleration but requires functional programming patterns. The library abstracts this complexity by:
+JAX :cite:p:`jax2018github`-based compilation provides GPU/TPU acceleration but requires functional programming patterns. The library abstracts this complexity by:
 
 * Encapsulating JIT compilation in BrainPy's ``bm.for_loop``
 * Managing state through ``bm.Variable`` containers
@@ -237,7 +237,7 @@ Native Layer (canns-lib)
 
    For performance-critical operations where Python overhead is significant, the library provides optional Rust-powered backends through ``canns-lib``:
 
-   * **Ripser Module**: Topological Data Analysis with 1.13x average speedup (up to 1.82x) vs. pure Python
+   * **Ripser Module**: Topological Data Analysis :cite:p:`carlsson2009topology,edelsbrunner2010computational` with 1.13x average speedup (up to 1.82x) vs. pure Python
    * **Spatial Navigation**: Accelerated RatInABox environments with ~700x speedup for long trajectory integration
    * **Future Modules**: Planned support for approximate nearest neighbors, dynamics computation
 

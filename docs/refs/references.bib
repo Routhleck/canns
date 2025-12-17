@@ -1,0 +1,605 @@
+% ============================================================================
+% CANNs Library Bibliography
+% ============================================================================
+% This file contains references for the CANNs documentation.
+% Format: BibTeX
+% Citation style: numeric ([1], [2], [3])
+% Shared by both English and Chinese documentation
+%
+% File Structure:
+% 1. Foundational CANN Theory
+% 2. Neural Cell Types and Spatial Coding
+% 3. Theta Rhythms and Sequences
+% 4. Learning Rules and Plasticity
+% 5. Path Integration and Navigation
+% 6. Computational Frameworks and Tools
+% 7. This Library
+%
+% Citation key format: authorYEARkeyword
+% Examples: wu2008dynamics, amari1977dynamics
+% ============================================================================
+
+
+% ============================================================================
+% 1. Foundational CANN Theory
+% ============================================================================
+% These papers establish the theoretical foundation of Continuous Attractor Neural Networks
+
+% Amari (1977) - Foundational work on CANN theory
+% Introduced dynamics theory for lateral-inhibition type neural fields
+% Document locations: Core concepts, design philosophy, multiple tutorials
+% Citation format: :cite:`amari1977dynamics`
+@article{amari1977dynamics,
+  title={Dynamics of pattern formation in lateral-inhibition type neural fields},
+  author={Amari, Shun-ichi},
+  journal={Biological cybernetics},
+  volume={27},
+  number={2},
+  pages={77--87},
+  year={1977},
+  publisher={Springer},
+  doi={10.1007/BF00337259}
+}
+
+% Wu et al. (2008) - Dynamics and computation of continuous attractors
+% Systematic analysis of CANN dynamics and computational capabilities
+% One of the most influential papers on continuous attractor networks
+% Document locations: 0_why_canns, core concepts, Tutorial 1-7
+% Citation format: :cite:`wu2008dynamics`
+@article{wu2008dynamics,
+  title={Dynamics and computation of continuous attractors},
+  author={Wu, Si and Hamaguchi, Kosuke and Amari, Shun-ichi},
+  journal={Neural computation},
+  volume={20},
+  number={4},
+  pages={994--1025},
+  year={2008},
+  publisher={MIT Press One Rogers Street, Cambridge, MA 02142-1209, USA journals-info~…},
+  doi={10.1162/neco.2008.10-06-378}
+}
+
+% Fung et al. (2010) - Moving bump dynamics in continuous manifolds
+% Comprehensive study of tracking dynamics in continuous attractor neural networks
+% Analyzes how activity bumps move and track external inputs
+% Document locations: Core concepts, modeling tutorials
+% Citation format: :cite:`fung2010moving`
+@article{fung2010moving,
+  title={A moving bump in a continuous manifold: a comprehensive study of the tracking dynamics of continuous attractor neural networks},
+  author={Fung, CC Alan and Wong, KY Michael and Wu, Si},
+  journal={Neural Computation},
+  volume={22},
+  number={3},
+  pages={752--792},
+  year={2010},
+  publisher={MIT Press},
+  doi={10.1162/neco.2009.07-08-824}
+}
+
+
+% Wu et al. (2016) - CANN review paper
+% Comprehensive review of CANN as a canonical model for neural information representation
+% Excellent overview paper for understanding CANNs' role in neuroscience
+% Document locations: 0_why_canns, design philosophy
+% Citation format: :cite:`wu2016continuous`
+@article{wu2016continuous,
+  title={Continuous attractor neural networks: candidate of a canonical model for neural information representation},
+  author={Wu, Si and Wong, KY Michael and Fung, CC Alan and Mi, Yuanyuan and Zhang, Wenhao},
+  journal={F1000Research},
+  volume={5},
+  pages={F1000--Faculty},
+  year={2016},
+  doi={10.12688/f1000research.7387.1}
+}
+
+
+% ============================================================================
+% 2. Neural Cell Types and Spatial Coding
+% ============================================================================
+% These groundbreaking works discovered spatial coding cells in the brain
+
+% O'Keefe & Dostrovsky (1971) - Discovery of place cells
+% First recording of location-specific neurons in freely moving rat hippocampus
+% Foundational work that led to the Nobel Prize in Physiology or Medicine 2014
+% Document locations: Tutorial 5, 6, 7; core concepts
+% Citation format: :cite:`o1971hippocampus`
+@article{o1971hippocampus,
+  title={The hippocampus as a spatial map: preliminary evidence from unit activity in the freely-moving rat.},
+  author={O'Keefe, John and Dostrovsky, Jonathan},
+  journal={Brain research},
+  year={1971},
+  publisher={Elsevier Science},
+  doi={10.1016/0006-8993(71)90358-1}
+}
+
+% Taube et al. (1990) - Discovery of head direction cells
+% Discovery of direction-encoding neurons in the postsubiculum
+% Essential for understanding directional navigation in the brain
+% Document locations: Tutorial 5, 6; model collections
+% Citation format: :cite:`taube1990head`
+@article{taube1990head,
+  title={Head-direction cells recorded from the postsubiculum in freely moving rats. I. Description and quantitative analysis},
+  author={Taube, Jeffrey S and Muller, Robert U and Ranck, James B},
+  journal={Journal of Neuroscience},
+  volume={10},
+  number={2},
+  pages={420--435},
+  year={1990},
+  publisher={Society for Neuroscience},
+  doi={10.1523/JNEUROSCI.10-02-00420.1990}
+}
+
+% Hafting et al. (2005) - Discovery of grid cells (Nobel Prize work)
+% Discovery of grid cells with periodic hexagonal spatial responses in entorhinal cortex
+% Led to the 2014 Nobel Prize in Physiology or Medicine (shared with O'Keefe)
+% Document locations: Tutorial 5, 6, 7; core concepts; design philosophy
+% Citation format: :cite:`hafting2005microstructure`
+@article{hafting2005microstructure,
+  title={Microstructure of a spatial map in the entorhinal cortex},
+  author={Hafting, Torkel and Fyhn, Marianne and Molden, Sturla and Moser, May-Britt and Moser, Edvard I},
+  journal={Nature},
+  volume={436},
+  number={7052},
+  pages={801--806},
+  year={2005},
+  publisher={Nature Publishing Group UK London},
+  doi={10.1038/nature03721}
+}
+
+
+% ============================================================================
+% 3. Theta Rhythms and Sequences
+% ============================================================================
+% These papers study the modulation of theta rhythms on neural coding and sequence generation
+
+% Wang et al. (2015) - Theta sequences in hippocampal firing fields
+% Demonstrated that theta sequences are essential for internally generated hippocampal firing fields
+% Important experimental evidence for theta-modulated neural dynamics
+% Document locations: Tutorial 6, 7
+% Citation format: :cite:`wang2015theta`
+@article{wang2015theta,
+  title={Theta sequences are essential for internally generated hippocampal firing fields},
+  author={Wang, Yingxue and Romani, Sandro and Lustig, Brian and Leonardo, Anthony and Pastalkova, Eva},
+  journal={Nature neuroscience},
+  volume={18},
+  number={2},
+  pages={282--288},
+  year={2015},
+  publisher={Nature Publishing Group US New York},
+  doi={10.1038/nn.3904}
+}
+
+% Ji et al. (2025) - Phase precession in theta-modulated head direction cells
+% Studies the relationship between phase precession and turning angle
+% Shows how theta modulation affects head direction cell firing
+% Document location: Tutorial 6 (06_theta_sweep_hd_grid.ipynb, Lines 66-67)
+% Citation format: :cite:`ji2025phase`
+@article{ji2025phase,
+  title={Phase Precession Relative to Turning Angle in Theta-Modulated Head Direction Cells},
+  author={Ji, Zilong and Lomi, Eleonora and Jeffery, Kate and Mitchell, Anna S and Burgess, Neil},
+  journal={Hippocampus},
+  volume={35},
+  number={2},
+  pages={e70008},
+  year={2025},
+  publisher={Wiley Online Library},
+  doi={10.1002/hipo.70008}
+}
+
+
+% Ji et al. (2025) - Systems model of alternating theta sweeps via firing rate adaptation
+% Proposes a computational model for alternating theta sweeps using SFA
+% Demonstrates how firing rate adaptation generates theta sweep patterns
+% Document location: Tutorial 6 (06_theta_sweep_hd_grid.ipynb)
+% Citation format: :cite:`ji2025systems`
+@article{ji2025systems,
+  title={A systems model of alternating theta sweeps via firing rate adaptation},
+  author={Ji, Zilong and Chu, Tianhao and Wu, Si and Burgess, Neil},
+  journal={Current Biology},
+  volume={35},
+  number={4},
+  pages={709--722},
+  year={2025},
+  publisher={Elsevier},
+  doi={10.1016/j.cub.2024.08.059}
+}
+
+
+% Chu et al. (2024) - Firing rate adaptation in place cells
+% Shows how firing rate adaptation enables theta sweeps, phase precession, and procession
+% Key paper connecting SFA to hippocampal spatial coding phenomena
+% Document location: Tutorial 7 (07_theta_sweep_place_cell.ipynb)
+% Citation format: :cite:`chu2024firing`
+@article{chu2024firing,
+  title={Firing rate adaptation affords place cell theta sweeps, phase precession, and procession},
+  author={Chu, Tianhao and Ji, Zilong and Zuo, Junfeng and Mi, Yuanyuan and Zhang, Wen-hao and Huang, Tiejun and Bush, Daniel and Burgess, Neil and Wu, Si},
+  journal={Elife},
+  volume={12},
+  pages={RP87055},
+  year={2024},
+  publisher={eLife Sciences Publications Limited},
+  doi={10.7554/eLife.87055.4}
+}
+
+
+
+% ============================================================================
+% 4. Learning Rules and Plasticity
+% ============================================================================
+% These classic papers define fundamental rules for neural network learning
+
+% Hebb (1949/2005) - Original theory of Hebbian learning
+% Proposed the famous "Neurons that fire together, wire together" principle
+% This is the 2005 reprint of the 1949 classic work
+% Document locations: Quick start 5, core concepts 5, Tutorial 3 (brain_inspired)
+% Citation format: :cite:`hebb2005organization`
+@book{hebb2005organization,
+  title={The organization of behavior: A neuropsychological theory},
+  author={Hebb, Donald Olding},
+  year={2005},
+  publisher={Psychology press}
+}
+
+% Amari (1977) - Neural theory of association and concept formation
+% Foundational work on how neural networks form associations and concepts
+% Important for understanding memory and learning in neural networks
+% Document location: Hopfield model implementation (hopfield.py)
+% Citation format: :cite:`amari1977neural`
+@article{amari1977neural,
+  title={Neural theory of association and concept-formation},
+  author={Amari, S-I},
+  journal={Biological cybernetics},
+  volume={26},
+  number={3},
+  pages={175--185},
+  year={1977},
+  publisher={Springer},
+  doi={10.1007/BF00365229}
+}
+
+% Hopfield (1982) - Hopfield networks and associative memory
+% Pioneering application of collective computational abilities of physical systems to neural networks
+% Foundation for understanding attractor networks and associative memory
+% Document location: Tutorial 3 (pattern_storage_recall.ipynb)
+% Documentation mentions "Amari-Hopfield networks"
+% Citation format: :cite:`hopfield1982neural`
+@article{hopfield1982neural,
+  title={Neural networks and physical systems with emergent collective computational abilities.},
+  author={Hopfield, John J},
+  journal={Proceedings of the national academy of sciences},
+  volume={79},
+  number={8},
+  pages={2554--2558},
+  year={1982},
+  doi={10.1073/pnas.79.8.2554}
+}
+
+% Bi & Poo (1998) - Experimental validation of STDP (Spike-Timing Dependent Plasticity)
+% Demonstrated that synaptic modifications depend on precise spike timing
+% Key experimental evidence for temporal coding in synaptic plasticity
+% Document location: Core concepts 5 (brain_inspired_training.rst)
+% Citation format: :cite:`bi1998synaptic`
+@article{bi1998synaptic,
+  title={Synaptic modifications in cultured hippocampal neurons: dependence on spike timing, synaptic strength, and postsynaptic cell type},
+  author={Bi, Guo-qiang and Poo, Mu-ming},
+  journal={Journal of neuroscience},
+  volume={18},
+  number={24},
+  pages={10464--10472},
+  year={1998},
+  publisher={Society for Neuroscience},
+  doi={10.1523/JNEUROSCI.18-24-10464.1998}
+}
+
+% Bienenstock et al. (1982) - BCM learning rule
+% Proposed theory for development of neuron selectivity in visual cortex
+% Explains how neurons develop orientation selectivity through experience
+% Document location: Core concepts 5 (brain_inspired_training.rst)
+% Citation format: :cite:`bienenstock1982theory`
+@article{bienenstock1982theory,
+  title={Theory for the development of neuron selectivity: orientation specificity and binocular interaction in visual cortex},
+  author={Bienenstock, Elie L and Cooper, Leon N and Munro, Paul W},
+  journal={Journal of Neuroscience},
+  volume={2},
+  number={1},
+  pages={32--48},
+  year={1982},
+  publisher={Society for Neuroscience},
+  doi={10.1523/JNEUROSCI.02-01-00032.1982}
+}
+
+% ---- Spike Frequency Adaptation (SFA) References ----
+% These papers study how SFA enables anticipative tracking and theta dynamics
+
+% Mi et al. (2014) - SFA implements anticipative tracking in CANNs
+% First paper showing how spike frequency adaptation enables prediction in CANNs
+% Demonstrates that SFA allows the network to anticipate moving inputs
+% Document location: A-CANN model in Tutorial 6, 7
+% Citation format: :cite:`mi2014spike`
+@article{mi2014spike,
+  title={Spike frequency adaptation implements anticipative tracking in continuous attractor neural networks},
+  author={Mi, Yuanyuan and Fung, CC and Wong, KY and Wu, Si},
+  journal={Advances in neural information processing systems},
+  volume={27},
+  year={2014},
+}
+
+% Li et al. (2025) - Dynamics of CANNs with SFA
+% Recent comprehensive analysis of how SFA affects CANN dynamics
+% Provides theoretical framework for understanding SFA in continuous attractors
+% Document location: A-CANN model in Tutorial 6, 7
+% Citation format: :cite:`li2025dynamics`
+@article{li2025dynamics,
+  title={Dynamics of Continuous Attractor Neural Networks With Spike Frequency Adaptation},
+  author={Li, Yujun and Chu, Tianhao and Wu, Si},
+  journal={Neural Computation},
+  volume={37},
+  number={6},
+  pages={1057--1101},
+  year={2025},
+  publisher={MIT Press 255 Main Street, 9th Floor, Cambridge, Massachusetts 02142, USA~…},
+  doi={10.1162/neco_a_01757}
+}
+
+
+% Oja (1982) - Oja's learning rule for principal component analysis
+% Introduces simplified neuron model that extracts the first principal component
+% Foundation for unsupervised learning in neural networks
+% Document locations: Referenced in trainer implementations
+% Citation format: :cite:`oja1982simplified`
+@article{oja1982simplified,
+  title={Simplified neuron model as a principal component analyzer},
+  author={Oja, Erkki},
+  journal={Journal of mathematical biology},
+  volume={15},
+  number={3},
+  pages={267--273},
+  year={1982},
+  publisher={Springer},
+  doi={10.1007/BF00275687}
+}
+
+% Sanger (1989) - Sanger's learning rule for multiple principal components
+% Extends Oja's rule to extract multiple principal components sequentially
+% Important for hierarchical unsupervised learning in neural networks
+% Document locations: Referenced in trainer implementations
+% Citation format: :cite:`network1989optimal`
+@article{sanger1989optimal,
+  title={Optimal unsupervised learning in a single-layer linear feedforward neural network},
+  author={Sanger, Terence D},
+  journal={Neural networks},
+  volume={2},
+  number={6},
+  pages={459--473},
+  year={1989},
+  publisher={Elsevier},
+  doi={10.1016/0893-6080(89)90044-0}
+}
+
+
+% ============================================================================
+% 5. Path Integration and Navigation
+% ============================================================================
+% These papers study how the brain achieves spatial navigation through path integration
+
+% McNaughton et al. (2006) - Path integration and neural basis of the 'cognitive map'
+% Comprehensive review of path integration mechanisms in the brain
+% Connects grid cells, place cells, and head direction cells to navigation
+% Document location: Tutorial 5 (hierarchical_network.ipynb)
+% Citation format: :cite:`mcnaughton2006path`
+@article{mcnaughton2006path,
+  title={Path integration and the neural basis of the'cognitive map'},
+  author={McNaughton, Bruce L and Battaglia, Francesco P and Jensen, Ole and Moser, Edvard I and Moser, May-Britt},
+  journal={Nature Reviews Neuroscience},
+  volume={7},
+  number={8},
+  pages={663--678},
+  year={2006},
+  publisher={Nature Publishing Group UK London},
+  doi={10.1038/nrn1932}
+}
+
+% Samsonovich & McNaughton (1997) - CANN model for path integration and cognitive mapping
+% Early influential computational model of path integration using continuous attractors
+% Demonstrates how grid-like representations can emerge from path integration dynamics
+% Document locations: Tutorial 5, 6, 7 (hierarchical_network.ipynb, theta sweep tutorials)
+% Citation format: :cite:`samsonovich1997path`
+@article{samsonovich1997path,
+  title={Path integration and cognitive mapping in a continuous attractor neural network model},
+  author={Samsonovich, Alexei and McNaughton, Bruce L},
+  journal={Journal of Neuroscience},
+  volume={17},
+  number={15},
+  pages={5900--5920},
+  year={1997},
+  publisher={Society for Neuroscience},
+  doi={10.1523/JNEUROSCI.17-15-05900.1997}
+}
+
+% Etienne & Jeffery (2004) - Path integration in mammals review
+% Comprehensive review of path integration mechanisms across mammalian species
+% Discusses behavioral evidence and neural substrates for self-motion integration
+% Document locations: Background reference for navigation tasks and path integration concepts
+% Citation format: :cite:`etienne2004path`
+@article{etienne2004path,
+  title={Path integration in mammals},
+  author={Etienne, Ariane S and Jeffery, Kathryn J},
+  journal={Hippocampus},
+  volume={14},
+  number={2},
+  pages={180--192},
+  year={2004},
+  publisher={Wiley Online Library},
+  doi={10.1002/hipo.10173}
+}
+
+
+% ============================================================================
+% 6. Computational Frameworks and Tools
+% ============================================================================
+% Computational frameworks and tools used by this library
+
+% ---- BrainPy Framework ----
+% Wang et al. (2023) - BrainPy framework paper
+% Official publication describing BrainPy as a flexible brain dynamics programming framework
+% Core dependency of this library, provides JAX-based high-performance neural simulation
+% Document location: Mentioned frequently throughout documentation
+% Citation format: :cite:`wang2023brainpy`
+@article{wang2023brainpy,
+  title={BrainPy, a flexible, integrative, efficient, and extensible framework for general-purpose brain dynamics programming},
+  author={Wang, Chaoming and Zhang, Tianqiu and Chen, Xiaoyu and He, Sichao and Li, Shangyang and Wu, Si},
+  journal={elife},
+  volume={12},
+  pages={e86365},
+  year={2023},
+  publisher={eLife Sciences Publications Limited},
+  doi={10.7554/eLife.86365}
+}
+
+% JAX - Google's composable transformations framework
+% Provides high-performance automatic differentiation and JIT compilation
+% Enables GPU/TPU acceleration for neural network simulations
+% Document location: Mentioned throughout documentation for JAX compilation and GPU/TPU support
+% Citation format: :cite:`jax2018github`
+@software{jax2018github,
+  author = {James Bradbury and Roy Frostig and Peter Hawkins and Matthew James Johnson and Chris Leary and Dougal Maclaurin and George Necula and Adam Paszke and Jake Vander{P}las and Skye Wanderman-{M}ilne and Qiao Zhang},
+  title = {{JAX}: composable transformations of {P}ython+{N}um{P}y programs},
+  url = {http://github.com/jax-ml/jax},
+  version = {0.3.13},
+  year = {2018},
+}
+
+% ---- Topological Data Analysis (TDA) ----
+% These papers provide foundations for topological analysis of neural activity
+
+% Carlsson (2009) - Topology and data foundations
+% Seminal paper introducing topological data analysis to a broad audience
+% Provides accessible introduction to persistent homology and its applications
+% Document location: Core concepts 4 (analysis_methods.rst, Section 4: TDA)
+% Citation format: :cite:`carlsson2009topology`
+@article{carlsson2009topology,
+  title={Topology and data},
+  author={Carlsson, Gunnar},
+  journal={Bulletin of the American Mathematical Society},
+  volume={46},
+  number={2},
+  pages={255--308},
+  year={2009},
+  doi={10.1090/S0273-0979-09-01249-X}
+}
+
+% Edelsbrunner & Harer (2010) - Computational topology textbook
+% Comprehensive technical reference for computational topology and persistent homology
+% Standard textbook for understanding the algorithmic foundations of TDA
+% Document location: Core concepts 4 (analysis_methods.rst, Section 4: TDA)
+% Citation format: :cite:`edelsbrunner2010computational`
+@book{edelsbrunner2010computational,
+  title={Computational topology: an introduction},
+  author={Edelsbrunner, Herbert and Harer, John},
+  year={2010},
+  publisher={American Mathematical Soc.}
+}
+
+% ---- RNN Dynamics Analysis ----
+% These papers establish methods for analyzing recurrent neural network dynamics
+
+% Sussillo & Barak (2013) - Low-dimensional dynamics in RNNs
+% Pioneering work on fixed point analysis in recurrent neural networks
+% Established methodology for understanding RNN computations through dynamical systems theory
+% Document location: Core concepts 4 (analysis_methods.rst, Section 3: RNN Dynamics)
+% Citation format: :cite:`sussillo2013opening`
+@article{sussillo2013opening,
+  title={Opening the black box: low-dimensional dynamics in high-dimensional recurrent neural networks},
+  author={Sussillo, David and Barak, Omri},
+  journal={Neural computation},
+  volume={25},
+  number={3},
+  pages={626--649},
+  year={2013},
+  publisher={MIT Press One Rogers Street, Cambridge, MA 02142-1209, USA journals-info~…},
+  doi={10.1162/NECO_a_00409}
+}
+
+% Golub & Sussillo (2018) - FixedPointFinder tool
+% Practical TensorFlow implementation for identifying fixed points in RNNs
+% Widely used tool in computational neuroscience for analyzing network dynamics
+% Document location: Core concepts 4 (analysis_methods.rst, Section 3: RNN Dynamics)
+% Citation format: :cite:`golub2018fixedpointfinder`
+@article{golub2018fixedpointfinder,
+  title={FixedPointFinder: A Tensorflow toolbox for identifying and characterizing fixed points in recurrent neural networks},
+  author={Golub, Matthew D and Sussillo, David},
+  journal={Journal of open source software},
+  volume={3},
+  number={31},
+  pages={1003},
+  year={2018},
+  doi={10.21105/joss.01003}
+}
+
+
+% ============================================================================
+% 7. This Library
+% ============================================================================
+% Citation for the CANNs toolkit itself
+
+% He (2025) - CANNs toolkit
+% Zenodo permanent archive version
+% Official citation for the CANNs library
+% If using this library in your research, please cite this reference
+% Citation format: :cite:`he_2025_canns`
+@software{he_2025_canns,
+  author = {He, Sichao},
+  title = {{CANNs}: Continuous Attractor Neural Networks Toolkit},
+  year = 2025,
+  publisher = {Zenodo},
+  version = {v0.9.0},
+  doi = {10.5281/zenodo.17412545},
+  url = {https://github.com/Routhleck/canns}
+}
+
+
+% ============================================================================
+% 8. Optional Enhancement Citations
+% ============================================================================
+% These citations would further enrich the documentation but are not critical
+
+% O'Keefe & Recce (1993) - Theta phase precession discovery
+% First systematic study of phase relationship between place cell firing and theta rhythm
+% Foundational discovery for understanding temporal coding in hippocampus
+% Document location: Could enhance theta sweep tutorials (Tutorial 6, 7)
+% Citation format: :cite:`o1993phase`
+@article{o1993phase,
+  title={Phase relationship between hippocampal place units and the EEG theta rhythm},
+  author={O'Keefe, John and Recce, Michael L},
+  journal={Hippocampus},
+  volume={3},
+  number={3},
+  pages={317--330},
+  year={1993},
+  publisher={Wiley Online Library},
+  doi={10.1002/hipo.450030307}
+}
+
+
+% ============================================================================
+% Guide for Adding New References
+% ============================================================================
+% 1. Use Google Scholar or DOI to find BibTeX format
+% 2. Ensure citation key follows authorYEARkeyword format
+% 3. Add appropriate category comments explaining the paper's contribution
+% 4. In document location comments, specify which files use this reference
+% 5. Provide citation format example: :cite:`citationkey`
+% 6. For key papers, add context about their importance to the field
+%
+% Useful Resources:
+% - Google Scholar: https://scholar.google.com/
+% - DOI to BibTeX: https://doi2bib.org/
+% - PubMed: https://pubmed.ncbi.nlm.nih.gov/
+% ============================================================================
+@article{chu2025localized,
+  title={Localized Space Coding and Phase Coding Complement Each Other to Achieve Robust and Efficient Spatial Representation},
+  author={Chu, Tianhao and Wu, Yuling and Qiu, Wentao and Jiang, Zihao and Burgess, Neil and Hong, Bo and Wu, Si},
+  journal={bioRxiv},
+  pages={2025--09},
+  year={2025},
+  publisher={Cold Spring Harbor Laboratory}
+}

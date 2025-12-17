@@ -1,58 +1,64 @@
 Installation Guide
-===================
+==================
 
-Environment Requirements
-------------------------
+.. grid:: 2
 
-- Python 3.11 or higher
+    .. grid-item-card::  🚀 Quick Start
+       :link: installation-with-uv-recommended
+       :link-type: ref
 
-Installation with uv (Recommended)
-----------------------------------
+       Install using the ultra-fast ``uv`` package manager.
 
-``uv`` is a fast Python package manager:
+    .. grid-item-card::  📦 Standard Pip
+       :link: installation-with-pip
+       :link-type: ref
 
-.. code-block:: bash
+       Install using the standard Python ``pip`` tool.
 
-   # Install uv (if not already installed)s
-   # macOS / Linux
-   curl -LsSf https://astral.sh/uv/install.sh | sh
-   # Windows
-   powershell -c "irm https://astral.sh/uv/install.ps1 | iex"
+.. note::
+   **Requirement:** Python 3.11 or higher.
 
-   # Install canns (CPU version)
-   uv pip install canns
+Installation
+------------
 
-   # Or specify an accelerator
-   uv pip install canns[cuda12]   # NVIDIA CUDA 12
-   uv pip install canns[tpu]      # Google TPU
+Choose your preferred package manager below:
 
-Installation with pip
----------------------
+.. tab-set::
 
-.. code-block:: bash
+    .. tab-item:: Using uv (Recommended)
+       :sync: uv
 
-   # CPU version
-   pip install canns
+       First, ensure you have `uv installed <https://github.com/astral-sh/uv>`_.
 
-   # Specify an accelerator
-   pip install canns[cuda12]   # NVIDIA CUDA 12
-   pip install canns[cuda13]   # NVIDIA CUDA 13
-   pip install canns[tpu]      # Google TPU
+       .. code-block:: bash
 
-Installation from Source
-------------------------
+          # Standard CPU
+          uv pip install canns
 
-.. code-block:: bash
+          # With Acceleration
+          uv pip install "canns[cuda12]"   # NVIDIA CUDA 12
+          uv pip install "canns[tpu]"      # Google TPU
 
-   # Clone the repository
-   git clone https://github.com/routhleck/canns.git
-   cd canns
+    .. tab-item:: Using pip
+       :sync: pip
 
-   # Method 1: Using uv
-   uv sync --all-extras
+       .. code-block:: bash
 
-   # Method 2: Using pip
-   pip install -e "."
+          # Standard CPU
+          pip install canns
+
+          # With Acceleration
+          pip install "canns[cuda12]"   # NVIDIA CUDA 12
+          pip install "canns[tpu]"      # Google TPU
+
+    .. tab-item:: From Source
+       :sync: source
+
+       .. code-block:: bash
+
+          git clone https://github.com/routhleck/canns.git
+          cd canns
+          pip install -e .
 
 Verify Installation
 -------------------
@@ -60,10 +66,7 @@ Verify Installation
 .. code-block:: python
 
    import canns
-   print(canns.__version__)
-   print("✅ Installation successful!")
+   print(f"✅ Successfully installed canns version {canns.__version__}")
 
-Next Steps
-----------
-
-- :doc:`01_build_model`
+.. seealso::
+   Ready to go? Check out the :doc:`First Steps Guide <01_build_model>`.

@@ -125,10 +125,10 @@ place_r = place_r.reshape(T, -1)
 
 print(f"{time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())} - Computing heatmaps...")
 
-heatmaps_grid = compute_firing_field(grid_r, loc, width, height, M, K)
-heatmaps_band_x = compute_firing_field(band_x_r, loc, width, height, M, K)
-heatmaps_band_y = compute_firing_field(band_y_r, loc, width, height, M, K)
-heatmaps_place = compute_firing_field(place_r, loc, width, height, M, K)
+heatmaps_grid = compute_firing_field(np.array(grid_r), loc, width, height, M, K)
+heatmaps_band_x = compute_firing_field(np.array(band_x_r), loc, width, height, M, K)
+heatmaps_band_y = compute_firing_field(np.array(band_y_r), loc, width, height, M, K)
+heatmaps_place = compute_firing_field(np.array(place_r), loc, width, height, M, K)
 
 # heatmap_file_path = os.path.join(PATH, 'band_grid_place_heatmap.npz')
 # np.savez(
