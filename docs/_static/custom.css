@@ -57,3 +57,58 @@ img {
     max-width: 100%;
     height: auto;
 }
+
+/* Citation styling - make citations more visible and elegant */
+span[id^="id"] {
+    color: #2980b9;
+    font-size: 0.95em;
+    font-style: italic;
+}
+
+/* Citation links styling */
+span[id^="id"] a.reference.internal {
+    color: #2980b9;
+    text-decoration: none;
+    font-weight: 500;
+    border-bottom: 1px dotted #2980b9;
+    transition: all 0.2s ease;
+}
+
+span[id^="id"] a.reference.internal:hover {
+    color: #1a5a8a;
+    border-bottom: 1px solid #1a5a8a;
+}
+
+/* Dark mode support for citations */
+@media (prefers-color-scheme: dark) {
+    body[data-theme="dark"] span[id^="id"] {
+        color: #79afd1;
+    }
+
+    body[data-theme="dark"] span[id^="id"] a.reference.internal {
+        color: #79afd1;
+        border-bottom-color: #79afd1;
+    }
+
+    body[data-theme="dark"] span[id^="id"] a.reference.internal:hover {
+        color: #a0c8e0;
+        border-bottom-color: #a0c8e0;
+    }
+}
+
+/* Figure captions centered */
+.figure .caption,
+p.caption {
+    text-align: center;
+    font-style: italic;
+    color: #666;
+    margin-top: 0.5em;
+}
+
+/* Dark mode for figure captions */
+@media (prefers-color-scheme: dark) {
+    body[data-theme="dark"] .figure .caption,
+    body[data-theme="dark"] p.caption {
+        color: #aaa;
+    }
+}

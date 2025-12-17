@@ -1,57 +1,64 @@
 安装指南
 ========
 
-环境要求
---------
+.. grid:: 2
 
-- Python 3.11 或更高版本
+    .. grid-item-card::  🚀 快速开始
+       :link: installation-with-uv-recommended
+       :link-type: ref
 
-使用 uv 安装（推荐）
---------------------
+       使用超快的 ``uv`` 包管理器进行安装。
 
-``uv`` 是一个快速的 Python 包管理器：
+    .. grid-item-card::  📦 标准 Pip
+       :link: installation-with-pip
+       :link-type: ref
 
-.. code-block:: bash
+       使用标准的 Python ``pip`` 工具进行安装。
 
-   # 安装 uv（如未安装）
-   # macOS / Linux
-   curl -LsSf https://astral.sh/uv/install.sh | sh
-   # Windows
-   powershell -c "irm https://astral.sh/uv/install.ps1 | iex"
+.. note::
+   **要求**：Python 3.11 或更高版本。
 
-   # 安装 canns（CPU 版本）
-   uv pip install canns
+安装
+----
 
-   # 或指定加速器
-   uv pip install canns[cuda12]   # NVIDIA CUDA 12
-   uv pip install canns[tpu]      # Google TPU
+选择您喜欢的包管理器：
 
-使用 pip 安装
--------------
+.. tab-set::
 
-.. code-block:: bash
+    .. tab-item:: 使用 uv（推荐）
+       :sync: uv
 
-   # CPU 版本
-   pip install canns
+       首先，确保您已安装 `uv <https://github.com/astral-sh/uv>`_。
 
-   # 指定加速器
-   pip install canns[cuda12]   # NVIDIA CUDA 12
-   pip install canns[tpu]      # Google TPU
+       .. code-block:: bash
 
-从源码安装
----------
+          # 标准 CPU 版本
+          uv pip install canns
 
-.. code-block:: bash
+          # 使用加速器
+          uv pip install "canns[cuda12]"   # NVIDIA CUDA 12
+          uv pip install "canns[tpu]"      # Google TPU
 
-   # 克隆仓库
-   git clone https://github.com/routhleck/canns.git
-   cd canns
+    .. tab-item:: 使用 pip
+       :sync: pip
 
-   # 方法1：使用 uv
-   uv sync --all-extras
+       .. code-block:: bash
 
-   # 方法2：使用 pip
-   pip install -e "."
+          # 标准 CPU 版本
+          pip install canns
+
+          # 使用加速器
+          pip install "canns[cuda12]"   # NVIDIA CUDA 12
+          pip install "canns[tpu]"      # Google TPU
+
+    .. tab-item:: 从源码安装
+       :sync: source
+
+       .. code-block:: bash
+
+          git clone https://github.com/routhleck/canns.git
+          cd canns
+          pip install -e .
 
 验证安装
 --------
@@ -59,10 +66,7 @@
 .. code-block:: python
 
    import canns
-   print(canns.__version__)
-   print("✅ 安装成功！")
+   print(f"✅ 成功安装 canns 版本 {canns.__version__}")
 
-下一步
-------
-
-- :doc:`01_quick_start`
+.. seealso::
+   准备好了吗？查看 :doc:`第一步指南 <01_build_model>`。

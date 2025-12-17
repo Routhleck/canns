@@ -13,7 +13,7 @@ Scenarios
 ---------
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
    :caption: Tutorial Scenarios:
 
    01_cann_modeling/index
@@ -110,8 +110,8 @@ All tutorials are provided as Jupyter notebooks (`.ipynb` files).
 .. code-block:: bash
 
    # Clone the repository
-   git clone https://github.com/PKU-NIP-Lab/CANNs.git
-   cd CANNs
+   git clone https://github.com/routhleck/canns.git
+   cd canns
 
    # Install dependencies
    pip install -e .[dev]
@@ -130,7 +130,7 @@ Support and Feedback
 
 - **Documentation**: Full API reference available
 - **Examples**: Additional examples in the `examples/` directory
-- **Issues**: Report problems on `GitHub Issues <https://github.com/PKU-NIP-Lab/CANNs/issues>`_
+- **Issues**: Report problems on `GitHub Issues <https://github.com/routhleck/canns/issues>`_
 - **Discussions**: Ask questions in GitHub Discussions
 
 Contributing
