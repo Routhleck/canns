@@ -2,69 +2,81 @@
 分析方法
 ================
 
-本文档解释了CANNs库中的分析和可视化工具。
+本文档解释了 CANNs 库中的分析和可视化工具。
 
 概览
 ========
 
-分析器模块（ ``canns.analyzer`` ）提供了用于可视化和解释仿真输出和实验数据的工具。它根据数据源和分析类型分为不同的组件：
+分析器模块（``canns.analyzer``）提供了用于可视化和解释仿真输出和实验数据的工具。它根据数据源和分析类型分为不同的组件：
 
-**模型分析器**
-   分析CANN仿真输出
+.. grid:: 2 2 2 4
+   :gutter: 3
 
-**数据分析器**
-   分析实验神经记录
+   .. grid-item-card:: 📊 模型分析器
+      :class-header: bg-primary text-white text-center
 
-**RNN动力学分析**
-   研究不动点和慢流形
+      分析 CANN 仿真输出
 
-**拓扑数据分析**
-   检测神经活动中的几何结构
+   .. grid-item-card:: 📈 数据分析器
+      :class-header: bg-success text-white text-center
+
+      分析实验神经记录
+
+   .. grid-item-card:: 🔬 RNN 动力学分析
+      :class-header: bg-info text-white text-center
+
+      研究不动点和慢流形
+
+   .. grid-item-card:: 🌐 拓扑数据分析
+      :class-header: bg-warning text-dark text-center
+
+      检测神经活动中的几何结构
 
 模型分析器
 ==============
 
-模型分析器可视化CANN仿真的输出，专注于网络活动模式及其随时间的演化。
+模型分析器可视化 CANN 仿真的输出，专注于网络活动模式及其随时间的演化。
 
 核心功能
 -----------------
 
-**活动可视化**
+.. tab-set::
 
-``animate_dynamics()``
-   动画显示放电率随时间的演化
+   .. tab-item:: 📹 活动可视化
 
-``plot_network_state()``
-   当前活动模式的快照
+      .. list-table::
+         :widths: 40 60
 
-``plot_bump_trajectory()``
-   跟踪凸起中心位置
+         * - ``animate_dynamics()``
+           - 动画显示放电率随时间的演化
+         * - ``plot_network_state()``
+           - 当前活动模式的快照
+         * - ``plot_bump_trajectory()``
+           - 跟踪活动凸起中心位置
 
-**能量景观**
+   .. tab-item:: ⚡ 能量景观
 
-``energy_landscape_1d_static()``
-   可视化吸引子盆地结构（静态图）
+      .. list-table::
+         :widths: 40 60
 
-``energy_landscape_1d_animation()``
-   可视化吸引子盆地结构（动画）
+         * - ``energy_landscape_1d()``
+           - 可视化吸引子盆地结构
+         * - ``energy_landscape_2d()``
+           - 二维能量表面
+         * - **用途**
+           - 展示不同状态如何与吸引子最小值相关
 
-``energy_landscape_2d_static()``
-   二维能量表面（静态图）
+   .. tab-item:: 🔗 连接性
 
-``energy_landscape_2d_animation()``
-   二维能量表面（动画）
+      .. list-table::
+         :widths: 40 60
 
-展示不同状态如何与吸引子最小值相关。
-
-**连接性分析**
-
-``plot_firing_field_heatmap()``
-   可视化放电场热图
-
-``tuning_curve()``
-   调谐曲线可视化
-
-揭示墨西哥帽或其他核结构。
+         * - ``plot_weight_matrix()``
+           - 可视化循环连接
+         * - ``plot_connection_profile()``
+           - 单个神经元的连接模式
+         * - **用途**
+           - 揭示墨西哥帽或其他核结构
 
 设计哲学
 -----------------
@@ -81,12 +93,13 @@
 
    * 放电率作为 ``(time, neurons)`` 数组
    * 膜电位作为 ``(time, neurons)`` 数组
-   * 用于凸起定位的空间坐标
+   * 用于活动凸起定位的空间坐标
 
-PlotConfig系统
+PlotConfig 系统
 -----------------
 
-.. tip::
+.. admonition:: 配置模式
+   :class: tip
 
    库使用 ``PlotConfig`` 数据类进行可视化配置：
 
@@ -98,12 +111,12 @@ PlotConfig系统
 
    **常见配置包括：**
 
-   * ``figsize`` ：图形尺寸
-   * ``interval`` ：动画速度
-   * ``colormap`` ：颜色方案选择
-   * ``show_colorbar`` ：切换颜色图例
+   * ``figsize``：图形尺寸
+   * ``interval``：动画速度
+   * ``colormap``：颜色方案选择
+   * ``show_colorbar``：切换颜色图例
 
-   虽然PlotConfig提供便利，但为了向后兼容，仍然支持直接参数传递。
+   虽然 PlotConfig 提供便利，但为了向后兼容，仍然支持直接参数传递。
 
 数据分析器
 =============
@@ -124,7 +137,7 @@ PlotConfig系统
      - 干净的仿真输出
      - 脉冲序列（稀疏、离散事件）、放电率估计
    * - **关注点**
-     - 可视化CANN动力学
+     - 可视化 CANN 动力学
      - 解码神经活动、拟合参数模型
    * - **噪声**
      - 最小（仿真）
@@ -133,41 +146,48 @@ PlotConfig系统
 功能
 ------------
 
-**群体活动分析**
+.. grid:: 2
+   :gutter: 3
 
-* 从神经群体估计凸起位置
-* 拟合高斯曲线到活动模式
-* 跟踪解码位置随时间的变化
+   .. grid-item-card:: 📊 群体活动分析
+      :class-header: bg-light text-center
 
-**虚拟数据生成**
+      * 从神经群体估计活动凸起位置
+      * 拟合高斯曲线到活动模式
+      * 跟踪解码位置随时间的变化
 
-* 创建用于算法测试的合成脉冲序列
-* 生成真值场景
-* 验证分析流水线
+   .. grid-item-card:: 🔬 虚拟数据生成
+      :class-header: bg-light text-center
 
-**统计工具**
+      * 创建用于算法测试的合成脉冲序列
+      * 生成真值场景
+      * 验证分析流水线
 
-* 调谐曲线估计
-* 角度变量的圆形统计
-* 误差量化指标
+   .. grid-item-card:: 📈 统计工具
+      :class-header: bg-light text-center
 
-**用例**
+      * 调谐曲线估计
+      * 角度变量的圆形统计
+      * 误差量化指标
 
-* 针对实验记录验证CANN模型
-* 为神经数据开发解码算法
-* 用模拟实验测试理论预测
+   .. grid-item-card:: 🎯 用例
+      :class-header: bg-light text-center
 
-RNN动力学分析
+      * 针对实验记录验证 CANN 模型
+      * 为神经数据开发解码算法
+      * 用模拟实验测试理论预测
+
+RNN 动力学分析
 =====================
 
-该组件将递归神经网络作为动力系统进行分析，找到不动点并表征相空间结构。
+该组件将递归神经网络作为动力系统进行分析 :cite:p:`sussillo2013opening`，找到不动点 :cite:p:`golub2018fixedpointfinder` 并表征相空间结构。
 
 目的
 -------
 
 .. note::
 
-   CANN模型是连续时间动力系统。理解它们的行为需要：
+   CANN 模型是连续时间动力系统。理解它们的行为需要：
 
    * 识别稳定的不动点（吸引子）
    * 找到不稳定的不动点（鞍点、排斥子）
@@ -176,36 +196,43 @@ RNN动力学分析
 方法
 -------
 
-**不动点查找**
+.. grid:: 1
+   :gutter: 2
 
-定位动力学消失的状态（du/dt = 0）：
+   .. grid-item-card:: 📍 不动点查找
+      :class-header: bg-primary text-white
 
-* 数值求根
-* 多个初始条件以进行彻底搜索
-* 通过稳定性分类（特征值分析）
+      定位动力学消失的状态（du/dt = 0）：
 
-**稳定性分析**
+      * 数值求根
+      * 多个初始条件以进行彻底搜索
+      * 通过稳定性分类（特征值分析）
 
-表征不动点附近的动力学：
+   .. grid-item-card:: 📊 稳定性分析
+      :class-header: bg-success text-white
 
-* Jacobian计算
-* 特征值分解
-* 吸引子 vs. 鞍点 vs. 排斥子分类
+      表征不动点附近的动力学：
 
-**慢流形识别**
+      * Jacobian 计算
+      * 特征值分解
+      * 吸引子 vs. 鞍点 vs. 排斥子分类
 
-在状态空间中找到低维结构：
+   .. grid-item-card:: 🌀 慢流形识别
+      :class-header: bg-info text-white
 
-* 降维
-* 识别慢动力学的方向
-* 可视化状态空间组织
+      在状态空间中找到低维结构：
+
+      * 降维
+      * 识别慢动力学的方向
+      * 可视化状态空间组织
 
 当前范围
 -------------
 
-.. note::
+.. admonition:: 实现状态
+   :class: note
 
-   目前专注于分析RNN模型（包括CANN作为特例）。为以下提供工具：
+   目前专注于分析 RNN 模型（包括 CANN 作为特例）。为以下提供工具：
 
    * 理解内在网络动力学
    * 表征吸引子景观
@@ -214,76 +241,108 @@ RNN动力学分析
 拓扑数据分析（TDA）
 ================================
 
-TDA工具检测高维神经活动数据中的几何和拓扑结构。
+TDA 工具 :cite:p:`carlsson2009topology` 使用持续同调 :cite:p:`edelsbrunner2010computational` 检测高维神经活动数据中的几何和拓扑结构。
 
-为什么CANN需要TDA
+为什么 CANN 需要 TDA
 -----------------
 
 .. important::
 
-   CANN活动模式通常存在于低维流形上：
+   CANN 活动模式通常存在于低维流形上：
 
-   * **环吸引子**：圆上的活动（1D环面）
-   * **环面吸引子**：2D环面上的活动（网格细胞）
+   * **环吸引子**：圆上的活动（1D 环面）
+   * **环面吸引子**：2D 环面上的活动（网格细胞）
    * **球面吸引子**：球面上的活动
 
-   传统方法可能会遗漏这些结构。TDA提供数学上严格的检测。
+   传统方法可能会遗漏这些结构。TDA 提供数学上严格的检测。
 
 可用工具
 ---------------
 
-**持续同调**
+.. grid:: 2
+   :gutter: 3
 
-* 加速的ripser实现
-* 检测拓扑特征（环、空洞）
-* 持续图量化特征显著性
+   .. grid-item-card:: 🔬 持续同调
+      :class-header: bg-light text-center
 
-**降维**
+      * 加速的 ripser 实现
+      * 检测拓扑特征（环、空洞）
+      * 持续图量化特征显著性
 
-* 用户应用外部工具（UMAP、PCA等）
-* 库提供预处理实用程序
-* 降维表示的可视化
+   .. grid-item-card:: 📉 降维
+      :class-header: bg-light text-center
+
+      * 用户应用外部工具（UMAP、PCA 等）
+      * 库提供预处理实用程序
+      * 降维表示的可视化
 
 用例
 ---------
 
-**网格细胞分析**
+.. tab-set::
 
-网格细胞在环面上编码位置。TDA可以：
+   .. tab-item:: 🧭 网格细胞分析
 
-* ✅ 验证神经记录中的环面结构
-* ✅ 量化活动与理论预测的匹配程度
-* ✅ 检测与理想拓扑的偏差
+      网格细胞在环面上编码位置。TDA 可以：
 
-**吸引子结构发现**
+      * ✅ 验证神经记录中的环面结构 :cite:p:`carlsson2009topology,edelsbrunner2010computational`
+      * ✅ 量化活动与理论预测的匹配程度
+      * ✅ 检测与理想拓扑的偏差
 
-对于未知网络：
+   .. tab-item:: 🔍 吸引子结构发现
 
-* ✅ 从活动模式推断吸引子几何
-* ✅ 测试关于编码流形的假设
-* ✅ 将实验数据与模型预测进行比较
+      对于未知网络：
+
+      * ✅ 从活动模式推断吸引子几何
+      * ✅ 测试关于编码流形的假设
+      * ✅ 将实验数据与模型预测进行比较
 
 实现说明
 ---------------------
 
-.. tip::
+.. admonition:: 技术细节
+   :class: tip
 
-   技术细节：
-
-   * **Ripser集成**，用于快速持续同调
+   * **Ripser 集成**，用于快速持续同调 :cite:p:`carlsson2009topology,edelsbrunner2010computational`
    * **外部依赖**，用于某些高级方法
    * **专注于工具**，与吸引子网络研究相关
 
-   有关性能详细信息，请参阅 ``canns-lib`` Ripser模块（1.13倍平均加速，最高1.82倍）。
+   有关性能详细信息，请参阅 ``canns-lib`` Ripser 模块（1.13 倍平均加速，最高 1.82 倍）。
 
 总结
 =======
 
 分析模块提供全面的工具：
 
-1. **模型分析器** - 使用标准化函数可视化CANN仿真输出
-2. **数据分析器** - 处理实验记录和合成神经数据
-3. **RNN动力学** - 研究不动点和相空间结构
-4. **TDA** - 检测神经表征的拓扑属性
+.. grid:: 2 2 2 4
+   :gutter: 2
+
+   .. grid-item-card::
+      :class-header: bg-primary text-white text-center
+
+      1️⃣
+      ^^^
+      **模型分析器**：使用标准化函数可视化 CANN 仿真输出
+
+   .. grid-item-card::
+      :class-header: bg-success text-white text-center
+
+      2️⃣
+      ^^^
+      **数据分析器**：处理实验记录和合成神经数据
+
+   .. grid-item-card::
+      :class-header: bg-info text-white text-center
+
+      3️⃣
+      ^^^
+      **RNN 动力学**：研究不动点和相空间结构
+
+   .. grid-item-card::
+      :class-header: bg-warning text-dark text-center
+
+      4️⃣
+      ^^^
+      **TDA**：检测神经表征的拓扑属性
 
 这些工具既支持正向建模（仿真分析）又支持逆向工程（实验数据解释），支持从理论到验证的完整研究周期。

@@ -47,40 +47,119 @@ Visualizations
 
 .. raw:: html
 
-   <div align="center">
-   <table>
-   <tr>
-   <td align="center" width="50%" valign="top">
-   <h4>1D CANN Smooth Tracking</h4>
-   <img src="../_static/smooth_tracking_1d.gif" alt="1D CANN Smooth Tracking" width="320">
-   <br><em>Real-time dynamics during smooth tracking</em>
-   </td>
-   <td align="center" width="50%" valign="top">
-   <h4>2D CANN Population Encoding</h4>
-   <img src="../_static/CANN2D_encoding.gif" alt="2D CANN Encoding" width="320">
-   <br><em>Spatial information encoding patterns</em>
-   </td>
-   </tr>
-   <tr>
-   <td colspan="2" align="center">
-   <h4>Theta Sweep Analysis</h4>
-   <img src="../_static/theta_sweep_animation.gif" alt="Theta Sweep Animation" width="600">
-   <br><em>Theta rhythm modulation in grid and direction cell networks</em>
-   </td>
-   </tr>
-   <tr>
-   <td align="center" width="50%" valign="top">
-   <h4>Bump Analysis</h4>
-   <img src="../_static/bump_analysis_demo.gif" alt="Bump Analysis Demo" width="320">
-   <br><em>1D bump fitting and analysis</em>
-   </td>
-   <td align="center" width="50%" valign="top">
-   <h4>Torus Topology Analysis</h4>
-   <img src="../_static/torus_bump.gif" alt="Torus Bump Analysis" width="320">
-   <br><em>3D torus visualization and decoding</em>
-   </td>
-   </tr>
-   </table>
+   <style>
+   .viz-container {
+      display: flex;
+      flex-direction: column;
+      gap: 25px;
+      max-width: 1000px;
+      margin: 30px auto;
+      padding: 20px;
+   }
+   .viz-row {
+      display: flex;
+      gap: 20px;
+      justify-content: center;
+      align-items: stretch;
+   }
+   .viz-card {
+      flex: 1;
+      background: #ffffff;
+      border: 2px solid #e0e0e0;
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+      transition: transform 0.2s, box-shadow 0.2s;
+      text-align: center;
+   }
+   .viz-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+      border-color: #4a90e2;
+   }
+   .viz-card-wide {
+      flex: 1 1 100%;
+      background: linear-gradient(135deg, #f5f7fa 0%, #ffffff 100%);
+      border: 2px solid #b8daff;
+      border-radius: 12px;
+      padding: 25px;
+      box-shadow: 0 6px 16px rgba(74, 144, 226, 0.12);
+   }
+   .viz-card-wide:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 10px 24px rgba(74, 144, 226, 0.2);
+      border-color: #4a90e2;
+   }
+   .viz-title {
+      color: #2c3e50;
+      font-size: 18px;
+      font-weight: 600;
+      margin: 0 0 15px 0;
+      padding-bottom: 10px;
+      border-bottom: 2px solid #e8eef5;
+   }
+   .viz-title-wide {
+      color: #1e3a5f;
+      font-size: 20px;
+      font-weight: 700;
+      margin: 0 0 20px 0;
+      padding-bottom: 12px;
+      border-bottom: 3px solid #4a90e2;
+   }
+   .viz-caption {
+      color: #666;
+      font-style: italic;
+      font-size: 14px;
+      margin-top: 12px;
+      line-height: 1.5;
+   }
+   .viz-img {
+      max-width: 100%;
+      height: auto;
+      border-radius: 8px;
+      border: 1px solid #e8eef5;
+   }
+   @media (max-width: 768px) {
+      .viz-row {
+         flex-direction: column;
+      }
+   }
+   </style>
+
+   <div class="viz-container">
+      <div class="viz-row">
+         <div class="viz-card">
+            <h4 class="viz-title">1D CANN Smooth Tracking</h4>
+            <img src="../_static/smooth_tracking_1d.gif" alt="1D CANN Smooth Tracking" class="viz-img" width="320">
+            <p class="viz-caption">Real-time dynamics during smooth tracking</p>
+         </div>
+         <div class="viz-card">
+            <h4 class="viz-title">2D CANN Population Encoding</h4>
+            <img src="../_static/CANN2D_encoding.gif" alt="2D CANN Encoding" class="viz-img" width="320">
+            <p class="viz-caption">Spatial information encoding patterns</p>
+         </div>
+      </div>
+
+      <div class="viz-row">
+         <div class="viz-card-wide">
+            <h4 class="viz-title-wide">🔬 Theta Sweep Analysis</h4>
+            <img src="../_static/theta_sweep_animation.gif" alt="Theta Sweep Animation" class="viz-img" width="600">
+            <p class="viz-caption">Theta rhythm modulation in grid and direction cell networks</p>
+         </div>
+      </div>
+
+      <div class="viz-row">
+         <div class="viz-card">
+            <h4 class="viz-title">Bump Analysis</h4>
+            <img src="../_static/bump_analysis_demo.gif" alt="Bump Analysis Demo" class="viz-img" width="320">
+            <p class="viz-caption">1D bump fitting and analysis</p>
+         </div>
+         <div class="viz-card">
+            <h4 class="viz-title">Torus Topology Analysis</h4>
+            <img src="../_static/torus_bump.gif" alt="Torus Bump Analysis" class="viz-img" width="320">
+            <p class="viz-caption">3D torus visualization and decoding</p>
+         </div>
+      </div>
    </div>
 
 Quick Start
