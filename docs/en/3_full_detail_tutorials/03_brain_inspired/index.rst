@@ -1,8 +1,7 @@
 Scenario 3: Brain-Inspired Learning
 ====================================
 
-Tutorials on biologically-inspired learning rules for neural networks, including Hebbian plasticity
-and associative memory.
+Tutorials on biologically-inspired learning rules for neural networks, including Hebbian plasticity and associative memory.
 
 Tutorials
 ---------
@@ -16,8 +15,7 @@ Tutorials
 Overview
 --------
 
-This scenario explores brain-inspired learning algorithms that model synaptic plasticity
-mechanisms observed in biological neural systems.
+This scenario explores brain-inspired learning algorithms that model synaptic plasticity mechanisms observed in biological neural systems.
 
 **Tutorial 1: Pattern Storage and Recall**
 
@@ -46,17 +44,17 @@ Prerequisites
 Estimated Time
 --------------
 
-- Tutorial 1: ~30-35 minutes
+- Tutorial 1: 30-35 minutes
 
 When to Use These Methods
 --------------------------
 
-**Hebbian/Hopfield:**
+**Hebbian/Hopfield**:
 - Associative memory tasks
 - Pattern completion with partial inputs
 - One-shot learning scenarios
 
-**Anti-Hebbian:**
+**Anti-Hebbian**:
 - Lateral inhibition between neurons
 - Decorrelation and sparse coding
 - Winner-take-all competition
@@ -64,5 +62,4 @@ When to Use These Methods
 Future Additions
 ----------------
 
-Additional tutorials on advanced learning rules (BCM plasticity, Oja's rule, STDP)
-may be added in future releases.
+Additional tutorials on advanced learning rules (BCM plasticity, Oja's rule, STDP) may be added in future releases.

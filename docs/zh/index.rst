@@ -40,7 +40,7 @@ CANNs 文档
 欢迎使用 CANNs！
 -----------------
 
-CANNs（连续吸引子神经网络工具包）是一个基于 BrainPy 构建的 Python 库，BrainPy 是一个强大的脑动力学编程框架。该工具包简化了连续吸引子神经网络和相关脑启发模型的实验流程，提供了即用型模型、任务生成器、分析工具和流水线，使神经科学和人工智能研究人员能够快速地从想法转化为可复现的仿真。
+CANNs（连续吸引子神经网络工具包）是一个基于 BrainPy 构建的 Python 库，BrainPy 是强大的脑动力学编程框架。本工具包简化了连续吸引子神经网络和相关脑启发模型的实验流程。它提供即用型模型、任务生成器、分析工具和流水线——让神经科学和 AI 研究人员能够快速从想法转化为可复现的仿真。
 
 可视化展示
 ----------
@@ -169,13 +169,13 @@ CANNs（连续吸引子神经网络工具包）是一个基于 BrainPy 构建的
 
 .. code-block:: bash
 
-   # 使用 uv（推荐，更快）
+   # 使用 uv（推荐，安装更快）
    uv pip install canns
 
-   # 或使用 pip
+   # 或用 pip
    pip install canns
 
-   # GPU 支持
+   # 若需 GPU 支持
    pip install canns[cuda12]
    pip install canns[cuda13]
 

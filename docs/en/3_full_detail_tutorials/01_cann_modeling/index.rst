@@ -29,14 +29,14 @@ Advanced Tutorials
 Learning Path
 -------------
 
-**For beginners:**
+**For beginners**:
 
 1. Start with Tutorial 1-4 (Foundation)
 2. Complete each tutorial in order
 3. Run all code cells to understand the concepts
 4. Experiment with parameters
 
-**For advanced users:**
+**For advanced users**:
 
 - Tutorial 5: Multi-scale spatial representation
 - Tutorial 6: Theta-modulated dynamics
@@ -52,6 +52,6 @@ Prerequisites
 Estimated Time
 --------------
 
-- Foundation tutorials (1-4): ~2-3 hours
-- Advanced tutorials (5-7): ~2.5 hours
-- Total: ~5 hours
+- Foundation tutorials (1-4): 2-3 hours
+- Advanced tutorials (5-7): 2.5 hours
+- Total: 5 hours

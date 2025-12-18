@@ -21,7 +21,7 @@ Installation Guide
 Installation
 ------------
 
-Choose your preferred package manager below:
+Choose your preferred package manager:
 
 .. tab-set::
 
