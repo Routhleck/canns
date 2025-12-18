@@ -6,8 +6,7 @@ Comprehensive tutorials covering all aspects of the CANNs library, organized by 
 Overview
 --------
 
-These tutorials provide in-depth, hands-on guidance for using the CANNs library across different
-research scenarios. Each tutorial is a complete Jupyter notebook that you can run and modify.
+These tutorials provide in-depth, hands-on guidance for using the CANNs library across different research scenarios. Each tutorial is a complete Jupyter notebook that you can run and modify.
 
 Scenarios
 ---------
@@ -25,47 +24,43 @@ Scenario Descriptions
 ---------------------
 
 **Scenario 1: CANN Modeling and Simulation** (7 tutorials)
-   Build, simulate, and analyze continuous attractor neural networks from scratch.
-   Learn network dynamics, parameter effects, and advanced architectures.
+   Build, simulate, and analyze continuous attractor neural networks from scratch. Learn network dynamics, parameter effects, and advanced architectures.
 
    - Foundation: Basic models, tasks, visualization, parameters
    - Advanced: Hierarchical networks, theta sweeps, complex environments
 
 **Scenario 2: Data Analysis and Neural Decoding** (Coming Soon)
-   Analyze experimental neural recordings, decode spatial representations,
-   and validate model predictions against real data.
+   Analyze experimental neural recordings, decode spatial representations, and validate model predictions against real data.
 
 **Scenario 3: Brain-Inspired Learning** (1 tutorial)
-   Implement biologically-inspired learning rules including Hebbian plasticity
-   and associative memory mechanisms.
+   Implement biologically-inspired learning rules including Hebbian plasticity and associative memory mechanisms.
 
    - Pattern storage and recall with Hopfield networks
 
 **Scenario 4: End-to-End Research Workflows** (1 tutorial)
-   Use high-level pipelines for complete analyses without detailed implementation knowledge.
-   Perfect for experimental neuroscientists.
+   Use high-level pipelines for complete analyses without detailed implementation knowledge. Perfect for experimental neuroscientists.
 
    - Theta sweep pipeline for trajectory analysis
 
 Learning Paths
 --------------
 
-**For Computational Neuroscientists:**
+**For Computational Neuroscientists**:
 
-1. Start with Scenario 1 (CANN Modeling) - Learn the foundations
-2. Explore Scenario 3 (Brain-Inspired Learning) - Understand learning mechanisms
+1. Start with Scenario 1 (CANN Modeling)—Learn the foundations
+2. Explore Scenario 3 (Brain-Inspired Learning)—Understand learning mechanisms
 3. Use Scenario 4 (Pipelines) for rapid analysis
 
-**For Experimental Neuroscientists:**
+**For Experimental Neuroscientists**:
 
-1. Begin with Scenario 4 (Pipelines) - Quick analysis of your data
-2. Optionally explore Scenario 1 - Understand what's happening under the hood
+1. Begin with Scenario 4 (Pipelines)—Quick analysis of your data
+2. Optionally explore Scenario 1—Understand what's happening under the hood
 3. Explore Scenario 3 for learning-based models
 
-**For Method Developers:**
+**For Method Developers**:
 
-1. Master Scenario 1 (CANN Modeling) - Deep understanding of models
-2. Study Scenario 3 (Brain-Inspired Learning) - Extend learning rules
+1. Master Scenario 1 (CANN Modeling)—Deep understanding of models
+2. Study Scenario 3 (Brain-Inspired Learning)—Extend learning rules
 3. Use Scenario 4 code as reference for creating new pipelines
 
 Prerequisites
@@ -80,12 +75,12 @@ Each scenario has specific prerequisites listed in its index page.
 Time Commitment
 ---------------
 
-- **Scenario 1**: ~5 hours (7 tutorials)
+- **Scenario 1**: 5 hours (7 tutorials)
 - **Scenario 2**: Coming soon
-- **Scenario 3**: ~35 minutes (1 tutorial)
-- **Scenario 4**: ~60 minutes (1 tutorial)
+- **Scenario 3**: 35 minutes (1 tutorial)
+- **Scenario 4**: 60 minutes (1 tutorial)
 
-Total estimated time: ~6.5 hours for all available tutorials
+Total estimated time: 6.5 hours for all available tutorials
 
 Getting Started
 ---------------
@@ -105,7 +100,7 @@ Running the Tutorials
 
 All tutorials are provided as Jupyter notebooks (`.ipynb` files).
 
-**To run locally:**
+**To run locally**:
 
 .. code-block:: bash
 
@@ -119,7 +114,7 @@ All tutorials are provided as Jupyter notebooks (`.ipynb` files).
    # Launch Jupyter
    jupyter notebook docs/en/3_full_detail_tutorials/
 
-**Online:**
+**Online**:
 
 - Open notebooks directly on GitHub
 - Use Google Colab (upload the notebook)
@@ -147,5 +142,4 @@ Please submit a pull request or open an issue.
 Next Steps
 ----------
 
-Choose a scenario above and start learning! Each scenario page provides
-detailed information about its content and learning objectives.
+Choose a scenario above and start learning! Each scenario page provides detailed information about its content and learning objectives.

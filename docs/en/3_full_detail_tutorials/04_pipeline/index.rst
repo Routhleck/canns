@@ -1,8 +1,7 @@
 Scenario 4: End-to-End Research Workflows
 ==========================================
 
-High-level pipelines for complete research workflows, from data loading to analysis and visualization,
-without requiring detailed knowledge of model implementation.
+High-level pipelines for complete research workflows—from data loading to analysis and visualization—without requiring detailed knowledge of model implementation.
 
 Tutorials
 ---------
@@ -16,9 +15,7 @@ Tutorials
 Overview
 --------
 
-This scenario demonstrates streamlined workflows for common research tasks using pre-built pipelines.
-Perfect for experimental neuroscientists and researchers who want to analyze data quickly without
-diving into implementation details.
+This scenario demonstrates streamlined workflows for common research tasks using pre-built pipelines. Perfect for experimental neuroscientists and researchers who want to analyze data quickly without diving into implementation details.
 
 **Tutorial 1: Theta Sweep Pipeline**
 
@@ -31,7 +28,7 @@ diving into implementation details.
 Who Should Use Pipelines?
 --------------------------
 
-**Perfect for:**
+**Perfect for**:
 
 - Experimental neuroscientists without deep coding expertise
 - Rapid prototyping and exploratory analysis
@@ -39,7 +36,7 @@ Who Should Use Pipelines?
 - Publication-quality figure generation
 - Teaching and demonstrations
 
-**Consider manual approach when:**
+**Consider manual approach when**:
 
 - Implementing non-standard model architectures
 - Developing new analysis methods
@@ -49,14 +46,14 @@ Who Should Use Pipelines?
 Learning Path
 -------------
 
-**Quick Start:**
+**Quick Start**:
 
 1. Prepare your trajectory data (positions + timestamps)
 2. Run the pipeline with default parameters
 3. Examine generated plots and animations
 4. Customize parameters as needed
 
-**Advanced Usage:**
+**Advanced Usage**:
 
 - Custom post-processing of simulation data
 - Batch processing multiple sessions
@@ -73,21 +70,21 @@ Prerequisites
 Estimated Time
 --------------
 
-- Tutorial 1: ~30-35 minutes
-- Setting up for your own data: ~15-30 minutes
-- Total: ~60 minutes
+- Tutorial 1: 30-35 minutes
+- Setting up for your own data: 15-30 minutes
+- Total: 60 minutes
 
 Pipeline Features
 -----------------
 
 The ThetaSweepPipeline provides:
 
-- **Automatic data validation** - Checks data format and quality
-- **Network simulation** - Direction cells and grid cells
-- **Theta modulation** - Speed-dependent oscillations
-- **Visualization suite** - Trajectory plots, population activity, animations
-- **Raw data export** - For custom analysis
-- **Flexible configuration** - From simple to advanced usage
+- **Automatic data validation**—Checks data format and quality
+- **Network simulation**—Direction cells and grid cells
+- **Theta modulation**—Speed-dependent oscillations
+- **Visualization suite**—Trajectory plots, population activity, animations
+- **Raw data export**—For custom analysis
+- **Flexible configuration**—From simple to advanced usage
 
 Data Input Formats
 ------------------

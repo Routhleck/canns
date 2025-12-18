@@ -25,13 +25,13 @@ Tutorial Overview
 
 This tutorial provides a detailed guide on using the ``FixedPointFinder`` tool to analyze the dynamical properties of recurrent neural networks (RNNs):
 
-- **Theoretical Foundation**: Understanding the concept of fixed points in dynamical systems
+- **Theoretical Foundation**: Understanding fixed points in dynamical systems
 - **FlipFlop Task**: Training RNNs to complete multi-channel memory tasks
 - **Fixed Point Finding**: Using optimization methods to identify stable and unstable fixed points
 - **Visualization Analysis**: Displaying fixed point distribution in state space through PCA dimensionality reduction
 - **Multi-Configuration Comparison**: Comparing fixed point structures across 2-bit, 3-bit, and 4-bit tasks
 
-**Key Finding**: For N-bit FlipFlop tasks, successfully trained RNNs learn to create 2^N stable fixed points, with each fixed point corresponding to a unique memory state combination.
+**Key Finding**: For N-bit FlipFlop tasks, successfully trained RNNs learn to create 2^N stable fixed points—each corresponding to a unique memory state combination.
 
 Learning Path
 -------------
@@ -54,6 +54,6 @@ Related Resources
 
 You may find these resources helpful:
 
-- :doc:`../01_cann_modeling/index` - Understanding CANN models
-- :doc:`../04_pipeline/index` - End-to-end research workflows
-- Core Concepts documentation - Detailed analysis methods
+- :doc:`../01_cann_modeling/index`—Understanding CANN models
+- :doc:`../04_pipeline/index`—End-to-end research workflows
+- Core Concepts documentation—Detailed analysis methods

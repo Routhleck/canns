@@ -7,7 +7,7 @@ This document explains the task generation philosophy and available paradigms in
 Overview
 ========
 
-The task module (``canns.task``) generates, saves, loads, imports, and visualizes experimental data for CANN simulations. It provides standardized paradigms that abstract common experimental scenarios, ensuring reproducibility and convenience.
+The task module (``canns.task``) generates experimental data for CANN simulations with support for saving, loading, importing, and visualization. It provides standardized paradigms that abstract common experimental scenarios, ensuring reproducibility and convenience.
 
 .. grid:: 2
    :gutter: 3
@@ -280,4 +280,4 @@ The task module provides:
       ^^^
       **Flexibility**: Navigation tasks allow user-defined input interpretation
 
-Tasks abstract experimental paradigms into reusable components, enabling systematic study of CANN dynamics across standardized conditions. The coupling design balances convenience for common cases with flexibility for specialized applications.
+Tasks abstract experimental paradigms into reusable components—enabling systematic study of CANN dynamics across standardized conditions. The coupling design balances convenience for common cases with flexibility for specialized applications.

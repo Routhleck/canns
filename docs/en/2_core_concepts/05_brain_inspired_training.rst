@@ -7,7 +7,7 @@ This document explains the brain-inspired learning mechanisms and the Trainer fr
 Overview
 ========
 
-The trainer module ( ``canns.trainer`` ) provides a unified interface for training brain-inspired models using biologically plausible learning rules. Unlike conventional deep learning with backpropagation, these methods rely on local, activity-dependent plasticity.
+The trainer module (``canns.trainer``) provides a unified interface for training brain-inspired models using biologically plausible learning rules. Unlike conventional deep learning with backpropagation, these methods rely on local, activity-dependent plasticity.
 
 Core Concept: Activity-Dependent Plasticity
 ============================================
@@ -175,7 +175,7 @@ Trainers interact with models through agreed-upon attributes:
 Weight Access
 ~~~~~~~~~~~~~
 
-Trainers expect models to expose weights as ``ParamState`` :
+Trainers expect models to expose weights as ``ParamState``:
 
 * Default attribute: ``model.W``
 * Custom attribute via ``model.weight_attr`` property
@@ -292,4 +292,4 @@ The brain-inspired training module provides:
 3. **Unified Trainer Interface** - Consistent API for all learning methods
 4. **Model-Trainer Separation** - Clean architecture enabling flexibility
 
-This framework enables research into biologically plausible learning mechanisms, associative memory formation, and self-organizing neural systems within the CANN paradigm.
+This framework enables research into biologically plausible learning mechanisms, associative memory formation, and self-organizing neural systems—all within the CANN paradigm.

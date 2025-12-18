@@ -7,7 +7,7 @@ This document explains the analysis and visualization tools in the CANNs library
 Overview
 ========
 
-The analyzer module (``canns.analyzer``) provides tools for visualizing and interpreting both simulation outputs and experimental data. It separates into distinct components based on data source and analysis type:
+The analyzer module (``canns.analyzer``) provides tools for visualizing and interpreting both simulation outputs and experimental data. It organizes into distinct components based on data source and analysis type:
 
 .. grid:: 2 2 2 4
    :gutter: 3
@@ -135,7 +135,7 @@ Key Differences from Model Analyzer
      - Data Analyzer
    * - **Input Data**
      - Clean simulation outputs
-     - Spike trains (sparse, discrete events), firing rate estimates
+     - Spike trains—sparse, discrete events—and firing rate estimates
    * - **Focus**
      - Visualize CANN dynamics
      - Decode neural activity, fit parametric models
@@ -345,4 +345,4 @@ The analysis module provides comprehensive tools for:
       ^^^
       **TDA**: Detect topological properties of neural representations
 
-These tools enable both forward modeling (simulation analysis) and reverse engineering (experimental data interpretation), supporting the full research cycle from theory to validation.
+These tools enable both forward modeling (simulation analysis) and reverse engineering (experimental data interpretation)—supporting the full research cycle from theory to validation.
