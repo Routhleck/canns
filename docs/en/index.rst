@@ -40,7 +40,7 @@ CANNs Documentation
 Welcome to CANNs!
 -----------------
 
-CANNs (Continuous Attractor Neural Networks toolkit) is a Python library built on top of BrainPy, a powerful framework for brain dynamics programming. It streamlines experimentation with continuous attractor neural networks and related brain-inspired models. It delivers ready-to-use models, task generators, analysis tools, and pipelines so neuroscience and AI researchers can move from ideas to reproducible simulations quickly.
+CANNs (Continuous Attractor Neural Networks toolkit) is a Python library built on BrainPy, a powerful framework for brain dynamics programming. It streamlines experimentation with continuous attractor neural networks and related brain-inspired models. The library delivers ready-to-use models, task generators, analysis tools, and pipelines—enabling neuroscience and AI researchers to move quickly from ideas to reproducible simulations.
 
 Visualizations
 --------------
@@ -169,13 +169,13 @@ Install CANNs:
 
 .. code-block:: bash
 
-   # Using uv (recommended, faster)
+   # Using uv (recommended for faster installs)
    uv pip install canns
 
-   # Or using pip
+   # Or use pip
    pip install canns
 
-   # GPU support
+   # For GPU support
    pip install canns[cuda12]
    pip install canns[cuda13]
 

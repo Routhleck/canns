@@ -7,15 +7,15 @@
 概述
 ========
 
-模型模块（ ``canns.models`` ）实现了各种 CANN 架构及其变体。模型分为三个类别：
+模型模块（``canns.models``）实现了各种 CANN 架构及其变体。模型分为三个类别：
 
-**基础模型** ( ``canns.models.basic`` )
+**基础模型** (``canns.models.basic``)
    标准 CANN 实现和变体
 
-**类脑模型** ( ``canns.models.brain_inspired`` )
+**类脑模型** (``canns.models.brain_inspired``)
    具有生物学习机制的模型
 
-**混合模型** ( ``canns.models.hybrid`` )
+**混合模型** (``canns.models.hybrid``)
    CANN 与人工神经网络的组合
 
 所有模型都基于 BrainPy 的动力学框架构建，该框架提供状态管理、时间步进和 JIT 编译功能。
@@ -36,13 +36,13 @@
 核心连续吸引子神经网络实现。
 
 ``CANN1D``
-   一维连续吸引子网络。默认 512 个神经元排列在环上。高斯循环连接。适用于头部方向编码 :cite:p:`taube1990head`、角度变量。
+   一维连续吸引子网络。默认使用 512 个神经元排列在环上，采用高斯循环连接。适用于头部方向编码 :cite:p:`taube1990head` 和角度变量。
 
 ``CANN1D_SFA``
-   带有尖峰频率适应的 CANN1D。增加活动依赖的负反馈，实现自持续波传播。用于建模内在动力学。
+   带有尖峰频率适应的 CANN1D。它增加了活动依赖的负反馈，并能实现自持续波传播。用于建模内在动力学。
 
 ``CANN2D``
-   二维连续吸引子网络。神经元排列在环面上。适用于位置场编码 :cite:p:`o1971hippocampus`、空间变量。
+   二维连续吸引子网络，神经元排列在环面上。适用于位置场编码 :cite:p:`o1971hippocampus` 和空间变量。
 
 ``CANN2D_SFA``
    带有尖峰频率适应的 CANN2D。支持二维行波。
@@ -101,7 +101,7 @@ Theta扫描模型 (theta_sweep_model.py)
 必需的方法
 ~~~~~~~~~~~~~~~~
 
-**连接矩阵** ( ``make_conn()`` )
+**连接矩阵** (``make_conn()``)
    生成循环连接矩阵。典型实现使用高斯核：
 
    - 计算神经元之间的成对距离
@@ -110,14 +110,14 @@ Theta扫描模型 (theta_sweep_model.py)
 
    参见 ``src/canns/models/basic/cann.py`` 的参考实现。
 
-**刺激生成** ( ``get_stimulus_by_pos(pos)`` )
+**刺激生成** (``get_stimulus_by_pos(pos)``)
    将特征空间位置转换为外部输入模式。由任务模块调用以生成神经输入：
 
    - 以位置坐标作为输入
    - 返回与网络大小匹配的刺激向量
    - 使用高斯凸起或类似的局部化模式
 
-**更新动力学** ( ``update(inputs)`` )
+**更新动力学** (``update(inputs)``)
    定义单步状态演化：
 
    - 读取当前状态
@@ -126,10 +126,10 @@ Theta扫描模型 (theta_sweep_model.py)
    - 写入更新后的状态
 
 **诊断属性**
-   暴露用于分析的有用信息：
+   提供用于分析的有用信息：
 
-   - ``self.x``：特征空间坐标
-   - ``self.rho``：神经元密度
+   - ``self.x``: 特征空间坐标
+   - ``self.rho``: 神经元密度
    - 用于凸起追踪的峰值检测方法
 
 类脑模型
@@ -174,8 +174,8 @@ Theta扫描模型 (theta_sweep_model.py)
 
 定义状态变量和可训练权重：
 
-- ``self.s``：状态向量（ ``bm.Variable`` ）
-- ``self.W``：连接权重（ ``bm.Variable`` ）
+- ``self.s``: 状态向量（``bm.Variable``）
+- ``self.W``: 连接权重（``bm.Variable``）
 
 所有状态和权重变量在 BrainPy 中使用 ``bm.Variable``。
 
@@ -257,8 +257,8 @@ BrainPy 基础
 
 ``brainpy.math`` 提供时间步管理：
 
-- ``bm.set_dt(0.1)``：设置模拟时间步
-- ``bm.get_dt()``：检索当前时间步
+- ``bm.set_dt(0.1)``: 设置模拟时间步
+- ``bm.get_dt()``: 检索当前时间步
 
 这确保了模型、任务和训练器之间的一致性。
 

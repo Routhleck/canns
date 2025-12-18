@@ -7,15 +7,15 @@ This document explains the different categories of models in the CANNs library a
 Overview
 ========
 
-The models module ( ``canns.models`` ) implements various CANN architectures and their variants. Models are organized into three categories:
+The models module (``canns.models``) implements various CANN architectures and their variants. Models are organized into three categories:
 
-**Basic Models** ( ``canns.models.basic`` )
+**Basic Models** (``canns.models.basic``)
    Standard CANN implementations and variants
 
-**Brain-Inspired Models** ( ``canns.models.brain_inspired`` )
+**Brain-Inspired Models** (``canns.models.brain_inspired``)
    Models with biological learning mechanisms
 
-**Hybrid Models** ( ``canns.models.hybrid`` )
+**Hybrid Models** (``canns.models.hybrid``)
    Combinations of CANN with artificial neural networks
 
 All models are built on BrainPy's dynamics framework, which provides state management, time stepping, and JIT compilation capabilities.
@@ -36,13 +36,13 @@ Origin CANN (cann.py)
 Core continuous attractor neural network implementations.
 
 ``CANN1D``
-   One-dimensional continuous attractor network. Default 512 neurons arranged on a ring. Gaussian recurrent connections. Suitable for head direction encoding :cite:p:`taube1990head`, angular variables.
+   One-dimensional continuous attractor network. Defaults to 512 neurons arranged on a ring with Gaussian recurrent connections. Suitable for head direction encoding :cite:p:`taube1990head` and angular variables.
 
 ``CANN1D_SFA``
-   CANN1D with Spike Frequency Adaptation. Adds activity-dependent negative feedback, enables self-sustained wave propagation. Useful for modeling intrinsic dynamics.
+   CANN1D with Spike Frequency Adaptation. It adds activity-dependent negative feedback and enables self-sustained wave propagation. Useful for modeling intrinsic dynamics.
 
 ``CANN2D``
-   Two-dimensional continuous attractor network. Neurons arranged on a torus. Suitable for place field encoding :cite:p:`o1971hippocampus`, spatial variables.
+   Two-dimensional continuous attractor network with neurons arranged on a torus. Suitable for place field encoding :cite:p:`o1971hippocampus` and spatial variables.
 
 ``CANN2D_SFA``
    CANN2D with Spike Frequency Adaptation. Supports 2D traveling waves.
@@ -101,7 +101,7 @@ Store shape information in ``self.shape`` and ``self.varshape`` for proper dimen
 Required Methods
 ~~~~~~~~~~~~~~~~
 
-**Connection Matrix** ( ``make_conn()`` )
+**Connection Matrix** (``make_conn()``)
    Generate the recurrent connection matrix. Typical implementation uses Gaussian kernels:
 
    - Compute pairwise distances between neurons
@@ -110,14 +110,14 @@ Required Methods
 
    See ``src/canns/models/basic/cann.py`` for reference implementations.
 
-**Stimulus Generation** ( ``get_stimulus_by_pos(pos)`` )
+**Stimulus Generation** (``get_stimulus_by_pos(pos)``)
    Convert feature space positions into external input patterns. Called by task modules to generate neural inputs:
 
    - Takes position coordinates as input
    - Returns a stimulus vector matching network size
    - Uses Gaussian bump or similar localized pattern
 
-**Update Dynamics** ( ``update(inputs)`` )
+**Update Dynamics** (``update(inputs)``)
    Define single-step state evolution:
 
    - Read current states
@@ -128,14 +128,14 @@ Required Methods
 **Diagnostic Properties**
    Expose useful information for analysis:
 
-   - ``self.x`` : Feature space coordinates
-   - ``self.rho`` : Neuron density
+   - ``self.x``: Feature space coordinates
+   - ``self.rho``: Neuron density
    - Peak detection methods for bump tracking
 
 Brain-Inspired Models
 =====================
 
-Brain-inspired models feature biologically plausible learning mechanisms. Unlike basic models with fixed weights, these networks modify their connectivity through local, activity-dependent plasticity.
+Brain-inspired models use biologically plausible learning mechanisms. Unlike basic models with fixed weights, these networks modify their connectivity through local, activity-dependent plasticity.
 
 Key Characteristics
 -------------------
@@ -174,8 +174,8 @@ State and Weight Variables
 
 Define state variables and trainable weights:
 
-- ``self.s`` : State vector ( ``bm.Variable`` )
-- ``self.W`` : Connection weights ( ``bm.Variable`` )
+- ``self.s``: State vector (``bm.Variable``)
+- ``self.W``: Connection weights (``bm.Variable``)
 
 All state and weight variables use ``bm.Variable`` in BrainPy.
 
@@ -191,7 +191,7 @@ If weights are stored under a different name, override the ``weight_attr`` prope
 Update Dynamics
 ~~~~~~~~~~~~~~~
 
-Define state evolution under current weights in ``update(...)`` . Typically involves matrix-vector multiplication and activation function.
+Define state evolution under current weights in ``update(...)``. Typically involves matrix-vector multiplication and activation function.
 
 Energy Function
 ~~~~~~~~~~~~~~~

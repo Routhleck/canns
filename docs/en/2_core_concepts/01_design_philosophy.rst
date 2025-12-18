@@ -7,7 +7,7 @@ This document explains the core design principles and module organization of the
 Core Design Principles
 ======================
 
-The CANNs library is built around two fundamental principles that guide its architecture and implementation.
+The CANNs library rests on two fundamental principles that guide its architecture and implementation.
 
 Separation of Concerns
 ----------------------
@@ -29,7 +29,7 @@ The library strictly separates different functional responsibilities into indepe
 :🔗 **Pipeline** (``canns.pipeline``):
    Orchestrate complete experimental workflows
 
-Each module focuses on a single responsibility. Models do not generate their own input data. Tasks do not analyze results. Analyzers do not modify model parameters. This separation makes the codebase maintainable, testable, and extensible.
+Each module focuses on a single responsibility. Models don't generate their own input data. Tasks don't analyze results. Analyzers don't modify model parameters. This separation makes the codebase maintainable, testable, and extensible.
 
 Extensibility Through Base Classes
 -----------------------------------
@@ -40,7 +40,7 @@ Every major component inherits from abstract base classes that define standard i
 * ``canns.models.brain_inspired.BrainInspiredModel`` for brain-inspired models
 * ``canns.trainer.Trainer`` for training algorithms
 
-These base classes establish contracts that ensure all implementations work seamlessly with the rest of the library. Users can create custom models, tasks, or trainers by inheriting from these bases and implementing the required methods.
+These base classes establish contracts ensuring all implementations work seamlessly with the rest of the library. Users can create custom models, tasks, or trainers by inheriting from these bases and implementing the required methods.
 
 Module Architecture
 ===================
@@ -165,7 +165,7 @@ The CANNs library builds on BrainPy :cite:p:`wang2023brainpy` (``brainpy``), a p
 :🎲 **Random Number Management**:
    ``bm.random`` for reproducible stochasticity
 
-With BrainPy :cite:p:`wang2023brainpy`, CANN models only need to define variables and update equations. Time stepping, parallelization, and compilation are handled automatically, significantly reducing implementation complexity.
+With BrainPy :cite:p:`wang2023brainpy`, CANN models only need to define variables and update equations. Time stepping, parallelization, and compilation are handled automatically—significantly reducing implementation complexity.
 
 Module Relationships
 ====================
@@ -181,12 +181,12 @@ Some tasks require a model instance to access stimulus generation methods. For e
 Model ↔ Analyzer Independence
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Analyzers work with model outputs (firing rates, membrane potentials) but do not modify model state. They accept simulation results as NumPy arrays and produce visualizations. This independence allows the same analyzer to work with any model that produces compatible outputs.
+Analyzers work with model outputs (firing rates, membrane potentials) but don't modify model state. They accept simulation results as NumPy arrays and produce visualizations. This independence allows the same analyzer to work with any model that produces compatible outputs.
 
 Model ↔ Trainer Collaboration
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Trainers modify model parameters (specifically connection weights) according to learning rules. They interact with models through agreed-upon attributes like ``model.W`` for weights and ``model.s`` for state vectors. The trainer framework is designed for brain-inspired models that use local, activity-dependent plasticity.
+Trainers modify model parameters—specifically connection weights—according to learning rules. They interact with models through agreed-upon attributes like ``model.W`` for weights and ``model.s`` for state vectors. The trainer framework is designed for brain-inspired models that use local, activity-dependent plasticity.
 
 Pipeline Orchestration
 ~~~~~~~~~~~~~~~~~~~~~~~
@@ -212,7 +212,7 @@ Flexibility vs. Convenience
 
       Standard workflows should require minimal boilerplate
 
-This balance is achieved through sensible defaults combined with extensive customization options. For example, ``CANN1D()`` uses default parameters that work for most cases, but every parameter can be explicitly specified.
+The library achieves this balance through sensible defaults combined with extensive customization options. For example, ``CANN1D()`` uses default parameters that work for most cases, but every parameter can be explicitly specified.
 
 Performance vs. Simplicity
 --------------------------
@@ -241,7 +241,7 @@ Native Layer (canns-lib)
    * **Spatial Navigation**: Accelerated RatInABox environments with ~700x speedup for long trajectory integration
    * **Future Modules**: Planned support for approximate nearest neighbors, dynamics computation
 
-   The canns-lib integration follows the same principle: expose simple Python APIs while leveraging native performance for bottleneck operations. Users can opt into these accelerations without changing their code structure.
+   The canns-lib integration follows the same principle: it exposes simple Python APIs while leveraging native performance for bottleneck operations. Users can opt into these accelerations without changing their code structure.
 
 Extending the Library
 =====================

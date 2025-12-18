@@ -1,7 +1,7 @@
 Quick Starts
 ============
 
-This section provides step-by-step guides to help you get started with CANNs quickly.
+Step-by-step guides to help you get started with CANNs quickly.
 
 .. toctree::
    :maxdepth: 1
@@ -17,7 +17,7 @@ This section provides step-by-step guides to help you get started with CANNs qui
 Overview
 --------
 
-These interactive notebooks will guide you through the essential workflows:
+These guides cover the essential workflows:
 
 1. **Installation** - Set up your CANNs environment
 2. **Build Models** - Create your first CANN model
