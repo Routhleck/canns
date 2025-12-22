@@ -23,7 +23,7 @@ All models are built on BrainPy's dynamics framework, which provides state manag
 Basic Models
 ============
 
-Basic models implement the core **Wu-Amari-Wong continuous attractor neural networks (CANNs)** dynamics :cite:p:`amari1977dynamics,wu2008dynamics,fung2010moving,wu2016continuous` as described in theoretical neuroscience literature. They use predefined connectivity patterns (typically Gaussian kernels) and fixed parameters.
+Basic models implement the mathematically tractable and canonical continuous attractor neural network called the **Wu-Amari-Wong (WAW)** model :cite:p:`amari1977dynamics,wu2008dynamics,fung2010moving,wu2016continuous` as described in theoretical neuroscience literature. They use predefined connectivity patterns (typically Gaussian kernels) and fixed parameters.
 
 Available Basic Models
 ----------------------
