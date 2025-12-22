@@ -52,7 +52,7 @@
          * - ``plot_network_state()``
            - 当前活动模式的快照
          * - ``plot_bump_trajectory()``
-           - 跟踪活动凸起中心位置
+           - 跟踪活动波包中心位置
 
    .. tab-item:: ⚡ 能量景观
 
@@ -93,7 +93,7 @@
 
    * 放电率作为 ``(time, neurons)`` 数组
    * 膜电位作为 ``(time, neurons)`` 数组
-   * 用于活动凸起定位的空间坐标
+   * 用于活动波包定位的空间坐标
 
 PlotConfig 系统
 -----------------
@@ -152,7 +152,7 @@ PlotConfig 系统
    .. grid-item-card:: 📊 群体活动分析
       :class-header: bg-light text-center
 
-      * 从神经群体估计活动凸起位置
+      * 从神经群体估计活动波包位置
       * 拟合高斯曲线到活动模式
       * 跟踪解码位置随时间的变化
 
