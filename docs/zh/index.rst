@@ -150,9 +150,9 @@ CANNs（连续吸引子神经网络工具包）是一个基于 BrainPy 构建的
 
       <div class="viz-row">
          <div class="viz-card">
-            <h4 class="viz-title">活动凸起分析</h4>
+            <h4 class="viz-title">活动波包分析</h4>
             <img src="../_static/bump_analysis_demo.gif" alt="Bump Analysis Demo" class="viz-img" width="320">
-            <p class="viz-caption">1D 活动凸起拟合和分析</p>
+            <p class="viz-caption">1D 活动波包拟合和分析</p>
          </div>
          <div class="viz-card">
             <h4 class="viz-title">环面拓扑分析</h4>
