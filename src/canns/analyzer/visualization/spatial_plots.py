@@ -84,8 +84,8 @@ def plot_firing_field_heatmap(
         tuple[plt.Figure, plt.Axes]: The figure and axis objects for further customization.
 
     Example:
-        >>> from canns.analyzer.spatial import compute_firing_field
-        >>> from canns.analyzer.plotting import plot_firing_field_heatmap, PlotConfig
+        >>> from canns.analyzer.metrics.spatial_metrics import compute_firing_field
+        >>> from canns.analyzer.visualization import plot_firing_field_heatmap, PlotConfig
         >>> # Compute firing field
         >>> heatmaps = compute_firing_field(activity, positions, 5.0, 5.0, 50, 50)
         >>> # Plot single neuron with PlotConfig
@@ -179,8 +179,8 @@ def plot_autocorrelation(
         tuple[plt.Figure, plt.Axes]: Figure and axes objects.
 
     Example:
-        >>> from canns.analyzer.spatial import compute_spatial_autocorrelation
-        >>> from canns.analyzer.plotting import plot_autocorrelation, PlotConfigs
+        >>> from canns.analyzer.metrics.spatial_metrics import compute_spatial_autocorrelation
+        >>> from canns.analyzer.visualization import plot_autocorrelation, PlotConfigs
         >>> autocorr = compute_spatial_autocorrelation(rate_map)
         >>> # Modern approach
         >>> config = PlotConfigs.grid_autocorrelation(save_path='autocorr.png')
@@ -289,8 +289,8 @@ def plot_grid_score(
         tuple[plt.Figure, plt.Axes]: Figure and axes objects.
 
     Example:
-        >>> from canns.analyzer.spatial import compute_grid_score
-        >>> from canns.analyzer.plotting import plot_grid_score
+        >>> from canns.analyzer.metrics.spatial_metrics import compute_grid_score
+        >>> from canns.analyzer.visualization import plot_grid_score
         >>> grid_score, rotated_corrs = compute_grid_score(autocorr)
         >>> fig, ax = plot_grid_score(rotated_corrs, grid_score)
         >>> print(f"Grid score: {grid_score:.3f}")
@@ -418,8 +418,8 @@ def plot_grid_spacing_analysis(
         tuple[plt.Figure, plt.Axes]: Figure and axes objects.
 
     Example:
-        >>> from canns.analyzer.spatial import find_grid_spacing
-        >>> from canns.analyzer.plotting import plot_grid_spacing_analysis
+        >>> from canns.analyzer.metrics.spatial_metrics import find_grid_spacing
+        >>> from canns.analyzer.visualization import plot_grid_spacing_analysis
         >>> spacing_bins, spacing_m = find_grid_spacing(autocorr, bin_size=0.06)
         >>> fig, ax = plot_grid_spacing_analysis(autocorr, spacing_bins, bin_size=0.06)
         >>> print(f"Spacing: {spacing_m:.3f}m")
@@ -560,7 +560,7 @@ def create_grid_cell_tracking_animation(
         FuncAnimation | None: Animation object, or None if displayed in Jupyter.
 
     Example:
-        >>> from canns.analyzer.plotting import create_grid_cell_tracking_animation, PlotConfigs
+        >>> from canns.analyzer.visualization import create_grid_cell_tracking_animation, PlotConfigs
         >>> # Create animation
         >>> config = PlotConfigs.grid_cell_tracking_animation(
         ...     time_steps_per_second=1000,  # dt=1.0ms

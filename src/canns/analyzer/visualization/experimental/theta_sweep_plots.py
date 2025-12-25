@@ -22,8 +22,8 @@ from matplotlib.animation import FuncAnimation
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 from tqdm import tqdm
 
-from .plotting import PlotConfig
-from .plotting.jupyter_utils import display_animation_in_jupyter, is_jupyter_environment
+from ..config import PlotConfig
+from ..jupyter_utils import display_animation_in_jupyter, is_jupyter_environment
 
 
 @dataclass(slots=True)

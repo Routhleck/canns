@@ -1,6 +1,6 @@
 import brainpy.math as bm
 
-from canns.analyzer.plotting import PlotConfigs, energy_landscape_2d_animation
+from canns.analyzer.visualization import PlotConfigs, energy_landscape_2d_animation
 from canns.models.basic import CANN2D
 from canns.task.tracking import SmoothTracking2D
 

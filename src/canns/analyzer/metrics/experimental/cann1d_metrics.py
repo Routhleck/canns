@@ -9,7 +9,7 @@ from scipy.optimize import linear_sum_assignment
 from scipy.special import i0
 from tqdm import tqdm
 
-from canns.analyzer.plotting.jupyter_utils import (
+from canns.analyzer.visualization.jupyter_utils import (
     display_animation_in_jupyter,
     is_jupyter_environment,
 )
@@ -45,7 +45,7 @@ except ImportError:
 from canns.data.loaders import load_roi_data
 
 # Import PlotConfig for unified plotting
-from ..plotting import PlotConfig
+from ...visualization import PlotConfig
 
 
 # ==================== Configuration Classes ====================

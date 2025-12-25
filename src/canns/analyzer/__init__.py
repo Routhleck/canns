@@ -1,13 +1,17 @@
-"""Analyzer utilities for inspecting CANNs models and simulations."""
+"""Analyzer utilities for inspecting CANNs models and simulations.
 
-from . import brain_inspired, experimental_data, plotting, slow_points, spatial, theta_sweep, utils
+NEW STRUCTURE:
+├── metrics/           - Computational analysis (no matplotlib)
+├── visualization/     - Plotting and animation (matplotlib-based)
+├── slow_points/       - Fixed point analysis
+└── model_specific/    - Specialized model analyzers
+"""
+
+from . import metrics, model_specific, slow_points, visualization
 
 __all__ = [
-    "brain_inspired",
-    "experimental_data",
-    "plotting",
+    "metrics",
+    "visualization",
     "slow_points",
-    "spatial",
-    "theta_sweep",
-    "utils",
+    "model_specific",
 ]

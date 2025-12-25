@@ -8,7 +8,7 @@ common errors like array indexing issues and parameter mismatches.
 
 import numpy as np
 import pytest
-from canns.analyzer.experimental_data import (
+from canns.analyzer.metrics.experimental.cann2d_metrics import (
     SpikeEmbeddingConfig,
     TDAConfig,
     CANN2DPlotConfig,
@@ -179,7 +179,7 @@ def test_decode_circular_coordinates():
 
 def test_array_indexing_fix():
     """Test that the _get_coords function doesn't have array indexing errors."""
-    from canns.analyzer.experimental_data.cann2d import _get_coords
+    from canns.analyzer.metrics.experimental.cann2d_metrics import _get_coords
     
     # Create minimal test data
     num_sampled = 10

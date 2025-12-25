@@ -11,8 +11,8 @@ worker when using the parallel GIF renderer.
 import brainpy.math as bm
 import numpy as np
 
-from canns.analyzer.plotting.spikes import population_activity_heatmap
-from canns.analyzer.theta_sweep import create_theta_sweep_place_cell_animation
+from canns.analyzer.visualization.spike_plots import population_activity_heatmap
+from canns.analyzer.visualization.experimental.theta_sweep_plots import create_theta_sweep_place_cell_animation
 from canns.models.basic.theta_sweep_model import PlaceCellNetwork
 from canns.task.open_loop_navigation import TMazeRecessOpenLoopNavigationTask
 

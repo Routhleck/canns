@@ -7,8 +7,7 @@ These tests provide basic verification of the CANN1D bump fitting and animation 
 
 import numpy as np
 import pytest
-from canns.analyzer.experimental_data import bump_fits, create_1d_bump_animation, CANN1DPlotConfig
-from canns.analyzer.experimental_data.cann1d import BumpFitsConfig
+from canns.analyzer.metrics.experimental.cann1d_metrics import bump_fits, create_1d_bump_animation, CANN1DPlotConfig, BumpFitsConfig
 
 
 def create_mock_roi_data(n_roi=16, n_steps=1000):
@@ -233,7 +232,7 @@ def test_bump_fits_error_handling():
 
 def test_numba_availability():
     """Test whether numba optimization is available."""
-    from canns.analyzer.experimental_data.cann1d import HAS_NUMBA
+    from canns.analyzer.metrics.experimental.cann1d_metrics import HAS_NUMBA
     
     if HAS_NUMBA:
         print("Numba optimization available - tests will run faster")

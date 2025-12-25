@@ -28,13 +28,13 @@ from scipy.stats import binned_statistic_2d, multivariate_normal
 from sklearn import preprocessing
 from tqdm import tqdm
 
-from canns.analyzer.plotting.jupyter_utils import (
+from canns.analyzer.visualization.jupyter_utils import (
     display_animation_in_jupyter,
     is_jupyter_environment,
 )
 
 # Import PlotConfig for unified plotting
-from ..plotting import PlotConfig
+from ...visualization import PlotConfig
 
 
 # ==================== Configuration Classes ====================

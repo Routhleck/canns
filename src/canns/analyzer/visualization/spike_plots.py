@@ -281,7 +281,7 @@ def population_activity_heatmap(
 
     Example:
         >>> import numpy as np
-        >>> from canns.analyzer.plotting.spikes import population_activity_heatmap
+        >>> from canns.analyzer.visualization.spike_plots import population_activity_heatmap
         >>> # Simulate some activity data
         >>> activity = np.random.rand(1000, 100)  # 1000 timesteps, 100 neurons
         >>> fig, ax = population_activity_heatmap(activity, dt=0.001)

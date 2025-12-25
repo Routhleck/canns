@@ -1,7 +1,7 @@
 import brainpy as bp
 import brainpy.math as bm
 
-from canns.analyzer.plotting import energy_landscape_1d_animation
+from canns.analyzer.visualization import energy_landscape_1d_animation
 from canns.task.tracking import PopulationCoding1D, TemplateMatching1D, SmoothTracking1D
 from canns.models.basic import CANN1D
 

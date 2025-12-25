@@ -11,7 +11,7 @@ This example demonstrates:
 import numpy as np
 from matplotlib import pyplot as plt
 
-from canns.analyzer.brain_inspired import HopfieldAnalyzer
+from canns.analyzer.model_specific import HopfieldAnalyzer
 from canns.models.brain_inspired import AmariHopfieldNetwork
 from canns.trainer import HebbianTrainer
 

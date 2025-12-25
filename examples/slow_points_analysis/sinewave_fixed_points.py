@@ -20,7 +20,7 @@ import jax
 import jax.numpy as jnp
 import numpy as np
 
-from canns.analyzer.plotting import PlotConfig
+from canns.analyzer.visualization import PlotConfig
 from canns.analyzer.slow_points import FixedPointFinder, plot_fixed_points_2d
 
 

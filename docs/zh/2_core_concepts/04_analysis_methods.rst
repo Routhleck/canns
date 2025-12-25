@@ -9,6 +9,32 @@
 
 分析器模块（``canns.analyzer``）提供了用于可视化和解释仿真输出和实验数据的工具。它根据数据源和分析类型组织为不同的组件：
 
+模块结构
+--------
+
+.. admonition:: 新组织结构（v2.0+）
+   :class: note
+
+   分析器模块按功能组织：
+
+   * **metrics/** - 计算分析（无 matplotlib 依赖）
+
+     * ``spatial_metrics`` - 空间指标计算
+     * ``utils`` - Spike train 转换工具
+     * ``experimental/`` - CANN1D/2D 实验数据分析
+
+   * **visualization/** - 绘图和动画（基于 matplotlib）
+
+     * ``config`` - PlotConfig 统一配置系统
+     * ``spatial_plots`` - 空间可视化
+     * ``energy_plots`` - 能量景观可视化
+     * ``spike_plots`` - Raster 图和发放率图
+     * ``tuning_plots`` - 调谐曲线可视化
+     * ``experimental/`` - 实验数据可视化
+
+   * **slow_points/** - 不动点分析
+   * **model_specific/** - 专用模型分析器
+
 .. grid:: 2 2 2 4
    :gutter: 3
 

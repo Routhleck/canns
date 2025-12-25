@@ -4,7 +4,7 @@ import brainpy as bp
 import brainpy.math as bm
 import numpy as np
 
-from canns.analyzer.plotting import (
+from canns.analyzer.visualization import (
     PlotConfig,
     PlotConfigs,
     average_firing_rate_plot,
@@ -15,7 +15,7 @@ from canns.analyzer.plotting import (
     raster_plot,
     tuning_curve,
 )
-from canns.analyzer.utils import firing_rate_to_spike_train, normalize_firing_rates
+from canns.analyzer.metrics.utils import firing_rate_to_spike_train, normalize_firing_rates
 from canns.task.tracking import PopulationCoding1D, PopulationCoding2D, SmoothTracking1D
 from canns.models.basic import CANN1D, CANN2D
 

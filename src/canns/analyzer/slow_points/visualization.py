@@ -7,7 +7,7 @@ import numpy as np
 from matplotlib.figure import Figure
 from sklearn.decomposition import PCA
 
-from ..plotting.config import PlotConfig
+from ..visualization.config import PlotConfig
 from .fixed_points import FixedPoints
 
 __all__ = ["plot_fixed_points_2d", "plot_fixed_points_3d"]
@@ -34,7 +34,7 @@ def plot_fixed_points_2d(
 
     Example:
         >>> from canns.analyzer.slow_points import plot_fixed_points_2d, FixedPoints
-        >>> from canns.analyzer.plotting import PlotConfig
+        >>> from canns.analyzer.visualization import PlotConfig
         >>> config = PlotConfig(
         ...     title="Fixed Points Analysis",
         ...     figsize=(10, 8),
@@ -171,7 +171,7 @@ def plot_fixed_points_3d(
 
     Example:
         >>> from canns.analyzer.slow_points import plot_fixed_points_3d, FixedPoints
-        >>> from canns.analyzer.plotting import PlotConfig
+        >>> from canns.analyzer.visualization import PlotConfig
         >>> config = PlotConfig(
         ...     title="Fixed Points 3D",
         ...     figsize=(12, 10),
