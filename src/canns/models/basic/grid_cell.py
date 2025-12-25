@@ -5,9 +5,8 @@ This module implements a standard grid cell model,
 suitable for basic spatial navigation and path integration tasks.
 """
 
-import jax
-import brainpy as bp
 import brainpy.math as bm
+import jax
 import numpy as np
 
 from ._base import BasicModel
@@ -344,3 +343,118 @@ class GridCell2D(BasicModel):
         # 6. Calculate firing rates with divisive normalization
         u_sq = bm.square(self.u.value)
         self.r.value = self.g * u_sq / (1.0 + self.k * bm.sum(u_sq))
+
+
+class GridCell2D_SFA(GridCell2D):
+    """
+    GridCell2D with Spike-Frequency Adaptation (SFA).
+
+    Extends GridCell2D with slow negative feedback adaptation for
+    anticipative tracking behavior.
+
+    Args:
+        All GridCell2D parameters, plus:
+        tau_v: Adaptation time constant (much slower than tau). Default: 50.0
+        m: Coupling strength from membrane potential to adaptation. Default: 0.3
+
+    Additional Attributes:
+        v (Variable): Adaptation variable (shape: num)
+
+    Example:
+        >>> import brainpy.math as bm
+        >>> from canns.models.basic import GridCell2D_SFA
+        >>>
+        >>> bm.set_dt(1.0)
+        >>> model = GridCell2D_SFA(length=30, mapping_ratio=1.5)
+        >>>
+        >>> # Same interface as GridCell2D
+        >>> position = [0.5, 0.3]
+        >>> model.update(position)
+
+    References:
+        Adaptation mechanism enables anticipative tracking in moving
+        input scenarios.
+    """
+
+    def __init__(
+        self,
+        length: int = 30,
+        tau: float = 10.0,
+        k: float = 1.0,
+        a: float = 0.8,
+        A: float = 3.0,
+        J0: float = 5.0,
+        mapping_ratio: float = 1.5,
+        noise_strength: float = 0.1,
+        conn_noise: float = 0.0,
+        g: float = 1.0,
+        tau_v: float = 50.0,
+        m: float = 0.3,
+    ):
+        """Initialize GridCell2D with SFA adaptation."""
+        # Initialize parent GridCell2D
+        super().__init__(
+            length=length,
+            tau=tau,
+            k=k,
+            a=a,
+            A=A,
+            J0=J0,
+            mapping_ratio=mapping_ratio,
+            noise_strength=noise_strength,
+            conn_noise=conn_noise,
+            g=g,
+        )
+
+        # Store SFA parameters
+        self.tau_v = tau_v
+        self.m = m
+
+        # Initialize adaptation variable
+        self.v = bm.Variable(bm.zeros(self.num))
+
+    def update(self, position):
+        """
+        Single time-step update with SFA adaptation.
+
+        Same as GridCell2D.update() but with slow negative feedback
+        from adaptation variable v.
+
+        Args:
+            position: Current 2D position [x, y] in real space, shape (2,)
+        """
+        # Convert position to array if needed
+        position = bm.asarray(position)
+
+        # 1. Decode current bump center for tracking
+        center_phase, center_position, gc_bump = self.get_unique_activity_bump(
+            self.r.value, position
+        )
+        self.center_phase.value = center_phase
+        self.center_position.value = center_position
+        self.gc_bump.value = gc_bump
+
+        # 2. Calculate external input directly from position
+        phase = self.position2phase(position)
+        d = self.calculate_dist(phase - self.value_grid)
+        Iext = self.A * bm.exp(-0.5 * bm.square(d / self.a))
+        self.inp.value = Iext
+
+        # 3. Calculate recurrent input
+        Irec = bm.matmul(self.conn_mat, self.r.value)
+
+        # 4. Add activity noise
+        noise = bm.random.randn(self.num) * self.noise_strength
+
+        # 5. Update membrane potential with SFA (KEY MODIFICATION)
+        total_input = Irec + Iext + noise - self.v.value  # Subtract adaptation
+        self.u.value += (-self.u.value + total_input) / self.tau * bm.get_dt()
+        # Apply ReLU non-linearity
+        self.u.value = bm.where(self.u.value > 0.0, self.u.value, 0.0)
+
+        # 6. Calculate firing rates with divisive normalization
+        u_sq = bm.square(self.u.value)
+        self.r.value = self.g * u_sq / (1.0 + self.k * bm.sum(u_sq))
+
+        # 7. Update adaptation variable (NEW)
+        self.v.value += (-self.v.value + self.m * self.u.value) / self.tau_v * bm.get_dt()

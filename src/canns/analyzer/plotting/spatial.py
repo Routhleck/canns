@@ -11,7 +11,8 @@ from __future__ import annotations
 from typing import Any
 
 import numpy as np
-from matplotlib import animation, pyplot as plt
+from matplotlib import animation
+from matplotlib import pyplot as plt
 from tqdm import tqdm
 
 from .config import PlotConfig, PlotConfigs
@@ -318,13 +319,15 @@ def plot_grid_score(
         colors = ["steelblue" if angle not in [60, 120] else "crimson" for angle in angles]
 
         # Create bar chart
-        bars = ax.bar(angles, correlations, color=colors, alpha=0.7, edgecolor="black", linewidth=1.2)
+        ax.bar(angles, correlations, color=colors, alpha=0.7, edgecolor="black", linewidth=1.2)
 
         # Add horizontal line at y=0
         ax.axhline(0, color="black", linestyle="-", linewidth=0.8)
 
         # Set labels and title with grid score
-        ax.set_title(f"{config.title}\nGrid Score = {grid_score:.3f}", fontsize=14, fontweight="bold")
+        ax.set_title(
+            f"{config.title}\nGrid Score = {grid_score:.3f}", fontsize=14, fontweight="bold"
+        )
         ax.set_xlabel(config.xlabel, fontsize=12)
         ax.set_ylabel(config.ylabel, fontsize=12)
         ax.set_xticks(angles)
@@ -470,7 +473,7 @@ def plot_grid_spacing_analysis(
             spacing_real = spacing_bins * bin_size
             ax2 = ax.twiny()
             ax2.set_xlim(np.array(ax.get_xlim()) * bin_size)
-            ax2.set_xlabel(f"Distance (m)", fontsize=11, color="gray")
+            ax2.set_xlabel("Distance (m)", fontsize=11, color="gray")
             ax2.tick_params(axis="x", labelcolor="gray")
 
             # Update legend with real units
@@ -596,7 +599,9 @@ def create_grid_cell_tracking_animation(
     if activity.ndim != 1:
         raise ValueError(f"activity must be 1D array, got shape {activity.shape}")
     if position.shape[0] != activity.shape[0]:
-        raise ValueError(f"position and activity must have same length: {position.shape[0]} != {activity.shape[0]}")
+        raise ValueError(
+            f"position and activity must have same length: {position.shape[0]} != {activity.shape[0]}"
+        )
     if rate_map.ndim != 2:
         raise ValueError(f"rate_map must be 2D array, got shape {rate_map.shape}")
 
@@ -637,7 +642,9 @@ def create_grid_cell_tracking_animation(
         im = ax3.imshow(
             rate_map.T, origin="lower", cmap="hot", extent=[0, env_size, 0, env_size], aspect="auto"
         )
-        (pos_marker,) = ax3.plot([], [], "c*", markersize=15, markeredgecolor="white", markeredgewidth=1.5)
+        (pos_marker,) = ax3.plot(
+            [], [], "c*", markersize=15, markeredgecolor="white", markeredgewidth=1.5
+        )
         ax3.set_xlabel("X Position (m)", fontsize=10)
         ax3.set_ylabel("Y Position (m)", fontsize=10)
         ax3.set_title("Firing Rate Map", fontsize=11, fontweight="bold")
@@ -670,7 +677,12 @@ def create_grid_cell_tracking_animation(
             return scatter, activity_line, activity_marker, pos_marker, time_text
 
         ani = animation.FuncAnimation(
-            fig, animate, frames=num_video_frames, interval=1000 / config.fps, blit=True, repeat=config.repeat
+            fig,
+            animate,
+            frames=num_video_frames,
+            interval=1000 / config.fps,
+            blit=True,
+            repeat=config.repeat,
         )
 
         progress_bar_enabled = getattr(config, "show_progress_bar", show_progress_bar)

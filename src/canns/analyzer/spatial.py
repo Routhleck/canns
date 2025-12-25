@@ -138,7 +138,7 @@ def compute_spatial_autocorrelation(rate_map: np.ndarray, max_lag: int | None = 
 
     # Compute 2D autocorrelation with periodic boundary
     # wrap boundary is critical for grid cells (toroidal space)
-    autocorr = signal.correlate2d(rate_map_norm, rate_map_norm, mode='same', boundary='wrap')
+    autocorr = signal.correlate2d(rate_map_norm, rate_map_norm, mode="same", boundary="wrap")
 
     # Normalize to [-1, 1]
     max_val = np.max(np.abs(autocorr))
@@ -233,7 +233,9 @@ def compute_grid_score(
     return grid_score, rotated_corrs
 
 
-def find_grid_spacing(autocorr: np.ndarray, bin_size: float | None = None) -> tuple[float, float | None]:
+def find_grid_spacing(
+    autocorr: np.ndarray, bin_size: float | None = None
+) -> tuple[float, float | None]:
     """Estimate grid spacing from spatial autocorrelation.
 
     Finds the distance from center to the first major peak in the autocorrelation,
