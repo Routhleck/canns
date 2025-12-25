@@ -7,7 +7,6 @@ suitable for basic spatial navigation and path integration tasks.
 
 import brainpy.math as bm
 import jax
-import numpy as np
 
 from ._base import BasicModel
 
@@ -129,7 +128,7 @@ class GridCell2D(BasicModel):
 
         # Build connectivity matrix with optional noise
         base_connection = self.make_connection()
-        noise_connection = np.random.normal(0, conn_noise, size=(self.num, self.num))
+        noise_connection = bm.random.randn(self.num, self.num) * conn_noise
         self.conn_mat = base_connection + noise_connection
 
         # Initialize state variables
