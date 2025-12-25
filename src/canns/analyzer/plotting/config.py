@@ -208,3 +208,129 @@ class PlotConfigs:
         config.num_bins = num_bins
         config.pref_stim = pref_stim
         return config
+
+    @staticmethod
+    def grid_autocorrelation(**kwargs: Any) -> PlotConfig:
+        """Configuration for spatial autocorrelation heatmap visualization.
+
+        Used to visualize hexagonal periodicity patterns in grid cell firing fields.
+        Applies diverging colormap (RdBu_r) suitable for correlation values [-1, 1].
+
+        Args:
+            **kwargs: Additional configuration parameters to override defaults.
+
+        Returns:
+            PlotConfig: Configuration object for autocorrelation plots.
+
+        Example:
+            >>> from canns.analyzer.plotting import PlotConfigs
+            >>> config = PlotConfigs.grid_autocorrelation(
+            ...     title="Grid Cell Autocorrelation",
+            ...     save_path="autocorr.png"
+            ... )
+        """
+        defaults: dict[str, Any] = {
+            "title": "Spatial Autocorrelation",
+            "xlabel": "X Lag (bins)",
+            "ylabel": "Y Lag (bins)",
+            "figsize": (6, 6),
+        }
+        plot_kwargs: dict[str, Any] = {"cmap": "RdBu_r", "vmin": -1, "vmax": 1}
+        plot_kwargs.update(kwargs.pop("kwargs", {}))
+        defaults["kwargs"] = plot_kwargs
+        defaults.update(kwargs)
+        return PlotConfig.for_static_plot(**defaults)
+
+    @staticmethod
+    def grid_score_plot(**kwargs: Any) -> PlotConfig:
+        """Configuration for grid score bar chart visualization.
+
+        Displays rotational correlations at different angles used to compute grid score.
+        Highlights hexagonal angles (60°, 120°) versus non-hexagonal angles.
+
+        Args:
+            **kwargs: Additional configuration parameters to override defaults.
+
+        Returns:
+            PlotConfig: Configuration object for grid score plots.
+
+        Example:
+            >>> config = PlotConfigs.grid_score_plot(
+            ...     title="Grid Cell Quality Assessment",
+            ...     save_path="grid_score.png"
+            ... )
+        """
+        defaults: dict[str, Any] = {
+            "title": "Grid Score Analysis",
+            "xlabel": "Rotation Angle (°)",
+            "ylabel": "Correlation",
+            "figsize": (8, 5),
+            "grid": True,
+        }
+        defaults.update(kwargs)
+        return PlotConfig.for_static_plot(**defaults)
+
+    @staticmethod
+    def grid_spacing_plot(**kwargs: Any) -> PlotConfig:
+        """Configuration for grid spacing radial profile visualization.
+
+        Shows how autocorrelation decays with distance from center, revealing
+        the periodic spacing of grid fields.
+
+        Args:
+            **kwargs: Additional configuration parameters to override defaults.
+
+        Returns:
+            PlotConfig: Configuration object for spacing analysis plots.
+
+        Example:
+            >>> config = PlotConfigs.grid_spacing_plot(
+            ...     title="Grid Field Spacing",
+            ...     save_path="spacing.png"
+            ... )
+        """
+        defaults: dict[str, Any] = {
+            "title": "Grid Spacing Analysis",
+            "xlabel": "Distance (bins)",
+            "ylabel": "Autocorrelation",
+            "figsize": (8, 5),
+            "grid": True,
+        }
+        defaults.update(kwargs)
+        return PlotConfig.for_static_plot(**defaults)
+
+    @staticmethod
+    def grid_cell_tracking_animation(**kwargs: Any) -> PlotConfig:
+        """Configuration for grid cell tracking animation.
+
+        Creates 3-panel synchronized animation showing trajectory, activity time course,
+        and rate map with position overlay for analyzing grid cell behavior.
+
+        Args:
+            **kwargs: Additional configuration parameters to override defaults.
+                Must include 'time_steps_per_second' if not using default.
+
+        Returns:
+            PlotConfig: Configuration object for tracking animations.
+
+        Example:
+            >>> config = PlotConfigs.grid_cell_tracking_animation(
+            ...     time_steps_per_second=1000,  # dt=1ms
+            ...     fps=20,
+            ...     save_path="tracking.gif"
+            ... )
+        """
+        defaults: dict[str, Any] = {
+            "title": "Grid Cell Tracking",
+            "figsize": (15, 5),
+            "fps": 20,
+            "show_progress_bar": True,
+        }
+        time_steps = kwargs.pop("time_steps_per_second", None)
+        defaults.update(kwargs)
+        if time_steps is not None:
+            return PlotConfig.for_animation(time_steps, **defaults)
+        else:
+            # Return config without time_steps_per_second set
+            # Will be validated when animation function is called
+            return PlotConfig(**defaults)

@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import brainpy.math as bm
-import jax
 import jax.numpy as jnp
 
 from ._base import BrainInspiredModel
