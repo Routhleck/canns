@@ -23,6 +23,7 @@ This page contains auto-generated API reference documentation [#f1]_.
    /autoapi/src/canns/models/hybrid/index
    /autoapi/src/canns/task/tracking/index
    /autoapi/src/canns/data/datasets/index
+   /autoapi/src/canns/analyzer/data/index
    /autoapi/src/canns/trainer/utils/index
    /autoapi/src/canns/trainer/sanger/index
    /autoapi/src/canns/utils/benchmark/index
@@ -32,6 +33,8 @@ This page contains auto-generated API reference documentation [#f1]_.
    /autoapi/src/canns/pipeline/theta_sweep/index
    /autoapi/src/canns/task/navigation_base/index
    /autoapi/src/canns/analyzer/slow_points/index
+   /autoapi/src/canns/analyzer/data/cann2d/index
+   /autoapi/src/canns/analyzer/data/cann1d/index
    /autoapi/src/canns/models/brain_inspired/index
    /autoapi/src/canns/models/basic/grid_cell/index
    /autoapi/src/canns/analyzer/visualization/index
@@ -43,7 +46,6 @@ This page contains auto-generated API reference documentation [#f1]_.
    /autoapi/src/canns/models/brain_inspired/linear/index
    /autoapi/src/canns/models/brain_inspired/spiking/index
    /autoapi/src/canns/analyzer/visualization/config/index
-   /autoapi/src/canns/analyzer/metrics/experimental/index
    /autoapi/src/canns/models/basic/theta_sweep_model/index
    /autoapi/src/canns/models/brain_inspired/hopfield/index
    /autoapi/src/canns/models/basic/hierarchical_model/index
@@ -55,12 +57,9 @@ This page contains auto-generated API reference documentation [#f1]_.
    /autoapi/src/canns/analyzer/slow_points/visualization/index
    /autoapi/src/canns/analyzer/visualization/energy_plots/index
    /autoapi/src/canns/analyzer/visualization/tuning_plots/index
-   /autoapi/src/canns/analyzer/visualization/experimental/index
    /autoapi/src/canns/analyzer/visualization/jupyter_utils/index
    /autoapi/src/canns/analyzer/visualization/spatial_plots/index
-   /autoapi/src/canns/analyzer/metrics/experimental/cann1d_metrics/index
-   /autoapi/src/canns/analyzer/metrics/experimental/cann2d_metrics/index
-   /autoapi/src/canns/analyzer/visualization/experimental/theta_sweep_plots/index
+   /autoapi/src/canns/analyzer/visualization/theta_sweep_plots/index
 
 
 .. [#f1] Created with `sphinx-autoapi <https://github.com/readthedocs/sphinx-autoapi>`_

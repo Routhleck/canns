@@ -1,17 +1,26 @@
-src.canns.analyzer.experimental_data
-====================================
+src.canns.analyzer.data.cann2d
+==============================
 
-.. py:module:: src.canns.analyzer.experimental_data
+.. py:module:: src.canns.analyzer.data.cann2d
 
 
-Submodules
+Attributes
 ----------
 
-.. toctree::
-   :maxdepth: 1
+.. autoapisummary::
 
-   /autoapi/src/canns/analyzer/experimental_data/cann1d/index
-   /autoapi/src/canns/analyzer/experimental_data/cann2d/index
+   src.canns.analyzer.data.cann2d.HAS_NUMBA
+   src.canns.analyzer.data.cann2d.data
+
+
+Exceptions
+----------
+
+.. autoapisummary::
+
+   src.canns.analyzer.data.cann2d.CANN2DError
+   src.canns.analyzer.data.cann2d.DataLoadError
+   src.canns.analyzer.data.cann2d.ProcessingError
 
 
 Classes
@@ -19,11 +28,10 @@ Classes
 
 .. autoapisummary::
 
-   src.canns.analyzer.experimental_data.CANN1DPlotConfig
-   src.canns.analyzer.experimental_data.CANN2DPlotConfig
-   src.canns.analyzer.experimental_data.PlotConfig
-   src.canns.analyzer.experimental_data.SpikeEmbeddingConfig
-   src.canns.analyzer.experimental_data.TDAConfig
+   src.canns.analyzer.data.cann2d.CANN2DPlotConfig
+   src.canns.analyzer.data.cann2d.Constants
+   src.canns.analyzer.data.cann2d.SpikeEmbeddingConfig
+   src.canns.analyzer.data.cann2d.TDAConfig
 
 
 Functions
@@ -31,71 +39,50 @@ Functions
 
 .. autoapisummary::
 
-   src.canns.analyzer.experimental_data.bump_fits
-   src.canns.analyzer.experimental_data.create_1d_bump_animation
-   src.canns.analyzer.experimental_data.decode_circular_coordinates
-   src.canns.analyzer.experimental_data.embed_spike_trains
-   src.canns.analyzer.experimental_data.load_grid_data
-   src.canns.analyzer.experimental_data.load_roi_data
-   src.canns.analyzer.experimental_data.plot_3d_bump_on_torus
-   src.canns.analyzer.experimental_data.plot_projection
-   src.canns.analyzer.experimental_data.tda_vis
-   src.canns.analyzer.experimental_data.validate_grid_data
-   src.canns.analyzer.experimental_data.validate_roi_data
+   src.canns.analyzer.data.cann2d.decode_circular_coordinates
+   src.canns.analyzer.data.cann2d.embed_spike_trains
+   src.canns.analyzer.data.cann2d.plot_3d_bump_on_torus
+   src.canns.analyzer.data.cann2d.plot_cohomap
+   src.canns.analyzer.data.cann2d.plot_projection
+   src.canns.analyzer.data.cann2d.tda_vis
 
 
-Package Contents
-----------------
+Module Contents
+---------------
 
-.. py:class:: CANN1DPlotConfig
+.. py:exception:: CANN2DError
 
-   Bases: :py:obj:`src.canns.analyzer.plotting.PlotConfig`
-
-
-   Specialized PlotConfig for CANN1D visualizations.
+   Bases: :py:obj:`Exception`
 
 
-   .. py:method:: for_bump_animation(**kwargs)
-      :classmethod:
+   Base exception for CANN2D analysis errors.
+
+   Initialize self.  See help(type(self)) for accurate signature.
 
 
-      Create configuration for 1D CANN bump animation.
+.. py:exception:: DataLoadError
+
+   Bases: :py:obj:`CANN2DError`
 
 
+   Raised when data loading fails.
 
-   .. py:attribute:: bump_selection
-      :type:  str
-      :value: 'strongest'
-
+   Initialize self.  See help(type(self)) for accurate signature.
 
 
-   .. py:attribute:: max_height_value
-      :type:  float
-      :value: 0.5
+.. py:exception:: ProcessingError
+
+   Bases: :py:obj:`CANN2DError`
 
 
+   Raised when data processing fails.
 
-   .. py:attribute:: max_width_range
-      :type:  int
-      :value: 40
-
-
-
-   .. py:attribute:: nframes
-      :type:  int | None
-      :value: None
-
-
-
-   .. py:attribute:: npoints
-      :type:  int
-      :value: 300
-
+   Initialize self.  See help(type(self)) for accurate signature.
 
 
 .. py:class:: CANN2DPlotConfig
 
-   Bases: :py:obj:`src.canns.analyzer.plotting.PlotConfig`
+   Bases: :py:obj:`src.canns.analyzer.visualization.PlotConfig`
 
 
    Specialized PlotConfig for CANN2D visualizations.
@@ -165,129 +152,38 @@ Package Contents
 
 
 
-.. py:class:: PlotConfig
+.. py:class:: Constants
 
-   Unified configuration class for all plotting helpers in ``canns.analyzer``.
-
-   This mirrors the behaviour of the previous ``visualize`` module so that
-   reorganising the files does not affect the public API. The attributes map
-   directly to keyword arguments exposed by the high-level plotting functions,
-   allowing users to keep existing configuration objects unchanged after the
-   reorganisation.
+   Constants used throughout CANN2D analysis.
 
 
-   .. py:method:: __post_init__()
-
-
-   .. py:method:: for_animation(time_steps_per_second, **kwargs)
-      :classmethod:
-
-
-      Return configuration tailored for animations.
+   .. py:attribute:: DEFAULT_DPI
+      :value: 300
 
 
 
-   .. py:method:: for_static_plot(**kwargs)
-      :classmethod:
-
-
-      Return configuration tailored for static plots.
+   .. py:attribute:: DEFAULT_FIGSIZE
+      :value: (10, 8)
 
 
 
-   .. py:method:: to_matplotlib_kwargs()
-
-      Materialize matplotlib keyword arguments from the config.
-
-
-
-   .. py:attribute:: clabel
-      :type:  str
-      :value: 'Value'
+   .. py:attribute:: GAUSSIAN_SIGMA_FACTOR
+      :value: 100
 
 
 
-   .. py:attribute:: color
-      :type:  str
-      :value: 'black'
+   .. py:attribute:: MULTIPROCESSING_CORES
+      :value: 4
 
 
 
-   .. py:attribute:: figsize
-      :type:  tuple[int, int]
-      :value: (10, 6)
+   .. py:attribute:: SPEED_CONVERSION_FACTOR
+      :value: 100
 
 
 
-   .. py:attribute:: fps
-      :type:  int
-      :value: 30
-
-
-
-   .. py:attribute:: grid
-      :type:  bool
-      :value: False
-
-
-
-   .. py:attribute:: kwargs
-      :type:  dict[str, Any] | None
-      :value: None
-
-
-
-   .. py:attribute:: repeat
-      :type:  bool
-      :value: True
-
-
-
-   .. py:attribute:: save_path
-      :type:  str | None
-      :value: None
-
-
-
-   .. py:attribute:: show
-      :type:  bool
-      :value: True
-
-
-
-   .. py:attribute:: show_legend
-      :type:  bool
-      :value: True
-
-
-
-   .. py:attribute:: show_progress_bar
-      :type:  bool
-      :value: True
-
-
-
-   .. py:attribute:: time_steps_per_second
-      :type:  int | None
-      :value: None
-
-
-
-   .. py:attribute:: title
-      :type:  str
-      :value: ''
-
-
-
-   .. py:attribute:: xlabel
-      :type:  str
-      :value: ''
-
-
-
-   .. py:attribute:: ylabel
-      :type:  str
-      :value: ''
+   .. py:attribute:: TIME_CONVERSION_FACTOR
+      :value: 0.01
 
 
 
@@ -415,49 +311,6 @@ Package Contents
 
 
 
-.. py:function:: bump_fits(data, config = None, save_path=None, **kwargs)
-
-   Fit CANN1D bumps to data using MCMC optimization.
-
-   :param data: numpy.ndarray
-                Input data for bump fitting
-   :param config: BumpFitsConfig, optional
-                  Configuration object with all fitting parameters
-   :param save_path: str, optional
-                     Path to save the results
-   :param \*\*kwargs: backward compatibility parameters
-
-   :returns:
-
-             list
-                 List of fitted bump objects
-             fits_array : numpy.ndarray
-                 Array of fitted bump parameters
-             nbump_array : numpy.ndarray
-                 Array of bump counts and reconstructed signals
-             centrbump_array : numpy.ndarray
-                 Array of centered bump data
-   :rtype: bumps
-
-
-.. py:function:: create_1d_bump_animation(fits_data, config = None, save_path=None, **kwargs)
-
-   Create 1D CANN bump animation using vectorized operations.
-
-   :param fits_data: numpy.ndarray
-                     Shape (n_fits, 4) array with columns [time, position, amplitude, kappa]
-   :param config: AnimationConfig, optional
-                  Configuration object with all animation parameters
-   :param save_path: str, optional
-                     Output path for the generated GIF
-   :param \*\*kwargs: backward compatibility parameters
-
-   :returns:
-
-             matplotlib.animation.FuncAnimation
-                 The animation object
-
-
 .. py:function:: decode_circular_coordinates(persistence_result, spike_data, real_ground = True, real_of = True, save_path = None)
 
    Decode circular coordinates (bump positions) from cohomology.
@@ -506,59 +359,6 @@ Package Contents
    :rtype: spikes_bin (ndarray)
 
 
-.. py:function:: load_grid_data(source = None, dataset_key = 'grid_1')
-
-   Load grid cell data for 2D CANN analysis.
-
-   :param source: Data source. Can be:
-                  - URL string: downloads and loads from URL
-                  - Path: loads from local file
-                  - None: uses default CANNs dataset
-   :type source: str, Path, or None
-   :param dataset_key: Which default dataset to use ('grid_1' or 'grid_2') when source is None.
-   :type dataset_key: str
-
-   :returns: Dictionary containing spike data and metadata if successful, None otherwise.
-             Expected keys: 'spike', 't', and optionally 'x', 'y' for position data.
-   :rtype: dict or None
-
-   .. rubric:: Examples
-
-   >>> # Load default dataset
-   >>> grid_data = load_grid_data()
-   >>>
-   >>> # Load from URL
-   >>> grid_data = load_grid_data('https://example.com/grid_data.npz')
-   >>>
-   >>> # Load specific default dataset
-   >>> grid_data = load_grid_data(dataset_key='grid_2')
-
-
-.. py:function:: load_roi_data(source = None)
-
-   Load ROI data for 1D CANN analysis.
-
-   :param source: Data source. Can be:
-                  - URL string: downloads and loads from URL
-                  - Path: loads from local file
-                  - None: uses default CANNs dataset
-   :type source: str, Path, or None
-
-   :returns: ROI data array if successful, None otherwise.
-   :rtype: ndarray or None
-
-   .. rubric:: Examples
-
-   >>> # Load default dataset
-   >>> roi_data = load_roi_data()
-   >>>
-   >>> # Load from URL
-   >>> roi_data = load_roi_data('https://example.com/roi_data.txt')
-   >>>
-   >>> # Load from local file
-   >>> roi_data = load_roi_data('./my_roi_data.txt')
-
-
 .. py:function:: plot_3d_bump_on_torus(decoding_result, spike_data, config = None, save_path = None, numangsint = 51, r1 = 1.5, r2 = 1.0, window_size = 300, frame_step = 5, n_frames = 20, fps = 5, show_progress = True, show = True, figsize = (8, 8), **kwargs)
 
    Visualize the movement of the neural activity bump on a torus using matplotlib animation.
@@ -599,6 +399,51 @@ Package Contents
 
    :returns: The animation object
    :rtype: matplotlib.animation.FuncAnimation
+
+
+.. py:function:: plot_cohomap(decoding_result, position_data, save_path = None, show = False, figsize = (10, 4), dpi = 300, subsample = 10)
+
+   Visualize CohoMap 1.0: decoded circular coordinates mapped onto spatial trajectory.
+
+   Creates a two-panel visualization showing how the two decoded circular coordinates
+   vary across the animal's spatial trajectory. Each panel displays the spatial path
+   colored by the cosine of one circular coordinate dimension.
+
+   :param decoding_result: dict
+                           Dictionary from decode_circular_coordinates() containing:
+                           - 'coordsbox': decoded coordinates for box timepoints (n_times x n_dims)
+                           - 'times_box': time indices for coordsbox
+   :param position_data: dict
+                         Position data containing 'x' and 'y' arrays for spatial coordinates
+   :param save_path: str, optional
+                     Path to save the visualization. If None, no save performed
+   :param show: bool, default=False
+                Whether to display the visualization
+   :param figsize: tuple[int, int], default=(10, 4)
+                   Figure size (width, height) in inches
+   :param dpi: int, default=300
+               Resolution for saved figure
+   :param subsample: int, default=10
+                     Subsampling interval for plotting (plot every Nth timepoint)
+
+   :returns: The matplotlib figure object
+   :rtype: plt.Figure
+
+   :raises KeyError: If required keys are missing from input dictionaries
+   :raises ValueError: If data dimensions are inconsistent
+   :raises IndexError: If time indices are out of bounds
+
+   .. rubric:: Examples
+
+   >>> # Decode coordinates
+   >>> decoding = decode_circular_coordinates(persistence_result, spike_data)
+   >>> # Visualize with trajectory data
+   >>> fig = plot_cohomap(
+   ...     decoding,
+   ...     position_data={'x': xx, 'y': yy},
+   ...     save_path='cohomap.png',
+   ...     show=True
+   ... )
 
 
 .. py:function:: plot_projection(reduce_func, embed_data, config = None, title='Projection (3D)', xlabel='Component 1', ylabel='Component 2', zlabel='Component 3', save_path=None, show=True, dpi=300, figsize=(10, 8), **kwargs)
@@ -654,25 +499,11 @@ Package Contents
    :rtype: dict
 
 
-.. py:function:: validate_grid_data(data)
-
-   Validate grid data format for 2D CANN analysis.
-
-   :param data: Grid data dictionary.
-   :type data: dict
-
-   :returns: True if data is valid, False otherwise.
-   :rtype: bool
+.. py:data:: HAS_NUMBA
+   :value: True
 
 
-.. py:function:: validate_roi_data(data)
-
-   Validate ROI data format for 1D CANN analysis.
-
-   :param data: ROI data array.
-   :type data: ndarray
-
-   :returns: True if data is valid, False otherwise.
-   :rtype: bool
+.. py:data:: data
+   :value: None
 
 

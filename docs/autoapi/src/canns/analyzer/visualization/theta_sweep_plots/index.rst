@@ -1,7 +1,7 @@
-src.canns.analyzer.theta_sweep
-==============================
+src.canns.analyzer.visualization.theta_sweep_plots
+==================================================
 
-.. py:module:: src.canns.analyzer.theta_sweep
+.. py:module:: src.canns.analyzer.visualization.theta_sweep_plots
 
 .. autoapi-nested-parse::
 
@@ -17,11 +17,11 @@ Functions
 
 .. autoapisummary::
 
-   src.canns.analyzer.theta_sweep.create_theta_sweep_grid_cell_animation
-   src.canns.analyzer.theta_sweep.create_theta_sweep_place_cell_animation
-   src.canns.analyzer.theta_sweep.plot_direction_cell_polar
-   src.canns.analyzer.theta_sweep.plot_grid_cell_manifold
-   src.canns.analyzer.theta_sweep.plot_population_activity_with_theta
+   src.canns.analyzer.visualization.theta_sweep_plots.create_theta_sweep_grid_cell_animation
+   src.canns.analyzer.visualization.theta_sweep_plots.create_theta_sweep_place_cell_animation
+   src.canns.analyzer.visualization.theta_sweep_plots.plot_direction_cell_polar
+   src.canns.analyzer.visualization.theta_sweep_plots.plot_grid_cell_manifold
+   src.canns.analyzer.visualization.theta_sweep_plots.plot_population_activity_with_theta
 
 
 Module Contents

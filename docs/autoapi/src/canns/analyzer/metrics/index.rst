@@ -5,7 +5,7 @@ src.canns.analyzer.metrics
 
 .. autoapi-nested-parse::
 
-   Computational analysis utilities.
+   Model metrics computation utilities.
 
 
 
@@ -15,7 +15,6 @@ Submodules
 .. toctree::
    :maxdepth: 1
 
-   /autoapi/src/canns/analyzer/metrics/experimental/index
    /autoapi/src/canns/analyzer/metrics/spatial_metrics/index
    /autoapi/src/canns/analyzer/metrics/utils/index
 

@@ -1,7 +1,7 @@
-src.canns.analyzer.experimental_data.cann1d
-===========================================
+src.canns.analyzer.data.cann1d
+==============================
 
-.. py:module:: src.canns.analyzer.experimental_data.cann1d
+.. py:module:: src.canns.analyzer.data.cann1d
 
 
 Attributes
@@ -9,8 +9,8 @@ Attributes
 
 .. autoapisummary::
 
-   src.canns.analyzer.experimental_data.cann1d.HAS_NUMBA
-   src.canns.analyzer.experimental_data.cann1d.data
+   src.canns.analyzer.data.cann1d.HAS_NUMBA
+   src.canns.analyzer.data.cann1d.data
 
 
 Exceptions
@@ -18,9 +18,9 @@ Exceptions
 
 .. autoapisummary::
 
-   src.canns.analyzer.experimental_data.cann1d.AnimationError
-   src.canns.analyzer.experimental_data.cann1d.CANN1DError
-   src.canns.analyzer.experimental_data.cann1d.FittingError
+   src.canns.analyzer.data.cann1d.AnimationError
+   src.canns.analyzer.data.cann1d.CANN1DError
+   src.canns.analyzer.data.cann1d.FittingError
 
 
 Classes
@@ -28,11 +28,11 @@ Classes
 
 .. autoapisummary::
 
-   src.canns.analyzer.experimental_data.cann1d.AnimationConfig
-   src.canns.analyzer.experimental_data.cann1d.BumpFitsConfig
-   src.canns.analyzer.experimental_data.cann1d.CANN1DPlotConfig
-   src.canns.analyzer.experimental_data.cann1d.Constants
-   src.canns.analyzer.experimental_data.cann1d.SiteBump
+   src.canns.analyzer.data.cann1d.AnimationConfig
+   src.canns.analyzer.data.cann1d.BumpFitsConfig
+   src.canns.analyzer.data.cann1d.CANN1DPlotConfig
+   src.canns.analyzer.data.cann1d.Constants
+   src.canns.analyzer.data.cann1d.SiteBump
 
 
 Functions
@@ -40,8 +40,8 @@ Functions
 
 .. autoapisummary::
 
-   src.canns.analyzer.experimental_data.cann1d.bump_fits
-   src.canns.analyzer.experimental_data.cann1d.create_1d_bump_animation
+   src.canns.analyzer.data.cann1d.bump_fits
+   src.canns.analyzer.data.cann1d.create_1d_bump_animation
 
 
 Module Contents
@@ -215,7 +215,7 @@ Module Contents
 
 .. py:class:: CANN1DPlotConfig
 
-   Bases: :py:obj:`src.canns.analyzer.plotting.PlotConfig`
+   Bases: :py:obj:`src.canns.analyzer.visualization.PlotConfig`
 
 
    Specialized PlotConfig for CANN1D visualizations.

@@ -196,7 +196,7 @@ Module Contents
 
       .. rubric:: Example
 
-      >>> from canns.analyzer.plotting import PlotConfigs
+      >>> from canns.analyzer.visualization import PlotConfigs
       >>> config = PlotConfigs.grid_autocorrelation(
       ...     title="Grid Cell Autocorrelation",
       ...     save_path="autocorr.png"

@@ -5,7 +5,7 @@ src.canns.analyzer.visualization
 
 .. autoapi-nested-parse::
 
-   Visualization utilities for analyzer functionality.
+   Model visualization utilities.
 
 
 
@@ -17,10 +17,10 @@ Submodules
 
    /autoapi/src/canns/analyzer/visualization/config/index
    /autoapi/src/canns/analyzer/visualization/energy_plots/index
-   /autoapi/src/canns/analyzer/visualization/experimental/index
    /autoapi/src/canns/analyzer/visualization/jupyter_utils/index
    /autoapi/src/canns/analyzer/visualization/spatial_plots/index
    /autoapi/src/canns/analyzer/visualization/spike_plots/index
+   /autoapi/src/canns/analyzer/visualization/theta_sweep_plots/index
    /autoapi/src/canns/analyzer/visualization/tuning_plots/index
 
 
@@ -40,14 +40,19 @@ Functions
 
    src.canns.analyzer.visualization.average_firing_rate_plot
    src.canns.analyzer.visualization.create_grid_cell_tracking_animation
+   src.canns.analyzer.visualization.create_theta_sweep_grid_cell_animation
+   src.canns.analyzer.visualization.create_theta_sweep_place_cell_animation
    src.canns.analyzer.visualization.energy_landscape_1d_animation
    src.canns.analyzer.visualization.energy_landscape_1d_static
    src.canns.analyzer.visualization.energy_landscape_2d_animation
    src.canns.analyzer.visualization.energy_landscape_2d_static
    src.canns.analyzer.visualization.plot_autocorrelation
    src.canns.analyzer.visualization.plot_firing_field_heatmap
+   src.canns.analyzer.visualization.plot_grid_cell_manifold
    src.canns.analyzer.visualization.plot_grid_score
    src.canns.analyzer.visualization.plot_grid_spacing_analysis
+   src.canns.analyzer.visualization.plot_population_activity_with_theta
+   src.canns.analyzer.visualization.population_activity_heatmap
    src.canns.analyzer.visualization.raster_plot
    src.canns.analyzer.visualization.tuning_curve
 
@@ -230,7 +235,7 @@ Package Contents
 
       .. rubric:: Example
 
-      >>> from canns.analyzer.plotting import PlotConfigs
+      >>> from canns.analyzer.visualization import PlotConfigs
       >>> config = PlotConfigs.grid_autocorrelation(
       ...     title="Grid Cell Autocorrelation",
       ...     save_path="autocorr.png"
@@ -396,7 +401,7 @@ Package Contents
 
    .. rubric:: Example
 
-   >>> from canns.analyzer.plotting import create_grid_cell_tracking_animation, PlotConfigs
+   >>> from canns.analyzer.visualization import create_grid_cell_tracking_animation, PlotConfigs
    >>> # Create animation
    >>> config = PlotConfigs.grid_cell_tracking_animation(
    ...     time_steps_per_second=1000,  # dt=1.0ms
@@ -408,6 +413,58 @@ Package Contents
    ...     config=config,
    ...     env_size=3.0
    ... )
+
+
+.. py:function:: create_theta_sweep_grid_cell_animation(position_data, direction_data, dc_activity_data, gc_activity_data, gc_network, env_size, mapping_ratio, dt = 0.001, config = None, n_step = 10, fps = 10, figsize = (12, 3), save_path = None, show = True, show_progress_bar = True, render_backend = 'auto', output_dpi = 150, render_workers = None, render_start_method = None, **kwargs)
+
+   Create comprehensive theta sweep animation with 4 panels (optimized for speed):
+   1. Animal trajectory
+   2. Direction cell polar plot
+   3. Grid cell activity on manifold
+   4. Grid cell activity in real space
+
+   :param position_data: Animal position data (time, 2)
+   :param direction_data: Direction data (time,)
+   :param dc_activity_data: Direction cell activity (time, neurons)
+   :param gc_activity_data: Grid cell activity (time, neurons)
+   :param gc_network: GridCellNetwork instance for coordinate transformations
+   :param env_size: Environment size
+   :param mapping_ratio: Mapping ratio for grid cells
+   :param dt: Time step size
+   :param config: PlotConfig object for unified configuration
+   :param n_step: Subsample every n_step frames for animation
+   :param render_backend: Rendering backend. Use 'matplotlib', 'imageio', or 'auto'/'None' for auto-detect.
+   :param output_dpi: Target DPI when rendering frames with non-interactive backends
+   :param render_workers: Worker processes for imageio backend. ``None`` auto-selects, 0 disables.
+   :param render_start_method: Multiprocessing start method ('fork', 'spawn', 'forkserver') or None for auto
+   :param \*\*kwargs: Additional parameters for backward compatibility
+
+   :returns: Matplotlib animation object for interactive backend, otherwise None
+   :rtype: FuncAnimation | None
+
+
+.. py:function:: create_theta_sweep_place_cell_animation(position_data, pc_activity_data, pc_network, navigation_task, dt = 0.001, config = None, n_step = 10, fps = 10, figsize = (12, 4), save_path = None, show = True, show_progress_bar = True, **kwargs)
+
+   Create theta sweep animation for place cell network with 2 panels:
+   1. Environment trajectory with place cell bump overlay
+   2. Population activity heatmap over time
+
+   :param position_data: Animal position data (time, 2)
+   :param pc_activity_data: Place cell activity (time, num_cells)
+   :param pc_network: PlaceCellNetwork instance
+   :param navigation_task: BaseNavigationTask instance for environment visualization
+   :param dt: Time step size
+   :param config: PlotConfig object for unified configuration
+   :param n_step: Subsample every n_step frames for animation
+   :param fps: Frames per second for animation
+   :param figsize: Figure size (width, height)
+   :param save_path: Path to save animation (GIF or MP4)
+   :param show: Whether to display animation
+   :param show_progress_bar: Whether to show progress bar during saving
+   :param \*\*kwargs: Additional parameters (cmap, alpha, etc.)
+
+   :returns: Matplotlib animation object
+   :rtype: FuncAnimation
 
 
 .. py:function:: energy_landscape_1d_animation(data_sets, time_steps_per_second = None, config = None, *, fps = 30, title = 'Evolving 1D Energy Landscape', xlabel = 'Collective Variable / State', ylabel = 'Energy', figsize = (10, 6), grid = False, repeat = True, save_path = None, show = True, show_progress_bar = True, **kwargs)
@@ -548,8 +605,8 @@ Package Contents
 
    .. rubric:: Example
 
-   >>> from canns.analyzer.spatial import compute_spatial_autocorrelation
-   >>> from canns.analyzer.plotting import plot_autocorrelation, PlotConfigs
+   >>> from canns.analyzer.metrics.spatial_metrics import compute_spatial_autocorrelation
+   >>> from canns.analyzer.visualization import plot_autocorrelation, PlotConfigs
    >>> autocorr = compute_spatial_autocorrelation(rate_map)
    >>> # Modern approach
    >>> config = PlotConfigs.grid_autocorrelation(save_path='autocorr.png')
@@ -598,8 +655,8 @@ Package Contents
 
    .. rubric:: Example
 
-   >>> from canns.analyzer.spatial import compute_firing_field
-   >>> from canns.analyzer.plotting import plot_firing_field_heatmap, PlotConfig
+   >>> from canns.analyzer.metrics.spatial_metrics import compute_firing_field
+   >>> from canns.analyzer.visualization import plot_firing_field_heatmap, PlotConfig
    >>> # Compute firing field
    >>> heatmaps = compute_firing_field(activity, positions, 5.0, 5.0, 50, 50)
    >>> # Plot single neuron with PlotConfig
@@ -607,6 +664,20 @@ Package Contents
    >>> fig, ax = plot_firing_field_heatmap(heatmaps[0], config=config)
    >>> # Plot with legacy parameters
    >>> fig, ax = plot_firing_field_heatmap(heatmaps[1], cmap='viridis', save_path='neuron_1.png')
+
+
+.. py:function:: plot_grid_cell_manifold(value_grid_twisted, grid_cell_activity, config = None, ax = None, title = 'Grid Cell Activity on Manifold', figsize = (8, 6), cmap = 'jet', show = True, save_path = None, **kwargs)
+
+   Plot grid cell activity on the twisted torus manifold.
+
+   :param value_grid_twisted: Coordinates on twisted manifold
+   :param grid_cell_activity: 2D array of grid cell activities
+   :param config: PlotConfig object for unified configuration
+   :param ax: Optional axis to draw on instead of creating a new figure
+   :param \*\*kwargs: Additional parameters for backward compatibility
+
+   :returns: (figure, axis) objects
+   :rtype: tuple
 
 
 .. py:function:: plot_grid_score(rotated_corrs, grid_score, config = None, *, title = 'Grid Score Analysis', xlabel = 'Rotation Angle (°)', ylabel = 'Correlation', figsize = (8, 5), grid = True, save_path = None, show = True, **kwargs)
@@ -645,8 +716,8 @@ Package Contents
 
    .. rubric:: Example
 
-   >>> from canns.analyzer.spatial import compute_grid_score
-   >>> from canns.analyzer.plotting import plot_grid_score
+   >>> from canns.analyzer.metrics.spatial_metrics import compute_grid_score
+   >>> from canns.analyzer.visualization import plot_grid_score
    >>> grid_score, rotated_corrs = compute_grid_score(autocorr)
    >>> fig, ax = plot_grid_score(rotated_corrs, grid_score)
    >>> print(f"Grid score: {grid_score:.3f}")
@@ -691,11 +762,61 @@ Package Contents
 
    .. rubric:: Example
 
-   >>> from canns.analyzer.spatial import find_grid_spacing
-   >>> from canns.analyzer.plotting import plot_grid_spacing_analysis
+   >>> from canns.analyzer.metrics.spatial_metrics import find_grid_spacing
+   >>> from canns.analyzer.visualization import plot_grid_spacing_analysis
    >>> spacing_bins, spacing_m = find_grid_spacing(autocorr, bin_size=0.06)
    >>> fig, ax = plot_grid_spacing_analysis(autocorr, spacing_bins, bin_size=0.06)
    >>> print(f"Spacing: {spacing_m:.3f}m")
+
+
+.. py:function:: plot_population_activity_with_theta(time_steps, theta_phase, net_activity, direction, config = None, add_lines = True, atol = 0.01, title = 'Population Activity with Theta', xlabel = 'Time (s)', ylabel = 'Direction (°)', figsize = (12, 4), cmap = 'jet', show = True, save_path = None, **kwargs)
+
+   Plot neural population activity with theta oscillation markers and direction trace.
+
+   :param time_steps: Array of time points
+   :param theta_phase: Array of theta phase values [-π, π]
+   :param net_activity: 2D array of network activity (time, neurons)
+   :param direction: Array of direction values
+   :param config: PlotConfig object for unified configuration
+   :param add_lines: Whether to add vertical lines at theta phase zeros
+   :param atol: Tolerance for detecting theta phase zeros
+   :param \*\*kwargs: Additional parameters for backward compatibility
+
+   :returns: (figure, axis) objects
+   :rtype: tuple
+
+
+.. py:function:: population_activity_heatmap(activity_data, dt, config = None, *, title = 'Population Activity', xlabel = 'Time (s)', ylabel = 'Neuron Index', figsize = (10, 6), cmap = 'viridis', save_path = None, show = True, **kwargs)
+
+   Generate a heatmap of population firing rate activity over time.
+
+   This function creates a 2D visualization where each row represents a neuron
+   and each column represents a time point, with color indicating the firing rate
+   or activity level.
+
+   :param activity_data: 2D array of shape ``(timesteps, neurons)`` containing
+                         firing rates or activity values.
+   :param dt: Simulation time step in seconds.
+   :param config: Optional :class:`PlotConfig` with styling overrides.
+   :param title: Plot title when ``config`` is not provided.
+   :param xlabel: X-axis label when ``config`` is not provided.
+   :param ylabel: Y-axis label when ``config`` is not provided.
+   :param figsize: Figure size forwarded to Matplotlib when creating the axes.
+   :param cmap: Colormap name (default: "viridis").
+   :param save_path: Optional path used to persist the plot.
+   :param show: Whether to display the plot interactively.
+   :param \*\*kwargs: Additional keyword arguments forwarded to Matplotlib.
+
+   :returns: (figure, axis) objects.
+   :rtype: tuple
+
+   .. rubric:: Example
+
+   >>> import numpy as np
+   >>> from canns.analyzer.visualization.spike_plots import population_activity_heatmap
+   >>> # Simulate some activity data
+   >>> activity = np.random.rand(1000, 100)  # 1000 timesteps, 100 neurons
+   >>> fig, ax = population_activity_heatmap(activity, dt=0.001)
 
 
 .. py:function:: raster_plot(spike_train, config = None, *, mode = 'block', title = 'Raster Plot', xlabel = 'Time Step', ylabel = 'Neuron Index', figsize = (12, 6), color = 'black', save_path = None, show = True, **kwargs)

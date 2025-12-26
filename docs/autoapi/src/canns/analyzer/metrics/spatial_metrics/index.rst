@@ -97,7 +97,7 @@ Module Contents
 
    .. rubric:: Example
 
-   >>> from canns.analyzer.spatial import compute_spatial_autocorrelation, compute_grid_score
+   >>> from canns.analyzer.metrics.spatial_metrics import compute_spatial_autocorrelation, compute_grid_score
    >>> autocorr = compute_spatial_autocorrelation(rate_map)
    >>> grid_score, rotated_corrs = compute_grid_score(autocorr)
    >>> print(f"Grid score: {grid_score:.3f}")
@@ -133,7 +133,7 @@ Module Contents
 
    .. rubric:: Example
 
-   >>> from canns.analyzer.spatial import compute_firing_field, compute_spatial_autocorrelation
+   >>> from canns.analyzer.metrics.spatial_metrics import compute_firing_field, compute_spatial_autocorrelation
    >>> # After computing firing fields
    >>> rate_map = firing_fields[0]  # First neuron
    >>> autocorr = compute_spatial_autocorrelation(rate_map)
@@ -167,7 +167,7 @@ Module Contents
 
    .. rubric:: Example
 
-   >>> from canns.analyzer.spatial import compute_spatial_autocorrelation, find_grid_spacing
+   >>> from canns.analyzer.metrics.spatial_metrics import compute_spatial_autocorrelation, find_grid_spacing
    >>> autocorr = compute_spatial_autocorrelation(rate_map)
    >>> spacing_bins, spacing_m = find_grid_spacing(autocorr, bin_size=0.06)  # 6cm bins
    >>> print(f"Grid spacing: {spacing_bins:.1f} bins = {spacing_m:.3f} m")
