@@ -92,8 +92,8 @@ band_x_r, band_y_r, grid_r, place_r = bm.for_loop(
 #### Visualization
 from tqdm import tqdm
 
-from canns.analyzer.spatial import compute_firing_field, gaussian_smooth_heatmaps
-from canns.analyzer.plotting import PlotConfig, plot_firing_field_heatmap
+from canns.analyzer.metrics.spatial_metrics import compute_firing_field, gaussian_smooth_heatmaps
+from canns.analyzer.visualization import PlotConfig, plot_firing_field_heatmap
 
 np.random.seed(10)
 

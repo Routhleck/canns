@@ -5,7 +5,7 @@ from __future__ import annotations
 import jax.numpy as jnp
 import pytest
 
-from canns.analyzer.brain_inspired import HopfieldAnalyzer
+from canns.analyzer.model_specific.hopfield import HopfieldAnalyzer
 from canns.models.brain_inspired import AmariHopfieldNetwork
 from canns.trainer import HebbianTrainer
 

@@ -2,7 +2,7 @@
 
 import pytest
 
-from canns.analyzer.plotting.jupyter_utils import is_jupyter_environment
+from canns.analyzer.visualization.jupyter_utils import is_jupyter_environment
 
 
 def test_is_jupyter_environment_returns_false_in_pytest():

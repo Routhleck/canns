@@ -13,7 +13,7 @@ import brainpy.math as bm
 import numpy as np
 from matplotlib import pyplot as plt
 
-from canns.analyzer.plotting import PlotConfigs, tuning_curve
+from canns.analyzer.visualization import PlotConfigs, tuning_curve
 from canns.models.brain_inspired import LinearLayer
 from canns.trainer import BCMTrainer
 

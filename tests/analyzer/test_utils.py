@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from canns.analyzer.utils import spike_train_to_firing_rate, firing_rate_to_spike_train
+from canns.analyzer.metrics.utils import spike_train_to_firing_rate, firing_rate_to_spike_train
 
 def test_fr_to_st_zero_rate_produces_no_spikes():
     duration = 100

@@ -78,6 +78,7 @@ instance/
 
 # Sphinx documentation
 docs/_build/
+docs/autoapi/  # Auto-generated API documentation
 
 # PyBuilder
 .pybuilder/
