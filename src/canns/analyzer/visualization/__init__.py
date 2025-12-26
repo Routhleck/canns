@@ -1,6 +1,5 @@
-"""Visualization utilities for analyzer functionality."""
+"""Model visualization utilities."""
 
-from . import experimental
 from .config import PlotConfig, PlotConfigs
 from .energy_plots import (
     energy_landscape_1d_animation,
@@ -15,7 +14,13 @@ from .spatial_plots import (
     plot_grid_score,
     plot_grid_spacing_analysis,
 )
-from .spike_plots import average_firing_rate_plot, raster_plot
+from .spike_plots import average_firing_rate_plot, population_activity_heatmap, raster_plot
+from .theta_sweep_plots import (
+    create_theta_sweep_grid_cell_animation,
+    create_theta_sweep_place_cell_animation,
+    plot_grid_cell_manifold,
+    plot_population_activity_with_theta,
+)
 from .tuning_plots import tuning_curve
 
 __all__ = [
@@ -32,6 +37,10 @@ __all__ = [
     "create_grid_cell_tracking_animation",
     "raster_plot",
     "average_firing_rate_plot",
+    "population_activity_heatmap",
     "tuning_curve",
-    "experimental",
+    "create_theta_sweep_grid_cell_animation",
+    "create_theta_sweep_place_cell_animation",
+    "plot_grid_cell_manifold",
+    "plot_population_activity_with_theta",
 ]

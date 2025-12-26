@@ -12,7 +12,7 @@ import brainpy.math as bm
 import numpy as np
 
 from canns.analyzer.visualization import PlotConfigs
-from canns.analyzer.visualization.experimental.theta_sweep_plots import (
+from canns.analyzer.visualization.theta_sweep_plots import (
     create_theta_sweep_grid_cell_animation,
     plot_grid_cell_manifold,
     plot_population_activity_with_theta,

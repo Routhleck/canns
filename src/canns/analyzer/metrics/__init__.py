@@ -1,9 +1,8 @@
-"""Computational analysis utilities."""
+"""Model metrics computation utilities."""
 
-from . import experimental, spatial_metrics, utils
+from . import spatial_metrics, utils
 
 __all__ = [
     "spatial_metrics",
     "utils",
-    "experimental",
 ]

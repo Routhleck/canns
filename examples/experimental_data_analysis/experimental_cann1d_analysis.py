@@ -8,7 +8,7 @@ from the experimental data analyzer to analyze 1D CANN bumps.
 
 import numpy as np
 
-from canns.analyzer.metrics.experimental.cann1d_metrics import (
+from canns.analyzer.data.cann1d_metrics import (
     bump_fits, create_1d_bump_animation, CANN1DPlotConfig
 )
 from canns.data.loaders import load_roi_data
