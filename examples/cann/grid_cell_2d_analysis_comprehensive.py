@@ -15,14 +15,14 @@ from pathlib import Path
 
 from canns.models.basic import GridCell2D
 from canns.task.open_loop_navigation import OpenLoopNavigationTask
-from canns.analyzer.spatial import (
+from canns.analyzer.metrics.spatial_metrics import (
     compute_firing_field,
     gaussian_smooth_heatmaps,
     compute_spatial_autocorrelation,
     compute_grid_score,
     find_grid_spacing,
 )
-from canns.analyzer.plotting import (
+from canns.analyzer.visualization import (
     plot_firing_field_heatmap,
     plot_autocorrelation,
     plot_grid_score,

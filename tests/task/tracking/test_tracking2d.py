@@ -2,7 +2,7 @@ import brainpy as bp
 import brainpy.math as bm
 import numpy as np
 
-from canns.analyzer.plotting import energy_landscape_2d_animation
+from canns.analyzer.visualization import energy_landscape_2d_animation
 from canns.task.tracking import PopulationCoding2D, TemplateMatching2D, SmoothTracking2D
 from canns.models.basic import CANN2D, CANN2D_SFA
 

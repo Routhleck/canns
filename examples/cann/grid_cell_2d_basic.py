@@ -11,8 +11,8 @@ from tqdm import tqdm
 
 from canns.models.basic import GridCell2D
 from canns.task.open_loop_navigation import OpenLoopNavigationTask
-from canns.analyzer.spatial import compute_firing_field, gaussian_smooth_heatmaps
-from canns.analyzer.plotting import PlotConfig, plot_firing_field_heatmap
+from canns.analyzer.metrics.spatial_metrics import compute_firing_field, gaussian_smooth_heatmaps
+from canns.analyzer.visualization import PlotConfig, plot_firing_field_heatmap
 
 # Setup
 dt = 1.0

@@ -431,7 +431,7 @@ Package Contents
    .. rubric:: Example
 
    >>> from canns.analyzer.slow_points import plot_fixed_points_2d, FixedPoints
-   >>> from canns.analyzer.plotting import PlotConfig
+   >>> from canns.analyzer.visualization import PlotConfig
    >>> config = PlotConfig(
    ...     title="Fixed Points Analysis",
    ...     figsize=(10, 8),
@@ -455,7 +455,7 @@ Package Contents
    .. rubric:: Example
 
    >>> from canns.analyzer.slow_points import plot_fixed_points_3d, FixedPoints
-   >>> from canns.analyzer.plotting import PlotConfig
+   >>> from canns.analyzer.visualization import PlotConfig
    >>> config = PlotConfig(
    ...     title="Fixed Points 3D",
    ...     figsize=(12, 10),

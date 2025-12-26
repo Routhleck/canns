@@ -2,7 +2,7 @@ import brainpy.math as bm
 import brainpy.math as bm
 import numpy as np
 
-from canns.analyzer.plotting import PlotConfigs, tuning_curve
+from canns.analyzer.visualization import PlotConfigs, tuning_curve
 from canns.models.basic import CANN1D
 from canns.task.tracking import SmoothTracking1D
 

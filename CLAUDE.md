@@ -55,7 +55,11 @@ BaseCANN (abstract)
 - `src/canns/models/basic/` - Core CANN implementations
 - `src/canns/models/brain_inspired/` - Bio-inspired models (under development)
 - `src/canns/task/` - Task definitions for tracking, navigation, population coding
-- `src/canns/analyzer/` - Visualization and analysis tools with unified PlotConfig system
+- `src/canns/analyzer/` - Analysis and visualization tools
+  - `metrics/` - Computational analysis (spatial metrics, experimental data analysis)
+  - `visualization/` - Plotting and animation (unified PlotConfig system)
+  - `slow_points/` - Fixed point analysis
+  - `model_specific/` - Specialized model analyzers
 - `src/canns/trainer/` - Training framework
 - `examples/` - Usage demonstrations
 

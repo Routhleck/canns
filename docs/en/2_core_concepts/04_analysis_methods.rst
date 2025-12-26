@@ -9,6 +9,32 @@ Overview
 
 The analyzer module (``canns.analyzer``) provides tools for visualizing and interpreting both simulation outputs and experimental data. It organizes into distinct components based on data source and analysis type:
 
+Module Structure
+----------------
+
+.. admonition:: New Organization (v2.0+)
+   :class: note
+
+   The analyzer module is organized by function:
+
+   * **metrics/** - Computational analysis (no matplotlib dependency)
+
+     * ``spatial_metrics`` - Spatial metrics computation
+     * ``utils`` - Spike train conversion utilities
+     * ``experimental/`` - CANN1D/2D experimental data analysis
+
+   * **visualization/** - Plotting and animation (matplotlib-based)
+
+     * ``config`` - PlotConfig unified configuration system
+     * ``spatial_plots`` - Spatial visualizations
+     * ``energy_plots`` - Energy landscape visualizations
+     * ``spike_plots`` - Raster plots and firing rate plots
+     * ``tuning_plots`` - Tuning curve visualizations
+     * ``experimental/`` - Experimental data visualizations
+
+   * **slow_points/** - Fixed point analysis
+   * **model_specific/** - Specialized model analyzers
+
 .. grid:: 2 2 2 4
    :gutter: 3
 
