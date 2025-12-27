@@ -34,7 +34,7 @@ config = PlotConfigs.energy_landscape_1d_animation(
     xlabel='State',
     ylabel='Activity',
     repeat=True,
-    save_path='test_smooth_tracking_1d.gif',
+    save_path='test_smooth_tracking_1d.mp4',
     show=False
 )
 
@@ -52,6 +52,6 @@ energy_landscape_1d_animation(
 #     xlabel='State',
 #     ylabel='Activity',
 #     repeat=True,
-#     save_path='test_smooth_tracking_1d_old.gif',
+#     save_path='test_smooth_tracking_1d_old.mp4',
 #     show=False,
 # )

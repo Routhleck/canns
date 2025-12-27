@@ -7,7 +7,7 @@ import numpy as np
 from matplotlib.figure import Figure
 from sklearn.decomposition import PCA
 
-from ..visualization.config import PlotConfig
+from ..visualization import PlotConfig
 from .fixed_points import FixedPoints
 
 __all__ = ["plot_fixed_points_2d", "plot_fixed_points_3d"]

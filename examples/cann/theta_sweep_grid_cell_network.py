@@ -5,7 +5,7 @@ This example keeps the execution wrapped in ``main()`` with an
 the imageio backend (which relies on multiprocessing and, on macOS/Windows,
 spawns fresh Python processes) the module is not re-imported and executed
 multiple times. Removing the guard would cause the entire script to run once per
-worker when using the parallel GIF renderer.
+worker when using the parallel MP4 renderer.
 """
 
 import brainpy.math as bm
@@ -168,7 +168,7 @@ def main() -> None:
     config_animation = PlotConfigs.theta_sweep_animation(
         figsize=(12, 3),
         fps=10,
-        save_path="theta_sweep_animation.gif",
+        save_path="theta_sweep_animation.mp4",
         show=False,
     )
 

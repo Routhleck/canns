@@ -40,7 +40,7 @@ rs, inps = bm.for_loop(
 #     xlabel='State',
 #     ylabel='Activity',
 #     repeat=True,
-#     save_path='smooth_tracking_1d.gif',
+#     save_path='smooth_tracking_1d.mp4',
 #     show=False
 # )
 # energy_landscape_1d_animation(
