@@ -167,7 +167,7 @@ create_grid_cell_tracking_animation(
         time_steps_per_second=int(500 / dt),
         fps=20,
         title=f"Cell {best_cell_idx} Tracking",
-        save_path=str(output_dir / f"cell_{best_cell_idx}_tracking.gif"),
+        save_path=str(output_dir / f"cell_{best_cell_idx}_tracking.mp4"),
         show=False,
     ),
     env_size=env_size,
@@ -193,4 +193,4 @@ print(f"\nAll outputs saved to {output_dir}/")
 print("Generated files:")
 for cell_idx in top_cell_indices:
     print(f"  • cell_{cell_idx}_{{firing_field,autocorr,gridscore,spacing}}.png")
-print(f"  • cell_{best_cell_idx}_tracking.gif")
+print(f"  • cell_{best_cell_idx}_tracking.mp4")

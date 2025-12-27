@@ -428,19 +428,37 @@ def create_1d_bump_animation(
         else:
             width_ranges = np.full_like(widths_raw_smooth, config.max_width_range // 2, dtype=int)
 
-        # ==== Initialize matplotlib animation ====
+        # ==== Initialize matplotlib animation with blitting optimization ====
         fig, ax = plt.subplots(figsize=Constants.DEFAULT_FIGSIZE, dpi=Constants.DEFAULT_DPI)
-        (line,) = ax.plot([], [], color="red", linewidth=2)
+
+        # Set up axes properties (done once, not per frame)
+        ax.set_xlim(-1.8, 1.8)
+        ax.set_ylim(-1.8, 1.8)
+        ax.axis("off")
+        ax.set_title(config.title, fontsize=14, fontweight="bold", pad=20)
+
+        # Pre-create all artist objects with animated=True for blitting
+        # Base circle (reference) - static geometry
+        inner_x = base_radius * np.cos(theta)
+        inner_y = base_radius * np.sin(theta)
+        base_circle, = ax.plot(inner_x, inner_y, color="gray",
+                               linestyle="--", linewidth=1, animated=True)
+
+        # Bump curve - will be updated each frame
+        bump_line, = ax.plot([], [], color="red", linewidth=2, animated=True)
+
+        # Center marker - will be updated each frame
+        center_marker, = ax.plot([], [], "o", color="black",
+                                markersize=6, animated=True)
 
         def init():
-            """Initialize animation"""
-            ax.set_xlim(-1.8, 1.8)
-            ax.set_ylim(-1.8, 1.8)
-            ax.axis("off")
-            return (line,)
+            """Initialize animation - set empty data for dynamic artists"""
+            bump_line.set_data([], [])
+            center_marker.set_data([], [])
+            return base_circle, bump_line, center_marker
 
         def update(frame):
-            """Update function for each animation frame"""
+            """Update function - only modify artist data, never clear or rebuild"""
             # Get parameters for current frame
             pos_angle = positions[frame]
             height = heights[frame]
@@ -472,40 +490,44 @@ def create_1d_bump_animation(
             x = r * np.cos(theta)
             y = r * np.sin(theta)
 
-            # Clear and redraw (avoid clearing to improve performance)
-            ax.clear()
-            ax.set_xlim(-1.8, 1.8)
-            ax.set_ylim(-1.8, 1.8)
-            ax.axis("off")
-            ax.set_title(config.title, fontsize=14, fontweight="bold", pad=20)
+            # Update bump curve data (no ax.clear()!)
+            bump_line.set_data(x, y)
 
-            # Draw base circle (reference)
-            inner_x = base_radius * np.cos(theta)
-            inner_y = base_radius * np.sin(theta)
-            ax.plot(inner_x, inner_y, color="gray", linestyle="--", linewidth=1)
-
-            # Draw bump curve
-            ax.plot(x, y, color="red", linewidth=2)
-
-            # Draw bump center marker
+            # Update center marker position
             dot_radius = base_radius * 0.96
             center_x = dot_radius * np.cos(pos_angle)
             center_y = dot_radius * np.sin(pos_angle)
-            ax.plot(center_x, center_y, "o", color="black", markersize=6)
+            center_marker.set_data([center_x], [center_y])
 
-            return (line,)
+            # Return all modified artists for blitting
+            return base_circle, bump_line, center_marker
 
         # ==== Create and save animation ====
         if config.save_path is None and not config.show:
             raise ValueError("Either save_path or show must be specified")
 
-        # Create animation with repeat option
+        # Check if backend supports blitting
+        use_blitting = True
+        try:
+            if not fig.canvas.supports_blit:
+                use_blitting = False
+                print("Warning: Backend does not support blitting. Using slower mode.")
+        except AttributeError:
+            use_blitting = False
+
+        # Create animation with blitting enabled for 15-20x speedup
         ani = FuncAnimation(
-            fig, update, frames=nframes, init_func=init, blit=False, repeat=config.repeat
+            fig, update, frames=nframes, init_func=init,
+            blit=use_blitting, repeat=config.repeat
         )
 
         # Save animation with progress tracking
         if config.save_path:
+            # Warn if both saving and showing (causes double rendering)
+            if config.show and nframes > 50:
+                from ...visualization.core import warn_double_rendering
+                warn_double_rendering(nframes, config.save_path, stacklevel=2)
+
             if config.show_progress_bar:
                 pbar = tqdm(total=nframes, desc=f"Saving animation to {config.save_path}")
 

@@ -39,7 +39,7 @@ config = PlotConfigs.energy_landscape_2d_animation(
     ylabel='State Y',
     clabel='Activity',
     repeat=True,
-    save_path='CANN2D_encoding.gif',
+    save_path='CANN2D_encoding.mp4',
     show=False
 )
 
@@ -58,6 +58,6 @@ energy_landscape_2d_animation(
 #     ylabel='State Y',
 #     clabel='Activity',
 #     repeat=True,
-#     save_path='CANN2D_encoding_old.gif',
+#     save_path='CANN2D_encoding_old.mp4',
 #     show=False,
 # )

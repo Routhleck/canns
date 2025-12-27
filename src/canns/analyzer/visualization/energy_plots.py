@@ -9,7 +9,7 @@ from matplotlib import animation
 from matplotlib import pyplot as plt
 from tqdm import tqdm
 
-from .config import PlotConfig, PlotConfigs
+from .core.config import PlotConfig, PlotConfigs
 from .jupyter_utils import display_animation_in_jupyter, is_jupyter_environment
 
 __all__ = [

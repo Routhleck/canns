@@ -8,7 +8,7 @@ import numpy as np
 from matplotlib import pyplot as plt
 from matplotlib.colors import ListedColormap
 
-from .config import PlotConfig, PlotConfigs
+from .core.config import PlotConfig, PlotConfigs
 
 __all__ = ["raster_plot", "average_firing_rate_plot", "population_activity_heatmap"]
 

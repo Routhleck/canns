@@ -9,7 +9,7 @@ import numpy as np
 from matplotlib import pyplot as plt
 from scipy.stats import binned_statistic
 
-from .config import PlotConfig, PlotConfigs
+from .core.config import PlotConfig, PlotConfigs
 
 __all__ = ["tuning_curve"]
 
