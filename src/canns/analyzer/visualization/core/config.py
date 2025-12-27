@@ -5,7 +5,7 @@ from typing import Any
 
 import numpy as np
 
-__all__ = ["PlotConfig", "PlotConfigs"]
+__all__ = ["PlotConfig", "PlotConfigs", "AnimationConfig"]
 
 
 @dataclass
@@ -60,6 +60,51 @@ class PlotConfig:
         """Materialize matplotlib keyword arguments from the config."""
 
         return self.kwargs.copy() if self.kwargs else {}
+
+
+@dataclass
+class AnimationConfig:
+    """Configuration for animation rendering.
+
+    Provides unified settings for optimized animation rendering with automatic
+    quality presets and parallel rendering support.
+
+    Attributes:
+        fps: Frames per second for the animation
+        enable_blitting: Whether to use blitting optimization (auto-detected by default)
+        use_parallel: Force parallel rendering even for short animations
+        num_workers: Number of worker processes for parallel rendering
+        quality: Quality preset - 'draft', 'medium', or 'high'
+        npoints_multiplier: Resolution multiplier (< 1.0 for draft mode)
+        auto_parallel_threshold: Auto-enable parallel rendering for animations with
+                                more than this many frames
+
+    Example:
+        >>> # High-quality animation (default)
+        >>> config = AnimationConfig(fps=30, quality='high')
+        >>>
+        >>> # Fast draft mode for quick iteration
+        >>> draft_config = AnimationConfig(quality='draft')  # Auto: 15 FPS, 0.5x resolution
+        >>>
+        >>> # Force parallel rendering
+        >>> parallel_config = AnimationConfig(use_parallel=True, num_workers=8)
+    """
+
+    fps: int = 30
+    enable_blitting: bool = True  # Auto-detect backend support
+    use_parallel: bool = False  # Auto-enable for long animations
+    num_workers: int = 4
+    quality: str = "high"  # Options: 'draft', 'medium', 'high'
+    npoints_multiplier: float = 1.0  # Automatically set to 0.5 for draft mode
+    auto_parallel_threshold: int = 500  # Enable parallel for > 500 frames
+
+    def __post_init__(self):
+        """Automatically adjust settings based on quality preset."""
+        if self.quality == "draft":
+            self.npoints_multiplier = 0.5
+            self.fps = max(15, self.fps // 2)
+        elif self.quality == "medium":
+            self.npoints_multiplier = 0.75
 
 
 class PlotConfigs:

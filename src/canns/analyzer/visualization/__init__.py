@@ -1,6 +1,20 @@
 """Model visualization utilities."""
 
-from .config import PlotConfig, PlotConfigs
+# Re-export core components for backward compatibility
+from .core import (
+    AnimationConfig,
+    OptimizedAnimationBase,
+    OptimizedAnimationWriter,
+    ParallelAnimationRenderer,
+    PlotConfig,
+    PlotConfigs,
+    create_optimized_writer,
+    display_animation_in_jupyter,
+    get_recommended_format,
+    is_jupyter_environment,
+    warn_double_rendering,
+    warn_gif_format,
+)
 from .energy_plots import (
     energy_landscape_1d_animation,
     energy_landscape_1d_static,
@@ -24,8 +38,20 @@ from .theta_sweep_plots import (
 from .tuning_plots import tuning_curve
 
 __all__ = [
+    # Core components (re-exported)
     "PlotConfig",
     "PlotConfigs",
+    "AnimationConfig",
+    "OptimizedAnimationBase",
+    "ParallelAnimationRenderer",
+    "OptimizedAnimationWriter",
+    "create_optimized_writer",
+    "get_recommended_format",
+    "warn_double_rendering",
+    "warn_gif_format",
+    "is_jupyter_environment",
+    "display_animation_in_jupyter",
+    # Visualization functions
     "energy_landscape_1d_animation",
     "energy_landscape_1d_static",
     "energy_landscape_2d_animation",

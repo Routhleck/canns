@@ -35,7 +35,7 @@ print("Creating bump animation...")
 # Using new config-based approach
 config = CANN1DPlotConfig.for_bump_animation(
     show=False,
-    save_path="bump_analysis_demo.gif",
+    save_path="bump_analysis_demo.mp4",
     nframes=100,
     fps=10,
     title="1D CANN Bump Analysis Demo",
@@ -48,15 +48,15 @@ create_1d_bump_animation(
     config=config
 )
 
-print("Animation saved as 'bump_analysis_demo.gif'")
+print("Animation saved as 'bump_analysis_demo.mp4'")
 
 # For comparison, the old-style approach still works:
 # create_1d_bump_animation(
 #     fits,
 #     show=False,
-#     save_path="bump_analysis_demo_old.gif",
+#     save_path="bump_analysis_demo_old.mp4",
 #     nframes=100,
 #     fps=10,
 #     title="1D CANN Bump Analysis Demo (Old Style)"
 # )
-# print("Old-style animation also saved as 'bump_analysis_demo_old.gif'")
+# print("Old-style animation also saved as 'bump_analysis_demo_old.mp4'")

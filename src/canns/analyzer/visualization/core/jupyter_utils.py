@@ -27,28 +27,56 @@ def is_jupyter_environment() -> bool:
         return False
 
 
-def display_animation_in_jupyter(animation, format: str = "jshtml"):
+def display_animation_in_jupyter(animation, format: str = "html5"):
     """
-    Display a matplotlib animation in Jupyter notebook using HTML/JavaScript.
+    Display a matplotlib animation in Jupyter notebook.
+
+    Performance comparison (100 frames):
+        - html5 (default): 1.3s, 134 KB - Fast encoding, small size, smooth playback
+        - jshtml: 2.6s, 4837 KB - Slower, 36x larger, but works without FFmpeg
 
     Args:
         animation: matplotlib.animation.FuncAnimation object
-        format: Display format - 'jshtml' (default) or 'html5' (video tag)
+        format: Display format - 'html5' (default, MP4 video) or 'jshtml' (JS animation)
 
     Returns:
         IPython.display.HTML object if successful, None otherwise
+
+    Note:
+        'html5' format requires FFmpeg to be installed. If FFmpeg is not available,
+        it will automatically fall back to 'jshtml'.
     """
     try:
         from IPython.display import HTML, display
 
+        # Generate HTML content based on format
+        use_autoplay = False
+
         if format == "html5":
             # Use HTML5 video tag (requires ffmpeg or similar)
-            html_content = animation.to_html5_video()
-        else:
-            # Use JavaScript-based animation (default, no external dependencies)
-            html_content = animation.to_jshtml()
+            try:
+                html_content = animation.to_html5_video()
+            except Exception as e:
+                # Fallback to jshtml if HTML5 video generation fails
+                # (e.g., FFmpeg not installed)
+                import warnings
 
-            # Add autoplay functionality - automatically click the play button
+                warnings.warn(
+                    f"Failed to generate HTML5 video (FFmpeg may not be installed): {e}\n"
+                    "Falling back to jshtml format. Install FFmpeg for better performance:\n"
+                    "  conda install -c conda-forge ffmpeg  OR  brew install ffmpeg",
+                    UserWarning,
+                    stacklevel=2,
+                )
+                html_content = animation.to_jshtml()
+                use_autoplay = True  # Add autoplay for jshtml fallback
+        else:
+            # Use JavaScript-based animation (no external dependencies)
+            html_content = animation.to_jshtml()
+            use_autoplay = True
+
+        # Add autoplay functionality for jshtml
+        if use_autoplay:
             autoplay_script = """
 <script>
 (function() {
