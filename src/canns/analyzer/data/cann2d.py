@@ -30,7 +30,7 @@ from tqdm import tqdm
 
 # Import PlotConfig for unified plotting
 from ..visualization import PlotConfig
-from ..visualization.jupyter_utils import (
+from ..visualization.core.jupyter_utils import (
     display_animation_in_jupyter,
     is_jupyter_environment,
 )
@@ -2058,8 +2058,12 @@ def plot_3d_bump_on_torus(
         # Create animation (blit=False due to 3D limitation)
         interval_ms = 1000 / fps
         ani = animation.FuncAnimation(
-            fig, animate, frames=len(frame_data), interval=interval_ms,
-            blit=False, repeat=True  # 3D does not support blitting
+            fig,
+            animate,
+            frames=len(frame_data),
+            interval=interval_ms,
+            blit=False,
+            repeat=True,  # 3D does not support blitting
         )
 
         # Save animation if path provided
@@ -2067,6 +2071,7 @@ def plot_3d_bump_on_torus(
             # Warn if both saving and showing (causes double rendering)
             if show and len(frame_data) > 50:
                 from ...visualization.core import warn_double_rendering
+
                 warn_double_rendering(len(frame_data), save_path, stacklevel=2)
 
             if show_progress:
@@ -2117,7 +2122,7 @@ def plot_2d_bump_on_manifold(
     save_path: str | None = None,
     fps: int = 20,
     show: bool = True,
-    mode: str = 'fast',
+    mode: str = "fast",
     window_size: int = 10,
     frame_step: int = 5,
     numangsint: int = 20,
@@ -2163,20 +2168,28 @@ def plot_2d_bump_on_manifold(
     """
     import matplotlib.animation as animation
 
-    from ..visualization.jupyter_utils import display_animation_in_jupyter, is_jupyter_environment
+    from ..visualization.core.jupyter_utils import (
+        display_animation_in_jupyter,
+        is_jupyter_environment,
+    )
 
     # Validate inputs
-    if mode == '3d':
+    if mode == "3d":
         # Fall back to 3D visualization
         return plot_3d_bump_on_torus(
-            decoding_result=decoding_result, spike_data=spike_data,
-            save_path=save_path, fps=fps, show=show,
-            window_size=window_size, frame_step=frame_step,
-            numangsint=numangsint, figsize=figsize,
-            show_progress=show_progress
+            decoding_result=decoding_result,
+            spike_data=spike_data,
+            save_path=save_path,
+            fps=fps,
+            show=show,
+            window_size=window_size,
+            frame_step=frame_step,
+            numangsint=numangsint,
+            figsize=figsize,
+            show_progress=show_progress,
         )
 
-    if mode != 'fast':
+    if mode != "fast":
         raise ProcessingError(f"Invalid mode '{mode}'. Must be 'fast' or '3d'.")
 
     # Load decoding results
@@ -2199,8 +2212,7 @@ def plot_2d_bump_on_manifold(
     frame_activity_maps = []
     prev_m = None
 
-    for frame_idx in tqdm(range(n_frames), desc="Processing frames",
-                         disable=not show_progress):
+    for frame_idx in tqdm(range(n_frames), desc="Processing frames", disable=not show_progress):
         start_idx = frame_idx * frame_step
         end_idx = start_idx + window_size
         if end_idx > np.max(times):
@@ -2236,38 +2248,40 @@ def plot_2d_bump_on_manifold(
 
     # Create 2D visualization with blitting
     fig, ax = plt.subplots(figsize=figsize)
-    ax.set_xlabel('Manifold Dimension 1 (rad)', fontsize=12)
-    ax.set_ylabel('Manifold Dimension 2 (rad)', fontsize=12)
-    ax.set_title('CANN2D Bump Activity (2D Projection)', fontsize=14, fontweight='bold')
+    ax.set_xlabel("Manifold Dimension 1 (rad)", fontsize=12)
+    ax.set_ylabel("Manifold Dimension 2 (rad)", fontsize=12)
+    ax.set_title("CANN2D Bump Activity (2D Projection)", fontsize=14, fontweight="bold")
 
     # Pre-create artists for blitting
     # Heatmap
     im = ax.imshow(
         frame_activity_maps[0].T,  # Transpose for correct orientation
-        extent=[0, 2*np.pi, 0, 2*np.pi],
-        origin='lower',
-        cmap='viridis',
+        extent=[0, 2 * np.pi, 0, 2 * np.pi],
+        origin="lower",
+        cmap="viridis",
         animated=True,
-        aspect='auto'
+        aspect="auto",
     )
     # Colorbar (static)
     cbar = plt.colorbar(im, ax=ax)
-    cbar.set_label('Activity', fontsize=11)
+    cbar.set_label("Activity", fontsize=11)
 
     # Time text
     time_text = ax.text(
-        0.02, 0.98, '',
+        0.02,
+        0.98,
+        "",
         transform=ax.transAxes,
         fontsize=11,
-        verticalalignment='top',
-        bbox=dict(boxstyle='round', facecolor='white', alpha=0.8),
-        animated=True
+        verticalalignment="top",
+        bbox=dict(boxstyle="round", facecolor="white", alpha=0.8),
+        animated=True,
     )
 
     def init():
         """Initialize animation"""
         im.set_array(frame_activity_maps[0].T)
-        time_text.set_text('')
+        time_text.set_text("")
         return im, time_text
 
     def update(frame_idx):
@@ -2279,7 +2293,7 @@ def plot_2d_bump_on_manifold(
         im.set_array(frame_activity_maps[frame_idx].T)
 
         # Update time text
-        time_text.set_text(f'Frame: {frame_idx + 1}/{len(frame_activity_maps)}')
+        time_text.set_text(f"Frame: {frame_idx + 1}/{len(frame_activity_maps)}")
 
         return im, time_text
 
@@ -2295,9 +2309,13 @@ def plot_2d_bump_on_manifold(
     # Create animation with blitting enabled for 10-20x speedup
     interval_ms = 1000 / fps
     ani = animation.FuncAnimation(
-        fig, update, frames=len(frame_activity_maps),
-        init_func=init, interval=interval_ms,
-        blit=use_blitting, repeat=True
+        fig,
+        update,
+        frames=len(frame_activity_maps),
+        init_func=init,
+        interval=interval_ms,
+        blit=use_blitting,
+        repeat=True,
     )
 
     # Save animation if path provided
@@ -2305,22 +2323,25 @@ def plot_2d_bump_on_manifold(
         # Warn if both saving and showing (causes double rendering)
         if show and len(frame_activity_maps) > 50:
             from ...visualization.core import warn_double_rendering
+
             warn_double_rendering(len(frame_activity_maps), save_path, stacklevel=2)
 
         if show_progress:
-            pbar = tqdm(total=len(frame_activity_maps),
-                       desc=f"Saving animation to {save_path}")
+            pbar = tqdm(total=len(frame_activity_maps), desc=f"Saving animation to {save_path}")
 
             def progress_callback(current_frame, total_frames):
                 pbar.update(1)
 
             try:
-                if save_path.endswith('.mp4'):
+                if save_path.endswith(".mp4"):
                     from matplotlib.animation import FFMpegWriter
-                    writer = FFMpegWriter(fps=fps, codec='libx264',
-                                         extra_args=['-pix_fmt', 'yuv420p'])
+
+                    writer = FFMpegWriter(
+                        fps=fps, codec="libx264", extra_args=["-pix_fmt", "yuv420p"]
+                    )
                 else:
                     from matplotlib.animation import PillowWriter
+
                     writer = PillowWriter(fps=fps)
 
                 ani.save(save_path, writer=writer, progress_callback=progress_callback)
@@ -2332,12 +2353,15 @@ def plot_2d_bump_on_manifold(
                 raise
         else:
             try:
-                if save_path.endswith('.mp4'):
+                if save_path.endswith(".mp4"):
                     from matplotlib.animation import FFMpegWriter
-                    writer = FFMpegWriter(fps=fps, codec='libx264',
-                                         extra_args=['-pix_fmt', 'yuv420p'])
+
+                    writer = FFMpegWriter(
+                        fps=fps, codec="libx264", extra_args=["-pix_fmt", "yuv420p"]
+                    )
                 else:
                     from matplotlib.animation import PillowWriter
+
                     writer = PillowWriter(fps=fps)
 
                 ani.save(save_path, writer=writer)

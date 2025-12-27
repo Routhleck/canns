@@ -89,20 +89,21 @@ class AnimationConfig:
         >>> # Force parallel rendering
         >>> parallel_config = AnimationConfig(use_parallel=True, num_workers=8)
     """
+
     fps: int = 30
     enable_blitting: bool = True  # Auto-detect backend support
     use_parallel: bool = False  # Auto-enable for long animations
     num_workers: int = 4
-    quality: str = 'high'  # Options: 'draft', 'medium', 'high'
+    quality: str = "high"  # Options: 'draft', 'medium', 'high'
     npoints_multiplier: float = 1.0  # Automatically set to 0.5 for draft mode
     auto_parallel_threshold: int = 500  # Enable parallel for > 500 frames
 
     def __post_init__(self):
         """Automatically adjust settings based on quality preset."""
-        if self.quality == 'draft':
+        if self.quality == "draft":
             self.npoints_multiplier = 0.5
             self.fps = max(15, self.fps // 2)
-        elif self.quality == 'medium':
+        elif self.quality == "medium":
             self.npoints_multiplier = 0.75
 
 

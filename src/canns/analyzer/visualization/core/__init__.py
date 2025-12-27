@@ -11,8 +11,9 @@ All core components are re-exported at the parent visualization level for
 backward compatibility and convenience.
 """
 
-from .config import PlotConfig, AnimationConfig, PlotConfigs
 from .animation import OptimizedAnimationBase
+from .config import AnimationConfig, PlotConfig, PlotConfigs
+from .jupyter_utils import display_animation_in_jupyter, is_jupyter_environment
 from .rendering import ParallelAnimationRenderer
 from .writers import (
     OptimizedAnimationWriter,
@@ -24,17 +25,20 @@ from .writers import (
 
 __all__ = [
     # Configuration
-    'PlotConfig',
-    'AnimationConfig',
-    'PlotConfigs',
+    "PlotConfig",
+    "AnimationConfig",
+    "PlotConfigs",
     # Animation framework
-    'OptimizedAnimationBase',
+    "OptimizedAnimationBase",
     # Rendering
-    'ParallelAnimationRenderer',
+    "ParallelAnimationRenderer",
     # Writers
-    'OptimizedAnimationWriter',
-    'create_optimized_writer',
-    'get_recommended_format',
-    'warn_double_rendering',
-    'warn_gif_format',
+    "OptimizedAnimationWriter",
+    "create_optimized_writer",
+    "get_recommended_format",
+    "warn_double_rendering",
+    "warn_gif_format",
+    # Jupyter utilities
+    "is_jupyter_environment",
+    "display_animation_in_jupyter",
 ]

@@ -10,7 +10,7 @@ from matplotlib import pyplot as plt
 from tqdm import tqdm
 
 from .core.config import PlotConfig, PlotConfigs
-from .jupyter_utils import display_animation_in_jupyter, is_jupyter_environment
+from .core.jupyter_utils import display_animation_in_jupyter, is_jupyter_environment
 
 __all__ = [
     "energy_landscape_1d_static",

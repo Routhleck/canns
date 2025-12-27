@@ -23,7 +23,7 @@ from mpl_toolkits.axes_grid1 import make_axes_locatable
 from tqdm import tqdm
 
 from .core.config import PlotConfig
-from .jupyter_utils import display_animation_in_jupyter, is_jupyter_environment
+from .core.jupyter_utils import display_animation_in_jupyter, is_jupyter_environment
 
 
 @dataclass(slots=True)
@@ -980,6 +980,7 @@ def create_theta_sweep_place_cell_animation(
         # Warn if both saving and showing (causes double rendering)
         if config.show and data.frames > 50:
             from .core import warn_double_rendering
+
             warn_double_rendering(data.frames, config.save_path, stacklevel=2)
 
         if config.save_path.endswith(".mp4"):
@@ -1477,6 +1478,7 @@ def create_theta_sweep_grid_cell_animation(
         # Warn if both saving and showing (causes double rendering)
         if config.show and data.frames > 50:
             from .core import warn_double_rendering
+
             warn_double_rendering(data.frames, config.save_path, stacklevel=2)
 
         # Use FFMpegWriter for better performance than PillowWriter

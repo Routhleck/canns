@@ -241,6 +241,40 @@ renderer = ParallelAnimationRenderer(num_workers=4)
 renderer.render_parallel(animation_func, nframes=1000, output_path='output.mp4')
 ```
 
+#### 7. Jupyter Notebook Display Optimization
+
+For Jupyter notebooks, use the optimized HTML5 video display (default since v2.0):
+
+```python
+# Automatic (uses html5 by default)
+create_animation(data, show=True)  # Shows in notebook with HTML5 video
+
+# Manual control (if needed)
+from canns.analyzer.visualization import display_animation_in_jupyter
+
+ani = create_animation(data, show=False)
+display_animation_in_jupyter(ani, format='html5')  # Recommended: 2x faster
+# or
+display_animation_in_jupyter(ani, format='jshtml')  # Fallback (no FFmpeg needed)
+```
+
+**Performance comparison (100 frames)**:
+
+| Format | Time | Size | Notes |
+|--------|------|------|-------|
+| html5 (default) | 1.3s | 134 KB | Fast, small, smooth playback |
+| jshtml (fallback) | 2.6s | 4837 KB | 2x slower, 36x larger |
+
+**Recommendation**: Use `show=False` when saving files to avoid double rendering:
+
+```python
+# ✅ Best practice: Save only, display later from file
+create_animation(data, save_path='output.mp4', show=False)
+
+# ⚠️ Avoid: Both save and show (renders twice)
+create_animation(data, save_path='output.mp4', show=True)
+```
+
 #### Performance Summary
 
 Optimization techniques and their speedups:
@@ -248,6 +282,7 @@ Optimization techniques and their speedups:
 | Technique | Speedup | Use Case |
 |-----------|---------|----------|
 | MP4 vs GIF encoding | 36.8x | All animations |
+| Notebook html5 vs jshtml | 2.0x | Jupyter display |
 | Blitting (2D) | 4.6x | Custom 2D animations |
 | 2D projection vs 3D | 10-20x | CANN2D visualization |
 | Parallel rendering | 3-4x | Long animations (>500 frames) |

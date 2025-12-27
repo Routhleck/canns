@@ -9,7 +9,7 @@ from scipy.optimize import linear_sum_assignment
 from scipy.special import i0
 from tqdm import tqdm
 
-from ..visualization.jupyter_utils import (
+from ..visualization.core.jupyter_utils import (
     display_animation_in_jupyter,
     is_jupyter_environment,
 )
@@ -441,15 +441,15 @@ def create_1d_bump_animation(
         # Base circle (reference) - static geometry
         inner_x = base_radius * np.cos(theta)
         inner_y = base_radius * np.sin(theta)
-        base_circle, = ax.plot(inner_x, inner_y, color="gray",
-                               linestyle="--", linewidth=1, animated=True)
+        (base_circle,) = ax.plot(
+            inner_x, inner_y, color="gray", linestyle="--", linewidth=1, animated=True
+        )
 
         # Bump curve - will be updated each frame
-        bump_line, = ax.plot([], [], color="red", linewidth=2, animated=True)
+        (bump_line,) = ax.plot([], [], color="red", linewidth=2, animated=True)
 
         # Center marker - will be updated each frame
-        center_marker, = ax.plot([], [], "o", color="black",
-                                markersize=6, animated=True)
+        (center_marker,) = ax.plot([], [], "o", color="black", markersize=6, animated=True)
 
         def init():
             """Initialize animation - set empty data for dynamic artists"""
@@ -517,8 +517,7 @@ def create_1d_bump_animation(
 
         # Create animation with blitting enabled for 15-20x speedup
         ani = FuncAnimation(
-            fig, update, frames=nframes, init_func=init,
-            blit=use_blitting, repeat=config.repeat
+            fig, update, frames=nframes, init_func=init, blit=use_blitting, repeat=config.repeat
         )
 
         # Save animation with progress tracking
@@ -526,6 +525,7 @@ def create_1d_bump_animation(
             # Warn if both saving and showing (causes double rendering)
             if config.show and nframes > 50:
                 from ...visualization.core import warn_double_rendering
+
                 warn_double_rendering(nframes, config.save_path, stacklevel=2)
 
             if config.show_progress_bar:

@@ -2,14 +2,16 @@
 
 # Re-export core components for backward compatibility
 from .core import (
-    PlotConfig,
-    PlotConfigs,
     AnimationConfig,
     OptimizedAnimationBase,
-    ParallelAnimationRenderer,
     OptimizedAnimationWriter,
+    ParallelAnimationRenderer,
+    PlotConfig,
+    PlotConfigs,
     create_optimized_writer,
+    display_animation_in_jupyter,
     get_recommended_format,
+    is_jupyter_environment,
     warn_double_rendering,
     warn_gif_format,
 )
@@ -47,6 +49,8 @@ __all__ = [
     "get_recommended_format",
     "warn_double_rendering",
     "warn_gif_format",
+    "is_jupyter_environment",
+    "display_animation_in_jupyter",
     # Visualization functions
     "energy_landscape_1d_animation",
     "energy_landscape_1d_static",
