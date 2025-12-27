@@ -5,6 +5,7 @@ This module provides drop-in replacements for matplotlib's animation writers
 with significant performance improvements through better encoding libraries.
 """
 
+import importlib.util
 import os
 import warnings
 from typing import Literal
@@ -12,26 +13,19 @@ from typing import Literal
 import numpy as np
 
 # Check available backends
-try:
-    import imageio
-    IMAGEIO_AVAILABLE = True
-except ImportError:
-    IMAGEIO_AVAILABLE = False
+IMAGEIO_AVAILABLE = importlib.util.find_spec("imageio") is not None
+if not IMAGEIO_AVAILABLE:
     warnings.warn(
         "imageio not available. Install with 'pip install imageio' for faster encoding.",
         ImportWarning,
-        stacklevel=2
+        stacklevel=2,
     )
 
-try:
-    import imageio_ffmpeg
-    FFMPEG_AVAILABLE = True
-except ImportError:
-    FFMPEG_AVAILABLE = False
+FFMPEG_AVAILABLE = importlib.util.find_spec("imageio_ffmpeg") is not None
 
 
-EncodingSpeed = Literal['fast', 'balanced', 'quality']
-VideoFormat = Literal['gif', 'mp4', 'webm']
+EncodingSpeed = Literal["fast", "balanced", "quality"]
+VideoFormat = Literal["gif", "mp4", "webm"]
 
 
 class OptimizedAnimationWriter:
@@ -64,10 +58,10 @@ class OptimizedAnimationWriter:
         self,
         save_path: str,
         fps: int = 10,
-        encoding_speed: EncodingSpeed = 'balanced',
+        encoding_speed: EncodingSpeed = "balanced",
         codec: str | None = None,
         bitrate: int | None = None,
-        dpi: int = 100
+        dpi: int = 100,
     ):
         """
         Initialize the optimized writer.
@@ -100,52 +94,50 @@ class OptimizedAnimationWriter:
         """Detect video format from file extension."""
         ext = os.path.splitext(path)[1].lower()
 
-        if ext == '.gif':
+        if ext == ".gif":
             # Warn user about performance: MP4 is 36.8x faster
             warn_gif_format(stacklevel=4)
-            return 'gif'
-        elif ext in ['.mp4', '.m4v', '.mov']:
-            return 'mp4'
-        elif ext == '.webm':
-            return 'webm'
+            return "gif"
+        elif ext in [".mp4", ".m4v", ".mov"]:
+            return "mp4"
+        elif ext == ".webm":
+            return "webm"
         else:
             # Default to GIF for unknown extensions
             warnings.warn(
-                f"Unknown extension '{ext}', defaulting to GIF format",
-                UserWarning,
-                stacklevel=3
+                f"Unknown extension '{ext}', defaulting to GIF format", UserWarning, stacklevel=3
             )
-            return 'gif'
+            return "gif"
 
     def _select_writer(self) -> str:
         """Select best available writer based on format and libraries."""
-        if self.format == 'gif':
+        if self.format == "gif":
             if IMAGEIO_AVAILABLE:
-                return 'imageio_gif'
+                return "imageio_gif"
             else:
-                return 'pillow_gif'
+                return "pillow_gif"
 
-        elif self.format in ['mp4', 'webm']:
+        elif self.format in ["mp4", "webm"]:
             if FFMPEG_AVAILABLE:
-                return 'imageio_ffmpeg'
+                return "imageio_ffmpeg"
             elif IMAGEIO_AVAILABLE:
                 warnings.warn(
-                    f"FFmpeg not available, falling back to GIF. "
-                    f"Install with: pip install imageio[ffmpeg]",
+                    "FFmpeg not available, falling back to GIF. "
+                    "Install with: pip install imageio[ffmpeg]",
                     UserWarning,
-                    stacklevel=3
+                    stacklevel=3,
                 )
-                return 'imageio_gif'
+                return "imageio_gif"
             else:
                 warnings.warn(
                     f"Cannot encode {self.format}, falling back to Pillow GIF. "
                     f"Install imageio with: pip install imageio[ffmpeg]",
                     UserWarning,
-                    stacklevel=3
+                    stacklevel=3,
                 )
-                return 'pillow_gif'
+                return "pillow_gif"
 
-        return 'pillow_gif'
+        return "pillow_gif"
 
     def setup(self, fig, outfile=None, dpi=None):
         """Setup the writer (matplotlib API compatibility)."""
@@ -176,11 +168,11 @@ class OptimizedAnimationWriter:
         if not self.frames:
             raise ValueError("No frames captured")
 
-        if self.writer == 'imageio_gif':
+        if self.writer == "imageio_gif":
             self._save_imageio_gif()
-        elif self.writer == 'imageio_ffmpeg':
+        elif self.writer == "imageio_ffmpeg":
             self._save_imageio_ffmpeg()
-        elif self.writer == 'pillow_gif':
+        elif self.writer == "pillow_gif":
             self._save_pillow_gif()
         else:
             raise ValueError(f"Unknown writer: {self.writer}")
@@ -190,117 +182,119 @@ class OptimizedAnimationWriter:
         import imageio
 
         # Optimized GIF parameters based on encoding_speed
-        if self.encoding_speed == 'fast':
+        if self.encoding_speed == "fast":
             params = {
-                'quantizer': 'nq',  # Faster quantizer
-                'palettesize': 128,  # Fewer colors = faster
+                "quantizer": "nq",  # Faster quantizer
+                "palettesize": 128,  # Fewer colors = faster
             }
-        elif self.encoding_speed == 'balanced':
+        elif self.encoding_speed == "balanced":
             params = {
-                'quantizer': 'nq',
-                'palettesize': 256,
+                "quantizer": "nq",
+                "palettesize": 256,
             }
         else:  # quality
             params = {
-                'palettesize': 256,
+                "palettesize": 256,
             }
 
-        imageio.mimsave(
-            self.save_path,
-            self.frames,
-            fps=self.fps,
-            format='GIF',
-            **params
-        )
+        imageio.mimsave(self.save_path, self.frames, fps=self.fps, format="GIF", **params)
 
     def _save_imageio_ffmpeg(self):
         """Save using imageio with FFmpeg (5-10x faster than GIF)."""
         import imageio
 
-        if self.format == 'mp4':
+        if self.format == "mp4":
             # H.264 encoding parameters
-            codec = self.codec or 'libx264'
-            pixel_format = 'yuv420p'  # Universal compatibility
+            codec = self.codec or "libx264"
+            pixel_format = "yuv420p"  # Universal compatibility
 
-            if self.encoding_speed == 'fast':
+            if self.encoding_speed == "fast":
                 ffmpeg_params = [
-                    '-preset', 'ultrafast',
-                    '-crf', '28',  # Slightly lower quality for speed
-                    '-tune', 'fastdecode'
+                    "-preset",
+                    "ultrafast",
+                    "-crf",
+                    "28",  # Slightly lower quality for speed
+                    "-tune",
+                    "fastdecode",
                 ]
-            elif self.encoding_speed == 'balanced':
+            elif self.encoding_speed == "balanced":
                 ffmpeg_params = [
-                    '-preset', 'medium',
-                    '-crf', '23',  # Good quality
+                    "-preset",
+                    "medium",
+                    "-crf",
+                    "23",  # Good quality
                 ]
             else:  # quality
                 ffmpeg_params = [
-                    '-preset', 'slow',
-                    '-crf', '18',  # High quality
+                    "-preset",
+                    "slow",
+                    "-crf",
+                    "18",  # High quality
                 ]
 
             if self.bitrate:
-                ffmpeg_params.extend(['-b:v', f'{self.bitrate}k'])
+                ffmpeg_params.extend(["-b:v", f"{self.bitrate}k"])
 
             imageio.mimsave(
                 self.save_path,
                 self.frames,
                 fps=self.fps,
-                format='FFMPEG',
+                format="FFMPEG",
                 codec=codec,
                 pixelformat=pixel_format,
-                ffmpeg_params=ffmpeg_params
+                ffmpeg_params=ffmpeg_params,
             )
 
-        elif self.format == 'webm':
+        elif self.format == "webm":
             # VP9 encoding parameters
-            codec = self.codec or 'libvpx-vp9'
+            codec = self.codec or "libvpx-vp9"
 
-            if self.encoding_speed == 'fast':
+            if self.encoding_speed == "fast":
                 ffmpeg_params = [
-                    '-speed', '8',  # Fastest
-                    '-tile-columns', '2',
-                    '-threads', '4'
+                    "-speed",
+                    "8",  # Fastest
+                    "-tile-columns",
+                    "2",
+                    "-threads",
+                    "4",
                 ]
-            elif self.encoding_speed == 'balanced':
-                ffmpeg_params = [
-                    '-speed', '4',
-                    '-tile-columns', '2',
-                    '-threads', '4'
-                ]
+            elif self.encoding_speed == "balanced":
+                ffmpeg_params = ["-speed", "4", "-tile-columns", "2", "-threads", "4"]
             else:  # quality
                 ffmpeg_params = [
-                    '-speed', '1',  # Slower but better quality
-                    '-tile-columns', '4',
-                    '-threads', '8'
+                    "-speed",
+                    "1",  # Slower but better quality
+                    "-tile-columns",
+                    "4",
+                    "-threads",
+                    "8",
                 ]
 
             imageio.mimsave(
                 self.save_path,
                 self.frames,
                 fps=self.fps,
-                format='FFMPEG',
+                format="FFMPEG",
                 codec=codec,
-                ffmpeg_params=ffmpeg_params
+                ffmpeg_params=ffmpeg_params,
             )
 
     def _save_pillow_gif(self):
         """Fallback to Pillow GIF writer."""
-        from matplotlib.animation import PillowWriter
         import matplotlib.pyplot as plt
+        from matplotlib.animation import PillowWriter
 
         # Create temporary animation to use PillowWriter
         # (This is slower but maintains compatibility)
         warnings.warn(
-            "Using slower PillowWriter. Install imageio for 1.7x speedup: "
-            "pip install imageio",
+            "Using slower PillowWriter. Install imageio for 1.7x speedup: pip install imageio",
             UserWarning,
-            stacklevel=3
+            stacklevel=3,
         )
 
         # Use matplotlib's PillowWriter
         fig, ax = plt.subplots()
-        ax.axis('off')
+        ax.axis("off")
         im = ax.imshow(self.frames[0])
 
         def update(frame):
@@ -308,17 +302,15 @@ class OptimizedAnimationWriter:
             return [im]
 
         from matplotlib.animation import FuncAnimation
-        ani = FuncAnimation(
-            fig, update, frames=len(self.frames),
-            blit=True, repeat=False
-        )
+
+        ani = FuncAnimation(fig, update, frames=len(self.frames), blit=True, repeat=False)
 
         ani.save(self.save_path, writer=PillowWriter(fps=self.fps))
         plt.close(fig)
 
 
 def get_recommended_format(
-    use_case: Literal['web', 'publication', 'github', 'presentation'] = 'web'
+    use_case: Literal["web", "publication", "github", "presentation"] = "web",
 ) -> tuple[str, str]:
     """
     Get recommended file format and extension for different use cases.
@@ -334,16 +326,15 @@ def get_recommended_format(
         >>> save_path = f'animation{ext}'  # 'animation.mp4'
     """
     recommendations = {
-        'web': ('mp4', '.mp4', 'Universal browser support, fast encoding'),
-        'publication': ('mp4', '.mp4', 'High quality, smaller file size'),
-        'github': ('gif', '.gif', 'Inline display in README'),
-        'presentation': ('mp4', '.mp4', 'Smooth playback, high quality')
+        "web": ("mp4", ".mp4", "Universal browser support, fast encoding"),
+        "publication": ("mp4", ".mp4", "High quality, smaller file size"),
+        "github": ("gif", ".gif", "Inline display in README"),
+        "presentation": ("mp4", ".mp4", "Smooth playback, high quality"),
     }
 
     if use_case not in recommendations:
         raise ValueError(
-            f"Unknown use case '{use_case}'. "
-            f"Choose from: {list(recommendations.keys())}"
+            f"Unknown use case '{use_case}'. Choose from: {list(recommendations.keys())}"
         )
 
     format_type, ext, _reason = recommendations[use_case]
@@ -351,10 +342,7 @@ def get_recommended_format(
 
 
 def create_optimized_writer(
-    save_path: str,
-    fps: int = 10,
-    encoding_speed: EncodingSpeed = 'balanced',
-    **kwargs
+    save_path: str, fps: int = 10, encoding_speed: EncodingSpeed = "balanced", **kwargs
 ) -> OptimizedAnimationWriter:
     """
     Factory function to create an optimized animation writer.
@@ -386,10 +374,7 @@ def create_optimized_writer(
         ... )
     """
     return OptimizedAnimationWriter(
-        save_path=save_path,
-        fps=fps,
-        encoding_speed=encoding_speed,
-        **kwargs
+        save_path=save_path, fps=fps, encoding_speed=encoding_speed, **kwargs
     )
 
 
