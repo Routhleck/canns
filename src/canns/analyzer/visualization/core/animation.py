@@ -49,7 +49,7 @@ class OptimizedAnimationBase(ABC):
             warnings.warn(
                 "Backend does not support blitting. Falling back to non-blitted mode.",
                 UserWarning,
-                stacklevel=2
+                stacklevel=2,
             )
             self.config.enable_blitting = False
 
@@ -112,7 +112,7 @@ class OptimizedAnimationBase(ABC):
         interval: int | None = None,
         repeat: bool = True,
         save_path: str | None = None,
-        **save_kwargs
+        **save_kwargs,
     ) -> FuncAnimation:
         """Render the animation with automatic optimization selection.
 
@@ -134,10 +134,7 @@ class OptimizedAnimationBase(ABC):
             interval = 1000 // self.config.fps
 
         # Decide whether to use parallel rendering
-        use_parallel = (
-            self.config.use_parallel or
-            nframes > self.config.auto_parallel_threshold
-        )
+        use_parallel = self.config.use_parallel or nframes > self.config.auto_parallel_threshold
 
         if use_parallel and save_path:
             # Use parallel rendering for long animations
@@ -151,7 +148,7 @@ class OptimizedAnimationBase(ABC):
                 init_func=self.init_func,
                 blit=self.config.enable_blitting,
                 interval=interval,
-                repeat=repeat
+                repeat=repeat,
             )
 
             if save_path:
@@ -159,12 +156,7 @@ class OptimizedAnimationBase(ABC):
 
             return ani
 
-    def _render_parallel(
-        self,
-        nframes: int,
-        save_path: str,
-        **save_kwargs
-    ) -> FuncAnimation:
+    def _render_parallel(self, nframes: int, save_path: str, **save_kwargs) -> FuncAnimation:
         """Render animation using parallel workers (for long animations).
 
         Args:
@@ -176,18 +168,16 @@ class OptimizedAnimationBase(ABC):
             FuncAnimation object (for API compatibility)
         """
         # Import here to avoid circular dependency
-        from .parallel_renderer import ParallelAnimationRenderer
+        from .rendering import ParallelAnimationRenderer
 
-        renderer = ParallelAnimationRenderer(
-            num_workers=self.config.num_workers
-        )
+        renderer = ParallelAnimationRenderer(num_workers=self.config.num_workers)
 
         renderer.render(
             animation_base=self,
             nframes=nframes,
             fps=self.config.fps,
             save_path=save_path,
-            **save_kwargs
+            **save_kwargs,
         )
 
         # Return a dummy FuncAnimation for API compatibility
@@ -196,7 +186,7 @@ class OptimizedAnimationBase(ABC):
             self.fig,
             self.update_frame,
             frames=1,  # Single frame to satisfy API
-            blit=False
+            blit=False,
         )
 
 
@@ -230,9 +220,9 @@ def create_buffer(shape: tuple[int, ...], dtype=np.float32) -> np.ndarray:
 
 def optimize_colormap(
     data: np.ndarray,
-    cmap_name: str = 'viridis',
+    cmap_name: str = "viridis",
     vmin: float | None = None,
-    vmax: float | None = None
+    vmax: float | None = None,
 ) -> tuple[np.ndarray, float, float]:
     """Pre-compute colormap normalization for efficient color mapping.
 

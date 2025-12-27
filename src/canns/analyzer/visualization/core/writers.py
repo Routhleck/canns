@@ -319,7 +319,7 @@ def get_recommended_format(
         use_case: Target use case
 
     Returns:
-        Tuple of (format, extension, reason)
+        Tuple of (format, extension) - format string and file extension with dot
 
     Examples:
         >>> format_str, ext = get_recommended_format('web')

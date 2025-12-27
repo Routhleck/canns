@@ -16,18 +16,18 @@ import numpy as np
 from matplotlib.backends.backend_agg import FigureCanvasAgg
 from matplotlib.figure import Figure
 
-# Use non-interactive backend for parallel rendering
-matplotlib.use('Agg')
+# Note: Backend is set to 'Agg' inside worker processes, not at module import time
 
 try:
     import imageio
+
     IMAGEIO_AVAILABLE = True
 except ImportError:
     IMAGEIO_AVAILABLE = False
     warnings.warn(
         "imageio not available. Install with 'pip install imageio' for parallel rendering.",
         ImportWarning,
-        stacklevel=2
+        stacklevel=2,
     )
 
 
@@ -55,10 +55,10 @@ class ParallelAnimationRenderer:
         nframes: int,
         fps: int,
         save_path: str,
-        writer: str = 'ffmpeg',
-        codec: str = 'libx264',
+        writer: str = "ffmpeg",
+        codec: str = "libx264",
         bitrate: int | None = None,
-        show_progress: bool = True
+        show_progress: bool = True,
     ) -> None:
         """Render animation frames in parallel and save to file.
 
@@ -74,9 +74,17 @@ class ParallelAnimationRenderer:
         """
         if not IMAGEIO_AVAILABLE:
             raise ImportError(
-                "imageio is required for parallel rendering. "
-                "Install with: pip install imageio"
+                "imageio is required for parallel rendering. Install with: pip install imageio"
             )
+
+        # Warn about experimental status
+        warnings.warn(
+            "Parallel rendering is experimental and may not work for all animation types "
+            "due to matplotlib object pickling limitations. If you encounter errors, "
+            "use standard rendering (disable use_parallel in AnimationConfig).",
+            UserWarning,
+            stacklevel=3,
+        )
 
         # Create frame rendering tasks
         print(f"Rendering {nframes} frames using {self.num_workers} workers...")
@@ -85,11 +93,7 @@ class ParallelAnimationRenderer:
         with ProcessPoolExecutor(max_workers=self.num_workers) as executor:
             # Submit all frame rendering tasks
             future_to_frame = {
-                executor.submit(
-                    _render_single_frame_worker,
-                    animation_base,
-                    frame_idx
-                ): frame_idx
+                executor.submit(_render_single_frame_worker, animation_base, frame_idx): frame_idx
                 for frame_idx in range(nframes)
             }
 
@@ -109,9 +113,7 @@ class ParallelAnimationRenderer:
 
                 except Exception as e:
                     warnings.warn(
-                        f"Failed to render frame {frame_idx}: {e}",
-                        RuntimeWarning,
-                        stacklevel=2
+                        f"Failed to render frame {frame_idx}: {e}", RuntimeWarning, stacklevel=2
                     )
                     # Create blank frame as fallback
                     frames[frame_idx] = np.zeros((480, 640, 3), dtype=np.uint8)
@@ -128,7 +130,7 @@ class ParallelAnimationRenderer:
         fps: int,
         writer: str,
         codec: str,
-        bitrate: int | None
+        bitrate: int | None,
     ) -> None:
         """Save rendered frames to video file using imageio.
 
@@ -141,14 +143,14 @@ class ParallelAnimationRenderer:
             bitrate: Video bitrate in kbps
         """
         # Configure writer based on file extension and settings
-        if writer == 'ffmpeg' and save_path.endswith('.mp4'):
+        if writer == "ffmpeg" and save_path.endswith(".mp4"):
             writer_kwargs = {
-                'fps': fps,
-                'codec': codec,
-                'pixelformat': 'yuv420p',
+                "fps": fps,
+                "codec": codec,
+                "pixelformat": "yuv420p",
             }
             if bitrate:
-                writer_kwargs['bitrate'] = f'{bitrate}k'
+                writer_kwargs["bitrate"] = f"{bitrate}k"
 
             with imageio.get_writer(save_path, **writer_kwargs) as video_writer:
                 for frame in frames:
@@ -158,9 +160,9 @@ class ParallelAnimationRenderer:
                             frame = frame[:, :, :3]
                         video_writer.append_data(frame)
 
-        elif save_path.endswith('.gif'):
+        elif save_path.endswith(".gif"):
             # Use Pillow writer for GIF
-            with imageio.get_writer(save_path, mode='I', fps=fps) as video_writer:
+            with imageio.get_writer(save_path, mode="I", fps=fps) as video_writer:
                 for frame in frames:
                     if frame is not None:
                         if frame.shape[-1] == 4:  # RGBA
@@ -190,7 +192,15 @@ def _render_single_frame_worker(animation_base: Any, frame_idx: int) -> np.ndarr
 
     Returns:
         Frame data as numpy array (H, W, 3) in RGB format
+
+    Note:
+        Parallel rendering is experimental. The animation_base instance must be
+        picklable, which may not work for all animation types due to matplotlib
+        object serialization limitations.
     """
+    # Set non-interactive backend for this worker process
+    matplotlib.use("Agg")
+
     # Each worker needs to recreate the figure and setup
     # (Can't pickle matplotlib objects across processes)
     fig = Figure(figsize=animation_base.fig.get_size_inches(), dpi=animation_base.fig.dpi)
@@ -199,7 +209,7 @@ def _render_single_frame_worker(animation_base: Any, frame_idx: int) -> np.ndarr
     # Copy relevant plot settings
     ax.set_xlim(animation_base.ax.get_xlim())
     ax.set_ylim(animation_base.ax.get_ylim())
-    if hasattr(animation_base.ax, 'get_zlim'):
+    if hasattr(animation_base.ax, "get_zlim"):
         ax.set_zlim(animation_base.ax.get_zlim())
 
     # Create artists for this worker
@@ -250,9 +260,7 @@ def estimate_parallel_speedup(nframes: int, num_workers: int = 4) -> float:
 
 
 def should_use_parallel(
-    nframes: int,
-    estimated_frame_time: float,
-    threshold_seconds: float = 30.0
+    nframes: int, estimated_frame_time: float, threshold_seconds: float = 30.0
 ) -> bool:
     """Determine if parallel rendering would be beneficial.
 
