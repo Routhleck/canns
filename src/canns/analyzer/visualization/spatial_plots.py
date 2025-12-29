@@ -691,7 +691,8 @@ def create_grid_cell_tracking_animation(
 
             def _save(write_animation):
                 try:
-                    writer = animation.PillowWriter(fps=config.fps)
+                    from canns.analyzer.visualization.core import get_matplotlib_writer
+                    writer = get_matplotlib_writer(config.save_path, fps=config.fps)
                     write_animation(writer)
                     print(f"Animation saved to: {config.save_path}")
                 except Exception as exc:
