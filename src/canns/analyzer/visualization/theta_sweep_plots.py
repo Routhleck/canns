@@ -983,16 +983,9 @@ def create_theta_sweep_place_cell_animation(
 
             warn_double_rendering(data.frames, config.save_path, stacklevel=2)
 
-        if config.save_path.endswith(".mp4"):
-            from matplotlib.animation import FFMpegWriter
+        from canns.analyzer.visualization.core import get_matplotlib_writer
 
-            writer = FFMpegWriter(
-                fps=config.fps, codec="libx264", extra_args=["-pix_fmt", "yuv420p"]
-            )
-        else:
-            from matplotlib.animation import PillowWriter
-
-            writer = PillowWriter(fps=config.fps)
+        writer = get_matplotlib_writer(config.save_path, fps=config.fps)
 
         if config.show_progress_bar:
             progress_bar = tqdm(
@@ -1482,16 +1475,9 @@ def create_theta_sweep_grid_cell_animation(
             warn_double_rendering(data.frames, config.save_path, stacklevel=2)
 
         # Use FFMpegWriter for better performance than PillowWriter
-        if config.save_path.endswith(".mp4"):
-            from matplotlib.animation import FFMpegWriter
+        from canns.analyzer.visualization.core import get_matplotlib_writer
 
-            writer = FFMpegWriter(
-                fps=config.fps, codec="libx264", extra_args=["-pix_fmt", "yuv420p"]
-            )
-        else:
-            from matplotlib.animation import PillowWriter
-
-            writer = PillowWriter(fps=config.fps)
+        writer = get_matplotlib_writer(config.save_path, fps=config.fps)
 
         if config.show_progress_bar:
             progress_bar = tqdm(

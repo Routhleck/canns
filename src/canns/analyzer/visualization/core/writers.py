@@ -436,3 +436,54 @@ def warn_gif_format(*, stacklevel: int = 2) -> None:
         UserWarning,
         stacklevel=stacklevel,
     )
+
+
+def get_matplotlib_writer(save_path: str, fps: int = 10, **kwargs):
+    """
+    Create appropriate matplotlib animation writer based on file extension.
+
+    This function automatically selects the correct writer:
+    - .mp4 → FFMpegWriter (H.264 codec, high quality, fast encoding)
+    - .gif → PillowWriter (universal compatibility)
+    - others → FFMpegWriter (default)
+
+    Args:
+        save_path: Output file path (extension determines format)
+        fps: Frames per second
+        **kwargs: Additional arguments passed to the writer
+            For FFMpegWriter: codec, bitrate, extra_args
+            For PillowWriter: codec (ignored)
+
+    Returns:
+        Matplotlib animation writer instance
+
+    Example:
+        >>> from matplotlib import animation
+        >>> writer = get_matplotlib_writer('output.mp4', fps=20)
+        >>> ani.save('output.mp4', writer=writer)
+
+        >>> # With custom codec
+        >>> writer = get_matplotlib_writer('output.mp4', fps=30, bitrate=8000)
+    """
+    from matplotlib import animation
+    import os
+
+    ext = os.path.splitext(save_path)[1].lower()
+
+    if ext == '.mp4':
+        # MP4 format: Use FFMpegWriter (36.8x faster than GIF)
+        codec = kwargs.pop('codec', 'h264')
+        bitrate = kwargs.pop('bitrate', 5000)
+        return animation.FFMpegWriter(
+            fps=fps,
+            codec=codec,
+            bitrate=bitrate,
+            **kwargs
+        )
+    elif ext == '.gif':
+        # GIF format: Use PillowWriter
+        warn_gif_format(stacklevel=3)
+        return animation.PillowWriter(fps=fps)
+    else:
+        # Default to FFMpegWriter for other formats
+        return animation.FFMpegWriter(fps=fps, **kwargs)

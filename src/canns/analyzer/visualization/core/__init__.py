@@ -18,6 +18,7 @@ from .rendering import ParallelAnimationRenderer
 from .writers import (
     OptimizedAnimationWriter,
     create_optimized_writer,
+    get_matplotlib_writer,
     get_recommended_format,
     warn_double_rendering,
     warn_gif_format,
@@ -35,6 +36,7 @@ __all__ = [
     # Writers
     "OptimizedAnimationWriter",
     "create_optimized_writer",
+    "get_matplotlib_writer",
     "get_recommended_format",
     "warn_double_rendering",
     "warn_gif_format",
