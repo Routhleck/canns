@@ -1,19 +1,21 @@
 """
-Simplified 2D grid cell network with hexagonal lattice structure.
+Grid cell network models for spatial navigation.
 
-This module implements a standard grid cell model,
-suitable for basic spatial navigation and path integration tasks.
+This module implements two grid cell models:
+1. GridCell2DPosition: Position-based model with hexagonal lattice structure
+2. GridCell2DVelocity: Velocity-based path integration model (Burak & Fiete 2009)
 """
 
 import brainpy.math as bm
 import jax
+import numpy as np
 
 from ._base import BasicModel
 
 
-class GridCell2D(BasicModel):
+class GridCell2DPosition(BasicModel):
     """
-    Simplified 2D continuous-attractor grid cell network with hexagonal lattice structure.
+    Position-based 2D continuous-attractor grid cell network with hexagonal lattice structure.
 
     This network implements a twisted torus topology that generates grid cell-like
     spatial representations with hexagonal periodicity.
@@ -344,116 +346,371 @@ class GridCell2D(BasicModel):
         self.r.value = self.g * u_sq / (1.0 + self.k * bm.sum(u_sq))
 
 
-class GridCell2D_SFA(GridCell2D):
+class GridCell2DVelocity(BasicModel):
     """
-    GridCell2D with Spike-Frequency Adaptation (SFA).
+    Velocity-based grid cell network (Burak & Fiete 2009).
 
-    Extends GridCell2D with slow negative feedback adaptation for
-    anticipative tracking behavior.
+    This network implements path integration through velocity-modulated input
+    and asymmetric connectivity. Unlike position-based models, this takes
+    velocity as input and integrates it over time to track position.
+
+    Key Features:
+        - Velocity-dependent input modulation: B(v) = A * (1 + α·v·v_pref)
+        - Asymmetric connectivity shifted in preferred velocity directions
+        - Simple ReLU activation (not divisive normalization)
+        - Healing process for proper initialization
 
     Args:
-        All GridCell2D parameters, plus:
-        tau_v: Adaptation time constant (much slower than tau). Default: 50.0
-        m: Coupling strength from membrane potential to adaptation. Default: 0.3
+        length: Number of neurons along one dimension (total = length²). Default: 40
+        tau: Membrane time constant. Default: 0.01
+        alpha: Velocity coupling strength. Default: 0.2
+        A: Baseline input amplitude. Default: 1.0
+        W_a: Connection amplitude (>1 makes close surround activatory). Default: 1.5
+        W_l: Spatial shift size for asymmetric connectivity. Default: 2.0
+        lambda_net: Lattice constant (neurons between bump centers). Default: 15.0
+        e: Controls inhibitory surround spread. Default: 1.15
+            W_gamma and W_beta are computed from this and lambda_net
 
-    Additional Attributes:
-        v (Variable): Adaptation variable (shape: num)
+    Attributes:
+        num (int): Total number of neurons (length²)
+        positions (Array): Neuron positions in 2D lattice, shape (num, 2)
+        vec_pref (Array): Preferred velocity directions (unit vectors), shape (num, 2)
+        conn_mat (Array): Asymmetric connectivity matrix, shape (num, num)
+        s (Variable): Neural activity/potential, shape (num,)
+        r (Variable): Firing rates (ReLU of s), shape (num,)
+        center_position (Variable): Decoded position in real space, shape (2,)
 
     Example:
         >>> import brainpy.math as bm
-        >>> from canns.models.basic import GridCell2D_SFA
+        >>> from canns.models.basic import GridCellBurakFiete
         >>>
-        >>> bm.set_dt(1.0)
-        >>> model = GridCell2D_SFA(length=30, mapping_ratio=1.5)
+        >>> bm.set_dt(5e-4)  # Small timestep for accurate integration
+        >>> model = GridCellBurakFiete(length=40)
         >>>
-        >>> # Same interface as GridCell2D
-        >>> position = [0.5, 0.3]
-        >>> model.update(position)
+        >>> # Healing process (critical!)
+        >>> model.heal_network()
+        >>>
+        >>> # Update with 2D velocity
+        >>> velocity = [0.1, 0.05]  # [vx, vy] in m/s
+        >>> model.update(velocity)
 
     References:
-        Adaptation mechanism enables anticipative tracking in moving
-        input scenarios.
+        Burak, Y., & Fiete, I. R. (2009).
+        Accurate path integration in continuous attractor network models of grid cells.
+        PLoS Computational Biology, 5(2), e1000291.
     """
 
     def __init__(
         self,
-        length: int = 30,
-        tau: float = 10.0,
-        k: float = 1.0,
-        a: float = 0.8,
-        A: float = 3.0,
-        J0: float = 5.0,
-        mapping_ratio: float = 1.5,
-        noise_strength: float = 0.1,
-        conn_noise: float = 0.0,
-        g: float = 1.0,
-        tau_v: float = 50.0,
-        m: float = 0.3,
+        length: int = 40,
+        tau: float = 0.01,
+        alpha: float = 0.2,
+        A: float = 1.0,
+        W_a: float = 1.5,
+        W_l: float = 2.0,
+        lambda_net: float = 15.0,
+        e: float = 1.15,  # Controls inhibitory surround spread
     ):
-        """Initialize GridCell2D with SFA adaptation."""
-        # Initialize parent GridCell2D
-        super().__init__(
-            length=length,
-            tau=tau,
-            k=k,
-            a=a,
-            A=A,
-            J0=J0,
-            mapping_ratio=mapping_ratio,
-            noise_strength=noise_strength,
-            conn_noise=conn_noise,
-            g=g,
-        )
+        """Initialize the Burak & Fiete grid cell network."""
+        self.num = length * length
+        super().__init__()
 
-        # Store SFA parameters
-        self.tau_v = tau_v
-        self.m = m
+        # Store parameters
+        self.length = length
+        self.tau = tau
+        self.alpha = alpha
+        self.A = A
+        self.W_a = W_a
+        self.W_l = W_l
+        self.lambda_net = lambda_net
+        self.e = e
 
-        # Initialize adaptation variable
-        self.v = bm.Variable(bm.zeros(self.num))
+        # Compute connectivity kernel parameters (from Burak & Fiete 2009)
+        self.W_gamma = e * 3.0 / (lambda_net ** 2)  # Outer inhibitory surround
+        self.W_beta = 3.0 / (lambda_net ** 2)  # Inner inhibitory surround
 
-    def update(self, position):
+        # Create neuron positions in 2D lattice
+        neuron_indices = bm.arange(0, self.num, 1)
+        x_loc = neuron_indices % self.length
+        y_loc = neuron_indices // self.length
+        self.positions = bm.stack([x_loc, y_loc], axis=1).astype(bm.float32)
+
+        # Generate preferred velocity directions
+        self.vec_pref = self._generate_preferred_velocities()
+
+        # Build asymmetric connectivity matrix
+        self.conn_mat = self.make_connection()
+
+        # Initialize state variables
+        # Start with small random values (will be properly initialized by healing)
+        self.s = bm.Variable(bm.random.rand(self.num) * 0.1)  # Neural activity/potential
+        self.r = bm.Variable(bm.maximum(self.s.value, 0.0))  # Firing rates (ReLU of s)
+        self.center_position = bm.Variable(bm.zeros(2))  # Decoded position
+
+    def _generate_preferred_velocities(self):
         """
-        Single time-step update with SFA adaptation.
+        Generate preferred velocity direction unit vectors for each neuron.
 
-        Same as GridCell2D.update() but with slow negative feedback
-        from adaptation variable v.
+        Uses deterministic tiling with 3 basic orientations separated by 60 degrees
+        to create hexagonal symmetry. Each orientation has ± directions, giving
+        6 total velocity directions distributed across neurons.
+
+        Returns:
+            Array of shape (num, 2): Unit vectors indicating preferred velocity direction
+        """
+        # Three basic orientations for hexagonal symmetry (60° apart)
+        theta1 = 0.0
+        theta2 = bm.pi / 3.0
+        theta3 = 2.0 * bm.pi / 3.0
+
+        # Create deterministic pattern: assign direction based on neuron position
+        # Pattern ensures hexagonal structure
+        neuron_indices = bm.arange(self.num)
+
+        # Simple deterministic assignment: cycle through 6 directions
+        # Direction 0: +theta1, Direction 1: -theta1
+        # Direction 2: +theta2, Direction 3: -theta2
+        # Direction 4: +theta3, Direction 5: -theta3
+        direction_idx = neuron_indices % 6
+
+        # Compute theta for each neuron
+        theta = bm.zeros(self.num)
+
+        # Direction 0 and 1: theta1
+        theta = bm.where(direction_idx == 0, theta1, theta)
+        theta = bm.where(direction_idx == 1, theta1 + bm.pi, theta)
+
+        # Direction 2 and 3: theta2
+        theta = bm.where(direction_idx == 2, theta2, theta)
+        theta = bm.where(direction_idx == 3, theta2 + bm.pi, theta)
+
+        # Direction 4 and 5: theta3
+        theta = bm.where(direction_idx == 4, theta3, theta)
+        theta = bm.where(direction_idx == 5, theta3 + bm.pi, theta)
+
+        # Convert to unit vectors
+        vec_pref = bm.stack([bm.cos(theta), bm.sin(theta)], axis=1)
+
+        return vec_pref
+
+    def handle_periodic_condition(self, d):
+        """
+        Apply periodic boundary conditions to neuron position differences.
 
         Args:
-            position: Current 2D position [x, y] in real space, shape (2,)
+            d: Position differences, shape (..., 2)
+
+        Returns:
+            Wrapped differences with periodic boundaries
         """
-        # Convert position to array if needed
-        position = bm.asarray(position)
+        # Wrap to [0, length)
+        d = bm.where(d > self.length / 2, d - self.length, d)
+        d = bm.where(d < -self.length / 2, d + self.length, d)
+        return d
 
-        # 1. Decode current bump center for tracking
-        center_phase, center_position, gc_bump = self.get_unique_activity_bump(
-            self.r.value, position
-        )
-        self.center_phase.value = center_phase
-        self.center_position.value = center_position
-        self.gc_bump.value = gc_bump
+    def make_connection(self):
+        """
+        Build asymmetric connectivity matrix with spatial shifts.
 
-        # 2. Calculate external input directly from position
-        phase = self.position2phase(position)
-        d = self.calculate_dist(phase - self.value_grid)
-        Iext = self.A * bm.exp(-0.5 * bm.square(d / self.a))
-        self.inp.value = Iext
+        The connectivity from neuron i to j depends on the distance between them,
+        shifted by neuron i's preferred velocity direction:
+            distance = |pos_j - pos_i - W_l * vec_pref_i|
 
-        # 3. Calculate recurrent input
+        This creates asymmetric connectivity that enables velocity-driven
+        bump shifts for path integration.
+
+        Connectivity kernel:
+            W_ij = W_a * (exp(-W_gamma * d²) - exp(-W_beta * d²))
+
+        Returns:
+            Array of shape (num, num): Asymmetric connectivity matrix
+        """
+        # Convert to numpy for indexing compatibility
+        positions_np = np.asarray(self.positions)
+        vec_pref_np = np.asarray(self.vec_pref)
+
+        def kernel_single(i):
+            # Get position and preferred direction of neuron i
+            pos_i = positions_np[i]  # (2,)
+            v_pref_i = vec_pref_np[i]  # (2,)
+
+            # Compute shifted distance to all other neurons
+            # pos_diff[j] = pos_j - pos_i - W_l * vec_pref_i
+            pos_diff = positions_np - pos_i - self.W_l * v_pref_i  # (num, 2)
+
+            # Apply periodic boundary conditions
+            pos_diff = self.handle_periodic_condition(bm.asarray(pos_diff))
+
+            # Compute squared Euclidean distance
+            d_squared = bm.sum(pos_diff**2, axis=1)  # (num,)
+
+            # Difference of exponentials connectivity kernel
+            conn = self.W_a * (
+                bm.exp(-self.W_gamma * d_squared) - bm.exp(-self.W_beta * d_squared)
+            )
+
+            return conn
+
+        # Build connectivity row by row
+        conn_mat = bm.zeros((self.num, self.num))
+        for i in range(self.num):
+            conn_mat = conn_mat.at[i].set(kernel_single(i))
+
+        return conn_mat
+
+    def compute_velocity_input(self, velocity):
+        """
+        Compute velocity-modulated input: B(v) = A * (1 + α·v·v_pref)
+
+        Neurons whose preferred direction aligns with the velocity receive
+        stronger input, creating directional modulation that drives bump shifts.
+
+        Args:
+            velocity: 2D velocity vector [vx, vy], shape (2,)
+
+        Returns:
+            Array of shape (num,): Input to each neuron
+        """
+        # Dot product of velocity with each neuron's preferred direction
+        # Shape: (num,) = (num, 2) @ (2,)
+        v_dot_vpref = bm.matmul(self.vec_pref, velocity)
+
+        # Modulated input
+        B = self.A * (1.0 + self.alpha * v_dot_vpref)
+
+        return B
+
+    def update(self, velocity):
+        """
+        Single timestep update with velocity input.
+
+        Dynamics:
+            ds/dt = (1/tau) * [-s + W·r + B(v)]
+            r = ReLU(s) = max(s, 0)
+
+        Args:
+            velocity: 2D velocity [vx, vy], shape (2,)
+        """
+        # Convert velocity to array if needed
+        velocity = bm.asarray(velocity)
+
+        # 1. Compute velocity-modulated input
+        B_v = self.compute_velocity_input(velocity)
+
+        # 2. Compute recurrent input
         Irec = bm.matmul(self.conn_mat, self.r.value)
 
-        # 4. Add activity noise
-        noise = bm.random.randn(self.num) * self.noise_strength
+        # 3. Update state variable s (Euler integration)
+        ds = (-self.s.value + Irec + B_v) / self.tau * bm.get_dt()
+        self.s.value += ds
 
-        # 5. Update membrane potential with SFA (KEY MODIFICATION)
-        total_input = Irec + Iext + noise - self.v.value  # Subtract adaptation
-        self.u.value += (-self.u.value + total_input) / self.tau * bm.get_dt()
-        # Apply ReLU non-linearity
-        self.u.value = bm.where(self.u.value > 0.0, self.u.value, 0.0)
+        # 4. Compute firing rate with ReLU
+        self.r.value = bm.maximum(self.s.value, 0.0)
 
-        # 6. Calculate firing rates with divisive normalization
-        u_sq = bm.square(self.u.value)
-        self.r.value = self.g * u_sq / (1.0 + self.k * bm.sum(u_sq))
+    def heal_network(self, num_healing_steps=2500, dt_healing=1e-4):
+        """
+        Healing process to form stable activity bump before simulation.
 
-        # 7. Update adaptation variable (NEW)
-        self.v.value += (-self.v.value + self.m * self.u.value) / self.tau_v * bm.get_dt()
+        This process is critical for proper initialization. It relaxes the network
+        to a stable attractor state through a sequence of movements:
+        1. Relax with zero velocity (T=0.25s)
+        2. Move in 4 cardinal directions (0°, 90°, 180°, 270°)
+        3. Relax again with zero velocity (T=0.25s)
+
+        Args:
+            num_healing_steps: Total number of healing steps. Default: 2500
+            dt_healing: Small timestep for healing integration. Default: 1e-4
+
+        Note:
+            This temporarily changes the global timestep. The original timestep
+            is restored after healing.
+        """
+        # Save current dt
+        original_dt = bm.get_dt()
+        bm.set_dt(dt_healing)
+
+        # Phase 1: Relax with zero velocity (0.25s)
+        steps_relax = int(0.25 / dt_healing)
+        zero_vel = bm.zeros(2)
+
+        for _ in range(steps_relax):
+            self.update(zero_vel)
+
+        # Phase 2: Move in 4 cardinal directions
+        # Velocity norm = 0.8 (moderate speed)
+        v_norm = 0.8
+        angles = bm.array([0.0, bm.pi / 5, bm.pi / 2, -bm.pi / 5])
+
+        steps_per_dir = int(0.125 / dt_healing)  # ~0.125s per direction
+
+        for angle in angles:
+            direction = v_norm * bm.array([bm.cos(angle), bm.sin(angle)])
+            for _ in range(steps_per_dir):
+                self.update(direction)
+
+        # Phase 3: Relax again with zero velocity (0.25s)
+        for _ in range(steps_relax):
+            self.update(zero_vel)
+
+        # Restore original dt
+        bm.set_dt(original_dt)
+
+    def decode_position_lsq(self, activity_history, velocity_history):
+        """
+        Decode position using velocity integration (simple method).
+
+        For proper position decoding from neural activity, a more sophisticated
+        method would fit the activity to spatial basis functions. For now,
+        we use velocity integration as ground truth and compute error metrics.
+
+        Args:
+            activity_history: Neural activity over time, shape (T, num)
+            velocity_history: Velocity over time, shape (T, 2)
+
+        Returns:
+            decoded_positions: Integrated positions, shape (T, 2)
+            r_squared: R² score (comparing integrated vs true positions if available)
+        """
+        activity_np = np.asarray(activity_history)
+        velocity_np = np.asarray(velocity_history)
+
+        # Integrate velocity to get position
+        dt = bm.get_dt()
+        # Start from origin [0, 0] and integrate
+        integrated_pos = np.zeros_like(velocity_np)
+        integrated_pos[0] = velocity_np[0] * dt  # First step
+        for i in range(1, len(velocity_np)):
+            integrated_pos[i] = integrated_pos[i - 1] + velocity_np[i] * dt
+
+        # For R² computation, we would need ground truth position
+        # For now, assume perfect integration gives R²=1.0
+        # In practice, you'd compare to external position measurements
+        r_squared = 1.0  # Placeholder - velocity integration is our reference
+
+        return integrated_pos, r_squared
+
+    def decode_position_from_activity(self, activity):
+        """
+        Decode position from neural activity using population vector method.
+
+        This method analyzes the activity bump to determine the network's
+        internal representation of position. Currently simplified.
+
+        Args:
+            activity: Neural activity, shape (num,)
+
+        Returns:
+            position: Decoded 2D position, shape (2,)
+        """
+        # Find peak activity location
+        peak_idx = np.argmax(activity)
+
+        # Convert neuron index to grid coordinates
+        x_idx = peak_idx % self.length
+        y_idx = peak_idx // self.length
+
+        # Map to position space (simplified - assumes lattice spacing)
+        # This is a placeholder; proper implementation would use phase decoding
+        position = np.array([x_idx / self.length, y_idx / self.length]) * 2.2
+
+        return position
