@@ -434,8 +434,8 @@ class GridCell2DVelocity(BasicModel):
         self.use_sparse = use_sparse
 
         # Compute connectivity kernel parameters (from Burak & Fiete 2009)
-        self.W_gamma = e * 3.0 / (lambda_net ** 2)  # Outer inhibitory surround
-        self.W_beta = 3.0 / (lambda_net ** 2)  # Inner inhibitory surround
+        self.W_gamma = e * 3.0 / (lambda_net**2)  # Outer inhibitory surround
+        self.W_beta = 3.0 / (lambda_net**2)  # Inner inhibitory surround
 
         # Create neuron positions in 2D lattice
         neuron_indices = bm.arange(0, self.num, 1)
@@ -564,9 +564,7 @@ class GridCell2DVelocity(BasicModel):
 
         # Apply connectivity kernel: difference of exponentials
         # W_ij = W_a * (exp(-W_gamma * d²) - exp(-W_beta * d²))
-        conn_mat = self.W_a * (
-            bm.exp(-self.W_gamma * d_squared) - bm.exp(-self.W_beta * d_squared)
-        )
+        conn_mat = self.W_a * (bm.exp(-self.W_gamma * d_squared) - bm.exp(-self.W_beta * d_squared))
 
         # Convert to sparse format for large networks
         if self.use_sparse:
@@ -580,8 +578,7 @@ class GridCell2DVelocity(BasicModel):
 
                 # Create brainevent CSR (much faster for matrix-vector multiplication)
                 conn_mat = brainevent.CSR(
-                    (scipy_csr.data, scipy_csr.indices, scipy_csr.indptr),
-                    shape=scipy_csr.shape
+                    (scipy_csr.data, scipy_csr.indices, scipy_csr.indptr), shape=scipy_csr.shape
                 )
             except ImportError:
                 print("Warning: brainevent not available, using dense matrix")
@@ -681,7 +678,9 @@ class GridCell2DVelocity(BasicModel):
         velocities_phase3 = bm.zeros((steps_relax, 2))
 
         # Concatenate all phases
-        velocities = bm.concatenate([velocities_phase1, velocities_phase2, velocities_phase3], axis=0)
+        velocities = bm.concatenate(
+            [velocities_phase1, velocities_phase2, velocities_phase3], axis=0
+        )
 
         # Define step function for bm.for_loop
         def healing_step(i, vel):
