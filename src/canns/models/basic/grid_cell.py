@@ -382,10 +382,10 @@ class GridCell2DVelocity(BasicModel):
 
     Example:
         >>> import brainpy.math as bm
-        >>> from canns.models.basic import GridCellBurakFiete
+        >>> from canns.models.basic import GridCell2DVelocity
         >>>
         >>> bm.set_dt(5e-4)  # Small timestep for accurate integration
-        >>> model = GridCellBurakFiete(length=40)
+        >>> model = GridCell2DVelocity(length=40)
         >>>
         >>> # Healing process (critical!)
         >>> model.heal_network()
@@ -410,8 +410,15 @@ class GridCell2DVelocity(BasicModel):
         W_l: float = 2.0,
         lambda_net: float = 15.0,
         e: float = 1.15,  # Controls inhibitory surround spread
+        use_sparse: bool = False,  # Experimental: sparse matrix (for GPU)
     ):
-        """Initialize the Burak & Fiete grid cell network."""
+        """Initialize the Burak & Fiete grid cell network.
+
+        Args:
+            use_sparse: Whether to use sparse matrix for connectivity (experimental).
+                Default: False. Sparse matrices may be faster on GPU but slower on CPU.
+                Requires brainevent library.
+        """
         self.num = length * length
         super().__init__()
 
@@ -424,6 +431,7 @@ class GridCell2DVelocity(BasicModel):
         self.W_l = W_l
         self.lambda_net = lambda_net
         self.e = e
+        self.use_sparse = use_sparse
 
         # Compute connectivity kernel parameters (from Burak & Fiete 2009)
         self.W_gamma = e * 3.0 / (lambda_net ** 2)  # Outer inhibitory surround
@@ -438,7 +446,7 @@ class GridCell2DVelocity(BasicModel):
         # Generate preferred velocity directions
         self.vec_pref = self._generate_preferred_velocities()
 
-        # Build asymmetric connectivity matrix
+        # Build asymmetric connectivity matrix (dense or sparse)
         self.conn_mat = self.make_connection()
 
         # Initialize state variables
@@ -510,7 +518,7 @@ class GridCell2DVelocity(BasicModel):
 
     def make_connection(self):
         """
-        Build asymmetric connectivity matrix with spatial shifts.
+        Build asymmetric connectivity matrix with spatial shifts (vectorized).
 
         The connectivity from neuron i to j depends on the distance between them,
         shifted by neuron i's preferred velocity direction:
@@ -522,39 +530,62 @@ class GridCell2DVelocity(BasicModel):
         Connectivity kernel:
             W_ij = W_a * (exp(-W_gamma * d²) - exp(-W_beta * d²))
 
+        Note:
+            This implementation uses JAX broadcasting for efficient computation.
+            All pairwise distances are computed simultaneously, avoiding Python loops.
+
+            If use_sparse=True, converts to brainevent.CSR sparse matrix format.
+            Sparse matrices reduce memory usage for large networks but may be slower
+            on CPU. They are primarily intended for GPU acceleration.
+
         Returns:
-            Array of shape (num, num): Asymmetric connectivity matrix
+            Dense array of shape (num, num), or brainevent.CSR if use_sparse=True
         """
-        # Convert to numpy for indexing compatibility
-        positions_np = np.asarray(self.positions)
-        vec_pref_np = np.asarray(self.vec_pref)
+        # Vectorized computation using broadcasting (much faster than loops)
+        # positions: (num, 2), vec_pref: (num, 2)
 
-        def kernel_single(i):
-            # Get position and preferred direction of neuron i
-            pos_i = positions_np[i]  # (2,)
-            v_pref_i = vec_pref_np[i]  # (2,)
+        # Compute all pairwise position differences using broadcasting
+        # pos_diff[i,j] = positions[j] - positions[i] - W_l * vec_pref[i]
+        # Broadcasting: (1, num, 2) - (num, 1, 2) - (num, 1, 2) → (num, num, 2)
+        pos_diff = (
+            self.positions[None, :, :]  # (1, num, 2) - all target positions j
+            - self.positions[:, None, :]  # (num, 1, 2) - all source positions i
+            - self.W_l * self.vec_pref[:, None, :]  # (num, 1, 2) - velocity-dependent shift
+        )
 
-            # Compute shifted distance to all other neurons
-            # pos_diff[j] = pos_j - pos_i - W_l * vec_pref_i
-            pos_diff = positions_np - pos_i - self.W_l * v_pref_i  # (num, 2)
+        # Apply periodic boundary conditions
+        # Wrap to [-length/2, length/2]
+        pos_diff = bm.where(pos_diff > self.length / 2, pos_diff - self.length, pos_diff)
+        pos_diff = bm.where(pos_diff < -self.length / 2, pos_diff + self.length, pos_diff)
 
-            # Apply periodic boundary conditions
-            pos_diff = self.handle_periodic_condition(bm.asarray(pos_diff))
+        # Compute squared Euclidean distances for all pairs
+        # Shape: (num, num)
+        d_squared = bm.sum(pos_diff**2, axis=2)
 
-            # Compute squared Euclidean distance
-            d_squared = bm.sum(pos_diff**2, axis=1)  # (num,)
+        # Apply connectivity kernel: difference of exponentials
+        # W_ij = W_a * (exp(-W_gamma * d²) - exp(-W_beta * d²))
+        conn_mat = self.W_a * (
+            bm.exp(-self.W_gamma * d_squared) - bm.exp(-self.W_beta * d_squared)
+        )
 
-            # Difference of exponentials connectivity kernel
-            conn = self.W_a * (
-                bm.exp(-self.W_gamma * d_squared) - bm.exp(-self.W_beta * d_squared)
-            )
+        # Convert to sparse format for large networks
+        if self.use_sparse:
+            try:
+                import brainevent
+                from scipy.sparse import csr_matrix
 
-            return conn
+                # Convert to numpy and create scipy CSR
+                conn_np = np.asarray(conn_mat)
+                scipy_csr = csr_matrix(conn_np)
 
-        # Build connectivity row by row
-        conn_mat = bm.zeros((self.num, self.num))
-        for i in range(self.num):
-            conn_mat = conn_mat.at[i].set(kernel_single(i))
+                # Create brainevent CSR (much faster for matrix-vector multiplication)
+                conn_mat = brainevent.CSR(
+                    (scipy_csr.data, scipy_csr.indices, scipy_csr.indptr),
+                    shape=scipy_csr.shape
+                )
+            except ImportError:
+                print("Warning: brainevent not available, using dense matrix")
+                self.use_sparse = False
 
         return conn_mat
 
@@ -598,7 +629,8 @@ class GridCell2DVelocity(BasicModel):
         B_v = self.compute_velocity_input(velocity)
 
         # 2. Compute recurrent input
-        Irec = bm.matmul(self.conn_mat, self.r.value)
+        # Use @ operator for both dense and sparse matrices
+        Irec = self.conn_mat @ self.r.value
 
         # 3. Update state variable s (Euler integration)
         ds = (-self.s.value + Irec + B_v) / self.tau * bm.get_dt()
@@ -609,7 +641,7 @@ class GridCell2DVelocity(BasicModel):
 
     def heal_network(self, num_healing_steps=2500, dt_healing=1e-4):
         """
-        Healing process to form stable activity bump before simulation.
+        Healing process to form stable activity bump before simulation (optimized).
 
         This process is critical for proper initialization. It relaxes the network
         to a stable attractor state through a sequence of movements:
@@ -623,34 +655,40 @@ class GridCell2DVelocity(BasicModel):
 
         Note:
             This temporarily changes the global timestep. The original timestep
-            is restored after healing.
+            is restored after healing. Uses bm.for_loop for efficient execution.
         """
         # Save current dt
         original_dt = bm.get_dt()
         bm.set_dt(dt_healing)
 
-        # Phase 1: Relax with zero velocity (0.25s)
+        # Prepare velocity sequence for all healing steps
         steps_relax = int(0.25 / dt_healing)
-        zero_vel = bm.zeros(2)
+        steps_per_dir = int(0.125 / dt_healing)
 
-        for _ in range(steps_relax):
-            self.update(zero_vel)
+        # Phase 1: Zero velocity (relax)
+        velocities_phase1 = bm.zeros((steps_relax, 2))
 
         # Phase 2: Move in 4 cardinal directions
-        # Velocity norm = 0.8 (moderate speed)
         v_norm = 0.8
         angles = bm.array([0.0, bm.pi / 5, bm.pi / 2, -bm.pi / 5])
-
-        steps_per_dir = int(0.125 / dt_healing)  # ~0.125s per direction
-
+        velocities_phase2 = []
         for angle in angles:
-            direction = v_norm * bm.array([bm.cos(angle), bm.sin(angle)])
-            for _ in range(steps_per_dir):
-                self.update(direction)
+            direction = v_norm * bm.stack([bm.cos(angle), bm.sin(angle)])
+            velocities_phase2.append(bm.tile(direction, (steps_per_dir, 1)))
+        velocities_phase2 = bm.concatenate(velocities_phase2, axis=0)
 
-        # Phase 3: Relax again with zero velocity (0.25s)
-        for _ in range(steps_relax):
-            self.update(zero_vel)
+        # Phase 3: Zero velocity (relax again)
+        velocities_phase3 = bm.zeros((steps_relax, 2))
+
+        # Concatenate all phases
+        velocities = bm.concatenate([velocities_phase1, velocities_phase2, velocities_phase3], axis=0)
+
+        # Define step function for bm.for_loop
+        def healing_step(i, vel):
+            self.update(vel)
+
+        # Run all healing steps with bm.for_loop
+        bm.for_loop(healing_step, (bm.arange(len(velocities)), velocities))
 
         # Restore original dt
         bm.set_dt(original_dt)
