@@ -465,22 +465,18 @@ def get_matplotlib_writer(save_path: str, fps: int = 10, **kwargs):
         >>> # With custom codec
         >>> writer = get_matplotlib_writer('output.mp4', fps=30, bitrate=8000)
     """
-    from matplotlib import animation
     import os
+
+    from matplotlib import animation
 
     ext = os.path.splitext(save_path)[1].lower()
 
-    if ext == '.mp4':
+    if ext == ".mp4":
         # MP4 format: Use FFMpegWriter (36.8x faster than GIF)
-        codec = kwargs.pop('codec', 'h264')
-        bitrate = kwargs.pop('bitrate', 5000)
-        return animation.FFMpegWriter(
-            fps=fps,
-            codec=codec,
-            bitrate=bitrate,
-            **kwargs
-        )
-    elif ext == '.gif':
+        codec = kwargs.pop("codec", "h264")
+        bitrate = kwargs.pop("bitrate", 5000)
+        return animation.FFMpegWriter(fps=fps, codec=codec, bitrate=bitrate, **kwargs)
+    elif ext == ".gif":
         # GIF format: Use PillowWriter
         warn_gif_format(stacklevel=3)
         return animation.PillowWriter(fps=fps)
