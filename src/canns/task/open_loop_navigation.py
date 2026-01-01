@@ -905,7 +905,7 @@ class RasterScanNavigationTask(CustomOpenLoopNavigationTask):
        → Switches to Vertical when reaching bottom
     2. Vertical phase: Up-down sweeps moving rightward
        → Switches back to Horizontal when reaching right edge
-    3. Cycles continuously: H → V → H → V → ... (避免撞墙)
+    3. Cycles continuously: H → V → H → V → ...
 
     This cyclic dual-mode strategy achieves superior coverage by combining
     orthogonal scanning patterns and continuously adapting to avoid walls.
