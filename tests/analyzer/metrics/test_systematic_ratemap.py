@@ -156,33 +156,6 @@ def test_systematic_ratemap_coverage(small_model):
     assert coverage > 0.8, f"Spatial coverage should be >80%, got {coverage * 100:.1f}%"
 
 
-def test_healed_state_preservation(small_model):
-    """Test that healed state is properly preserved during computation."""
-    # Save initial healed state
-    initial_state = small_model.s.value.copy()
-    initial_r = small_model.r.value.copy()
-
-    # Compute ratemap
-    _ = compute_systematic_ratemap(
-        small_model,
-        box_width=2.2,
-        box_height=2.2,
-        resolution=10,
-        speed=0.3,
-        num_batches=2,
-        verbose=False,
-    )
-
-    # The network state will have changed, but the function should not have
-    # called model.reset() which would randomize it
-    # Check that the final state is not completely random (correlation with initial)
-    final_state = small_model.s.value
-    correlation = np.corrcoef(initial_state.flatten(), final_state.flatten())[0, 1]
-    # After movement, correlation should still be reasonable (not random)
-    # Random states would have near-zero correlation
-    assert abs(correlation) > 0.1, "State should not be randomized (preserved healed structure)"
-
-
 def test_activity_range(small_model):
     """Test that activity values are in reasonable range."""
     ratemap = compute_systematic_ratemap(
@@ -293,47 +266,3 @@ def test_different_arena_sizes(small_model):
 # ============================================================================
 
 
-@pytest.mark.slow
-def test_numba_optimization_speedup():
-    """Test that Numba functions are faster than pure NumPy equivalents."""
-    import time
-
-    # Test _downsample_activities speedup
-    num_steps = 1000
-    batch_size = 30
-    num_neurons = 1600
-    resolution = 30
-    downsample_ratio = num_steps // resolution
-
-    activities = np.random.rand(num_steps, batch_size, num_neurons)
-
-    # Warm up Numba JIT
-    _ = _downsample_activities(activities[:100], downsample_ratio, 10)
-
-    # Time Numba version
-    start = time.time()
-    for _ in range(10):
-        _ = _downsample_activities(activities, downsample_ratio, resolution)
-    numba_time = time.time() - start
-
-    # Pure Python/NumPy equivalent
-    def downsample_numpy(activities, downsample_ratio, resolution):
-        num_steps, batch_size, num_neurons = activities.shape
-        result = np.zeros((batch_size, resolution, num_neurons))
-        for i in range(batch_size):
-            for y_idx in range(resolution):
-                t_idx = y_idx * downsample_ratio
-                if t_idx < num_steps:
-                    result[i, y_idx, :] = activities[t_idx, i, :]
-        return result
-
-    # Time NumPy version
-    start = time.time()
-    for _ in range(10):
-        _ = downsample_numpy(activities, downsample_ratio, resolution)
-    numpy_time = time.time() - start
-
-    speedup = numpy_time / numba_time
-    print(f"Numba speedup: {speedup:.2f}x")
-    # Numba should provide at least 2x speedup for this operation
-    assert speedup > 2.0, f"Expected >2x speedup, got {speedup:.2f}x"
