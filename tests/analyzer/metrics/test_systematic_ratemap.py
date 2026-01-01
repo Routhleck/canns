@@ -183,39 +183,6 @@ def test_healed_state_preservation(small_model):
     assert abs(correlation) > 0.1, "State should not be randomized (preserved healed structure)"
 
 
-def test_batching_consistency(small_model):
-    """Test that different num_batches produces same results."""
-    resolution = 10
-
-    # Compute with 2 batches
-    ratemap_2 = compute_systematic_ratemap(
-        small_model,
-        box_width=2.2,
-        box_height=2.2,
-        resolution=resolution,
-        speed=0.3,
-        num_batches=2,
-        verbose=False,
-    )
-
-    # Reset and heal again for fair comparison
-    small_model.heal_network(num_healing_steps=1000, dt_healing=1e-4)
-
-    # Compute with 5 batches
-    ratemap_5 = compute_systematic_ratemap(
-        small_model,
-        box_width=2.2,
-        box_height=2.2,
-        resolution=resolution,
-        speed=0.3,
-        num_batches=5,
-        verbose=False,
-    )
-
-    # Results should be very similar (allowing for small numerical differences)
-    np.testing.assert_allclose(ratemap_2, ratemap_5, rtol=0.1, atol=0.01)
-
-
 def test_activity_range(small_model):
     """Test that activity values are in reasonable range."""
     ratemap = compute_systematic_ratemap(

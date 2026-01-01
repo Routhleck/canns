@@ -339,10 +339,19 @@ def compute_systematic_ratemap(
             model.s.value = batch_initial_states_s[i]
             model.r.value = batch_initial_states_r[i]
 
-            # Run vertical sweep
-            for t in range(num_vertical_steps):
-                model(batch_vel[t, i])
-                batch_activities[t, i] = np.asarray(model.r.value)
+            # Run vertical sweep with bm.for_loop for better performance
+            def run_vertical_step(t, vel):
+                model(vel)
+                return model.r.value
+
+            velocities_i = bm.asarray(batch_vel[:, i])
+            activities = bm.for_loop(
+                run_vertical_step,
+                (bm.arange(num_vertical_steps), velocities_i),
+                progress_bar=False,
+            )
+            # Keep as BrainPy array until batching is done (avoid premature conversion)
+            batch_activities[:, i, :] = activities
 
         # Downsample to resolution using Numba-optimized function
         downsample_ratio = num_vertical_steps // resolution
