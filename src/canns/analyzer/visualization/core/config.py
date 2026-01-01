@@ -190,6 +190,37 @@ class PlotConfigs:
         return config
 
     @staticmethod
+    def population_activity_heatmap(**kwargs: Any) -> PlotConfig:
+        """Configuration for population activity heatmap visualization.
+
+        Displays neural population activity over time as a 2D heatmap where
+        rows represent neurons and columns represent time points.
+
+        Args:
+            **kwargs: Additional configuration parameters to override defaults.
+
+        Returns:
+            PlotConfig: Configuration object for population activity heatmaps.
+
+        Example:
+            >>> config = PlotConfigs.population_activity_heatmap(
+            ...     title="Network Activity",
+            ...     save_path="activity.png"
+            ... )
+        """
+        defaults: dict[str, Any] = {
+            "title": "Population Activity",
+            "xlabel": "Time (s)",
+            "ylabel": "Neuron Index",
+            "figsize": (10, 6),
+        }
+        plot_kwargs: dict[str, Any] = {"cmap": "viridis"}
+        plot_kwargs.update(kwargs.pop("kwargs", {}))
+        defaults["kwargs"] = plot_kwargs
+        defaults.update(kwargs)
+        return PlotConfig.for_static_plot(**defaults)
+
+    @staticmethod
     def theta_population_activity_static(**kwargs: Any) -> PlotConfig:
         defaults: dict[str, Any] = {
             "title": "Population Activity with Theta",
@@ -216,6 +247,32 @@ class PlotConfigs:
         return PlotConfig.for_static_plot(**defaults)
 
     @staticmethod
+    def direction_cell_polar(**kwargs: Any) -> PlotConfig:
+        """Configuration for direction cell polar plot visualization.
+
+        Creates polar coordinate plots showing directional tuning of head direction
+        cells or other orientation-selective neurons.
+
+        Args:
+            **kwargs: Additional configuration parameters to override defaults.
+
+        Returns:
+            PlotConfig: Configuration object for polar plots.
+
+        Example:
+            >>> config = PlotConfigs.direction_cell_polar(
+            ...     title="Head Direction Cell",
+            ...     save_path="direction_cell.png"
+            ... )
+        """
+        defaults: dict[str, Any] = {
+            "title": "Direction Cell Activity",
+            "figsize": (6, 6),
+        }
+        defaults.update(kwargs)
+        return PlotConfig.for_static_plot(**defaults)
+
+    @staticmethod
     def theta_sweep_animation(**kwargs: Any) -> PlotConfig:
         defaults: dict[str, Any] = {
             "figsize": (12, 3),
@@ -237,6 +294,45 @@ class PlotConfigs:
         return PlotConfig(**defaults)
 
     @staticmethod
+    def theta_sweep_place_cell_animation(**kwargs: Any) -> PlotConfig:
+        """Configuration for theta sweep place cell animation.
+
+        Creates synchronized 2-panel animation showing trajectory with place cell
+        activity overlay and population activity heatmap.
+
+        Args:
+            **kwargs: Additional configuration parameters to override defaults.
+                Must include 'time_steps_per_second' if not using default.
+
+        Returns:
+            PlotConfig: Configuration object for place cell animations.
+
+        Example:
+            >>> config = PlotConfigs.theta_sweep_place_cell_animation(
+            ...     time_steps_per_second=1000,
+            ...     fps=10,
+            ...     save_path="place_cell_sweep.gif"
+            ... )
+        """
+        defaults: dict[str, Any] = {
+            "figsize": (12, 4),
+            "fps": 10,
+            "show_progress_bar": True,
+        }
+        animation_kwargs: dict[str, Any] = {
+            "cmap": "jet",
+            "alpha": 0.8,
+        }
+        animation_kwargs.update(kwargs.pop("kwargs", {}))
+        defaults["kwargs"] = animation_kwargs
+        time_steps = kwargs.pop("time_steps_per_second", None)
+        defaults.update(kwargs)
+        if time_steps is not None:
+            return PlotConfig.for_animation(time_steps, **defaults)
+        else:
+            return PlotConfig(**defaults)
+
+    @staticmethod
     def tuning_curve(
         num_bins: int = 50,
         pref_stim: np.ndarray | None = None,
@@ -253,6 +349,39 @@ class PlotConfigs:
         config.num_bins = num_bins
         config.pref_stim = pref_stim
         return config
+
+    @staticmethod
+    def firing_field_heatmap(**kwargs: Any) -> PlotConfig:
+        """Configuration for firing field (rate map) heatmap visualization.
+
+        Displays spatial firing rate distribution for grid cells, place cells, or
+        other spatially-tuned neurons. Uses 'jet' colormap for high-contrast
+        visualization of firing fields.
+
+        Args:
+            **kwargs: Additional configuration parameters to override defaults.
+
+        Returns:
+            PlotConfig: Configuration object for firing field heatmaps.
+
+        Example:
+            >>> from canns.analyzer.visualization import PlotConfigs
+            >>> config = PlotConfigs.firing_field_heatmap(
+            ...     title="Grid Cell Firing Field",
+            ...     save_path="ratemap.png"
+            ... )
+        """
+        defaults: dict[str, Any] = {
+            "title": "Firing Field (Rate Map)",
+            "xlabel": "X Position (bins)",
+            "ylabel": "Y Position (bins)",
+            "figsize": (6, 6),
+        }
+        plot_kwargs: dict[str, Any] = {"cmap": "jet", "origin": "lower", "aspect": "auto"}
+        plot_kwargs.update(kwargs.pop("kwargs", {}))
+        defaults["kwargs"] = plot_kwargs
+        defaults.update(kwargs)
+        return PlotConfig.for_static_plot(**defaults)
 
     @staticmethod
     def grid_autocorrelation(**kwargs: Any) -> PlotConfig:

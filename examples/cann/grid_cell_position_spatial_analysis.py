@@ -1,19 +1,18 @@
 """
-Grid Cell 2D Network - Comprehensive Analysis Example
+Grid Cell Position Model - Spatial Analysis
 
-Demonstrates complete grid cell analysis workflow including:
-- Firing field heatmaps (spatial firing patterns)
-- Spatial autocorrelation (reveals hexagonal periodicity)
-- Grid score calculation (quantifies hexagonal symmetry)
-- Grid spacing measurement (measures field spacing)
-- Tracking animation (visualizes real-time behavior)
+Demonstrates spatial analysis of GridCell2DPosition model:
+- Firing field computation from trajectory
+- Autocorrelation and grid score analysis
+- Grid spacing measurement
+- Tracking animation
 """
 
 import brainpy.math as bm
 import numpy as np
 from pathlib import Path
 
-from canns.models.basic import GridCell2D
+from canns.models.basic import GridCell2DPosition
 from canns.task.open_loop_navigation import OpenLoopNavigationTask
 from canns.analyzer.metrics.spatial_metrics import (
     compute_firing_field,
@@ -55,7 +54,7 @@ task.get_data()
 position = task.data.position
 
 # Initialize and run network
-gc_model = GridCell2D(
+gc_model = GridCell2DPosition(
     length=40,
     mapping_ratio=6.0,  # Reduced grid spacing for visible hexagonal pattern
     tau=10.0,
@@ -95,22 +94,14 @@ max_rates = np.max(firing_fields_smooth, axis=(1, 2))
 top_cell_indices = np.argsort(max_rates)[-num_cells_to_analyze:][::-1]
 
 # Analyze each top cell
-print(f"\nAnalyzing top {num_cells_to_analyze} cells:")
-print("=" * 60)
-
 for idx, cell_idx in enumerate(top_cell_indices):
     rate_map = firing_fields_smooth[cell_idx]
 
-    # Compute grid cell metrics
     autocorr = compute_spatial_autocorrelation(rate_map)
     grid_score, rotated_corrs = compute_grid_score(autocorr)
     spacing_bins, spacing_real = find_grid_spacing(autocorr, bin_size=env_size / spatial_bins)
 
-    # Print results
-    print(f"\nCell {cell_idx} (Rank #{idx+1}):")
-    print(f"  Grid Score: {grid_score:.3f} {'✓' if grid_score > 0.3 else ''}")
-    print(f"  Spacing: {spacing_bins:.1f} bins = {spacing_real:.3f}m (theory: {gc_model.Lambda:.3f}m)")
-    print(f"  Correlations: 60°={rotated_corrs[60]:.2f}, 120°={rotated_corrs[120]:.2f}")
+    print(f"Cell {cell_idx}: Grid Score={grid_score:.3f}, Spacing={spacing_real:.3f}m")
 
     # Generate visualizations
     plot_firing_field_heatmap(
@@ -176,21 +167,10 @@ create_grid_cell_tracking_animation(
 
 # Summary
 all_grid_scores = []
-all_spacings = []
 for cell_idx in top_cell_indices:
     autocorr = compute_spatial_autocorrelation(firing_fields_smooth[cell_idx])
     grid_score, _ = compute_grid_score(autocorr)
-    spacing_bins, spacing_real = find_grid_spacing(autocorr, bin_size=env_size / spatial_bins)
     all_grid_scores.append(grid_score)
-    all_spacings.append(spacing_real)
 
-print("\n" + "=" * 60)
-print("Summary:")
-print(f"  Grid scores: mean={np.mean(all_grid_scores):.3f}, range=[{np.min(all_grid_scores):.3f}, {np.max(all_grid_scores):.3f}]")
-print(f"  Cells above threshold (>0.3): {np.sum(np.array(all_grid_scores) > 0.3)}/{len(all_grid_scores)}")
-print(f"  Spacing: mean={np.mean(all_spacings):.3f}m, std={np.std(all_spacings):.3f}m (theory={gc_model.Lambda:.3f}m)")
-print(f"\nAll outputs saved to {output_dir}/")
-print("Generated files:")
-for cell_idx in top_cell_indices:
-    print(f"  • cell_{cell_idx}_{{firing_field,autocorr,gridscore,spacing}}.png")
-print(f"  • cell_{best_cell_idx}_tracking.mp4")
+print(f"\nMean grid score: {np.mean(all_grid_scores):.3f}")
+print(f"Outputs saved to: {output_dir}/")
