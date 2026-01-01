@@ -708,7 +708,6 @@ class GridCell2DVelocity(BasicModel):
             decoded_positions: Integrated positions, shape (T, 2)
             r_squared: R² score (comparing integrated vs true positions if available)
         """
-        activity_np = np.asarray(activity_history)
         velocity_np = np.asarray(velocity_history)
 
         # Integrate velocity to get position
@@ -772,7 +771,7 @@ class GridCell2DVelocity(BasicModel):
             >>> centers = GridCell2DVelocity.track_blob_centers(activities, length=40)
             >>> # centers.shape == (T, 2)
         """
-        from scipy.ndimage import gaussian_filter, label, center_of_mass
+        from scipy.ndimage import center_of_mass, gaussian_filter, label
 
         T = len(activities)
         n = length
@@ -799,10 +798,10 @@ class GridCell2DVelocity(BasicModel):
                     blob_centers = blob_centers.reshape(1, -1)
 
                 blob_centers = blob_centers[:, [1, 0]]  # Swap x,y
-                dist = np.linalg.norm(blob_centers - n/2, axis=1)
+                dist = np.linalg.norm(blob_centers - n / 2, axis=1)
                 best_center = blob_centers[np.argmin(dist)]
             else:
-                best_center = centers[-1] if centers else np.array([n/2, n/2])
+                best_center = centers[-1] if centers else np.array([n / 2, n / 2])
 
             centers.append(best_center)
 
