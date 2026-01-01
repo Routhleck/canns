@@ -39,8 +39,8 @@ Example:
     (30, 30, 1600)
 """
 
-import numpy as np
 import brainpy.math as bm
+import numpy as np
 from numba import njit
 from tqdm import tqdm
 
@@ -74,9 +74,7 @@ def _compute_velocities(positions: np.ndarray, dt: float) -> np.ndarray:
 
 
 @njit
-def _create_vertical_velocities(
-    num_steps: int, num_positions: int, speed: float
-) -> np.ndarray:
+def _create_vertical_velocities(num_steps: int, num_positions: int, speed: float) -> np.ndarray:
     """Pre-allocate vertical velocity array.
 
     Args:
@@ -320,9 +318,7 @@ def compute_systematic_ratemap(
     # Process in batches for memory efficiency
     samples_per_batch = resolution // num_batches
 
-    for batch_idx in tqdm(
-        range(num_batches), desc="Batching", disable=not verbose
-    ):
+    for batch_idx in tqdm(range(num_batches), desc="Batching", disable=not verbose):
         start_idx = batch_idx * samples_per_batch
         end_idx = min((batch_idx + 1) * samples_per_batch, resolution)
         batch_size = end_idx - start_idx
@@ -344,9 +340,7 @@ def compute_systematic_ratemap(
 
         # Downsample to resolution using Numba-optimized function
         downsample_ratio = num_vertical_steps // resolution
-        downsampled = _downsample_activities(
-            batch_activities, downsample_ratio, resolution
-        )
+        downsampled = _downsample_activities(batch_activities, downsample_ratio, resolution)
 
         # Store in ratemap
         ratemap[start_idx:end_idx, :, :] = downsampled

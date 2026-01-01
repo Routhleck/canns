@@ -786,10 +786,12 @@ class StateAwareRasterScanPolicy(ActionPolicy):
         self.drift_strength = drift_strength
 
         # Scanning mode: 'horizontal' or 'vertical'
-        self.mode = 'horizontal'
+        self.mode = "horizontal"
 
         # Internal state
-        self.current_direction = 1.0  # Horizontal: 1.0=right, -1.0=left; Vertical: 1.0=up, -1.0=down
+        self.current_direction = (
+            1.0  # Horizontal: 1.0=right, -1.0=left; Vertical: 1.0=up, -1.0=down
+        )
         self.is_turning = False
         self.turn_steps_remaining = 0
 
@@ -808,16 +810,16 @@ class StateAwareRasterScanPolicy(ActionPolicy):
         # IMPORTANT: Check this BEFORE handling turns, to avoid confusion
 
         # Horizontal -> Vertical: when reaching bottom
-        if self.mode == 'horizontal' and pos[1] <= self.margin:
-            self.mode = 'vertical'
+        if self.mode == "horizontal" and pos[1] <= self.margin:
+            self.mode = "vertical"
             # Start moving upward in vertical mode
             self.current_direction = 1.0  # 1.0 = up in vertical mode
             self.is_turning = False
             self.turn_steps_remaining = 0
 
         # Vertical -> Horizontal: when reaching right edge
-        elif self.mode == 'vertical' and pos[0] >= self.width - self.margin:
-            self.mode = 'horizontal'
+        elif self.mode == "vertical" and pos[0] >= self.width - self.margin:
+            self.mode = "horizontal"
             # Start moving rightward in horizontal mode
             self.current_direction = 1.0  # 1.0 = right in horizontal mode
             self.is_turning = False
@@ -831,7 +833,7 @@ class StateAwareRasterScanPolicy(ActionPolicy):
                 self.current_direction *= -1  # Reverse direction
 
             # Move perpendicular to scanning direction during turn
-            if self.mode == 'horizontal':
+            if self.mode == "horizontal":
                 # Move downward during horizontal scanning turns
                 return {
                     "drift_velocity": np.array([0.0, -self.step_size * 10]),
@@ -847,7 +849,7 @@ class StateAwareRasterScanPolicy(ActionPolicy):
         # Determine if turn is needed WITHIN current mode
         need_turn = False
 
-        if self.mode == 'horizontal':
+        if self.mode == "horizontal":
             # Horizontal mode: check left/right walls
             if self.current_direction > 0:  # Moving right
                 if pos[0] >= self.width - self.margin:
@@ -870,7 +872,7 @@ class StateAwareRasterScanPolicy(ActionPolicy):
             dt = 1e-3  # Assuming default dt
             self.turn_steps_remaining = max(1, int(self.step_size / (self.speed * dt)))
 
-            if self.mode == 'horizontal':
+            if self.mode == "horizontal":
                 return {
                     "drift_velocity": np.array([0.0, -self.step_size * 10]),
                     "drift_to_random_strength_ratio": self.drift_strength,
@@ -882,7 +884,7 @@ class StateAwareRasterScanPolicy(ActionPolicy):
                 }
 
         # Normal movement in current scanning direction
-        if self.mode == 'horizontal':
+        if self.mode == "horizontal":
             # Horizontal scanning: move left or right
             return {
                 "drift_velocity": np.array([self.current_direction * self.speed, 0.0]),
