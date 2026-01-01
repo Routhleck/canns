@@ -288,17 +288,21 @@ def compute_systematic_ratemap(
 
     # Downsample to resolution positions
     ratio = int(len(c) / resolution)
-    horizontal_states = []
+    horizontal_states_s = []
+    horizontal_states_r = []
 
     # Re-run horizontal sweep, saving states at downsampled positions
     for i in range(len(horizontal_vel)):
         model(horizontal_vel[i])
-        if i % ratio == 0 and len(horizontal_states) < resolution:
-            horizontal_states.append(model.s.value.copy())
+        if i % ratio == 0 and len(horizontal_states_s) < resolution:
+            horizontal_states_s.append(model.s.value.copy())
+            horizontal_states_r.append(model.r.value.copy())
 
     # Ensure we have exactly resolution states
-    horizontal_states = horizontal_states[:resolution]
-    horizontal_states = bm.asarray(horizontal_states)
+    horizontal_states_s = horizontal_states_s[:resolution]
+    horizontal_states_r = horizontal_states_r[:resolution]
+    horizontal_states_s = bm.asarray(horizontal_states_s)
+    horizontal_states_r = bm.asarray(horizontal_states_r)
 
     # ========================================================================
     # Step 3: Vertical sampling at each horizontal position
@@ -324,14 +328,16 @@ def compute_systematic_ratemap(
         batch_size = end_idx - start_idx
 
         # Get initial states for this batch
-        batch_initial_states = horizontal_states[start_idx:end_idx]
+        batch_initial_states_s = horizontal_states_s[start_idx:end_idx]
+        batch_initial_states_r = horizontal_states_r[start_idx:end_idx]
 
         # Run vertical sweeps for this batch
         batch_activities = np.zeros((num_vertical_steps, batch_size, model.num))
 
         for i in range(batch_size):
-            # Set initial state from horizontal sweep
-            model.s.value = batch_initial_states[i]
+            # Set initial state from horizontal sweep (restore both s and r)
+            model.s.value = batch_initial_states_s[i]
+            model.r.value = batch_initial_states_r[i]
 
             # Run vertical sweep
             for t in range(num_vertical_steps):

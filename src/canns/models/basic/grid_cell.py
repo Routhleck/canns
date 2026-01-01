@@ -776,9 +776,9 @@ class GridCell2DVelocity(BasicModel):
         T = len(activities)
         n = length
 
-        # Reshape and apply Gaussian smoothing
+        # Reshape and apply Gaussian smoothing (per-frame to avoid axes parameter)
         activities_2d = activities.reshape(T, n, n)
-        smoothed = gaussian_filter(activities_2d, sigma=1, axes=(1, 2))
+        smoothed = np.array([gaussian_filter(activities_2d[t], sigma=1) for t in range(T)])
 
         # Adaptive thresholding
         thresholds = smoothed.mean(axis=(1, 2)) + 0.5 * smoothed.std(axis=(1, 2))

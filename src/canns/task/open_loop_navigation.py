@@ -869,7 +869,7 @@ class StateAwareRasterScanPolicy(ActionPolicy):
         if need_turn:
             # Initiate turn WITHIN current mode
             self.is_turning = True
-            dt = 1e-3  # Assuming default dt
+            dt = bm.get_dt()  # Use actual simulation timestep
             self.turn_steps_remaining = max(1, int(self.step_size / (self.speed * dt)))
 
             if self.mode == "horizontal":
