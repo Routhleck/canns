@@ -35,11 +35,11 @@ output_dir = Path("outputs/burak_spatial_analysis")
 output_dir.mkdir(parents=True, exist_ok=True)
 
 num_cells_to_analyze = 5
-spatial_resolution = 60
+spatial_resolution = 100
 
 # Initialize model
 model = GridCell2DVelocity(
-    length=60,
+    length=50,
     tau=0.01,
     alpha=0.1,
     W_l=2.0,

@@ -14,6 +14,7 @@ Foundation Tutorials
    02_task_and_simulation
    03_analysis_visualization
    04_parameter_effects
+   05_grid_cell_velocity_model
 
 Advanced Tutorials
 ------------------
@@ -22,9 +23,9 @@ Advanced Tutorials
    :maxdepth: 1
    :caption: Advanced Applications
 
-   05_hierarchical_network
-   06_theta_sweep_hd_grid
-   07_theta_sweep_place_cell
+   06_hierarchical_network
+   07_theta_sweep_hd_grid
+   08_theta_sweep_place_cell
 
 Learning Path
 -------------
