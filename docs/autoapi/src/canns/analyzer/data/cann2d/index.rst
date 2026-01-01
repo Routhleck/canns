@@ -41,6 +41,7 @@ Functions
 
    src.canns.analyzer.data.cann2d.decode_circular_coordinates
    src.canns.analyzer.data.cann2d.embed_spike_trains
+   src.canns.analyzer.data.cann2d.plot_2d_bump_on_manifold
    src.canns.analyzer.data.cann2d.plot_3d_bump_on_torus
    src.canns.analyzer.data.cann2d.plot_cohomap
    src.canns.analyzer.data.cann2d.plot_projection
@@ -357,6 +358,43 @@ Module Contents
              yy (ndarray, optional): Y coordinates (if speed_filter=True).
              tt (ndarray, optional): Time points (if speed_filter=True).
    :rtype: spikes_bin (ndarray)
+
+
+.. py:function:: plot_2d_bump_on_manifold(decoding_result, spike_data, save_path = None, fps = 20, show = True, mode = 'fast', window_size = 10, frame_step = 5, numangsint = 20, figsize = (8, 6), show_progress = False)
+
+   Create 2D projection animation of CANN2D bump activity with full blitting support.
+
+   This function provides a fast 2D heatmap visualization as an alternative to the
+   3D torus animation. It achieves 10-20x speedup using matplotlib blitting
+   optimization, making it ideal for rapid prototyping and daily analysis.
+
+   :param decoding_result: Decoding results containing coords and times (dict or file path)
+   :param spike_data: Dictionary containing spike train data
+   :param save_path: Path to save animation (None to skip saving)
+   :param fps: Frames per second
+   :param show: Whether to display the animation
+   :param mode: Visualization mode - 'fast' for 2D heatmap (default), '3d' falls back to 3D
+   :param window_size: Time window for activity aggregation
+   :param frame_step: Time step between frames
+   :param numangsint: Number of angular bins for spatial discretization
+   :param figsize: Figure size (width, height) in inches
+   :param show_progress: Show progress bar during processing
+
+   :returns: FuncAnimation object (or None in Jupyter when showing)
+
+   :raises ProcessingError: If mode is invalid or animation generation fails
+
+   .. rubric:: Example
+
+   >>> # Fast 2D visualization (recommended for daily use)
+   >>> ani = plot_2d_bump_on_manifold(
+   ...     decoding_result, spike_data,
+   ...     save_path='bump_2d.mp4', mode='fast'
+   ... )
+   >>> # For publication-ready 3D visualization, use mode='3d'
+   >>> ani = plot_2d_bump_on_manifold(
+   ...     decoding_result, spike_data, mode='3d'
+   ... )
 
 
 .. py:function:: plot_3d_bump_on_torus(decoding_result, spike_data, config = None, save_path = None, numangsint = 51, r1 = 1.5, r2 = 1.0, window_size = 300, frame_step = 5, n_frames = 20, fps = 5, show_progress = True, show = True, figsize = (8, 8), **kwargs)

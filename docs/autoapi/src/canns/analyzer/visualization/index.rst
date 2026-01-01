@@ -15,9 +15,8 @@ Submodules
 .. toctree::
    :maxdepth: 1
 
-   /autoapi/src/canns/analyzer/visualization/config/index
+   /autoapi/src/canns/analyzer/visualization/core/index
    /autoapi/src/canns/analyzer/visualization/energy_plots/index
-   /autoapi/src/canns/analyzer/visualization/jupyter_utils/index
    /autoapi/src/canns/analyzer/visualization/spatial_plots/index
    /autoapi/src/canns/analyzer/visualization/spike_plots/index
    /autoapi/src/canns/analyzer/visualization/theta_sweep_plots/index
@@ -29,6 +28,10 @@ Classes
 
 .. autoapisummary::
 
+   src.canns.analyzer.visualization.AnimationConfig
+   src.canns.analyzer.visualization.OptimizedAnimationBase
+   src.canns.analyzer.visualization.OptimizedAnimationWriter
+   src.canns.analyzer.visualization.ParallelAnimationRenderer
    src.canns.analyzer.visualization.PlotConfig
    src.canns.analyzer.visualization.PlotConfigs
 
@@ -40,12 +43,16 @@ Functions
 
    src.canns.analyzer.visualization.average_firing_rate_plot
    src.canns.analyzer.visualization.create_grid_cell_tracking_animation
+   src.canns.analyzer.visualization.create_optimized_writer
    src.canns.analyzer.visualization.create_theta_sweep_grid_cell_animation
    src.canns.analyzer.visualization.create_theta_sweep_place_cell_animation
+   src.canns.analyzer.visualization.display_animation_in_jupyter
    src.canns.analyzer.visualization.energy_landscape_1d_animation
    src.canns.analyzer.visualization.energy_landscape_1d_static
    src.canns.analyzer.visualization.energy_landscape_2d_animation
    src.canns.analyzer.visualization.energy_landscape_2d_static
+   src.canns.analyzer.visualization.get_recommended_format
+   src.canns.analyzer.visualization.is_jupyter_environment
    src.canns.analyzer.visualization.plot_autocorrelation
    src.canns.analyzer.visualization.plot_firing_field_heatmap
    src.canns.analyzer.visualization.plot_grid_cell_manifold
@@ -55,10 +62,334 @@ Functions
    src.canns.analyzer.visualization.population_activity_heatmap
    src.canns.analyzer.visualization.raster_plot
    src.canns.analyzer.visualization.tuning_curve
+   src.canns.analyzer.visualization.warn_double_rendering
+   src.canns.analyzer.visualization.warn_gif_format
 
 
 Package Contents
 ----------------
+
+.. py:class:: AnimationConfig
+
+   Configuration for animation rendering.
+
+   Provides unified settings for optimized animation rendering with automatic
+   quality presets and parallel rendering support.
+
+   .. attribute:: fps
+
+      Frames per second for the animation
+
+   .. attribute:: enable_blitting
+
+      Whether to use blitting optimization (auto-detected by default)
+
+   .. attribute:: use_parallel
+
+      Force parallel rendering even for short animations
+
+   .. attribute:: num_workers
+
+      Number of worker processes for parallel rendering
+
+   .. attribute:: quality
+
+      Quality preset - 'draft', 'medium', or 'high'
+
+   .. attribute:: npoints_multiplier
+
+      Resolution multiplier (< 1.0 for draft mode)
+
+   .. attribute:: auto_parallel_threshold
+
+      Auto-enable parallel rendering for animations with
+      more than this many frames
+
+   .. rubric:: Example
+
+   >>> # High-quality animation (default)
+   >>> config = AnimationConfig(fps=30, quality='high')
+   >>>
+   >>> # Fast draft mode for quick iteration
+   >>> draft_config = AnimationConfig(quality='draft')  # Auto: 15 FPS, 0.5x resolution
+   >>>
+   >>> # Force parallel rendering
+   >>> parallel_config = AnimationConfig(use_parallel=True, num_workers=8)
+
+
+   .. py:method:: __post_init__()
+
+      Automatically adjust settings based on quality preset.
+
+
+
+   .. py:attribute:: auto_parallel_threshold
+      :type:  int
+      :value: 500
+
+
+
+   .. py:attribute:: enable_blitting
+      :type:  bool
+      :value: True
+
+
+
+   .. py:attribute:: fps
+      :type:  int
+      :value: 30
+
+
+
+   .. py:attribute:: npoints_multiplier
+      :type:  float
+      :value: 1.0
+
+
+
+   .. py:attribute:: num_workers
+      :type:  int
+      :value: 4
+
+
+
+   .. py:attribute:: quality
+      :type:  str
+      :value: 'high'
+
+
+
+   .. py:attribute:: use_parallel
+      :type:  bool
+      :value: False
+
+
+
+.. py:class:: OptimizedAnimationBase(fig, ax, config = None)
+
+   Bases: :py:obj:`abc.ABC`
+
+
+   High-performance animation base class with blitting support.
+
+   This abstract base class enforces best practices for matplotlib animations:
+   - Artists are pre-created in create_artists()
+   - Frame updates only modify data, never rebuild objects
+   - Automatic blitting support detection
+   - Optional parallel rendering for long animations
+
+   Subclasses must implement:
+   - create_artists(): Pre-create all artist objects with animated=True
+   - update_frame(frame_idx): Update artist data and return modified artists
+
+   Initialize the animation base.
+
+   :param fig: Matplotlib figure
+   :param ax: Matplotlib axes
+   :param config: Animation configuration (uses defaults if None)
+
+
+   .. py:method:: create_artists()
+      :abstractmethod:
+
+
+      Pre-create all artist objects for the animation.
+
+      This method should:
+      1. Create all plot objects (lines, scatter, images, etc.)
+      2. Set animated=True for objects that will be updated
+      3. Set initial data (can be empty with [], [])
+      4. Return list of all animated artists
+
+      :returns: List of artist objects that will be animated
+
+
+
+   .. py:method:: init_func()
+
+      Initialize animation (called by FuncAnimation).
+
+      :returns: Tuple of all animated artists
+
+
+
+   .. py:method:: render_animation(nframes, interval = None, repeat = True, save_path = None, **save_kwargs)
+
+      Render the animation with automatic optimization selection.
+
+      :param nframes: Total number of frames
+      :param interval: Milliseconds between frames (computed from fps if None)
+      :param repeat: Whether to loop the animation
+      :param save_path: Path to save animation (None to skip saving)
+      :param \*\*save_kwargs: Additional arguments for animation.save()
+
+      :returns: FuncAnimation object
+
+
+
+   .. py:method:: update_frame(frame_idx)
+      :abstractmethod:
+
+
+      Update artists for a specific frame.
+
+      This method should:
+      1. Compute data for the current frame
+      2. Update artist data using set_data(), set_array(), etc.
+      3. Return tuple of all modified artists
+
+      Important: Do NOT call ax.clear() or recreate artists here!
+
+      :param frame_idx: Index of the current frame
+
+      :returns: Tuple of modified artist objects
+
+
+
+   .. py:attribute:: artists
+      :type:  list[matplotlib.artist.Artist]
+      :value: []
+
+
+
+   .. py:attribute:: ax
+
+
+   .. py:attribute:: config
+
+
+   .. py:attribute:: fig
+
+
+.. py:class:: OptimizedAnimationWriter(save_path, fps = 10, encoding_speed = 'balanced', codec = None, bitrate = None, dpi = 100)
+
+   High-performance animation writer with automatic format detection.
+
+   This writer automatically selects the best encoding method based on:
+   - Output file format (detected from extension)
+   - Available encoding libraries
+   - User-specified speed/quality preferences
+
+   Performance improvements:
+   - GIF: 1.7x faster than PillowWriter
+   - MP4: 5-10x faster than GIF encoding
+   - WebM: Best compression, moderate speed
+
+   .. rubric:: Example
+
+   >>> writer = OptimizedAnimationWriter(
+   ...     'output.mp4',
+   ...     fps=10,
+   ...     encoding_speed='fast'
+   ... )
+   >>> writer.setup(fig, 'output.mp4')
+   >>> for frame in frames:
+   ...     writer.grab_frame()
+   >>> writer.finish()
+
+   Initialize the optimized writer.
+
+   :param save_path: Output file path (extension determines format)
+   :param fps: Frames per second
+   :param encoding_speed: 'fast', 'balanced', or 'quality'
+   :param codec: Override automatic codec selection
+   :param bitrate: Video bitrate in kbps (None for automatic)
+   :param dpi: Figure DPI for rendering
+
+
+   .. py:method:: finish()
+
+      Finish writing and save file.
+
+
+
+   .. py:method:: grab_frame(**kwargs)
+
+      Grab current frame from figure (matplotlib API compatibility).
+
+
+
+   .. py:method:: setup(fig, outfile=None, dpi=None)
+
+      Setup the writer (matplotlib API compatibility).
+
+
+
+   .. py:attribute:: bitrate
+      :value: None
+
+
+
+   .. py:attribute:: codec
+      :value: None
+
+
+
+   .. py:attribute:: dpi
+      :value: 100
+
+
+
+   .. py:attribute:: encoding_speed
+      :value: 'balanced'
+
+
+
+   .. py:attribute:: format
+      :value: 'gif'
+
+
+
+   .. py:attribute:: fps
+      :value: 10
+
+
+
+   .. py:attribute:: frames
+      :value: []
+
+
+
+   .. py:attribute:: save_path
+
+
+   .. py:attribute:: writer
+      :value: 'imageio_gif'
+
+
+
+.. py:class:: ParallelAnimationRenderer(num_workers = None)
+
+   Multi-process parallel renderer for matplotlib animations.
+
+   This renderer creates separate processes to render frames in parallel,
+   then combines them into a video file using imageio. Best for animations
+   with >500 frames where the rendering bottleneck is matplotlib itself.
+
+   Performance: Achieves ~3-4x speedup on 4-core CPUs.
+
+   Initialize the parallel renderer.
+
+   :param num_workers: Number of worker processes (uses CPU count if None)
+
+
+   .. py:method:: render(animation_base, nframes, fps, save_path, writer = 'ffmpeg', codec = 'libx264', bitrate = None, show_progress = True)
+
+      Render animation frames in parallel and save to file.
+
+      :param animation_base: OptimizedAnimationBase instance with update_frame method
+      :param nframes: Total number of frames to render
+      :param fps: Frames per second
+      :param save_path: Output file path
+      :param writer: Video writer to use ('ffmpeg' or 'pillow')
+      :param codec: Video codec (for ffmpeg writer)
+      :param bitrate: Video bitrate in kbps (None for automatic)
+      :param show_progress: Whether to show progress bar
+
+
+
+   .. py:attribute:: num_workers
+
 
 .. py:class:: PlotConfig
 
@@ -199,6 +530,29 @@ Package Contents
 
 
 
+   .. py:method:: direction_cell_polar(**kwargs)
+      :staticmethod:
+
+
+      Configuration for direction cell polar plot visualization.
+
+      Creates polar coordinate plots showing directional tuning of head direction
+      cells or other orientation-selective neurons.
+
+      :param \*\*kwargs: Additional configuration parameters to override defaults.
+
+      :returns: Configuration object for polar plots.
+      :rtype: PlotConfig
+
+      .. rubric:: Example
+
+      >>> config = PlotConfigs.direction_cell_polar(
+      ...     title="Head Direction Cell",
+      ...     save_path="direction_cell.png"
+      ... )
+
+
+
    .. py:method:: energy_landscape_1d_animation(**kwargs)
       :staticmethod:
 
@@ -216,6 +570,31 @@ Package Contents
 
    .. py:method:: energy_landscape_2d_static(**kwargs)
       :staticmethod:
+
+
+
+   .. py:method:: firing_field_heatmap(**kwargs)
+      :staticmethod:
+
+
+      Configuration for firing field (rate map) heatmap visualization.
+
+      Displays spatial firing rate distribution for grid cells, place cells, or
+      other spatially-tuned neurons. Uses 'jet' colormap for high-contrast
+      visualization of firing fields.
+
+      :param \*\*kwargs: Additional configuration parameters to override defaults.
+
+      :returns: Configuration object for firing field heatmaps.
+      :rtype: PlotConfig
+
+      .. rubric:: Example
+
+      >>> from canns.analyzer.visualization import PlotConfigs
+      >>> config = PlotConfigs.firing_field_heatmap(
+      ...     title="Grid Cell Firing Field",
+      ...     save_path="ratemap.png"
+      ... )
 
 
 
@@ -319,6 +698,29 @@ Package Contents
 
 
 
+   .. py:method:: population_activity_heatmap(**kwargs)
+      :staticmethod:
+
+
+      Configuration for population activity heatmap visualization.
+
+      Displays neural population activity over time as a 2D heatmap where
+      rows represent neurons and columns represent time points.
+
+      :param \*\*kwargs: Additional configuration parameters to override defaults.
+
+      :returns: Configuration object for population activity heatmaps.
+      :rtype: PlotConfig
+
+      .. rubric:: Example
+
+      >>> config = PlotConfigs.population_activity_heatmap(
+      ...     title="Network Activity",
+      ...     save_path="activity.png"
+      ... )
+
+
+
    .. py:method:: raster_plot(mode = 'block', **kwargs)
       :staticmethod:
 
@@ -331,6 +733,31 @@ Package Contents
 
    .. py:method:: theta_sweep_animation(**kwargs)
       :staticmethod:
+
+
+
+   .. py:method:: theta_sweep_place_cell_animation(**kwargs)
+      :staticmethod:
+
+
+      Configuration for theta sweep place cell animation.
+
+      Creates synchronized 2-panel animation showing trajectory with place cell
+      activity overlay and population activity heatmap.
+
+      :param \*\*kwargs: Additional configuration parameters to override defaults.
+                         Must include 'time_steps_per_second' if not using default.
+
+      :returns: Configuration object for place cell animations.
+      :rtype: PlotConfig
+
+      .. rubric:: Example
+
+      >>> config = PlotConfigs.theta_sweep_place_cell_animation(
+      ...     time_steps_per_second=1000,
+      ...     fps=10,
+      ...     save_path="place_cell_sweep.gif"
+      ... )
 
 
 
@@ -415,6 +842,36 @@ Package Contents
    ... )
 
 
+.. py:function:: create_optimized_writer(save_path, fps = 10, encoding_speed = 'balanced', **kwargs)
+
+   Factory function to create an optimized animation writer.
+
+   This is the recommended way to create writers for CANNs animations.
+
+   :param save_path: Output file path
+   :param fps: Frames per second
+   :param encoding_speed: 'fast', 'balanced', or 'quality'
+   :param \*\*kwargs: Additional parameters passed to writer
+
+   :returns: OptimizedAnimationWriter instance
+
+   .. rubric:: Examples
+
+   >>> # Fast GIF for quick iteration
+   >>> writer = create_optimized_writer(
+   ...     'output.gif',
+   ...     fps=10,
+   ...     encoding_speed='fast'
+   ... )
+
+   >>> # High-quality MP4 for publication
+   >>> writer = create_optimized_writer(
+   ...     'output.mp4',
+   ...     fps=30,
+   ...     encoding_speed='quality'
+   ... )
+
+
 .. py:function:: create_theta_sweep_grid_cell_animation(position_data, direction_data, dc_activity_data, gc_activity_data, gc_network, env_size, mapping_ratio, dt = 0.001, config = None, n_step = 10, fps = 10, figsize = (12, 3), save_path = None, show = True, show_progress_bar = True, render_backend = 'auto', output_dpi = 150, render_workers = None, render_start_method = None, **kwargs)
 
    Create comprehensive theta sweep animation with 4 panels (optimized for speed):
@@ -465,6 +922,25 @@ Package Contents
 
    :returns: Matplotlib animation object
    :rtype: FuncAnimation
+
+
+.. py:function:: display_animation_in_jupyter(animation, format = 'html5')
+
+   Display a matplotlib animation in Jupyter notebook.
+
+   Performance comparison (100 frames):
+       - html5 (default): 1.3s, 134 KB - Fast encoding, small size, smooth playback
+       - jshtml: 2.6s, 4837 KB - Slower, 36x larger, but works without FFmpeg
+
+   :param animation: matplotlib.animation.FuncAnimation object
+   :param format: Display format - 'html5' (default, MP4 video) or 'jshtml' (JS animation)
+
+   :returns: IPython.display.HTML object if successful, None otherwise
+
+   .. note::
+
+      'html5' format requires FFmpeg to be installed. If FFmpeg is not available,
+      it will automatically fall back to 'jshtml'.
 
 
 .. py:function:: energy_landscape_1d_animation(data_sets, time_steps_per_second = None, config = None, *, fps = 30, title = 'Evolving 1D Energy Landscape', xlabel = 'Collective Variable / State', ylabel = 'Energy', figsize = (10, 6), grid = False, repeat = True, save_path = None, show = True, show_progress_bar = True, **kwargs)
@@ -570,6 +1046,28 @@ Package Contents
 
    :returns: The Matplotlib figure and axes objects.
    :rtype: Tuple[plt.Figure, plt.Axes]
+
+
+.. py:function:: get_recommended_format(use_case = 'web')
+
+   Get recommended file format and extension for different use cases.
+
+   :param use_case: Target use case
+
+   :returns: Tuple of (format, extension) - format string and file extension with dot
+
+   .. rubric:: Examples
+
+   >>> format_str, ext = get_recommended_format('web')
+   >>> save_path = f'animation{ext}'  # 'animation.mp4'
+
+
+.. py:function:: is_jupyter_environment()
+
+   Detect if code is running in a Jupyter notebook environment.
+
+   :returns: True if running in Jupyter/IPython notebook, False otherwise.
+   :rtype: bool
 
 
 .. py:function:: plot_autocorrelation(autocorr, config = None, *, title = 'Spatial Autocorrelation', xlabel = 'X Lag (bins)', ylabel = 'Y Lag (bins)', figsize = (6, 6), save_path = None, show = True, **kwargs)
@@ -859,5 +1357,41 @@ Package Contents
    :param save_path: Optional location where the figure should be stored.
    :param show: Whether to display the plot interactively.
    :param \*\*kwargs: Additional keyword arguments passed through to ``ax.plot``.
+
+
+.. py:function:: warn_double_rendering(nframes, save_path, *, stacklevel = 2)
+
+   Warn user about performance impact when both saving and showing animations.
+
+   When both save_path and show=True are enabled, the animation gets rendered twice:
+   1. First time: encoding to file (fast with MP4: ~1000 FPS)
+   2. Second time: live GUI display (slow: ~10-30 FPS)
+
+   This can significantly increase total processing time, especially for long animations.
+
+   :param nframes: Number of frames in the animation
+   :param save_path: Path where animation will be saved
+   :param stacklevel: Stack level for the warning (default: 2, caller's caller)
+
+   .. rubric:: Example
+
+   >>> if save_path and show and nframes > 50:
+   ...     warn_double_rendering(nframes, save_path, stacklevel=2)
+
+
+.. py:function:: warn_gif_format(*, stacklevel = 2)
+
+   Warn user about GIF format performance limitations.
+
+   GIF encoding is significantly slower than MP4:
+   - GIF: ~27 FPS encoding (256 colors, larger files)
+   - MP4: ~1000 FPS encoding (36.8x faster, full color, smaller files)
+
+   :param stacklevel: Stack level for the warning (default: 2, caller's caller)
+
+   .. rubric:: Example
+
+   >>> if save_path.endswith('.gif'):
+   ...     warn_gif_format(stacklevel=2)
 
 

@@ -9,8 +9,12 @@ Classes
 
 .. autoapisummary::
 
+   src.canns.task.open_loop_navigation.ActionPolicy
+   src.canns.task.open_loop_navigation.CustomOpenLoopNavigationTask
    src.canns.task.open_loop_navigation.OpenLoopNavigationData
    src.canns.task.open_loop_navigation.OpenLoopNavigationTask
+   src.canns.task.open_loop_navigation.RasterScanNavigationTask
+   src.canns.task.open_loop_navigation.StateAwareRasterScanPolicy
    src.canns.task.open_loop_navigation.TMazeOpenLoopNavigationTask
    src.canns.task.open_loop_navigation.TMazeRecessOpenLoopNavigationTask
 
@@ -25,6 +29,86 @@ Functions
 
 Module Contents
 ---------------
+
+.. py:class:: ActionPolicy
+
+   Bases: :py:obj:`abc.ABC`
+
+
+   Abstract base class for action policies that control agent movement.
+
+   Action policies compute parameters for agent.update() at each simulation step,
+   enabling reusable, testable, and composable control strategies.
+
+   .. rubric:: Example
+
+   ```python
+   class ConstantDriftPolicy(ActionPolicy):
+       def __init__(self, drift_direction):
+           self.drift = np.array(drift_direction)
+
+       def compute_action(self, step_idx, agent):
+           return {'drift_velocity': self.drift}
+
+   task = CustomOpenLoopNavigationTask(
+       duration=100, action_policy=ConstantDriftPolicy([0.1, 0.0])
+   )
+   ```
+
+
+   .. py:method:: compute_action(step_idx, agent)
+      :abstractmethod:
+
+
+      Compute action parameters for the current simulation step.
+
+      :param step_idx: Current simulation step (0 to total_steps-1)
+      :param agent: Agent instance (for state-aware policies)
+
+      :returns:
+
+                Keyword arguments for agent.update()
+                      Supported keys:
+                      - drift_velocity: np.ndarray of shape (2,) for 2D drift
+                      - drift_to_random_strength_ratio: float (typically 5.0-20.0)
+                      - forced_next_position: np.ndarray of shape (2,)
+      :rtype: dict
+
+
+
+.. py:class:: CustomOpenLoopNavigationTask(*args, action_policy = None, **kwargs)
+
+   Bases: :py:obj:`OpenLoopNavigationTask`
+
+
+   Template class for policy-based open-loop navigation tasks.
+
+   This class enables custom action policies by accepting an ActionPolicy object
+   that controls agent movement at each simulation step.
+
+   :param action_policy: ActionPolicy instance controlling agent movement
+   :param \*\*kwargs: All other arguments passed to OpenLoopNavigationTask
+
+   .. rubric:: Example
+
+   ```python
+   # Define custom policy
+   class MyPolicy(ActionPolicy):
+       def compute_action(self, step_idx, agent):
+           return {'drift_velocity': np.array([0.1, 0.0])}
+
+   # Use it
+   task = CustomOpenLoopNavigationTask(
+       duration=100, action_policy=MyPolicy()
+   )
+   task.get_data()
+   ```
+
+
+   .. py:attribute:: action_policy
+      :value: None
+
+
 
 .. py:class:: OpenLoopNavigationData
 
@@ -187,6 +271,156 @@ Module Contents
 
 
    .. py:attribute:: total_steps
+
+
+.. py:class:: RasterScanNavigationTask(duration, width = 1.0, height = 1.0, step_size = 0.03, margin = 0.05, speed = 0.15, drift_strength = 15.0, **kwargs)
+
+   Bases: :py:obj:`CustomOpenLoopNavigationTask`
+
+
+   Preset task for cyclic dual-mode state-aware raster scan exploration.
+
+   Systematically explores the environment using cyclic mode switching:
+   1. Horizontal phase: Left-right sweeps moving downward
+      → Switches to Vertical when reaching bottom
+   2. Vertical phase: Up-down sweeps moving rightward
+      → Switches back to Horizontal when reaching right edge
+   3. Cycles continuously: H → V → H → V → ...
+
+   This cyclic dual-mode strategy achieves superior coverage by combining
+   orthogonal scanning patterns and continuously adapting to avoid walls.
+
+   Performance (200s, 1.0m x 1.0m):
+       - Cyclic dual-mode: ~75-80% coverage (continuous cycling)
+       - Single horizontal: 54.1% coverage (29 rows)
+       - +20-30% improvement over random walk
+
+   :param duration: Simulation duration in seconds
+   :param width: Environment width (default: 1.0)
+   :param height: Environment height (default: 1.0)
+   :param step_size: Scan density - smaller = denser scanning (default: 0.03)
+   :param margin: Wall detection margin (default: 0.05)
+   :param speed: Movement speed in m/s (default: 0.15)
+   :param drift_strength: Drift control strength (default: 15.0)
+   :param \*\*kwargs: Additional arguments passed to OpenLoopNavigationTask
+
+   .. rubric:: Example
+
+   ```python
+   # High coverage dual-mode exploration
+   task = RasterScanNavigationTask(
+       duration=200,
+       width=1.0,
+       height=1.0,
+       step_size=0.03,  # Dense scanning in both directions
+       speed=0.15  # Movement speed
+   )
+   task.get_data()
+   task.show_trajectory_analysis()
+   ```
+
+
+.. py:class:: StateAwareRasterScanPolicy(width, height, margin = 0.05, step_size = 0.03, speed = 0.15, drift_strength = 15.0)
+
+   Bases: :py:obj:`ActionPolicy`
+
+
+   State-aware raster scan policy with cyclic dual-mode exploration.
+
+   Scanning strategy (循环扫描):
+   1. Horizontal mode: Left-right sweeps moving downward
+      → When reaching bottom: switch to Vertical mode
+   2. Vertical mode: Up-down sweeps moving rightward
+      → When reaching right edge: switch back to Horizontal mode
+   3. Cycles continuously: H → V → H → V → ... (避免撞墙)
+
+   This cyclic dual-mode approach achieves comprehensive coverage by combining
+   orthogonal scanning patterns and avoiding wall collisions.
+
+   Tested performance (200s, 1.0m x 1.0m environment):
+       - Cyclic dual-mode: ~75-80%+ coverage (continuous cycling)
+       - Single horizontal: 54.1% coverage (29 rows)
+
+   :param width: Environment width in meters
+   :param height: Environment height in meters
+   :param margin: Distance from wall to trigger turn (default: 0.05)
+   :param step_size: Movement per turn in perpendicular direction (default: 0.03)
+   :param speed: Movement speed (default: 0.15)
+   :param drift_strength: Drift-to-random ratio for agent.update() (default: 15.0)
+
+   .. rubric:: Example
+
+   ```python
+   policy = StateAwareRasterScanPolicy(
+       width=1.0, height=1.0,
+       step_size=0.03,  # Dense scanning for high coverage
+       drift_strength=15.0
+   )
+   task = CustomOpenLoopNavigationTask(
+       duration=200,
+       action_policy=policy,
+       width=1.0,
+       height=1.0,
+       start_pos=(0.05, 0.95)  # Start at top-left
+   )
+   ```
+
+
+   .. py:method:: compute_action(step_idx, agent)
+
+      Compute next action based on current agent position and scanning mode.
+
+      Implements cyclic dual-mode scanning:
+      - Horizontal mode: Left-right sweeps moving downward
+      - Vertical mode: Up-down sweeps moving rightward
+      - Auto-switches between modes to avoid walls and maintain coverage
+
+
+
+   .. py:attribute:: current_direction
+      :value: 1.0
+
+
+
+   .. py:attribute:: drift_strength
+      :value: 15.0
+
+
+
+   .. py:attribute:: height
+
+
+   .. py:attribute:: is_turning
+      :value: False
+
+
+
+   .. py:attribute:: margin
+      :value: 0.05
+
+
+
+   .. py:attribute:: mode
+      :value: 'horizontal'
+
+
+
+   .. py:attribute:: speed
+      :value: 0.15
+
+
+
+   .. py:attribute:: step_size
+      :value: 0.03
+
+
+
+   .. py:attribute:: turn_steps_remaining
+      :value: 0
+
+
+
+   .. py:attribute:: width
 
 
 .. py:class:: TMazeOpenLoopNavigationTask(w=0.3, l_s=1.0, l_arm=0.75, t=0.3, start_pos=(0.0, 0.15), duration=20.0, dt=None, **kwargs)

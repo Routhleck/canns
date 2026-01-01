@@ -25,8 +25,8 @@ Classes
    src.canns.models.basic.CANN1D_SFA
    src.canns.models.basic.CANN2D
    src.canns.models.basic.CANN2D_SFA
-   src.canns.models.basic.GridCell2D
-   src.canns.models.basic.GridCell2D_SFA
+   src.canns.models.basic.GridCell2DPosition
+   src.canns.models.basic.GridCell2DVelocity
    src.canns.models.basic.HierarchicalNetwork
 
 
@@ -204,12 +204,12 @@ Package Contents
    .. py:attribute:: v
 
 
-.. py:class:: GridCell2D(length = 30, tau = 10.0, k = 1.0, a = 0.8, A = 3.0, J0 = 5.0, mapping_ratio = 1.5, noise_strength = 0.1, conn_noise = 0.0, g = 1.0)
+.. py:class:: GridCell2DPosition(length = 30, tau = 10.0, k = 1.0, a = 0.8, A = 3.0, J0 = 5.0, mapping_ratio = 1.5, noise_strength = 0.1, conn_noise = 0.0, g = 1.0)
 
    Bases: :py:obj:`src.canns.models.basic._base.BasicModel`
 
 
-   Simplified 2D continuous-attractor grid cell network with hexagonal lattice structure.
+   Position-based 2D continuous-attractor grid cell network with hexagonal lattice structure.
 
    This network implements a twisted torus topology that generates grid cell-like
    spatial representations with hexagonal periodicity.
@@ -545,66 +545,316 @@ Package Contents
    .. py:attribute:: y_grid
 
 
-.. py:class:: GridCell2D_SFA(length = 30, tau = 10.0, k = 1.0, a = 0.8, A = 3.0, J0 = 5.0, mapping_ratio = 1.5, noise_strength = 0.1, conn_noise = 0.0, g = 1.0, tau_v = 50.0, m = 0.3)
+.. py:class:: GridCell2DVelocity(length = 40, tau = 0.01, alpha = 0.2, A = 1.0, W_a = 1.5, W_l = 2.0, lambda_net = 15.0, e = 1.15, use_sparse = False)
 
-   Bases: :py:obj:`GridCell2D`
+   Bases: :py:obj:`src.canns.models.basic._base.BasicModel`
 
 
-   GridCell2D with Spike-Frequency Adaptation (SFA).
+   Velocity-based grid cell network (Burak & Fiete 2009).
 
-   Extends GridCell2D with slow negative feedback adaptation for
-   anticipative tracking behavior.
+   This network implements path integration through velocity-modulated input
+   and asymmetric connectivity. Unlike position-based models, this takes
+   velocity as input and integrates it over time to track position.
 
-   :param All GridCell2D parameters:
-   :param plus:
-   :param tau_v: Adaptation time constant (much slower than tau). Default: 50.0
-   :param m: Coupling strength from membrane potential to adaptation. Default: 0.3
+   Key Features:
+       - Velocity-dependent input modulation: B(v) = A * (1 + α·v·v_pref)
+       - Asymmetric connectivity shifted in preferred velocity directions
+       - Simple ReLU activation (not divisive normalization)
+       - Healing process for proper initialization
 
-   Additional Attributes:
-       v (Variable): Adaptation variable (shape: num)
+   :param length: Number of neurons along one dimension (total = length²). Default: 40
+   :param tau: Membrane time constant. Default: 0.01
+   :param alpha: Velocity coupling strength. Default: 0.2
+   :param A: Baseline input amplitude. Default: 1.0
+   :param W_a: Connection amplitude (>1 makes close surround activatory). Default: 1.5
+   :param W_l: Spatial shift size for asymmetric connectivity. Default: 2.0
+   :param lambda_net: Lattice constant (neurons between bump centers). Default: 15.0
+   :param e: Controls inhibitory surround spread. Default: 1.15
+             W_gamma and W_beta are computed from this and lambda_net
+
+   .. attribute:: num
+
+      Total number of neurons (length²)
+
+      :type: int
+
+   .. attribute:: positions
+
+      Neuron positions in 2D lattice, shape (num, 2)
+
+      :type: Array
+
+   .. attribute:: vec_pref
+
+      Preferred velocity directions (unit vectors), shape (num, 2)
+
+      :type: Array
+
+   .. attribute:: conn_mat
+
+      Asymmetric connectivity matrix, shape (num, num)
+
+      :type: Array
+
+   .. attribute:: s
+
+      Neural activity/potential, shape (num,)
+
+      :type: Variable
+
+   .. attribute:: r
+
+      Firing rates (ReLU of s), shape (num,)
+
+      :type: Variable
+
+   .. attribute:: center_position
+
+      Decoded position in real space, shape (2,)
+
+      :type: Variable
 
    .. rubric:: Example
 
    >>> import brainpy.math as bm
-   >>> from canns.models.basic import GridCell2D_SFA
+   >>> from canns.models.basic import GridCell2DVelocity
    >>>
-   >>> bm.set_dt(1.0)
-   >>> model = GridCell2D_SFA(length=30, mapping_ratio=1.5)
+   >>> bm.set_dt(5e-4)  # Small timestep for accurate integration
+   >>> model = GridCell2DVelocity(length=40)
    >>>
-   >>> # Same interface as GridCell2D
-   >>> position = [0.5, 0.3]
-   >>> model.update(position)
+   >>> # Healing process (critical!)
+   >>> model.heal_network()
+   >>>
+   >>> # Update with 2D velocity
+   >>> velocity = [0.1, 0.05]  # [vx, vy] in m/s
+   >>> model.update(velocity)
 
    .. rubric:: References
 
-   Adaptation mechanism enables anticipative tracking in moving
-   input scenarios.
+   Burak, Y., & Fiete, I. R. (2009).
+   Accurate path integration in continuous attractor network models of grid cells.
+   PLoS Computational Biology, 5(2), e1000291.
 
-   Initialize GridCell2D with SFA adaptation.
+   Initialize the Burak & Fiete grid cell network.
 
-
-   .. py:method:: update(position)
-
-      Single time-step update with SFA adaptation.
-
-      Same as GridCell2D.update() but with slow negative feedback
-      from adaptation variable v.
-
-      :param position: Current 2D position [x, y] in real space, shape (2,)
+   :param use_sparse: Whether to use sparse matrix for connectivity (experimental).
+                      Default: False. Sparse matrices may be faster on GPU but slower on CPU.
+                      Requires brainevent library.
 
 
+   .. py:method:: compute_velocity_input(velocity)
 
-   .. py:attribute:: m
-      :value: 0.3
+      Compute velocity-modulated input: B(v) = A * (1 + α·v·v_pref)
 
+      Neurons whose preferred direction aligns with the velocity receive
+      stronger input, creating directional modulation that drives bump shifts.
 
+      :param velocity: 2D velocity vector [vx, vy], shape (2,)
 
-   .. py:attribute:: tau_v
-      :value: 50.0
+      :returns: Input to each neuron
+      :rtype: Array of shape (num,)
 
 
 
-   .. py:attribute:: v
+   .. py:method:: decode_position_from_activity(activity)
+
+      Decode position from neural activity using population vector method.
+
+      This method analyzes the activity bump to determine the network's
+      internal representation of position. Currently simplified.
+
+      :param activity: Neural activity, shape (num,)
+
+      :returns: Decoded 2D position, shape (2,)
+      :rtype: position
+
+
+
+   .. py:method:: decode_position_lsq(activity_history, velocity_history)
+
+      Decode position using velocity integration (simple method).
+
+      For proper position decoding from neural activity, a more sophisticated
+      method would fit the activity to spatial basis functions. For now,
+      we use velocity integration as ground truth and compute error metrics.
+
+      :param activity_history: Neural activity over time, shape (T, num)
+      :param velocity_history: Velocity over time, shape (T, 2)
+
+      :returns: Integrated positions, shape (T, 2)
+                r_squared: R² score (comparing integrated vs true positions if available)
+      :rtype: decoded_positions
+
+
+
+   .. py:method:: handle_periodic_condition(d)
+
+      Apply periodic boundary conditions to neuron position differences.
+
+      :param d: Position differences, shape (..., 2)
+
+      :returns: Wrapped differences with periodic boundaries
+
+
+
+   .. py:method:: heal_network(num_healing_steps=2500, dt_healing=0.0001)
+
+      Healing process to form stable activity bump before simulation (optimized).
+
+      This process is critical for proper initialization. It relaxes the network
+      to a stable attractor state through a sequence of movements:
+      1. Relax with zero velocity (T=0.25s)
+      2. Move in 4 cardinal directions (0°, 90°, 180°, 270°)
+      3. Relax again with zero velocity (T=0.25s)
+
+      :param num_healing_steps: Total number of healing steps. Default: 2500
+      :param dt_healing: Small timestep for healing integration. Default: 1e-4
+
+      .. note::
+
+         This temporarily changes the global timestep. The original timestep
+         is restored after healing. Uses bm.for_loop for efficient execution.
+
+
+
+   .. py:method:: make_connection()
+
+      Build asymmetric connectivity matrix with spatial shifts (vectorized).
+
+      The connectivity from neuron i to j depends on the distance between them,
+      shifted by neuron i's preferred velocity direction:
+          distance = |pos_j - pos_i - W_l * vec_pref_i|
+
+      This creates asymmetric connectivity that enables velocity-driven
+      bump shifts for path integration.
+
+      Connectivity kernel:
+          W_ij = W_a * (exp(-W_gamma * d²) - exp(-W_beta * d²))
+
+      .. note::
+
+         This implementation uses JAX broadcasting for efficient computation.
+         All pairwise distances are computed simultaneously, avoiding Python loops.
+         
+         If use_sparse=True, converts to brainevent.CSR sparse matrix format.
+         Sparse matrices reduce memory usage for large networks but may be slower
+         on CPU. They are primarily intended for GPU acceleration.
+
+      :returns: Dense array of shape (num, num), or brainevent.CSR if use_sparse=True
+
+
+
+   .. py:method:: track_blob_centers(activities, length)
+      :staticmethod:
+
+
+      Track blob centers using Gaussian filtering and thresholding.
+
+      This is the robust method from Burak & Fiete 2009 reference implementation
+      that achieves R² > 0.99 for path integration quality.
+
+      :param activities: Neural activities, shape (T, num)
+      :param length: Grid size (e.g., 40 for 40×40 grid)
+
+      :returns: Blob centers in neuron coordinates, shape (T, 2)
+      :rtype: centers
+
+      .. rubric:: Example
+
+      >>> activities = np.array([...])  # (T, 1600) for 40×40 grid
+      >>> centers = GridCell2DVelocity.track_blob_centers(activities, length=40)
+      >>> # centers.shape == (T, 2)
+
+
+
+   .. py:method:: update(velocity)
+
+      Single timestep update with velocity input.
+
+      Dynamics:
+          ds/dt = (1/tau) * [-s + W·r + B(v)]
+          r = ReLU(s) = max(s, 0)
+
+      :param velocity: 2D velocity [vx, vy], shape (2,)
+
+
+
+   .. py:attribute:: A
+      :value: 1.0
+
+
+
+   .. py:attribute:: W_a
+      :value: 1.5
+
+
+
+   .. py:attribute:: W_beta
+      :value: 0.013333333333333334
+
+
+
+   .. py:attribute:: W_gamma
+      :value: 0.015333333333333332
+
+
+
+   .. py:attribute:: W_l
+      :value: 2.0
+
+
+
+   .. py:attribute:: alpha
+      :value: 0.2
+
+
+
+   .. py:attribute:: center_position
+
+
+   .. py:attribute:: conn_mat
+
+
+   .. py:attribute:: e
+      :value: 1.15
+
+
+
+   .. py:attribute:: lambda_net
+      :value: 15.0
+
+
+
+   .. py:attribute:: length
+      :value: 40
+
+
+
+   .. py:attribute:: num
+      :value: 1600
+
+
+
+   .. py:attribute:: positions
+
+
+   .. py:attribute:: r
+
+
+   .. py:attribute:: s
+
+
+   .. py:attribute:: tau
+      :value: 0.01
+
+
+
+   .. py:attribute:: use_sparse
+      :value: False
+
+
+
+   .. py:attribute:: vec_pref
 
 
 .. py:class:: HierarchicalNetwork(num_module, num_place, spacing_min=2.0, spacing_max=5.0, module_angle=0.0, band_size=180, band_noise=0.0, band_w_L2S=0.2, band_w_S2L=1.0, band_gain=0.2, grid_num=20, grid_tau=0.1, grid_tau_v=10.0, grid_k=0.005, grid_a=bm.pi / 9, grid_A=1.0, grid_J0=1.0, grid_mbar=1.0, gauss_tau=1.0, gauss_J0=1.1, gauss_k=0.0005, gauss_a=2 / 9 * bm.pi, nonrec_tau=0.1)

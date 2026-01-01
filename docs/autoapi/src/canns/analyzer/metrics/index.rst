@@ -16,6 +16,7 @@ Submodules
    :maxdepth: 1
 
    /autoapi/src/canns/analyzer/metrics/spatial_metrics/index
+   /autoapi/src/canns/analyzer/metrics/systematic_ratemap/index
    /autoapi/src/canns/analyzer/metrics/utils/index
 
 
