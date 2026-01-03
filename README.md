@@ -6,7 +6,7 @@
 
 [<img src="https://badges.ws/badge/status-beta-yellow" />](https://github.com/routhleck/canns)
 ![PyPI - Python Version](https://img.shields.io/pypi/pyversions/canns)
-[<img src="https://badges.ws/maintenance/yes/2025" />](https://github.com/routhleck/canns)
+[<img src="https://badges.ws/maintenance/yes/2026" />](https://github.com/routhleck/canns)
 <picture><img src="https://badges.ws/github/release/routhleck/canns" /></picture>
 <picture><img src="https://badges.ws/github/license/routhleck/canns" /></picture>
 [![DOI](https://zenodo.org/badge/1001781809.svg)](https://doi.org/10.5281/zenodo.17412545)
