@@ -142,5 +142,7 @@ Module Contents
 
 
    .. py:attribute:: stored_patterns
+      :value: None
+
 
 

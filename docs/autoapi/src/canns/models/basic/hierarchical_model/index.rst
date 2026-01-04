@@ -495,10 +495,6 @@ Module Contents
 
    .. py:method:: update(input)
 
-      The function to specify the updating rule.
-
-
-
 
    .. py:attribute:: J
 
@@ -740,10 +736,6 @@ Module Contents
 
    .. py:method:: update(input)
 
-      The function to specify the updating rule.
-
-
-
 
    .. py:attribute:: A
       :value: 1.0
@@ -961,12 +953,6 @@ Module Contents
 
    .. py:method:: update(velocity, loc, loc_input_stre=0.0)
 
-      Step function of a network.
-
-      In this update function, the update functions in children systems are
-      iteratively called.
-
-
 
    .. py:attribute:: MEC_model_list
       :value: []
@@ -1157,12 +1143,6 @@ Module Contents
 
    .. py:method:: update(velocity, loc, loc_input_stre=0.0)
 
-      Step function of a network.
-
-      In this update function, the update functions in children systems are
-      iteratively called.
-
-
 
    .. py:attribute:: band_cell_x
 
@@ -1186,6 +1166,8 @@ Module Contents
 
 
    .. py:attribute:: place_center
+      :value: None
+
 
 
    .. py:attribute:: proj_k_x
@@ -1319,10 +1301,6 @@ Module Contents
 
 
    .. py:method:: update(input)
-
-      The function to specify the updating rule.
-
-
 
 
    .. py:attribute:: dx
