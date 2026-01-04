@@ -980,12 +980,6 @@ Package Contents
 
    .. py:method:: update(velocity, loc, loc_input_stre=0.0)
 
-      Step function of a network.
-
-      In this update function, the update functions in children systems are
-      iteratively called.
-
-
 
    .. py:attribute:: MEC_model_list
       :value: []
