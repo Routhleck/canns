@@ -33,14 +33,6 @@ Module Contents
    navigation tasks, including environment setup, agent initialization, and
    geodesic distance computation on discretized grids.
 
-   Initializes the Task instance.
-
-   :param data_class: A dataclass type for structured data.
-                      If provided, the task will use this
-                      class to structure the loaded or
-                      generated data.
-   :type data_class: type, optional
-
 
    .. py:method:: build_movement_cost_grid(*, refresh = False)
 
@@ -157,6 +149,8 @@ Module Contents
 
 
    .. py:attribute:: dt
+      :value: None
+
 
 
    .. py:attribute:: dx
