@@ -8,7 +8,7 @@ import numpy as np
 from matplotlib import pyplot as plt
 from matplotlib.colors import ListedColormap
 
-from .core.config import PlotConfig, PlotConfigs
+from .core.config import PlotConfig, PlotConfigs, finalize_figure
 
 __all__ = ["raster_plot", "average_firing_rate_plot", "population_activity_heatmap"]
 
@@ -95,6 +95,8 @@ def raster_plot(
         ax.set_xlabel(config.xlabel, fontsize=12)
         ax.set_ylabel(config.ylabel, fontsize=12)
 
+        raster_artists = None
+
         if config.mode == "scatter":
             time_indices, neuron_indices = np.where(spike_train)
             marker_size = config.kwargs.pop("marker_size", 1.0)
@@ -112,26 +114,23 @@ def raster_plot(
         else:
             data_to_show = spike_train.T
             cmap = config.kwargs.pop("cmap", ListedColormap(["white", config.color]))
-            ax.imshow(
+            im = ax.imshow(
                 data_to_show,
                 aspect="auto",
                 interpolation="none",
                 cmap=cmap,
                 **config.to_matplotlib_kwargs(),
             )
+            raster_artists = [im] if config.rasterized else None
             ax.set_yticks(np.arange(spike_train.shape[1]))
             ax.set_yticklabels(np.arange(spike_train.shape[1]))
             if spike_train.shape[1] > 20:
                 ax.yaxis.set_major_locator(plt.MaxNLocator(integer=True, nbins=10))
 
-        if config.save_path:
-            plt.savefig(config.save_path, dpi=300, bbox_inches="tight")
-            print(f"Plot saved to: {config.save_path}")
-
-        if config.show:
-            plt.show()
+        finalize_figure(fig, config, rasterize_artists=raster_artists)
     finally:
-        plt.close(fig)
+        if not config.show:
+            plt.close(fig)
 
     return fig, ax
 
@@ -229,15 +228,10 @@ def average_firing_rate_plot(
             )
 
         ax.grid(True, linestyle="--", alpha=0.6)
-
-        if config.save_path:
-            plt.savefig(config.save_path, dpi=300, bbox_inches="tight")
-            print(f"Plot saved to: {config.save_path}")
-
-        if config.show:
-            plt.show()
+        finalize_figure(fig, config)
     finally:
-        plt.close(fig)
+        if not config.show:
+            plt.close(fig)
 
     return fig, ax
 
@@ -346,14 +340,7 @@ def population_activity_heatmap(
 
         fig.tight_layout()
 
-        # Save and show
-        if config.save_path:
-            plt.savefig(config.save_path, dpi=300, bbox_inches="tight")
-            print(f"Plot saved to: {config.save_path}")
-
-        if config.show:
-            plt.show()
-
+        finalize_figure(fig, config, rasterize_artists=[im] if config.rasterized else None)
         return fig, ax
 
     except Exception as e:

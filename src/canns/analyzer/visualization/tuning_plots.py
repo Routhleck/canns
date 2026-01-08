@@ -9,7 +9,7 @@ import numpy as np
 from matplotlib import pyplot as plt
 from scipy.stats import binned_statistic
 
-from .core.config import PlotConfig, PlotConfigs
+from .core.config import PlotConfig, PlotConfigs, finalize_figure
 
 __all__ = ["tuning_curve"]
 
@@ -146,13 +146,9 @@ def tuning_curve(
         ax.grid(True, linestyle="--", alpha=0.6)
         fig.tight_layout()
 
-        if config.save_path:
-            plt.savefig(config.save_path, dpi=300)
-            print(f"Tuning curve saved to {config.save_path}")
-
-        if config.show:
-            plt.show()
+        finalize_figure(fig, config)
     finally:
-        plt.close(fig)
+        if not config.show:
+            plt.close(fig)
 
     return fig, ax

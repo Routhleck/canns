@@ -9,7 +9,7 @@ from matplotlib import animation
 from matplotlib import pyplot as plt
 from tqdm import tqdm
 
-from .core.config import PlotConfig, PlotConfigs
+from .core.config import PlotConfig, PlotConfigs, finalize_figure
 from .core.jupyter_utils import display_animation_in_jupyter, is_jupyter_environment
 
 __all__ = [
@@ -108,16 +108,11 @@ def energy_landscape_1d_static(
         if config.grid:
             ax.grid(True, linestyle="--", alpha=0.6)
 
-        if config.save_path:
-            plt.savefig(config.save_path, dpi=300, bbox_inches="tight")
-            print(f"Plot saved to: {config.save_path}")
-
-        if config.show:
-            plt.show()
+        finalize_figure(fig, config)
+        return fig, ax
     finally:
-        plt.close(fig)
-
-    return fig, ax
+        if not config.show:
+            plt.close(fig)
 
 
 def energy_landscape_1d_animation(
@@ -388,16 +383,11 @@ def energy_landscape_2d_static(
         if config.grid:
             ax.grid(True, linestyle="--", alpha=0.6)
 
-        if config.save_path:
-            plt.savefig(config.save_path, dpi=300, bbox_inches="tight")
-            print(f"Plot saved to: {config.save_path}")
-
-        if config.show:
-            plt.show()
+        finalize_figure(fig, config, rasterize_artists=[im] if config.rasterized else None)
+        return fig, ax
     finally:
-        plt.close(fig)
-
-    return fig, ax
+        if not config.show:
+            plt.close(fig)
 
 
 def energy_landscape_2d_animation(

@@ -12,7 +12,7 @@ backward compatibility and convenience.
 """
 
 from .animation import OptimizedAnimationBase
-from .config import AnimationConfig, PlotConfig, PlotConfigs
+from .config import AnimationConfig, PlotConfig, PlotConfigs, finalize_figure
 from .jupyter_utils import display_animation_in_jupyter, is_jupyter_environment
 from .rendering import ParallelAnimationRenderer
 from .writers import (
@@ -29,6 +29,7 @@ __all__ = [
     "PlotConfig",
     "AnimationConfig",
     "PlotConfigs",
+    "finalize_figure",
     # Animation framework
     "OptimizedAnimationBase",
     # Rendering

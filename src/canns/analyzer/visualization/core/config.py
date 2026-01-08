@@ -5,7 +5,7 @@ from typing import Any
 
 import numpy as np
 
-__all__ = ["PlotConfig", "PlotConfigs", "AnimationConfig"]
+__all__ = ["PlotConfig", "PlotConfigs", "AnimationConfig", "finalize_figure"]
 
 
 @dataclass
@@ -37,6 +37,11 @@ class PlotConfig:
     clabel: str = "Value"
 
     kwargs: dict[str, Any] | None = None
+    savefig_kwargs: dict[str, Any] | None = None
+    rasterized: bool | None = None
+    save_dpi: int = 300
+    save_bbox_inches: str | None = "tight"
+    save_format: str | None = None
 
     def __post_init__(self) -> None:
         if self.kwargs is None:
@@ -59,7 +64,68 @@ class PlotConfig:
     def to_matplotlib_kwargs(self) -> dict[str, Any]:
         """Materialize matplotlib keyword arguments from the config."""
 
-        return self.kwargs.copy() if self.kwargs else {}
+        kwargs = self.kwargs.copy() if self.kwargs else {}
+        if self.rasterized is not None and "rasterized" not in kwargs:
+            kwargs["rasterized"] = self.rasterized
+        return kwargs
+
+    def to_savefig_kwargs(self) -> dict[str, Any]:
+        """Return keyword arguments for ``matplotlib.pyplot.savefig``."""
+
+        savefig_kwargs: dict[str, Any] = {}
+        if self.savefig_kwargs:
+            savefig_kwargs.update(self.savefig_kwargs)
+
+        savefig_kwargs.setdefault("dpi", self.save_dpi)
+        if self.save_bbox_inches is not None:
+            savefig_kwargs.setdefault("bbox_inches", self.save_bbox_inches)
+        if self.save_format is not None:
+            savefig_kwargs.setdefault("format", self.save_format)
+        return savefig_kwargs
+
+
+def finalize_figure(
+    fig,
+    config: PlotConfig,
+    *,
+    rasterize_artists: list[Any] | None = None,
+    savefig_kwargs: dict[str, Any] | None = None,
+    always_close: bool = False,
+):
+    """Centralized save/show/close helper for plot functions.
+
+    Args:
+        fig: Matplotlib Figure to finalize.
+        config: PlotConfig carrying show/save options.
+        rasterize_artists: Optional list of artists to rasterize before saving.
+        savefig_kwargs: Extra kwargs merged into ``savefig`` (wins over config).
+        always_close: If True, close the figure even when ``config.show`` is True.
+    """
+
+    from matplotlib import pyplot as plt
+
+    if rasterize_artists:
+        for artist in rasterize_artists:
+            try:
+                artist.set_rasterized(True)
+            except Exception:
+                # Best-effort; ignore artists without rasterized attribute
+                pass
+
+    if config.save_path:
+        merged_kwargs = config.to_savefig_kwargs()
+        if savefig_kwargs:
+            merged_kwargs.update(savefig_kwargs)
+        fig.savefig(config.save_path, **merged_kwargs)
+        print(f"Plot saved to: {config.save_path}")
+
+    if config.show:
+        plt.show()
+
+    if always_close or not config.show:
+        plt.close(fig)
+
+    return fig
 
 
 @dataclass
