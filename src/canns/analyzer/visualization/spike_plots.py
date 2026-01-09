@@ -300,41 +300,36 @@ def population_activity_heatmap(
 
     fig, ax = plt.subplots(figsize=config.figsize)
 
-    try:
-        # Create time axis
-        time_axis = np.arange(num_timesteps) * dt
+    # Create time axis
+    time_axis = np.arange(num_timesteps) * dt
 
-        # Transpose for proper visualization (neurons × time)
-        activity_transposed = activity_data.T
+    # Transpose for proper visualization (neurons × time)
+    activity_transposed = activity_data.T
 
-        # Extract cmap from kwargs for imshow
-        plot_kwargs = config.to_matplotlib_kwargs()
-        cmap_name = plot_kwargs.pop("cmap", cmap)
+    # Extract cmap from kwargs for imshow
+    plot_kwargs = config.to_matplotlib_kwargs()
+    cmap_name = plot_kwargs.pop("cmap", cmap)
 
-        # Plot heatmap
-        im = ax.imshow(
-            activity_transposed,
-            aspect="auto",
-            extent=[time_axis[0], time_axis[-1], 0, num_neurons],
-            origin="lower",
-            cmap=cmap_name,
-            **plot_kwargs,
-        )
+    # Plot heatmap
+    im = ax.imshow(
+        activity_transposed,
+        aspect="auto",
+        extent=[time_axis[0], time_axis[-1], 0, num_neurons],
+        origin="lower",
+        cmap=cmap_name,
+        **plot_kwargs,
+    )
 
-        # Configure axes
-        ax.set_title(config.title, fontsize=16, fontweight="bold")
-        ax.set_xlabel(config.xlabel, fontsize=12)
-        ax.set_ylabel(config.ylabel, fontsize=12)
+    # Configure axes
+    ax.set_title(config.title, fontsize=16, fontweight="bold")
+    ax.set_xlabel(config.xlabel, fontsize=12)
+    ax.set_ylabel(config.ylabel, fontsize=12)
 
-        # Add colorbar
-        cbar = fig.colorbar(im, ax=ax)
-        cbar.set_label("Activity", fontsize=10)
+    # Add colorbar
+    cbar = fig.colorbar(im, ax=ax)
+    cbar.set_label("Activity", fontsize=10)
 
-        fig.tight_layout()
+    fig.tight_layout()
 
-        finalize_figure(fig, config, rasterize_artists=[im] if config.rasterized else None)
-        return fig, ax
-
-    except Exception as e:
-        plt.close(fig)
-        raise e
+    finalize_figure(fig, config, rasterize_artists=[im] if config.rasterized else None)
+    return fig, ax
