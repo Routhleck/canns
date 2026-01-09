@@ -1,9 +1,12 @@
 """Reusable plotting configuration utilities for analyzer visualizations."""
 
+import logging
 from dataclasses import dataclass
 from typing import Any
 
 import numpy as np
+
+_logger = logging.getLogger(__name__)
 
 __all__ = ["PlotConfig", "PlotConfigs", "AnimationConfig", "finalize_figure"]
 
@@ -42,6 +45,7 @@ class PlotConfig:
     save_dpi: int = 300
     save_bbox_inches: str | None = "tight"
     save_format: str | None = None
+    verbose: bool = False
 
     def __post_init__(self) -> None:
         if self.kwargs is None:
@@ -108,8 +112,8 @@ def finalize_figure(
         for artist in rasterize_artists:
             try:
                 artist.set_rasterized(True)
-            except Exception:
-                # Best-effort; ignore artists without rasterized attribute
+            except (AttributeError, TypeError):
+                # Best-effort; ignore artists that do not expose set_rasterized
                 pass
 
     if config.save_path:
@@ -117,7 +121,8 @@ def finalize_figure(
         if savefig_kwargs:
             merged_kwargs.update(savefig_kwargs)
         fig.savefig(config.save_path, **merged_kwargs)
-        print(f"Plot saved to: {config.save_path}")
+        if getattr(config, "verbose", False):
+            _logger.info("Plot saved to: %s", config.save_path)
 
     if config.show:
         plt.show()

@@ -90,47 +90,43 @@ def raster_plot(
 
     fig, ax = plt.subplots(figsize=config.figsize)
 
-    try:
-        ax.set_title(config.title, fontsize=16, fontweight="bold")
-        ax.set_xlabel(config.xlabel, fontsize=12)
-        ax.set_ylabel(config.ylabel, fontsize=12)
+    ax.set_title(config.title, fontsize=16, fontweight="bold")
+    ax.set_xlabel(config.xlabel, fontsize=12)
+    ax.set_ylabel(config.ylabel, fontsize=12)
 
-        raster_artists = None
+    raster_artists = None
 
-        if config.mode == "scatter":
-            time_indices, neuron_indices = np.where(spike_train)
-            marker_size = config.kwargs.pop("marker_size", 1.0)
-            ax.scatter(
-                time_indices,
-                neuron_indices,
-                s=marker_size,
-                c=config.color,
-                marker="|",
-                alpha=0.8,
-                **config.to_matplotlib_kwargs(),
-            )
-            ax.set_xlim(0, spike_train.shape[0])
-            ax.set_ylim(-1, spike_train.shape[1])
-        else:
-            data_to_show = spike_train.T
-            cmap = config.kwargs.pop("cmap", ListedColormap(["white", config.color]))
-            im = ax.imshow(
-                data_to_show,
-                aspect="auto",
-                interpolation="none",
-                cmap=cmap,
-                **config.to_matplotlib_kwargs(),
-            )
-            raster_artists = [im] if config.rasterized else None
-            ax.set_yticks(np.arange(spike_train.shape[1]))
-            ax.set_yticklabels(np.arange(spike_train.shape[1]))
-            if spike_train.shape[1] > 20:
-                ax.yaxis.set_major_locator(plt.MaxNLocator(integer=True, nbins=10))
+    if config.mode == "scatter":
+        time_indices, neuron_indices = np.where(spike_train)
+        marker_size = config.kwargs.pop("marker_size", 1.0)
+        ax.scatter(
+            time_indices,
+            neuron_indices,
+            s=marker_size,
+            c=config.color,
+            marker="|",
+            alpha=0.8,
+            **config.to_matplotlib_kwargs(),
+        )
+        ax.set_xlim(0, spike_train.shape[0])
+        ax.set_ylim(-1, spike_train.shape[1])
+    else:
+        data_to_show = spike_train.T
+        cmap = config.kwargs.pop("cmap", ListedColormap(["white", config.color]))
+        im = ax.imshow(
+            data_to_show,
+            aspect="auto",
+            interpolation="none",
+            cmap=cmap,
+            **config.to_matplotlib_kwargs(),
+        )
+        raster_artists = [im] if config.rasterized else None
+        ax.set_yticks(np.arange(spike_train.shape[1]))
+        ax.set_yticklabels(np.arange(spike_train.shape[1]))
+        if spike_train.shape[1] > 20:
+            ax.yaxis.set_major_locator(plt.MaxNLocator(integer=True, nbins=10))
 
-        finalize_figure(fig, config, rasterize_artists=raster_artists)
-    finally:
-        if not config.show:
-            plt.close(fig)
+    finalize_figure(fig, config, rasterize_artists=raster_artists)
 
     return fig, ax
 
@@ -183,55 +179,51 @@ def average_firing_rate_plot(
 
     fig, ax = plt.subplots(figsize=config.figsize)
 
-    try:
-        num_timesteps, num_neurons = spike_train.shape
-        ax.set_title(config.title, fontsize=16, fontweight="bold")
+    num_timesteps, num_neurons = spike_train.shape
+    ax.set_title(config.title, fontsize=16, fontweight="bold")
 
-        if config.mode == "per_neuron":
-            duration_s = num_timesteps * dt
-            total_spikes_per_neuron = np.sum(spike_train, axis=0)
-            calculated_data = total_spikes_per_neuron / duration_s
-            ax.plot(np.arange(num_neurons), calculated_data, **config.to_matplotlib_kwargs())
-            ax.set_xlabel("Neuron Index", fontsize=12)
-            ax.set_ylabel("Average Firing Rate (Hz)", fontsize=12)
-            ax.set_xlim(0, num_neurons - 1)
+    if config.mode == "per_neuron":
+        duration_s = num_timesteps * dt
+        total_spikes_per_neuron = np.sum(spike_train, axis=0)
+        calculated_data = total_spikes_per_neuron / duration_s
+        ax.plot(np.arange(num_neurons), calculated_data, **config.to_matplotlib_kwargs())
+        ax.set_xlabel("Neuron Index", fontsize=12)
+        ax.set_ylabel("Average Firing Rate (Hz)", fontsize=12)
+        ax.set_xlim(0, num_neurons - 1)
 
-        elif config.mode == "population":
-            spikes_per_timestep = np.sum(spike_train, axis=1)
-            calculated_data = spikes_per_timestep / dt
-            time_vector = np.arange(num_timesteps) * dt
-            ax.plot(time_vector, calculated_data, **config.to_matplotlib_kwargs())
-            ax.set_xlabel("Time (s)", fontsize=12)
-            ax.set_ylabel("Total Population Rate (Hz)", fontsize=12)
-            ax.set_xlim(0, time_vector[-1])
+    elif config.mode == "population":
+        spikes_per_timestep = np.sum(spike_train, axis=1)
+        calculated_data = spikes_per_timestep / dt
+        time_vector = np.arange(num_timesteps) * dt
+        ax.plot(time_vector, calculated_data, **config.to_matplotlib_kwargs())
+        ax.set_xlabel("Time (s)", fontsize=12)
+        ax.set_ylabel("Total Population Rate (Hz)", fontsize=12)
+        ax.set_xlim(0, time_vector[-1])
 
-        elif config.mode == "weighted_average":
-            if weights is None:
-                raise ValueError("'weights' argument is required for 'weighted_average' mode.")
-            if weights.shape != (num_neurons,):
-                raise ValueError(
-                    f"Shape of 'weights' {weights.shape} must match num_neurons ({num_neurons})."
-                )
-
-            total_spikes_per_timestep = np.sum(spike_train, axis=1)
-            weighted_sum_of_spikes = np.sum(spike_train * weights, axis=1)
-            calculated_data = weighted_sum_of_spikes / (total_spikes_per_timestep + 1e-9)
-            calculated_data[total_spikes_per_timestep == 0] = np.nan
-            time_vector = np.arange(num_timesteps) * dt
-            ax.plot(time_vector, calculated_data, **config.to_matplotlib_kwargs())
-            ax.set_xlabel("Time (s)", fontsize=12)
-            ax.set_ylabel("Decoded Value (Weighted Average)", fontsize=12)
-            ax.set_xlim(0, time_vector[-1])
-        else:
+    elif config.mode == "weighted_average":
+        if weights is None:
+            raise ValueError("'weights' argument is required for 'weighted_average' mode.")
+        if weights.shape != (num_neurons,):
             raise ValueError(
-                f"Invalid mode '{config.mode}'. Choose 'per_neuron', 'population', or 'weighted_average'."
+                f"Shape of 'weights' {weights.shape} must match num_neurons ({num_neurons})."
             )
 
-        ax.grid(True, linestyle="--", alpha=0.6)
-        finalize_figure(fig, config)
-    finally:
-        if not config.show:
-            plt.close(fig)
+        total_spikes_per_timestep = np.sum(spike_train, axis=1)
+        weighted_sum_of_spikes = np.sum(spike_train * weights, axis=1)
+        calculated_data = weighted_sum_of_spikes / (total_spikes_per_timestep + 1e-9)
+        calculated_data[total_spikes_per_timestep == 0] = np.nan
+        time_vector = np.arange(num_timesteps) * dt
+        ax.plot(time_vector, calculated_data, **config.to_matplotlib_kwargs())
+        ax.set_xlabel("Time (s)", fontsize=12)
+        ax.set_ylabel("Decoded Value (Weighted Average)", fontsize=12)
+        ax.set_xlim(0, time_vector[-1])
+    else:
+        raise ValueError(
+            f"Invalid mode '{config.mode}'. Choose 'per_neuron', 'population', or 'weighted_average'."
+        )
+
+    ax.grid(True, linestyle="--", alpha=0.6)
+    finalize_figure(fig, config)
 
     return fig, ax
 
