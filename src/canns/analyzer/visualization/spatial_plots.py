@@ -106,32 +106,27 @@ def plot_firing_field_heatmap(
     # Create figure and axis
     fig, ax = plt.subplots(figsize=config.figsize)
 
-    try:
-        # Extract plotting parameters
-        plot_kwargs = config.to_matplotlib_kwargs()
-        if "cmap" not in plot_kwargs:
-            plot_kwargs["cmap"] = cmap
-        if "interpolation" not in plot_kwargs:
-            plot_kwargs["interpolation"] = interpolation
-        if "origin" not in plot_kwargs:
-            plot_kwargs["origin"] = origin
+    # Extract plotting parameters
+    plot_kwargs = config.to_matplotlib_kwargs()
+    if "cmap" not in plot_kwargs:
+        plot_kwargs["cmap"] = cmap
+    if "interpolation" not in plot_kwargs:
+        plot_kwargs["interpolation"] = interpolation
+    if "origin" not in plot_kwargs:
+        plot_kwargs["origin"] = origin
 
-        # Plot heatmap
-        im = ax.imshow(heatmap.T, **plot_kwargs)
+    # Plot heatmap
+    im = ax.imshow(heatmap.T, **plot_kwargs)
 
-        # Remove ticks for cleaner appearance
-        ax.set_xticks([])
-        ax.set_yticks([])
+    # Remove ticks for cleaner appearance
+    ax.set_xticks([])
+    ax.set_yticks([])
 
-        # Tight layout for better appearance
-        fig.tight_layout()
+    # Tight layout for better appearance
+    fig.tight_layout()
 
-        finalize_figure(fig, config, rasterize_artists=[im] if config.rasterized else None)
-        return fig, ax
-
-    except Exception as e:
-        plt.close(fig)
-        raise e
+    finalize_figure(fig, config, rasterize_artists=[im] if config.rasterized else None)
+    return fig, ax
 
 
 def plot_autocorrelation(
@@ -196,41 +191,36 @@ def plot_autocorrelation(
 
     fig, ax = plt.subplots(figsize=config.figsize)
 
-    try:
-        # Get plot kwargs with defaults
-        plot_kwargs = config.to_matplotlib_kwargs()
-        if "cmap" not in plot_kwargs:
-            plot_kwargs["cmap"] = "RdBu_r"
-        if "vmin" not in plot_kwargs:
-            plot_kwargs["vmin"] = -1
-        if "vmax" not in plot_kwargs:
-            plot_kwargs["vmax"] = 1
+    # Get plot kwargs with defaults
+    plot_kwargs = config.to_matplotlib_kwargs()
+    if "cmap" not in plot_kwargs:
+        plot_kwargs["cmap"] = "RdBu_r"
+    if "vmin" not in plot_kwargs:
+        plot_kwargs["vmin"] = -1
+    if "vmax" not in plot_kwargs:
+        plot_kwargs["vmax"] = 1
 
-        # Plot autocorrelation
-        im = ax.imshow(autocorr, origin="lower", aspect="equal", **plot_kwargs)
+    # Plot autocorrelation
+    im = ax.imshow(autocorr, origin="lower", aspect="equal", **plot_kwargs)
 
-        # Add colorbar
-        cbar = plt.colorbar(im, ax=ax)
-        cbar.set_label("Correlation", fontsize=10)
+    # Add colorbar
+    cbar = plt.colorbar(im, ax=ax)
+    cbar.set_label("Correlation", fontsize=10)
 
-        # Set labels and title
-        ax.set_title(config.title, fontsize=14, fontweight="bold")
-        ax.set_xlabel(config.xlabel, fontsize=11)
-        ax.set_ylabel(config.ylabel, fontsize=11)
+    # Set labels and title
+    ax.set_title(config.title, fontsize=14, fontweight="bold")
+    ax.set_xlabel(config.xlabel, fontsize=11)
+    ax.set_ylabel(config.ylabel, fontsize=11)
 
-        # Center at (0, 0)
-        center = np.array(autocorr.shape) // 2
-        ax.axhline(center[0], color="gray", linestyle="--", linewidth=0.5, alpha=0.5)
-        ax.axvline(center[1], color="gray", linestyle="--", linewidth=0.5, alpha=0.5)
+    # Center at (0, 0)
+    center = np.array(autocorr.shape) // 2
+    ax.axhline(center[0], color="gray", linestyle="--", linewidth=0.5, alpha=0.5)
+    ax.axvline(center[1], color="gray", linestyle="--", linewidth=0.5, alpha=0.5)
 
-        fig.tight_layout()
+    fig.tight_layout()
 
-        finalize_figure(fig, config, rasterize_artists=[im] if config.rasterized else None)
-        return fig, ax
-
-    except Exception as e:
-        plt.close(fig)
-        raise e
+    finalize_figure(fig, config, rasterize_artists=[im] if config.rasterized else None)
+    return fig, ax
 
 
 def plot_grid_score(
@@ -293,63 +283,58 @@ def plot_grid_score(
 
     fig, ax = plt.subplots(figsize=config.figsize)
 
-    try:
-        angles = [30, 60, 90, 120, 150]
-        correlations = [rotated_corrs[angle] for angle in angles]
+    angles = [30, 60, 90, 120, 150]
+    correlations = [rotated_corrs[angle] for angle in angles]
 
-        # Color bars: red for hexagonal angles (60, 120), blue for others
-        colors = ["steelblue" if angle not in [60, 120] else "crimson" for angle in angles]
+    # Color bars: red for hexagonal angles (60, 120), blue for others
+    colors = ["steelblue" if angle not in [60, 120] else "crimson" for angle in angles]
 
-        # Create bar chart
-        ax.bar(angles, correlations, color=colors, alpha=0.7, edgecolor="black", linewidth=1.2)
+    # Create bar chart
+    ax.bar(angles, correlations, color=colors, alpha=0.7, edgecolor="black", linewidth=1.2)
 
-        # Add horizontal line at y=0
-        ax.axhline(0, color="black", linestyle="-", linewidth=0.8)
+    # Add horizontal line at y=0
+    ax.axhline(0, color="black", linestyle="-", linewidth=0.8)
 
-        # Set labels and title with grid score
-        ax.set_title(
-            f"{config.title}\nGrid Score = {grid_score:.3f}", fontsize=14, fontweight="bold"
+    # Set labels and title with grid score
+    ax.set_title(
+        f"{config.title}\nGrid Score = {grid_score:.3f}", fontsize=14, fontweight="bold"
+    )
+    ax.set_xlabel(config.xlabel, fontsize=12)
+    ax.set_ylabel(config.ylabel, fontsize=12)
+    ax.set_xticks(angles)
+
+    # Add grid if requested
+    if config.grid:
+        ax.grid(True, linestyle="--", alpha=0.4, axis="y")
+
+    # Add text annotation if grid cell confirmed
+    if grid_score > 0.3:
+        ax.text(
+            0.5,
+            0.95,
+            "Grid Cell Confirmed (score > 0.3)",
+            transform=ax.transAxes,
+            fontsize=11,
+            color="green",
+            fontweight="bold",
+            ha="center",
+            va="top",
+            bbox=dict(boxstyle="round,pad=0.5", facecolor="lightgreen", alpha=0.3),
         )
-        ax.set_xlabel(config.xlabel, fontsize=12)
-        ax.set_ylabel(config.ylabel, fontsize=12)
-        ax.set_xticks(angles)
 
-        # Add grid if requested
-        if config.grid:
-            ax.grid(True, linestyle="--", alpha=0.4, axis="y")
+    # Add legend
+    from matplotlib.patches import Patch
 
-        # Add text annotation if grid cell confirmed
-        if grid_score > 0.3:
-            ax.text(
-                0.5,
-                0.95,
-                "Grid Cell Confirmed (score > 0.3)",
-                transform=ax.transAxes,
-                fontsize=11,
-                color="green",
-                fontweight="bold",
-                ha="center",
-                va="top",
-                bbox=dict(boxstyle="round,pad=0.5", facecolor="lightgreen", alpha=0.3),
-            )
+    legend_elements = [
+        Patch(facecolor="crimson", alpha=0.7, label="Hexagonal (60°, 120°)"),
+        Patch(facecolor="steelblue", alpha=0.7, label="Non-hexagonal (30°, 90°, 150°)"),
+    ]
+    ax.legend(handles=legend_elements, loc="upper right", fontsize=9)
 
-        # Add legend
-        from matplotlib.patches import Patch
+    fig.tight_layout()
 
-        legend_elements = [
-            Patch(facecolor="crimson", alpha=0.7, label="Hexagonal (60°, 120°)"),
-            Patch(facecolor="steelblue", alpha=0.7, label="Non-hexagonal (30°, 90°, 150°)"),
-        ]
-        ax.legend(handles=legend_elements, loc="upper right", fontsize=9)
-
-        fig.tight_layout()
-
-        finalize_figure(fig, config)
-        return fig, ax
-
-    except Exception as e:
-        plt.close(fig)
-        raise e
+    finalize_figure(fig, config)
+    return fig, ax
 
 
 def plot_grid_spacing_analysis(
@@ -413,70 +398,65 @@ def plot_grid_spacing_analysis(
 
     fig, ax = plt.subplots(figsize=config.figsize)
 
-    try:
-        # Compute radial average
-        center = np.array(autocorr.shape) // 2
-        y, x = np.ogrid[: autocorr.shape[0], : autocorr.shape[1]]
-        r = np.sqrt((x - center[1]) ** 2 + (y - center[0]) ** 2)
+    # Compute radial average
+    center = np.array(autocorr.shape) // 2
+    y, x = np.ogrid[: autocorr.shape[0], : autocorr.shape[1]]
+    r = np.sqrt((x - center[1]) ** 2 + (y - center[0]) ** 2)
 
-        # Bin by distance
-        max_dist = int(min(center))
-        radial_profile = []
-        distances = []
+    # Bin by distance
+    max_dist = int(min(center))
+    radial_profile = []
+    distances = []
 
-        for dist in range(max_dist):
-            mask = (r >= dist) & (r < dist + 1)
-            if np.any(mask):
-                radial_profile.append(np.mean(autocorr[mask]))
-                distances.append(dist)
+    for dist in range(max_dist):
+        mask = (r >= dist) & (r < dist + 1)
+        if np.any(mask):
+            radial_profile.append(np.mean(autocorr[mask]))
+            distances.append(dist)
 
-        # Plot radial profile
-        ax.plot(distances, radial_profile, linewidth=2, color="steelblue", label="Radial Average")
+    # Plot radial profile
+    ax.plot(distances, radial_profile, linewidth=2, color="steelblue", label="Radial Average")
 
-        # Mark detected spacing
+    # Mark detected spacing
+    ax.axvline(
+        spacing_bins,
+        color="crimson",
+        linestyle="--",
+        linewidth=2,
+        label=f"Detected Spacing: {spacing_bins:.1f} bins",
+    )
+
+    # If bin_size provided, add secondary x-axis
+    if bin_size is not None:
+        spacing_real = spacing_bins * bin_size
+        ax2 = ax.twiny()
+        ax2.set_xlim(np.array(ax.get_xlim()) * bin_size)
+        ax2.set_xlabel("Distance (m)", fontsize=11, color="gray")
+        ax2.tick_params(axis="x", labelcolor="gray")
+
+        # Update legend with real units
         ax.axvline(
             spacing_bins,
             color="crimson",
             linestyle="--",
             linewidth=2,
-            label=f"Detected Spacing: {spacing_bins:.1f} bins",
+            label=f"Detected Spacing: {spacing_bins:.1f} bins = {spacing_real:.3f}m",
         )
 
-        # If bin_size provided, add secondary x-axis
-        if bin_size is not None:
-            spacing_real = spacing_bins * bin_size
-            ax2 = ax.twiny()
-            ax2.set_xlim(np.array(ax.get_xlim()) * bin_size)
-            ax2.set_xlabel("Distance (m)", fontsize=11, color="gray")
-            ax2.tick_params(axis="x", labelcolor="gray")
+    # Set labels and title
+    ax.set_title(config.title, fontsize=14, fontweight="bold")
+    ax.set_xlabel(config.xlabel, fontsize=12)
+    ax.set_ylabel(config.ylabel, fontsize=12)
 
-            # Update legend with real units
-            ax.axvline(
-                spacing_bins,
-                color="crimson",
-                linestyle="--",
-                linewidth=2,
-                label=f"Detected Spacing: {spacing_bins:.1f} bins = {spacing_real:.3f}m",
-            )
+    # Add grid and legend
+    if config.grid:
+        ax.grid(True, linestyle="--", alpha=0.4)
+    ax.legend(loc="upper right", fontsize=10)
 
-        # Set labels and title
-        ax.set_title(config.title, fontsize=14, fontweight="bold")
-        ax.set_xlabel(config.xlabel, fontsize=12)
-        ax.set_ylabel(config.ylabel, fontsize=12)
+    fig.tight_layout()
 
-        # Add grid and legend
-        if config.grid:
-            ax.grid(True, linestyle="--", alpha=0.4)
-        ax.legend(loc="upper right", fontsize=10)
-
-        fig.tight_layout()
-
-        finalize_figure(fig, config)
-        return fig, ax
-
-    except Exception as e:
-        plt.close(fig)
-        raise e
+    finalize_figure(fig, config)
+    return fig, ax
 
 
 def create_grid_cell_tracking_animation(
