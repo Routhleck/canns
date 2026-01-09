@@ -8,6 +8,7 @@ from .core import (
     ParallelAnimationRenderer,
     PlotConfig,
     PlotConfigs,
+    finalize_figure,
     create_optimized_writer,
     display_animation_in_jupyter,
     get_recommended_format,
@@ -41,6 +42,7 @@ __all__ = [
     # Core components (re-exported)
     "PlotConfig",
     "PlotConfigs",
+    "finalize_figure",
     "AnimationConfig",
     "OptimizedAnimationBase",
     "ParallelAnimationRenderer",
