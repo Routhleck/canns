@@ -12,7 +12,7 @@ import sys
 import warnings
 from collections.abc import Iterable
 from concurrent.futures import ProcessPoolExecutor
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 
 import matplotlib.patheffects as mpatheffects
 import numpy as np
@@ -22,7 +22,7 @@ from matplotlib.animation import FuncAnimation
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 from tqdm import tqdm
 
-from .core.config import PlotConfig
+from .core.config import PlotConfig, finalize_figure
 from .core.jupyter_utils import display_animation_in_jupyter, is_jupyter_environment
 
 
@@ -523,14 +523,7 @@ def plot_population_activity_with_theta(
         cbar = fig.colorbar(im, ax=ax)
         cbar.set_label("Activity (%)", fontsize=12)
 
-        # Save and show
-        if config.save_path:
-            plt.savefig(config.save_path, dpi=300, bbox_inches="tight")
-            print(f"Plot saved to: {config.save_path}")
-
-        if config.show:
-            plt.show()
-
+        finalize_figure(fig, config, rasterize_artists=[im] if config.rasterized else None)
         return fig, ax
 
     except Exception as e:
@@ -589,14 +582,7 @@ def plot_direction_cell_polar(
         ax.set_xticklabels(["0°", "90°", "180°", "270°"])
         ax.set_title(config.title, fontsize=14, fontweight="bold", pad=20)
 
-        # Save and show
-        if config.save_path:
-            plt.savefig(config.save_path, dpi=300, bbox_inches="tight")
-            print(f"Plot saved to: {config.save_path}")
-
-        if config.show:
-            plt.show()
-
+        finalize_figure(fig, config)
         return fig, ax
 
     except Exception as e:
@@ -691,14 +677,13 @@ def plot_grid_cell_manifold(
         if not axis_provided:
             fig.tight_layout()
 
-        # Save and show
-        if config.save_path:
-            plt.savefig(config.save_path, dpi=300, bbox_inches="tight")
-            print(f"Plot saved to: {config.save_path}")
-
-        if config.show and not axis_provided:
-            plt.show()
-
+        show_flag = config.show and not axis_provided
+        finalize_figure(
+            fig,
+            replace(config, show=show_flag),
+            rasterize_artists=[scatter] if config.rasterized else None,
+            always_close=not show_flag,
+        )
         return fig, ax
 
     except Exception as e:

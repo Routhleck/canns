@@ -15,7 +15,7 @@ from matplotlib import animation
 from matplotlib import pyplot as plt
 from tqdm import tqdm
 
-from .core.config import PlotConfig, PlotConfigs
+from .core.config import PlotConfig, PlotConfigs, finalize_figure
 from .core.jupyter_utils import display_animation_in_jupyter, is_jupyter_environment
 
 __all__ = [
@@ -117,7 +117,7 @@ def plot_firing_field_heatmap(
             plot_kwargs["origin"] = origin
 
         # Plot heatmap
-        ax.imshow(heatmap.T, **plot_kwargs)
+        im = ax.imshow(heatmap.T, **plot_kwargs)
 
         # Remove ticks for cleaner appearance
         ax.set_xticks([])
@@ -126,17 +126,7 @@ def plot_firing_field_heatmap(
         # Tight layout for better appearance
         fig.tight_layout()
 
-        # Save if path provided
-        if config.save_path:
-            plt.savefig(config.save_path, bbox_inches="tight")
-
-        # Show if requested
-        if config.show:
-            plt.show()
-        else:
-            # Close figure to avoid memory accumulation when batch saving
-            plt.close(fig)
-
+        finalize_figure(fig, config, rasterize_artists=[im] if config.rasterized else None)
         return fig, ax
 
     except Exception as e:
@@ -235,15 +225,7 @@ def plot_autocorrelation(
 
         fig.tight_layout()
 
-        if config.save_path:
-            plt.savefig(config.save_path, dpi=300, bbox_inches="tight")
-            print(f"Plot saved to: {config.save_path}")
-
-        if config.show:
-            plt.show()
-        else:
-            plt.close(fig)
-
+        finalize_figure(fig, config, rasterize_artists=[im] if config.rasterized else None)
         return fig, ax
 
     except Exception as e:
@@ -362,15 +344,7 @@ def plot_grid_score(
 
         fig.tight_layout()
 
-        if config.save_path:
-            plt.savefig(config.save_path, dpi=300, bbox_inches="tight")
-            print(f"Plot saved to: {config.save_path}")
-
-        if config.show:
-            plt.show()
-        else:
-            plt.close(fig)
-
+        finalize_figure(fig, config)
         return fig, ax
 
     except Exception as e:
@@ -497,15 +471,7 @@ def plot_grid_spacing_analysis(
 
         fig.tight_layout()
 
-        if config.save_path:
-            plt.savefig(config.save_path, dpi=300, bbox_inches="tight")
-            print(f"Plot saved to: {config.save_path}")
-
-        if config.show:
-            plt.show()
-        else:
-            plt.close(fig)
-
+        finalize_figure(fig, config)
         return fig, ax
 
     except Exception as e:

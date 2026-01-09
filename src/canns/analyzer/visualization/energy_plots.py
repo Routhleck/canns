@@ -9,7 +9,7 @@ from matplotlib import animation
 from matplotlib import pyplot as plt
 from tqdm import tqdm
 
-from .core.config import PlotConfig, PlotConfigs
+from .core.config import PlotConfig, PlotConfigs, finalize_figure
 from .core.jupyter_utils import display_animation_in_jupyter, is_jupyter_environment
 
 __all__ = [
@@ -95,28 +95,19 @@ def energy_landscape_1d_static(
 
     fig, ax = plt.subplots(figsize=config.figsize)
 
-    try:
-        for label, (x_data, y_data) in data_sets.items():
-            ax.plot(x_data, y_data, label=label, **config.to_matplotlib_kwargs())
+    for label, (x_data, y_data) in data_sets.items():
+        ax.plot(x_data, y_data, label=label, **config.to_matplotlib_kwargs())
 
-        ax.set_title(config.title, fontsize=16, fontweight="bold")
-        ax.set_xlabel(config.xlabel, fontsize=12)
-        ax.set_ylabel(config.ylabel, fontsize=12)
+    ax.set_title(config.title, fontsize=16, fontweight="bold")
+    ax.set_xlabel(config.xlabel, fontsize=12)
+    ax.set_ylabel(config.ylabel, fontsize=12)
 
-        if config.show_legend:
-            ax.legend()
-        if config.grid:
-            ax.grid(True, linestyle="--", alpha=0.6)
+    if config.show_legend:
+        ax.legend()
+    if config.grid:
+        ax.grid(True, linestyle="--", alpha=0.6)
 
-        if config.save_path:
-            plt.savefig(config.save_path, dpi=300, bbox_inches="tight")
-            print(f"Plot saved to: {config.save_path}")
-
-        if config.show:
-            plt.show()
-    finally:
-        plt.close(fig)
-
+    finalize_figure(fig, config)
     return fig, ax
 
 
@@ -370,33 +361,24 @@ def energy_landscape_2d_static(
 
     fig, ax = plt.subplots(figsize=config.figsize)
 
-    try:
-        im = ax.imshow(
-            z_data,
-            origin="lower",
-            aspect="auto",
-            **config.to_matplotlib_kwargs(),
-        )
+    im = ax.imshow(
+        z_data,
+        origin="lower",
+        aspect="auto",
+        **config.to_matplotlib_kwargs(),
+    )
 
-        ax.set_title(config.title, fontsize=16, fontweight="bold")
-        ax.set_xlabel(config.xlabel, fontsize=12)
-        ax.set_ylabel(config.ylabel, fontsize=12)
+    ax.set_title(config.title, fontsize=16, fontweight="bold")
+    ax.set_xlabel(config.xlabel, fontsize=12)
+    ax.set_ylabel(config.ylabel, fontsize=12)
 
-        cbar = plt.colorbar(im, ax=ax)
-        cbar.set_label(config.clabel)
+    cbar = plt.colorbar(im, ax=ax)
+    cbar.set_label(config.clabel)
 
-        if config.grid:
-            ax.grid(True, linestyle="--", alpha=0.6)
+    if config.grid:
+        ax.grid(True, linestyle="--", alpha=0.6)
 
-        if config.save_path:
-            plt.savefig(config.save_path, dpi=300, bbox_inches="tight")
-            print(f"Plot saved to: {config.save_path}")
-
-        if config.show:
-            plt.show()
-    finally:
-        plt.close(fig)
-
+    finalize_figure(fig, config, rasterize_artists=[im] if config.rasterized else None)
     return fig, ax
 
 
