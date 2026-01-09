@@ -51,6 +51,9 @@ def plot_firing_field_heatmap(
     heatmap: np.ndarray,
     config: PlotConfig | None = None,
     # Backward compatibility parameters
+    title: str | None = None,
+    xlabel: str | None = None,
+    ylabel: str | None = None,
     figsize: tuple[int, int] = (5, 5),
     cmap: str = "jet",
     interpolation: str = "nearest",
@@ -70,6 +73,9 @@ def plot_firing_field_heatmap(
             firing rates in each bin.
         config (PlotConfig | None): Unified configuration object. If None,
             uses backward compatibility parameters.
+        title (str | None): Plot title. If None, no title is displayed.
+        xlabel (str | None): X-axis label. If None, no label is displayed.
+        ylabel (str | None): Y-axis label. If None, no label is displayed.
         figsize (tuple[int, int]): Figure size (width, height) in inches.
             Defaults to (5, 5).
         cmap (str): Colormap name for the heatmap. Defaults to 'jet'.
@@ -89,15 +95,18 @@ def plot_firing_field_heatmap(
         >>> # Compute firing field
         >>> heatmaps = compute_firing_field(activity, positions, 5.0, 5.0, 50, 50)
         >>> # Plot single neuron with PlotConfig
-        >>> config = PlotConfig(figsize=(6, 6), save_path='neuron_0.png', show=False)
+        >>> config = PlotConfig(figsize=(6, 6), title='Neuron 0', save_path='neuron_0.png', show=False)
         >>> fig, ax = plot_firing_field_heatmap(heatmaps[0], config=config)
         >>> # Plot with legacy parameters
-        >>> fig, ax = plot_firing_field_heatmap(heatmaps[1], cmap='viridis', save_path='neuron_1.png')
+        >>> fig, ax = plot_firing_field_heatmap(heatmaps[1], title='Neuron 1', cmap='viridis', save_path='neuron_1.png')
     """
     # Handle configuration
     if config is None:
         config = PlotConfig(
             figsize=figsize,
+            title=title,
+            xlabel=xlabel,
+            ylabel=ylabel,
             show=show,
             save_path=save_path,
             kwargs={"cmap": cmap, "interpolation": interpolation, "origin": origin, **kwargs},
@@ -118,9 +127,19 @@ def plot_firing_field_heatmap(
     # Plot heatmap
     im = ax.imshow(heatmap.T, **plot_kwargs)
 
-    # Remove ticks for cleaner appearance
-    ax.set_xticks([])
-    ax.set_yticks([])
+    # Set labels and title if provided
+    if config.title:
+        ax.set_title(config.title, fontsize=14, fontweight="bold")
+    if config.xlabel:
+        ax.set_xlabel(config.xlabel, fontsize=11)
+    if config.ylabel:
+        ax.set_ylabel(config.ylabel, fontsize=11)
+
+    # Remove ticks for cleaner appearance (only if no labels)
+    if not config.xlabel:
+        ax.set_xticks([])
+    if not config.ylabel:
+        ax.set_yticks([])
 
     # Tight layout for better appearance
     fig.tight_layout()
@@ -296,9 +315,7 @@ def plot_grid_score(
     ax.axhline(0, color="black", linestyle="-", linewidth=0.8)
 
     # Set labels and title with grid score
-    ax.set_title(
-        f"{config.title}\nGrid Score = {grid_score:.3f}", fontsize=14, fontweight="bold"
-    )
+    ax.set_title(f"{config.title}\nGrid Score = {grid_score:.3f}", fontsize=14, fontweight="bold")
     ax.set_xlabel(config.xlabel, fontsize=12)
     ax.set_ylabel(config.ylabel, fontsize=12)
     ax.set_xticks(angles)

@@ -67,14 +67,14 @@ gc_model = GridCell2DPosition(
 )
 
 
-def run_step(_i, pos):
+def run_step(pos):
     gc_model(pos)
     return gc_model.r.value, gc_model.center_position.value
 
 
 activity, decoded_positions = bm.for_loop(
     run_step,
-    (bm.arange(len(position)), position),
+    (position,),
     progress_bar=True
 )
 
