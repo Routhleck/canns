@@ -530,6 +530,7 @@ class BaseNavigationTask(Task):
         thigmotaxis=0.5,
         wall_repel_distance=0.1,
         wall_repel_strength=1.0,
+        rng_seed: int | None = None,  # Add rng_seed parameter
         data_class=None,
     ):
         super().__init__(data_class=data_class)
@@ -571,6 +572,7 @@ class BaseNavigationTask(Task):
         self.wall_repel_strength = wall_repel_strength
         self.start_pos = start_pos
         self.initial_head_direction = initial_head_direction
+        self.rng_seed = rng_seed  # Store rng_seed
 
         self.env_params = {
             "dimensionality": self.dimensionality,
@@ -597,7 +599,9 @@ class BaseNavigationTask(Task):
             "wall_repel_distance": self.wall_repel_distance,
             "wall_repel_strength": self.wall_repel_strength,
         }
-        self.agent = Agent(environment=self.env, params=copy.deepcopy(self.agent_params))
+        self.agent = Agent(
+            environment=self.env, params=copy.deepcopy(self.agent_params), rng_seed=self.rng_seed
+        )
         self.agent.set_position(np.array(start_pos))
         self.agent.dt = self.dt
         self._apply_initial_head_direction(speed_mean=self.speed_mean)
