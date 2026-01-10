@@ -130,6 +130,55 @@ def test_open_loop_navigation_different_seeds():
     assert vel_diff > 1e-6, f"Velocities should differ with different seeds (diff={vel_diff})"
 
 
+def test_open_loop_navigation_rng_seed_only_reproducibility():
+    """Test that rng_seed alone ensures reproducibility without global seeds."""
+    # Test parameters
+    duration = 5.0
+    box_size = 2.2
+    rng_seed = 123
+
+    # Important: Do NOT set global seeds to prove rng_seed alone works
+    bm.set_dt(0.1)
+
+    # Create two tasks with same rng_seed
+    task1 = OpenLoopNavigationTask(
+        duration=duration,
+        width=box_size,
+        height=box_size,
+        start_pos=[box_size / 2, box_size / 2],
+        speed_mean=0.3,
+        speed_std=0.1,
+        dt=bm.get_dt(),
+        rng_seed=rng_seed,
+        progress_bar=False,
+    )
+    task1.get_data()
+
+    task2 = OpenLoopNavigationTask(
+        duration=duration,
+        width=box_size,
+        height=box_size,
+        start_pos=[box_size / 2, box_size / 2],
+        speed_mean=0.3,
+        speed_std=0.1,
+        dt=bm.get_dt(),
+        rng_seed=rng_seed,
+        progress_bar=False,
+    )
+    task2.get_data()
+
+    # Verify identical results
+    assert np.allclose(
+        task1.data.position, task2.data.position, rtol=1e-10, atol=1e-10
+    ), "rng_seed alone should produce identical positions"
+    assert np.allclose(
+        task1.data.velocity, task2.data.velocity, rtol=1e-10, atol=1e-10
+    ), "rng_seed alone should produce identical velocities"
+    assert np.allclose(
+        task1.data.speed, task2.data.speed, rtol=1e-10, atol=1e-10
+    ), "rng_seed alone should produce identical speeds"
+
+
 def test_open_loop_navigation_reset_reproducibility():
     """Test that reset() maintains reproducibility with same seed."""
     seed = 42
