@@ -139,6 +139,7 @@ class OpenLoopNavigationTask(BaseNavigationTask):
         thigmotaxis=0.5,
         wall_repel_distance=0.1,
         wall_repel_strength=1.0,
+        rng_seed: int | None = None,  # Add rng_seed parameter
     ):
         super().__init__(
             start_pos=start_pos,
@@ -165,6 +166,7 @@ class OpenLoopNavigationTask(BaseNavigationTask):
             thigmotaxis=thigmotaxis,
             wall_repel_distance=wall_repel_distance,
             wall_repel_strength=wall_repel_strength,
+            rng_seed=rng_seed,  # Pass rng_seed to parent
             data_class=OpenLoopNavigationData,
         )
 
@@ -221,8 +223,10 @@ class OpenLoopNavigationTask(BaseNavigationTask):
         """
         Resets the agent's position to the starting position.
         """
-        self.agent = Agent(Environment=self.env, params=copy.deepcopy(self.agent_params))
-        self.agent.pos = np.array(self.start_pos)
+        self.agent = Agent(
+            environment=self.env, params=copy.deepcopy(self.agent_params), rng_seed=self.rng_seed
+        )
+        self.agent.set_position(np.array(self.start_pos))
         self.agent.dt = self.dt
         self._apply_initial_head_direction()
 
@@ -616,7 +620,9 @@ class OpenLoopNavigationTask(BaseNavigationTask):
             self.env = Environment(params=self.env_params)
 
         if not hasattr(self, "agent") or self.agent is None:
-            self.agent = Agent(Environment=self.env, params=copy.deepcopy(self.agent_params))
+            self.agent = Agent(
+                Environment=self.env, params=copy.deepcopy(self.agent_params), rng_seed=self.rng_seed
+            )
 
         # Set initial position
         if initial_pos is None:
