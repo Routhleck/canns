@@ -5,6 +5,27 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.12.6] - 2026-01-14
+
+### Added
+- Unified parallel animation backend system with imageio and matplotlib support (#79)
+- Centralized backend selection with smart auto-detection
+- Parallel frame rendering for 3-4x speedup on GIF and 2-3x on MP4
+- New `backend.py` module for backend selection logic
+- Extended parallel rendering functions in `rendering.py`
+- CHANGELOG.md documenting all project releases
+- CODE_OF_CONDUCT.md establishing community standards
+- CONTRIBUTING.md with comprehensive development guidelines
+- `render_backend`, `render_workers`, `render_start_method` options to PlotConfig
+
+### Changed
+- Refactored `energy_plots.py`, `spatial_plots.py`, `theta_sweep_plots.py` to use unified backend
+- Updated imageio dependency to `imageio[ffmpeg]>=2.37.0`
+- Updated project license to Apache-2.0 in pyproject.toml
+
+### Fixed
+- Improved animation backend selection and fallback logic with helpful error messages
+
 ## [0.12.5] - 2026-01-14
 
 ### Added
