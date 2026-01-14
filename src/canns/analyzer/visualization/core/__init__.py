@@ -12,9 +12,18 @@ backward compatibility and convenience.
 """
 
 from .animation import OptimizedAnimationBase
+from .backend import (
+    AnimationBackend,
+    BackendSelection,
+    emit_backend_warnings,
+    get_imageio_writer_kwargs,
+    get_multiprocessing_context,
+    get_optimal_worker_count,
+    select_animation_backend,
+)
 from .config import AnimationConfig, PlotConfig, PlotConfigs, finalize_figure
 from .jupyter_utils import display_animation_in_jupyter, is_jupyter_environment
-from .rendering import ParallelAnimationRenderer
+from .rendering import ParallelAnimationRenderer, render_animation_parallel
 from .writers import (
     OptimizedAnimationWriter,
     create_optimized_writer,
@@ -32,8 +41,17 @@ __all__ = [
     "finalize_figure",
     # Animation framework
     "OptimizedAnimationBase",
+    # Backend management
+    "AnimationBackend",
+    "BackendSelection",
+    "select_animation_backend",
+    "get_imageio_writer_kwargs",
+    "get_optimal_worker_count",
+    "get_multiprocessing_context",
+    "emit_backend_warnings",
     # Rendering
     "ParallelAnimationRenderer",
+    "render_animation_parallel",
     # Writers
     "OptimizedAnimationWriter",
     "create_optimized_writer",

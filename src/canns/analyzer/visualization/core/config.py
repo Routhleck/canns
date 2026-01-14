@@ -35,6 +35,11 @@ class PlotConfig:
     repeat: bool = True
     show_progress_bar: bool = True
 
+    # Animation backend configuration
+    render_backend: str | None = None  # 'auto', 'imageio', or 'matplotlib'
+    render_workers: int | None = None  # Number of parallel workers (None = auto)
+    render_start_method: str | None = None  # Multiprocessing start method
+
     show_legend: bool = True
     color: str = "black"
     clabel: str = "Value"
