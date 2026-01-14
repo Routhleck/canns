@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from typing import Any
 
 import numpy as np
@@ -18,6 +19,162 @@ __all__ = [
     "energy_landscape_2d_static",
     "energy_landscape_2d_animation",
 ]
+
+
+@dataclass(slots=True)
+class _Energy1DRenderOptions:
+    """Rendering options for 1D energy landscape animation."""
+
+    figsize: tuple[int, int]
+    title: str
+    xlabel: str
+    ylabel: str
+    grid: bool
+    dpi: int
+    data_sets: dict[str, tuple[np.ndarray, np.ndarray]]  # label -> (x_data, y_data)
+    sim_indices_to_render: np.ndarray
+    time_steps_per_second: int
+    global_ymin: float
+    global_ymax: float
+    y_buffer: float
+    matplotlib_kwargs: dict
+
+
+def _render_single_energy_1d_frame(
+    frame_index: int,
+    options: _Energy1DRenderOptions,
+) -> np.ndarray:
+    """Render a single frame for 1D energy landscape animation (module-level for pickling)."""
+    import matplotlib.pyplot as plt
+    import numpy as np
+    from io import BytesIO
+
+    fig, ax = plt.subplots(figsize=options.figsize)
+    sim_index = options.sim_indices_to_render[frame_index]
+
+    # Plot all data sets
+    for label, (x_data, ys_data) in options.data_sets.items():
+        ax.plot(
+            x_data,
+            ys_data[sim_index, :],
+            label=label,
+            **options.matplotlib_kwargs,
+        )
+
+    ax.set_ylim(options.global_ymin - options.y_buffer, options.global_ymax + options.y_buffer)
+    ax.set_title(options.title, fontsize=16, fontweight="bold")
+    ax.set_xlabel(options.xlabel, fontsize=12)
+    ax.set_ylabel(options.ylabel, fontsize=12)
+    if options.grid:
+        ax.grid(True, linestyle="--", alpha=0.6)
+    ax.legend()
+
+    # Add time text
+    current_time_s = sim_index / options.time_steps_per_second
+    ax.text(
+        0.05,
+        0.9,
+        f"Time: {current_time_s:.2f} s",
+        transform=ax.transAxes,
+        fontsize=12,
+        bbox=dict(facecolor="white", alpha=0.7),
+    )
+
+    fig.tight_layout()
+
+    # Convert to numpy array
+    buf = BytesIO()
+    fig.savefig(buf, format="png", dpi=options.dpi, bbox_inches="tight")
+    buf.seek(0)
+    img = plt.imread(buf)
+    plt.close(fig)
+    buf.close()
+
+    # Convert to uint8
+    if img.dtype in (np.float32, np.float64):
+        img = (img * 255).astype(np.uint8)
+
+    return img
+
+
+@dataclass(slots=True)
+class _Energy2DRenderOptions:
+    """Rendering options for 2D energy landscape animation."""
+
+    figsize: tuple[int, int]
+    title: str
+    xlabel: str
+    ylabel: str
+    clabel: str
+    grid: bool
+    dpi: int
+    zs_data: np.ndarray  # (timesteps, dim_y, dim_x)
+    sim_indices_to_render: np.ndarray
+    time_steps_per_second: int
+    vmin: float
+    vmax: float
+    matplotlib_kwargs: dict
+
+
+def _render_single_energy_2d_frame(
+    frame_index: int,
+    options: _Energy2DRenderOptions,
+) -> np.ndarray:
+    """Render a single frame for 2D energy landscape animation (module-level for pickling)."""
+    import matplotlib.pyplot as plt
+    import numpy as np
+    from io import BytesIO
+
+    fig, ax = plt.subplots(figsize=options.figsize)
+    sim_index = options.sim_indices_to_render[frame_index]
+
+    # Plot 2D landscape
+    im = ax.imshow(
+        options.zs_data[sim_index, :, :],
+        origin="lower",
+        aspect="auto",
+        vmin=options.vmin,
+        vmax=options.vmax,
+        **options.matplotlib_kwargs,
+    )
+
+    cbar = fig.colorbar(im, ax=ax)
+    cbar.set_label(options.clabel, fontsize=12)
+
+    ax.set_title(options.title, fontsize=16, fontweight="bold")
+    ax.set_xlabel(options.xlabel, fontsize=12)
+    ax.set_ylabel(options.ylabel, fontsize=12)
+    if options.grid:
+        ax.grid(True, linestyle="--", alpha=0.4, color="white")
+
+    # Add time text
+    current_time_s = sim_index / options.time_steps_per_second
+    ax.text(
+        0.05,
+        0.95,
+        f"Time: {current_time_s:.2f} s",
+        transform=ax.transAxes,
+        fontsize=12,
+        color="white",
+        bbox=dict(facecolor="black", alpha=0.5),
+        verticalalignment="top",
+    )
+
+    fig.tight_layout()
+
+    # Convert to numpy array
+    buf = BytesIO()
+    fig.savefig(buf, format="png", dpi=options.dpi, bbox_inches="tight")
+    buf.seek(0)
+    img = plt.imread(buf)
+    plt.close(fig)
+    buf.close()
+
+    # Convert to uint8
+    if img.dtype in (np.float32, np.float64):
+        img = (img * 255).astype(np.uint8)
+
+    return img
 
 
 def _ensure_plot_config(
@@ -126,6 +283,10 @@ def energy_landscape_1d_animation(
     save_path: str | None = None,
     show: bool = True,
     show_progress_bar: bool = True,
+    render_backend: str | None = "auto",
+    output_dpi: int = 150,
+    render_workers: int | None = None,
+    render_start_method: str | None = None,
     **kwargs: Any,
 ) -> animation.FuncAnimation:
     """Create an animation of an evolving 1D energy landscape.
@@ -151,6 +312,10 @@ def energy_landscape_1d_animation(
         save_path: Optional path to persist the animation (``.gif`` / ``.mp4``).
         show: Whether to display the animation interactively.
         show_progress_bar: Whether to show a ``tqdm`` progress bar when saving.
+        render_backend: Rendering backend ('imageio', 'matplotlib', or 'auto')
+        output_dpi: DPI for rendered frames (affects file size and quality)
+        render_workers: Number of parallel workers (None = auto-detect)
+        render_start_method: Multiprocessing start method ('fork', 'spawn', or None)
         **kwargs: Further keyword arguments passed through to ``ax.plot``.
 
     Returns:
@@ -242,52 +407,154 @@ def energy_landscape_1d_animation(
             artists_to_update.append(time_text)
             return artists_to_update
 
-        ani = animation.FuncAnimation(
-            fig,
-            animate,
-            frames=num_video_frames,
-            interval=1000 / config.fps,
-            blit=True,
-            repeat=config.repeat,
-        )
-
+        ani = None
         progress_bar_enabled = (
             getattr(config, "show_progress_bar", show_progress_bar)
             if config is not None
             else show_progress_bar
         )
 
+        # Save animation using unified backend system
         if config.save_path:
+            # Warn if both saving and showing (causes double rendering)
+            if config.show and num_video_frames > 50:
+                from canns.analyzer.visualization.core import warn_double_rendering
 
-            def _save(write_animation):
+                warn_double_rendering(num_video_frames, config.save_path, stacklevel=2)
+
+            # Use unified backend selection system
+            from canns.analyzer.visualization.core import (
+                emit_backend_warnings,
+                get_imageio_writer_kwargs,
+                get_multiprocessing_context,
+                get_optimal_worker_count,
+                select_animation_backend,
+            )
+
+            backend_selection = select_animation_backend(
+                save_path=config.save_path,
+                requested_backend=render_backend,
+                check_imageio_plugins=True,
+            )
+
+            emit_backend_warnings(backend_selection.warnings, stacklevel=2)
+            backend = backend_selection.backend
+
+            if backend == "imageio":
+                # Use imageio backend with parallel rendering
+                workers = render_workers if render_workers is not None else get_optimal_worker_count()
+                ctx = get_multiprocessing_context(prefer_fork=(render_start_method == "fork"))
+
+                # Create render options
+                render_options = _Energy1DRenderOptions(
+                    figsize=config.figsize,
+                    title=config.title,
+                    xlabel=config.xlabel,
+                    ylabel=config.ylabel,
+                    grid=grid,
+                    dpi=output_dpi,
+                    data_sets=data_sets,
+                    sim_indices_to_render=sim_indices_to_render,
+                    time_steps_per_second=config.time_steps_per_second,
+                    global_ymin=global_ymin,
+                    global_ymax=global_ymax,
+                    y_buffer=y_buffer,
+                    matplotlib_kwargs=config.to_matplotlib_kwargs(),
+                )
+
+                # Get format-specific kwargs
+                writer_kwargs, mode = get_imageio_writer_kwargs(config.save_path, config.fps)
+
                 try:
-                    from canns.analyzer.visualization.core import get_matplotlib_writer
+                    import imageio
+                    from functools import partial
 
-                    writer = get_matplotlib_writer(config.save_path, fps=config.fps)
-                    write_animation(writer)
+                    # Create partial function with options
+                    render_func = partial(_render_single_energy_1d_frame, options=render_options)
+
+                    with imageio.get_writer(config.save_path, mode=mode, **writer_kwargs) as writer:
+                        if workers > 1 and ctx is not None:
+                            # Parallel rendering
+                            with ctx.Pool(processes=workers) as pool:
+                                frames_iter = pool.imap(render_func, range(num_video_frames))
+
+                                if progress_bar_enabled:
+                                    frames_iter = tqdm(
+                                        frames_iter,
+                                        total=num_video_frames,
+                                        desc=f"Rendering {config.save_path}",
+                                    )
+
+                                for frame_img in frames_iter:
+                                    writer.append_data(frame_img)
+                        else:
+                            # Serial rendering
+                            frames_range = range(num_video_frames)
+                            if progress_bar_enabled:
+                                frames_range = tqdm(
+                                    frames_range,
+                                    desc=f"Rendering {config.save_path}",
+                                )
+
+                            for frame_idx in frames_range:
+                                frame_img = render_func(frame_idx)
+                                writer.append_data(frame_img)
+
                     print(f"Animation saved to: {config.save_path}")
-                except Exception as exc:
-                    print(f"Error saving animation: {exc}")
 
-            if progress_bar_enabled:
-                pbar = tqdm(total=num_video_frames, desc=f"Saving to {config.save_path}")
-
-                def progress_callback(current_frame: int, total_frames: int) -> None:
-                    pbar.update(1)
-
-                def with_writer(writer):
-                    ani.save(
-                        config.save_path,
-                        writer=writer,
-                        progress_callback=progress_callback,
+                except Exception as e:
+                    import warnings
+                    warnings.warn(
+                        f"imageio rendering failed: {e}. Falling back to matplotlib.",
+                        RuntimeWarning,
+                        stacklevel=2,
                     )
+                    backend = "matplotlib"
 
-                try:
-                    _save(with_writer)
-                finally:
-                    pbar.close()
-            else:
-                _save(lambda writer: ani.save(config.save_path, writer=writer))
+            if backend == "matplotlib":
+                # Use matplotlib backend (traditional FuncAnimation)
+                ani = animation.FuncAnimation(
+                    fig,
+                    animate,
+                    frames=num_video_frames,
+                    interval=1000 / config.fps,
+                    blit=True,
+                    repeat=config.repeat,
+                )
+
+                from canns.analyzer.visualization.core import get_matplotlib_writer
+
+                writer = get_matplotlib_writer(config.save_path, fps=config.fps)
+
+                if progress_bar_enabled:
+                    pbar = tqdm(total=num_video_frames, desc=f"Saving to {config.save_path}")
+
+                    def progress_callback(current_frame: int, total_frames: int) -> None:
+                        pbar.update(1)
+
+                    try:
+                        ani.save(
+                            config.save_path,
+                            writer=writer,
+                            progress_callback=progress_callback,
+                        )
+                        print(f"Animation saved to: {config.save_path}")
+                    finally:
+                        pbar.close()
+                else:
+                    ani.save(config.save_path, writer=writer)
+                    print(f"Animation saved to: {config.save_path}")
+
+        # Create animation object for showing (if not already created)
+        if config.show and ani is None:
+            ani = animation.FuncAnimation(
+                fig,
+                animate,
+                frames=num_video_frames,
+                interval=1000 / config.fps,
+                blit=True,
+                repeat=config.repeat,
+            )
 
         if config.show:
             # Automatically detect Jupyter and display as HTML/JS
@@ -398,6 +665,10 @@ def energy_landscape_2d_animation(
     save_path: str | None = None,
     show: bool = True,
     show_progress_bar: bool = True,
+    render_backend: str | None = "auto",
+    output_dpi: int = 150,
+    render_workers: int | None = None,
+    render_start_method: str | None = None,
     **kwargs: Any,
 ) -> animation.FuncAnimation:
     """Create an animation of an evolving 2D landscape.
@@ -422,6 +693,10 @@ def energy_landscape_2d_animation(
         save_path: Optional output path (``.gif`` / ``.mp4``).
         show: Whether to display the animation interactively.
         show_progress_bar: Whether to render a ``tqdm`` progress bar during save.
+        render_backend: Rendering backend ('imageio', 'matplotlib', or 'auto')
+        output_dpi: DPI for rendered frames (affects file size and quality)
+        render_workers: Number of parallel workers (None = auto-detect)
+        render_start_method: Multiprocessing start method ('fork', 'spawn', or None)
         **kwargs: Additional keyword arguments forwarded to ``ax.imshow``.
 
     Returns:
@@ -507,52 +782,154 @@ def energy_landscape_2d_animation(
             time_text.set_text(f"Time: {current_time_s:.2f} s")
             return [im, time_text]
 
-        ani = animation.FuncAnimation(
-            fig,
-            animate,
-            frames=num_video_frames,
-            interval=1000 / config.fps,
-            blit=True,
-            repeat=config.repeat,
-        )
-
+        ani = None
         progress_bar_enabled = (
             getattr(config, "show_progress_bar", show_progress_bar)
             if config is not None
             else show_progress_bar
         )
 
+        # Save animation using unified backend system
         if config.save_path:
+            # Warn if both saving and showing (causes double rendering)
+            if config.show and num_video_frames > 50:
+                from canns.analyzer.visualization.core import warn_double_rendering
 
-            def _save(write_animation):
+                warn_double_rendering(num_video_frames, config.save_path, stacklevel=2)
+
+            # Use unified backend selection system
+            from canns.analyzer.visualization.core import (
+                emit_backend_warnings,
+                get_imageio_writer_kwargs,
+                get_multiprocessing_context,
+                get_optimal_worker_count,
+                select_animation_backend,
+            )
+
+            backend_selection = select_animation_backend(
+                save_path=config.save_path,
+                requested_backend=render_backend,
+                check_imageio_plugins=True,
+            )
+
+            emit_backend_warnings(backend_selection.warnings, stacklevel=2)
+            backend = backend_selection.backend
+
+            if backend == "imageio":
+                # Use imageio backend with parallel rendering
+                workers = render_workers if render_workers is not None else get_optimal_worker_count()
+                ctx = get_multiprocessing_context(prefer_fork=(render_start_method == "fork"))
+
+                # Create render options
+                render_options = _Energy2DRenderOptions(
+                    figsize=config.figsize,
+                    title=config.title,
+                    xlabel=config.xlabel,
+                    ylabel=config.ylabel,
+                    clabel=config.clabel,
+                    grid=grid,
+                    dpi=output_dpi,
+                    zs_data=zs_data,
+                    sim_indices_to_render=sim_indices_to_render,
+                    time_steps_per_second=config.time_steps_per_second,
+                    vmin=vmin,
+                    vmax=vmax,
+                    matplotlib_kwargs=config.to_matplotlib_kwargs(),
+                )
+
+                # Get format-specific kwargs
+                writer_kwargs, mode = get_imageio_writer_kwargs(config.save_path, config.fps)
+
                 try:
-                    from canns.analyzer.visualization.core import get_matplotlib_writer
+                    import imageio
+                    from functools import partial
 
-                    writer = get_matplotlib_writer(config.save_path, fps=config.fps)
-                    write_animation(writer)
+                    # Create partial function with options
+                    render_func = partial(_render_single_energy_2d_frame, options=render_options)
+
+                    with imageio.get_writer(config.save_path, mode=mode, **writer_kwargs) as writer:
+                        if workers > 1 and ctx is not None:
+                            # Parallel rendering
+                            with ctx.Pool(processes=workers) as pool:
+                                frames_iter = pool.imap(render_func, range(num_video_frames))
+
+                                if progress_bar_enabled:
+                                    frames_iter = tqdm(
+                                        frames_iter,
+                                        total=num_video_frames,
+                                        desc=f"Rendering {config.save_path}",
+                                    )
+
+                                for frame_img in frames_iter:
+                                    writer.append_data(frame_img)
+                        else:
+                            # Serial rendering
+                            frames_range = range(num_video_frames)
+                            if progress_bar_enabled:
+                                frames_range = tqdm(
+                                    frames_range,
+                                    desc=f"Rendering {config.save_path}",
+                                )
+
+                            for frame_idx in frames_range:
+                                frame_img = render_func(frame_idx)
+                                writer.append_data(frame_img)
+
                     print(f"Animation saved to: {config.save_path}")
-                except Exception as exc:
-                    print(f"Error saving animation: {exc}")
 
-            if progress_bar_enabled:
-                pbar = tqdm(total=num_video_frames, desc=f"Saving to {config.save_path}")
-
-                def progress_callback(current_frame: int, total_frames: int) -> None:
-                    pbar.update(1)
-
-                def with_writer(writer):
-                    ani.save(
-                        config.save_path,
-                        writer=writer,
-                        progress_callback=progress_callback,
+                except Exception as e:
+                    import warnings
+                    warnings.warn(
+                        f"imageio rendering failed: {e}. Falling back to matplotlib.",
+                        RuntimeWarning,
+                        stacklevel=2,
                     )
+                    backend = "matplotlib"
 
-                try:
-                    _save(with_writer)
-                finally:
-                    pbar.close()
-            else:
-                _save(lambda writer: ani.save(config.save_path, writer=writer))
+            if backend == "matplotlib":
+                # Use matplotlib backend (traditional FuncAnimation)
+                ani = animation.FuncAnimation(
+                    fig,
+                    animate,
+                    frames=num_video_frames,
+                    interval=1000 / config.fps,
+                    blit=True,
+                    repeat=config.repeat,
+                )
+
+                from canns.analyzer.visualization.core import get_matplotlib_writer
+
+                writer = get_matplotlib_writer(config.save_path, fps=config.fps)
+
+                if progress_bar_enabled:
+                    pbar = tqdm(total=num_video_frames, desc=f"Saving to {config.save_path}")
+
+                    def progress_callback(current_frame: int, total_frames: int) -> None:
+                        pbar.update(1)
+
+                    try:
+                        ani.save(
+                            config.save_path,
+                            writer=writer,
+                            progress_callback=progress_callback,
+                        )
+                        print(f"Animation saved to: {config.save_path}")
+                    finally:
+                        pbar.close()
+                else:
+                    ani.save(config.save_path, writer=writer)
+                    print(f"Animation saved to: {config.save_path}")
+
+        # Create animation object for showing (if not already created)
+        if config.show and ani is None:
+            ani = animation.FuncAnimation(
+                fig,
+                animate,
+                frames=num_video_frames,
+                interval=1000 / config.fps,
+                blit=True,
+                repeat=config.repeat,
+            )
 
         if config.show:
             # Automatically detect Jupyter and display as HTML/JS

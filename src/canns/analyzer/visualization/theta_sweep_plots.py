@@ -7,6 +7,7 @@ neural activity, particularly for direction cell and grid cell networks.
 
 import logging
 import multiprocessing as mp
+import os
 import platform
 import sys
 import warnings
@@ -22,8 +23,30 @@ from matplotlib.animation import FuncAnimation
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 from tqdm import tqdm
 
+from .core.backend import (
+    emit_backend_warnings,
+    get_imageio_writer_kwargs,
+    get_multiprocessing_context,
+    get_optimal_worker_count,
+    select_animation_backend,
+)
 from .core.config import PlotConfig, finalize_figure
 from .core.jupyter_utils import display_animation_in_jupyter, is_jupyter_environment
+
+
+def _get_file_extension(save_path: str | None) -> str | None:
+    """
+    Extract lowercase file extension from save_path.
+
+    Args:
+        save_path: File path or None
+
+    Returns:
+        Lowercase extension including dot (e.g., '.gif', '.mp4') or None
+    """
+    if save_path is None:
+        return None
+    return os.path.splitext(str(save_path))[1].lower()
 
 
 @dataclass(slots=True)
@@ -347,7 +370,9 @@ def _render_theta_sweep_animation_with_imageio(
     save_path: str,
     render_options: _ThetaSweepRenderOptions,
 ) -> None:
-    """Render frames to a GIF via imageio (requires optional dependency).
+    """Render frames with parallel processing via imageio backend.
+
+    Supports GIF (direct imageio write) and MP4 (parallel render + FFMpegWriter).
 
     When ``render_options.workers`` > 1 and the platform provides a ``fork`` start
     method, frames are rendered in parallel across processes. On platforms that
@@ -364,10 +389,25 @@ def _render_theta_sweep_animation_with_imageio(
         ) from exc
 
     path_str = str(save_path)
-    if not path_str.lower().endswith(".gif"):
-        raise ValueError("imageio backend currently supports only GIF outputs (use .gif extension)")
+    file_ext = _get_file_extension(save_path)
 
-    writer_kwargs = {"duration": 1.0 / data.fps, "loop": 0}
+    # Validate supported formats
+    supported_formats = {".gif", ".mp4", ".m4v", ".mov", ".avi", ".webm"}
+    if file_ext not in supported_formats:
+        raise ValueError(
+            f"imageio backend supports {', '.join(supported_formats)} formats, "
+            f"but got '{file_ext}'. Use .gif for optimal parallel performance."
+        )
+
+    # Set writer kwargs based on file format
+    if file_ext == ".gif":
+        # GIF-specific parameters
+        writer_kwargs = {"duration": 1.0 / data.fps, "loop": 0}
+        mode = "I"
+    else:
+        # MP4/video parameters
+        writer_kwargs = {"fps": data.fps, "codec": "libx264", "pixelformat": "yuv420p"}
+        mode = None
 
     frame_indices: Iterable[int] = range(data.frames)
     progress_bar = None
@@ -411,7 +451,13 @@ def _render_theta_sweep_animation_with_imageio(
                 )
 
     try:
-        with imageio.get_writer(path_str, mode="I", **writer_kwargs) as writer:
+        # Open writer with format-specific parameters
+        if mode is not None:
+            writer_handle = imageio.get_writer(path_str, mode=mode, **writer_kwargs)
+        else:
+            writer_handle = imageio.get_writer(path_str, **writer_kwargs)
+
+        with writer_handle as writer:
             if use_parallel and ctx is not None:
                 with ProcessPoolExecutor(
                     max_workers=render_options.workers,
@@ -756,6 +802,143 @@ def _prepare_place_cell_animation_data(
     )
 
 
+@dataclass(slots=True)
+class _PlaceCellRenderOptions:
+    """Rendering options for place cell animation."""
+
+    figsize: tuple[int, int]
+    cmap_name: str
+    alpha: float
+    trajectory_color: str
+    dpi: int
+    n_step: int
+    dt: float
+    # Environment data
+    boundary: np.ndarray | None
+    walls: list[np.ndarray] | None
+    # Accessible indices for activity heatmap
+    accessible_indices: np.ndarray
+    n_cells: int
+
+
+def _render_single_place_cell_frame(
+    frame_idx: int,
+    data: _PlaceCellAnimationData,
+    options: _PlaceCellRenderOptions,
+) -> np.ndarray:
+    """Render a single frame for place cell animation (module-level for pickling)."""
+    import matplotlib.pyplot as plt
+    import numpy as np
+    from io import BytesIO
+
+    fig, axes = plt.subplots(1, 2, figsize=options.figsize, width_ratios=[1, 1])
+    ax_env, ax_activity = axes
+
+    # Panel 1: Environment with place cell bump overlay
+    if options.boundary is not None:
+        ax_env.fill(options.boundary[:, 0], options.boundary[:, 1], color="lightgrey", alpha=0.3)
+        ax_env.plot(
+            np.append(options.boundary[:, 0], options.boundary[0, 0]),
+            np.append(options.boundary[:, 1], options.boundary[0, 1]),
+            color="black",
+            linewidth=2,
+        )
+
+    if options.walls is not None and len(options.walls) > 0:
+        for wall in options.walls:
+            ax_env.plot(wall[:, 0], wall[:, 1], color="black", linewidth=2)
+
+    # Place cell activity pcolormesh
+    y_edges_plot = data.y_edges[::-1]
+    grid_flipped = np.flipud(data.activity_grid[frame_idx])
+    ax_env.pcolormesh(
+        data.x_edges,
+        y_edges_plot,
+        grid_flipped,
+        cmap=options.cmap_name,
+        vmin=data.vmin,
+        vmax=data.vmax,
+        alpha=options.alpha,
+        shading="auto",
+        zorder=1,
+    )
+
+    # Trajectory
+    ax_env.plot(
+        data.position4ani[:, 0],
+        data.position4ani[:, 1],
+        color=options.trajectory_color,
+        lw=1.5,
+        alpha=0.9,
+        zorder=15,
+    )
+
+    # Current position marker
+    ax_env.plot(
+        [data.position4ani[frame_idx, 0]],
+        [data.position4ani[frame_idx, 1]],
+        "ro",
+        markersize=8,
+        zorder=20,
+    )
+
+    ax_env.set_aspect("equal", adjustable="box")
+    ax_env.set_title("Place Cell Activity in Environment")
+
+    # Panel 2: Population activity heatmap
+    time_axis = np.arange(data.frames) * options.n_step * options.dt
+
+    # Extract activity only for accessible cells
+    activity_flat = np.zeros((options.n_cells, data.frames), dtype=np.float32)
+    for cell_idx, (row, col) in enumerate(options.accessible_indices):
+        activity_flat[cell_idx, :] = data.activity_grid[:, row, col]
+
+    ax_activity.imshow(
+        activity_flat,
+        aspect="auto",
+        extent=[time_axis[0], time_axis[-1], 0, options.n_cells],
+        origin="lower",
+        cmap=options.cmap_name,
+        vmin=data.vmin,
+        vmax=data.vmax,
+    )
+
+    # Current time marker
+    t = frame_idx * options.n_step * options.dt
+    ax_activity.plot([t, t], [0, options.n_cells], "w-", lw=2, alpha=0.8)
+
+    ax_activity.set_xlabel("Time (s)")
+    ax_activity.set_ylabel("Place Cell Index")
+    ax_activity.set_title("Population Activity Over Time")
+
+    fig.tight_layout()
+
+    # Add time text
+    fig.text(
+        0.5,
+        0.98,
+        f"t = {t:.2f}s",
+        ha="center",
+        va="top",
+        fontsize=12,
+        fontweight="bold",
+    )
+
+    # Convert to numpy array
+    buf = BytesIO()
+    fig.savefig(buf, format="png", dpi=options.dpi, bbox_inches="tight")
+    buf.seek(0)
+    img = plt.imread(buf)
+    plt.close(fig)
+    buf.close()
+
+    # Convert to uint8
+    if img.dtype in (np.float32, np.float64):
+        img = (img * 255).astype(np.uint8)
+
+    return img
+
+
 def create_theta_sweep_place_cell_animation(
     position_data: np.ndarray,
     pc_activity_data: np.ndarray,
@@ -770,6 +953,10 @@ def create_theta_sweep_place_cell_animation(
     save_path: str | None = None,
     show: bool = True,
     show_progress_bar: bool = True,
+    render_backend: str | None = "auto",
+    output_dpi: int = 150,
+    render_workers: int | None = None,
+    render_start_method: str | None = None,
     **kwargs,
 ) -> FuncAnimation | None:
     """
@@ -790,6 +977,10 @@ def create_theta_sweep_place_cell_animation(
         save_path: Path to save animation (GIF or MP4)
         show: Whether to display animation
         show_progress_bar: Whether to show progress bar during saving
+        render_backend: Rendering backend ('imageio', 'matplotlib', or 'auto')
+        output_dpi: DPI for rendered frames (affects file size and quality)
+        render_workers: Number of parallel workers (None = auto-detect)
+        render_start_method: Multiprocessing start method ('fork', 'spawn', or None)
         **kwargs: Additional parameters (cmap, alpha, etc.)
 
     Returns:
@@ -954,13 +1145,11 @@ def create_theta_sweep_place_cell_animation(
 
         return pc_mesh, pos_marker, time_marker, time_text
 
-    # Create animation
+    # Create animation (only for matplotlib backend or show mode)
     interval_ms = 1000 // config.fps
-    ani = FuncAnimation(
-        fig, update, frames=data.frames, interval=interval_ms, blit=True, repeat=True
-    )
+    ani = None
 
-    # Save and/or show animation
+    # Save animation using unified backend system
     if config.save_path:
         # Warn if both saving and showing (causes double rendering)
         if config.show and data.frames > 50:
@@ -968,29 +1157,144 @@ def create_theta_sweep_place_cell_animation(
 
             warn_double_rendering(data.frames, config.save_path, stacklevel=2)
 
-        from canns.analyzer.visualization.core import get_matplotlib_writer
+        # Use unified backend selection system
+        from .core import (
+            emit_backend_warnings,
+            get_imageio_writer_kwargs,
+            get_multiprocessing_context,
+            get_optimal_worker_count,
+            select_animation_backend,
+        )
 
-        writer = get_matplotlib_writer(config.save_path, fps=config.fps)
+        backend_selection = select_animation_backend(
+            save_path=config.save_path,
+            requested_backend=render_backend,
+            check_imageio_plugins=True,
+        )
 
-        if config.show_progress_bar:
-            progress_bar = tqdm(
-                total=data.frames,
-                desc=f"<{create_theta_sweep_place_cell_animation.__name__}> Saving to {config.save_path}",
+        emit_backend_warnings(backend_selection.warnings, stacklevel=2)
+        _emit_info(f"Using {backend_selection.backend} backend: {backend_selection.reason}")
+
+        backend = backend_selection.backend
+
+        if backend == "imageio":
+            # Use imageio backend with parallel rendering
+            workers = render_workers if render_workers is not None else get_optimal_worker_count()
+            ctx = get_multiprocessing_context(prefer_fork=(render_start_method == "fork"))
+            start_method = ctx.method if ctx is not None else None
+
+            _emit_info(
+                f"Parallel rendering enabled: {workers} workers (start_method={start_method})"
             )
 
-            last_frame = {"value": -1}
+            # Prepare environment data
+            env = navigation_task.env
+            boundary_array = np.array(env.boundary) if env.boundary is not None else None
+            walls_arrays = [np.array(wall) for wall in env.walls] if env.walls is not None and len(env.walls) > 0 else None
 
-            def progress_callback(current_frame, _total_frames):
-                update = current_frame - last_frame["value"]
-                if update > 0:
-                    progress_bar.update(update)
-                    last_frame["value"] = current_frame
+            # Get accessible indices
+            accessible_indices = pc_network.geodesic_result.accessible_indices
+            n_cells = len(accessible_indices)
 
-            ani.save(config.save_path, writer=writer, progress_callback=progress_callback)
-            progress_bar.close()
-        else:
-            ani.save(config.save_path, writer=writer)
+            # Create render options
+            render_options = _PlaceCellRenderOptions(
+                figsize=config.figsize,
+                cmap_name=cmap_name,
+                alpha=alpha,
+                trajectory_color=trajectory_color,
+                dpi=output_dpi,
+                n_step=n_step,
+                dt=dt,
+                boundary=boundary_array,
+                walls=walls_arrays,
+                accessible_indices=accessible_indices,
+                n_cells=n_cells,
+            )
+
+            # Get format-specific kwargs
+            writer_kwargs, mode = get_imageio_writer_kwargs(config.save_path, config.fps)
+
+            try:
+                import imageio
+                from functools import partial
+
+                # Create partial function with data and options
+                render_func = partial(_render_single_place_cell_frame, data=data, options=render_options)
+
+                with imageio.get_writer(config.save_path, mode=mode, **writer_kwargs) as writer:
+                    if workers > 1 and ctx is not None:
+                        # Parallel rendering
+                        with ctx.Pool(processes=workers) as pool:
+                            frames_iter = pool.imap(render_func, range(data.frames))
+
+                            if config.show_progress_bar:
+                                frames_iter = tqdm(
+                                    frames_iter,
+                                    total=data.frames,
+                                    desc=f"<{create_theta_sweep_place_cell_animation.__name__}> Rendering frames",
+                                )
+
+                            for frame_img in frames_iter:
+                                writer.append_data(frame_img)
+                    else:
+                        # Serial rendering (fallback)
+                        frames_range = range(data.frames)
+                        if config.show_progress_bar:
+                            frames_range = tqdm(
+                                frames_range,
+                                desc=f"<{create_theta_sweep_place_cell_animation.__name__}> Rendering frames",
+                            )
+
+                        for frame_idx in frames_range:
+                            frame_img = render_func(frame_idx)
+                            writer.append_data(frame_img)
+
+                print(f"Animation saved to: {config.save_path}")
+
+            except Exception as e:
+                warnings.warn(
+                    f"imageio rendering failed: {e}. Falling back to matplotlib.",
+                    RuntimeWarning,
+                    stacklevel=2,
+                )
+                backend = "matplotlib"
+
+        if backend == "matplotlib":
+            # Use matplotlib backend (traditional FuncAnimation)
+            ani = FuncAnimation(
+                fig, update, frames=data.frames, interval=interval_ms, blit=True, repeat=True
+            )
+
+            from canns.analyzer.visualization.core import get_matplotlib_writer
+
+            writer = get_matplotlib_writer(config.save_path, fps=config.fps)
+
+            if config.show_progress_bar:
+                progress_bar = tqdm(
+                    total=data.frames,
+                    desc=f"<{create_theta_sweep_place_cell_animation.__name__}> Saving to {config.save_path}",
+                )
+
+                last_frame = {"value": -1}
+
+                def progress_callback(current_frame, _total_frames):
+                    update_val = current_frame - last_frame["value"]
+                    if update_val > 0:
+                        progress_bar.update(update_val)
+                        last_frame["value"] = current_frame
+
+                ani.save(config.save_path, writer=writer, progress_callback=progress_callback)
+                progress_bar.close()
+            else:
+                ani.save(config.save_path, writer=writer)
+
         print(f"Animation saved to: {config.save_path}")
+
+    # Create animation object for showing (if not already created)
+    if config.show and ani is None:
+        ani = FuncAnimation(
+            fig, update, frames=data.frames, interval=interval_ms, blit=True, repeat=True
+        )
 
     if config.show:
         # Automatically detect Jupyter and display as HTML/JS
@@ -1099,93 +1403,42 @@ def create_theta_sweep_grid_cell_animation(
     trajectory_outline = config.kwargs.get("trajectory_outline", "#1A1A1A")
     current_marker_color = config.kwargs.get("current_marker_color", "#FF2D00")
 
-    backend_requested = (render_backend or "auto").lower()
-    auto_backend = backend_requested in {"auto", "none", ""}
-    backend = backend_requested
-    if auto_backend:
-        try:
-            import imageio  # noqa: F401
-        except ImportError:
-            backend = "matplotlib"
-            warnings.warn(
-                "Falling back to Matplotlib backend because imageio is not installed.",
-                RuntimeWarning,
-                stacklevel=2,
-            )
-        else:
-            backend = "imageio"
-            _emit_info("Using imageio backend for theta sweep animation (auto-detected).")
+    # Use unified backend selection system
+    backend_selection = select_animation_backend(
+        save_path=config.save_path,
+        requested_backend=render_backend,
+        check_imageio_plugins=True,
+    )
 
-    if backend == "imageio" and not config.save_path:
-        if auto_backend:
-            _emit_info(
-                "Auto-selected imageio backend requires save_path; falling back to Matplotlib."
-            )
-            backend = "matplotlib"
-        else:
-            raise ValueError(
-                "render_backend='imageio' requires a valid save_path (e.g., path/to/output.gif)"
-            )
+    # Emit any warnings from backend selection
+    emit_backend_warnings(backend_selection.warnings, stacklevel=2)
+    _emit_info(f"Using {backend_selection.backend} backend: {backend_selection.reason}")
 
+    backend = backend_selection.backend
+
+    # Handle imageio backend
     if backend == "imageio":
-        try:
-            import imageio  # noqa: F401
-        except ImportError as exc:
-            raise ImportError(
-                "render_backend='imageio' requires the optional dependency 'imageio'. "
-                "Install it via `uv pip install imageio` or `pip install imageio`."
-            ) from exc
-
+        # Validate render_workers
         if render_workers is not None and render_workers < 0:
             raise ValueError("render_workers must be >= 0")
 
-        available_methods: set[str]
-        try:
-            available_methods = set(mp.get_all_start_methods())
-        except (AttributeError, NotImplementedError):
-            available_methods = {"spawn"}
+        # Get optimal worker count
+        workers = render_workers if render_workers is not None else get_optimal_worker_count()
 
-        start_method = render_start_method
-        if start_method is not None and start_method not in available_methods:
+        # Get multiprocessing context
+        ctx = get_multiprocessing_context(prefer_fork=True)
+        start_method = ctx.method if ctx is not None else None
+
+        if workers > 0 and ctx is None:
             warnings.warn(
-                f"Requested start method '{start_method}' is unavailable; choosing automatically instead.",
-                RuntimeWarning,
-                stacklevel=2,
-            )
-            start_method = None
-
-        jax_loaded = any(name.startswith("jax") for name in sys.modules)
-        if start_method is None:
-            if platform.system() == "Linux" and "fork" in available_methods and not jax_loaded:
-                start_method = "fork"
-            elif "spawn" in available_methods:
-                start_method = "spawn"
-            elif available_methods:
-                start_method = sorted(available_methods)[0]
-            else:
-                start_method = None
-
-        workers: int
-        if render_workers is None:
-            if start_method is None:
-                workers = 0
-            else:
-                workers = max(mp.cpu_count() - 1, 1)
-        else:
-            workers = render_workers
-
-        if workers > 0 and start_method is None:
-            warnings.warn(
-                "Parallel rendering requested but no multiprocessing start method is available; "
+                "Parallel rendering requested but multiprocessing unavailable; "
                 "falling back to sequential rendering.",
                 RuntimeWarning,
                 stacklevel=2,
             )
             workers = 0
 
-        if start_method == "spawn" and jax_loaded:
-            _emit_info("Detected JAX; using 'spawn' start method to avoid fork-related deadlocks.")
-
+        # Create render options
         render_options = _ThetaSweepRenderOptions(
             figsize=config.figsize,
             width_ratios=(1.0, 1.0, 1.0, 1.0),

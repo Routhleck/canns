@@ -8,6 +8,7 @@ spacing analysis) and tracking animations.
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from typing import Any
 
 import numpy as np
@@ -25,6 +26,94 @@ __all__ = [
     "plot_grid_spacing_analysis",
     "create_grid_cell_tracking_animation",
 ]
+
+
+@dataclass(slots=True)
+class _GridCellTrackingRenderOptions:
+    """Rendering options for grid cell tracking animation."""
+
+    figsize: tuple[int, int]
+    title: str
+    env_size: float
+    dt: float
+    dpi: int
+    position: np.ndarray  # Full trajectory
+    activity: np.ndarray  # Full activity
+    rate_map: np.ndarray  # Rate map
+    sim_indices_to_render: np.ndarray  # Frame indices
+    total_sim_steps: int
+
+
+def _render_single_grid_tracking_frame(
+    frame_index: int,
+    options: _GridCellTrackingRenderOptions,
+) -> np.ndarray:
+    """Render a single frame for grid cell tracking animation (module-level for pickling)."""
+    import matplotlib.pyplot as plt
+    import numpy as np
+    from io import BytesIO
+
+    fig, (ax1, ax2, ax3) = plt.subplots(1, 3, figsize=options.figsize)
+    sim_idx = options.sim_indices_to_render[frame_index]
+    current_time_s = sim_idx * options.dt / 1000.0
+
+    # Panel 1: Trajectory
+    ax1.plot(options.position[:, 0], options.position[:, 1], color="gray", alpha=0.3, linewidth=0.5)
+    ax1.plot([options.position[sim_idx, 0]], [options.position[sim_idx, 1]], "ro", markersize=8)
+    ax1.set_xlim(0, options.env_size)
+    ax1.set_ylim(0, options.env_size)
+    ax1.set_xlabel("X Position (m)", fontsize=10)
+    ax1.set_ylabel("Y Position (m)", fontsize=10)
+    ax1.set_title("Trajectory", fontsize=11, fontweight="bold")
+    ax1.set_aspect("equal")
+    ax1.grid(True, alpha=0.3)
+
+    # Panel 2: Activity time course
+    time_axis = np.arange(options.total_sim_steps) * options.dt
+    ax2.plot(time_axis, options.activity, color="steelblue", alpha=0.3, linewidth=0.5)
+    time_slice = time_axis[: sim_idx + 1]
+    activity_slice = options.activity[: sim_idx + 1]
+    ax2.plot(time_slice, activity_slice, "b-", linewidth=2)
+    ax2.plot([time_axis[sim_idx]], [options.activity[sim_idx]], "ro", markersize=6)
+    ax2.set_xlim(0, time_axis[-1])
+    ax2.set_ylim(0, np.max(options.activity) * 1.1 if np.max(options.activity) > 0 else 1)
+    ax2.set_xlabel("Time (ms)", fontsize=10)
+    ax2.set_ylabel("Firing Rate", fontsize=10)
+    ax2.set_title("Activity", fontsize=11, fontweight="bold")
+    ax2.grid(True, alpha=0.3)
+
+    # Panel 3: Rate map with position
+    im = ax3.imshow(
+        options.rate_map.T, origin="lower", cmap="hot",
+        extent=[0, options.env_size, 0, options.env_size], aspect="auto"
+    )
+    ax3.plot(
+        [options.position[sim_idx, 0]], [options.position[sim_idx, 1]], "c*",
+        markersize=15, markeredgecolor="white", markeredgewidth=1.5
+    )
+    ax3.set_xlabel("X Position (m)", fontsize=10)
+    ax3.set_ylabel("Y Position (m)", fontsize=10)
+    ax3.set_title("Firing Rate Map", fontsize=11, fontweight="bold")
+    plt.colorbar(im, ax=ax3, fraction=0.046, pad=0.04)
+
+    # Overall title with time
+    fig.suptitle(f"{options.title}  |  Time: {current_time_s:.2f} s", fontsize=13, fontweight="bold")
+
+    fig.tight_layout()
+
+    # Convert to numpy array
+    buf = BytesIO()
+    fig.savefig(buf, format="png", dpi=options.dpi, bbox_inches="tight")
+    buf.seek(0)
+    img = plt.imread(buf)
+    plt.close(fig)
+    buf.close()
+
+    # Convert to uint8
+    if img.dtype in (np.float32, np.float64):
+        img = (img * 255).astype(np.uint8)
+
+    return img
 
 
 def _ensure_plot_config(
@@ -492,6 +581,10 @@ def create_grid_cell_tracking_animation(
     save_path: str | None = None,
     show: bool = True,
     show_progress_bar: bool = True,
+    render_backend: str | None = "auto",
+    output_dpi: int = 150,
+    render_workers: int | None = None,
+    render_start_method: str | None = None,
     **kwargs: Any,
 ) -> animation.FuncAnimation | None:
     """Create 3-panel animation showing grid cell tracking behavior.
@@ -517,6 +610,10 @@ def create_grid_cell_tracking_animation(
         save_path (str | None): Path to save animation (e.g., 'tracking.gif').
         show (bool): Whether to display the animation. Defaults to True.
         show_progress_bar (bool): Whether to show progress bar during save. Defaults to True.
+        render_backend (str | None): Rendering backend ('imageio', 'matplotlib', or 'auto')
+        output_dpi (int): DPI for rendered frames (affects file size and quality)
+        render_workers (int | None): Number of parallel workers (None = auto-detect)
+        render_start_method (str | None): Multiprocessing start method ('fork', 'spawn', or None)
         **kwargs: Additional keyword arguments.
 
     Returns:
@@ -639,44 +736,143 @@ def create_grid_cell_tracking_animation(
 
             return scatter, activity_line, activity_marker, pos_marker, time_text
 
-        ani = animation.FuncAnimation(
-            fig,
-            animate,
-            frames=num_video_frames,
-            interval=1000 / config.fps,
-            blit=True,
-            repeat=config.repeat,
-        )
-
+        ani = None
         progress_bar_enabled = getattr(config, "show_progress_bar", show_progress_bar)
 
+        # Save animation using unified backend system
         if config.save_path:
+            # Warn if both saving and showing (causes double rendering)
+            if config.show and num_video_frames > 50:
+                from canns.analyzer.visualization.core import warn_double_rendering
 
-            def _save(write_animation):
+                warn_double_rendering(num_video_frames, config.save_path, stacklevel=2)
+
+            # Use unified backend selection system
+            from canns.analyzer.visualization.core import (
+                emit_backend_warnings,
+                get_imageio_writer_kwargs,
+                get_multiprocessing_context,
+                get_optimal_worker_count,
+                select_animation_backend,
+            )
+
+            backend_selection = select_animation_backend(
+                save_path=config.save_path,
+                requested_backend=render_backend,
+                check_imageio_plugins=True,
+            )
+
+            emit_backend_warnings(backend_selection.warnings, stacklevel=2)
+            backend = backend_selection.backend
+
+            if backend == "imageio":
+                # Use imageio backend with parallel rendering
+                workers = render_workers if render_workers is not None else get_optimal_worker_count()
+                ctx = get_multiprocessing_context(prefer_fork=(render_start_method == "fork"))
+
+                # Create render options
+                render_options = _GridCellTrackingRenderOptions(
+                    figsize=config.figsize,
+                    title=title,
+                    env_size=env_size,
+                    dt=dt,
+                    dpi=output_dpi,
+                    position=position,
+                    activity=activity,
+                    rate_map=rate_map,
+                    sim_indices_to_render=sim_indices_to_render,
+                    total_sim_steps=total_sim_steps,
+                )
+
+                # Get format-specific kwargs
+                writer_kwargs, mode = get_imageio_writer_kwargs(config.save_path, config.fps)
+
                 try:
-                    from canns.analyzer.visualization.core import get_matplotlib_writer
+                    import imageio
+                    from functools import partial
 
-                    writer = get_matplotlib_writer(config.save_path, fps=config.fps)
-                    write_animation(writer)
+                    # Create partial function with options
+                    render_func = partial(_render_single_grid_tracking_frame, options=render_options)
+
+                    with imageio.get_writer(config.save_path, mode=mode, **writer_kwargs) as writer:
+                        if workers > 1 and ctx is not None:
+                            # Parallel rendering
+                            with ctx.Pool(processes=workers) as pool:
+                                frames_iter = pool.imap(render_func, range(num_video_frames))
+
+                                if progress_bar_enabled:
+                                    frames_iter = tqdm(
+                                        frames_iter,
+                                        total=num_video_frames,
+                                        desc=f"Rendering {config.save_path}",
+                                    )
+
+                                for frame_img in frames_iter:
+                                    writer.append_data(frame_img)
+                        else:
+                            # Serial rendering
+                            frames_range = range(num_video_frames)
+                            if progress_bar_enabled:
+                                frames_range = tqdm(
+                                    frames_range,
+                                    desc=f"Rendering {config.save_path}",
+                                )
+
+                            for frame_idx in frames_range:
+                                frame_img = render_func(frame_idx)
+                                writer.append_data(frame_img)
+
                     print(f"Animation saved to: {config.save_path}")
-                except Exception as exc:
-                    print(f"Error saving animation: {exc}")
 
-            if progress_bar_enabled:
-                pbar = tqdm(total=num_video_frames, desc=f"Saving to {config.save_path}")
+                except Exception as e:
+                    import warnings
+                    warnings.warn(
+                        f"imageio rendering failed: {e}. Falling back to matplotlib.",
+                        RuntimeWarning,
+                        stacklevel=2,
+                    )
+                    backend = "matplotlib"
 
-                def progress_callback(current_frame: int, total_frames: int) -> None:
-                    pbar.update(1)
+            if backend == "matplotlib":
+                # Use matplotlib backend (traditional FuncAnimation)
+                ani = animation.FuncAnimation(
+                    fig,
+                    animate,
+                    frames=num_video_frames,
+                    interval=1000 / config.fps,
+                    blit=True,
+                    repeat=config.repeat,
+                )
 
-                def with_writer(writer):
-                    ani.save(config.save_path, writer=writer, progress_callback=progress_callback)
+                from canns.analyzer.visualization.core import get_matplotlib_writer
 
-                try:
-                    _save(with_writer)
-                finally:
-                    pbar.close()
-            else:
-                _save(lambda writer: ani.save(config.save_path, writer=writer))
+                writer = get_matplotlib_writer(config.save_path, fps=config.fps)
+
+                if progress_bar_enabled:
+                    pbar = tqdm(total=num_video_frames, desc=f"Saving to {config.save_path}")
+
+                    def progress_callback(current_frame: int, total_frames: int) -> None:
+                        pbar.update(1)
+
+                    try:
+                        ani.save(config.save_path, writer=writer, progress_callback=progress_callback)
+                        print(f"Animation saved to: {config.save_path}")
+                    finally:
+                        pbar.close()
+                else:
+                    ani.save(config.save_path, writer=writer)
+                    print(f"Animation saved to: {config.save_path}")
+
+        # Create animation object for showing (if not already created)
+        if config.show and ani is None:
+            ani = animation.FuncAnimation(
+                fig,
+                animate,
+                frames=num_video_frames,
+                interval=1000 / config.fps,
+                blit=True,
+                repeat=config.repeat,
+            )
 
         if config.show:
             if is_jupyter_environment():
