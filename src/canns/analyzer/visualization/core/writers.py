@@ -32,26 +32,183 @@ class OptimizedAnimationWriter:
     """
     High-performance animation writer with automatic format detection.
 
-    This writer automatically selects the best encoding method based on:
-    - Output file format (detected from extension)
-    - Available encoding libraries
-    - User-specified speed/quality preferences
+    This writer provides a drop-in replacement for matplotlib's animation
+    writers with significant performance improvements through better encoding
+    libraries and optimized settings. Automatically selects the best encoding
+    method based on output format and available dependencies.
 
-    Performance improvements:
-    - GIF: 1.7x faster than PillowWriter
-    - MP4: 5-10x faster than GIF encoding
-    - WebM: Best compression, moderate speed
+    The writer handles:
+    - Format detection from file extension
+    - Automatic backend selection (imageio vs Pillow)
+    - Encoding speed vs quality tradeoffs
+    - Compatibility with matplotlib's animation API
 
-    Example:
-        >>> writer = OptimizedAnimationWriter(
-        ...     'output.mp4',
-        ...     fps=10,
-        ...     encoding_speed='fast'
-        ... )
-        >>> writer.setup(fig, 'output.mp4')
-        >>> for frame in frames:
-        ...     writer.grab_frame()
-        >>> writer.finish()
+    Performance Improvements
+    ------------------------
+    - **GIF**: 1.7x faster than PillowWriter
+    - **MP4**: 5-10x faster than GIF encoding (~36x total speedup)
+    - **WebM**: Best compression, moderate speed
+
+    Supported Formats
+    -----------------
+    - **GIF** (.gif): Universal compatibility, inline GitHub display
+    - **MP4** (.mp4, .m4v, .mov): Best performance, smallest files
+    - **WebM** (.webm): Modern format, excellent compression
+
+    Parameters
+    ----------
+    save_path : str
+        Output file path. Extension determines format (.gif, .mp4, .webm)
+    fps : int, default=10
+        Frames per second for the animation
+    encoding_speed : {"fast", "balanced", "quality"}, default="balanced"
+        Encoding speed vs quality tradeoff:
+        - "fast": Fastest encoding, good quality
+        - "balanced": Good balance (recommended)
+        - "quality": Best quality, slower encoding
+    codec : str or None, default=None
+        Video codec override (None for automatic selection).
+        Common: 'libx264' (MP4), 'h264', 'mpeg4'
+    bitrate : int or None, default=None
+        Video bitrate in kbps (None for automatic).
+        Higher = better quality but larger files.
+        Typical: 1000-5000 kbps for MP4
+    dpi : int, default=100
+        Figure DPI for rendering. Higher DPI = larger output but sharper
+
+    Attributes
+    ----------
+    save_path : str
+        Output file path
+    format : VideoFormat
+        Detected format ("gif", "mp4", or "webm")
+    writer : str
+        Selected writer backend ("imageio_gif", "imageio_ffmpeg", "pillow_gif")
+    frames : list[np.ndarray]
+        Buffer of captured frames
+
+    Methods
+    -------
+    setup(fig, outfile=None, dpi=None)
+        Setup writer for figure (matplotlib API)
+    grab_frame(**kwargs)
+        Capture current frame from figure
+    finish()
+        Complete encoding and save file
+
+    Example
+    -------
+    Basic usage with matplotlib FuncAnimation:
+
+    >>> import numpy as np
+    >>> import matplotlib.pyplot as plt
+    >>> from matplotlib.animation import FuncAnimation
+    >>> from canns.analyzer.visualization.core.writers import OptimizedAnimationWriter
+    >>> 
+    >>> # Create figure and animation
+    >>> fig, ax = plt.subplots()
+    >>> line, = ax.plot([], [], 'b-')
+    >>> ax.set_xlim(0, 2*np.pi)
+    >>> ax.set_ylim(-1, 1)
+    >>> 
+    >>> def init():
+    ...     line.set_data([], [])
+    ...     return line,
+    >>> 
+    >>> def update(frame):
+    ...     x = np.linspace(0, 2*np.pi, 100)
+    ...     y = np.sin(x + frame * 0.1)
+    ...     line.set_data(x, y)
+    ...     return line,
+    >>> 
+    >>> # Create animation
+    >>> anim = FuncAnimation(fig, update, init_func=init, frames=100)
+    >>> 
+    >>> # Save with optimized writer
+    >>> writer = OptimizedAnimationWriter(
+    ...     'output.mp4',
+    ...     fps=30,
+    ...     encoding_speed='fast'
+    ... )
+    >>> anim.save('output.mp4', writer=writer)
+
+    Fast GIF for iteration:
+
+    >>> # Quick preview GIF (fast encoding)
+    >>> writer = OptimizedAnimationWriter(
+    ...     'preview.gif',
+    ...     fps=10,
+    ...     encoding_speed='fast'
+    ... )
+    >>> anim.save('preview.gif', writer=writer)
+
+    High-quality MP4 for publication:
+
+    >>> # Publication quality (high DPI, slower encoding)
+    >>> writer = OptimizedAnimationWriter(
+    ...     'figure_publication.mp4',
+    ...     fps=30,
+    ...     encoding_speed='quality',
+    ...     bitrate=5000,  # 5 Mbps
+    ...     dpi=150
+    ... )
+    >>> anim.save('figure_publication.mp4', writer=writer)
+
+    Manual frame capture:
+
+    >>> # Direct frame-by-frame control
+    >>> fig, ax = plt.subplots()
+    >>> writer = OptimizedAnimationWriter('manual.mp4', fps=24)
+    >>> writer.setup(fig)
+    >>> 
+    >>> for i in range(100):
+    ...     ax.clear()
+    ...     ax.plot(np.sin(np.linspace(0, 2*np.pi, 100) + i*0.1))
+    ...     writer.grab_frame()
+    >>> 
+    >>> writer.finish()
+
+    See Also
+    --------
+    create_optimized_writer : Factory function for creating writers
+    get_recommended_format : Get optimal format for use case
+    warn_gif_format : Performance warning for GIF format
+
+    Notes
+    -----
+    **Backend Selection:**
+    1. MP4/WebM: Prefers imageio+ffmpeg (best performance)
+    2. GIF: Prefers imageio (1.7x faster than Pillow)
+    3. Fallback: Pillow (always available but slower)
+
+    **Format Recommendations:**
+    - **Fast iteration**: GIF with encoding_speed='fast'
+    - **Final output**: MP4 with encoding_speed='balanced'
+    - **Publication**: MP4 with encoding_speed='quality', high dpi
+    - **GitHub README**: GIF (displays inline)
+
+    **Performance Tips:**
+    - MP4 is ~36x faster than GIF overall
+    - Use 'fast' encoding for quick previews
+    - Higher DPI significantly increases encoding time
+    - Bitrate affects file size more than encoding time
+
+    **Dependencies:**
+    - Basic (always works): Pillow (via matplotlib)
+    - Recommended: imageio (1.7x faster GIF)
+    - Best performance: imageio[ffmpeg] (fast MP4)
+
+    **Compatibility:**
+    - Implements matplotlib's MovieWriter API
+    - Drop-in replacement for FFMpegWriter, PillowWriter
+    - Works with FuncAnimation.save()
+
+    Warnings
+    --------
+    - GIF encoding is significantly slower than MP4 (~36x)
+    - High DPI settings can greatly increase encoding time
+    - Large bitrates produce very large files
+    - WebM requires ffmpeg with webm support
     """
 
     def __init__(
@@ -66,13 +223,20 @@ class OptimizedAnimationWriter:
         """
         Initialize the optimized writer.
 
-        Args:
-            save_path: Output file path (extension determines format)
-            fps: Frames per second
-            encoding_speed: 'fast', 'balanced', or 'quality'
-            codec: Override automatic codec selection
-            bitrate: Video bitrate in kbps (None for automatic)
-            dpi: Figure DPI for rendering
+        Parameters
+        ----------
+        save_path : str
+            Output file path (extension determines format)
+        fps : int, default=10
+            Frames per second
+        encoding_speed : {"fast", "balanced", "quality"}, default="balanced"
+            Encoding speed vs quality tradeoff
+        codec : str or None, default=None
+            Override automatic codec selection
+        bitrate : int or None, default=None
+            Video bitrate in kbps (None for automatic)
+        dpi : int, default=100
+            Figure DPI for rendering
         """
         self.save_path = save_path
         self.fps = fps

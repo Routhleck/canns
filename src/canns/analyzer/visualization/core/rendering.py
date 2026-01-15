@@ -32,20 +32,168 @@ except ImportError:
 
 
 class ParallelAnimationRenderer:
-    """Multi-process parallel renderer for matplotlib animations.
+    """
+    Multi-process parallel renderer for matplotlib animations.
 
-    This renderer creates separate processes to render frames in parallel,
-    then combines them into a video file using imageio. Best for animations
-    with >500 frames where the rendering bottleneck is matplotlib itself.
+    This renderer distributes frame rendering across multiple CPU cores using
+    multiprocessing, achieving 3-4x speedup for animations with many frames.
+    Best suited for animations where matplotlib rendering is the bottleneck
+    (>500 frames).
 
-    Performance: Achieves ~3-4x speedup on 4-core CPUs.
+    The renderer works by:
+    1. Creating a pool of worker processes
+    2. Distributing frame rendering tasks across workers
+    3. Collecting rendered frames as numpy arrays
+    4. Combining frames into a video file using imageio
+
+    Performance
+    -----------
+    - **Speedup**: 3-4x faster on 4-core CPUs
+    - **Threshold**: Most effective for >500 frames
+    - **Overhead**: Multiprocessing has startup cost (~1-2s)
+    - **Memory**: Each worker needs separate memory for matplotlib objects
+
+    Limitations
+    -----------
+    - Requires imageio package
+    - Experimental: May fail due to matplotlib object pickling limitations
+    - Not all matplotlib objects can be pickled (e.g., lambda functions)
+    - Works best with simple, picklable animation objects
+
+    Parameters
+    ----------
+    num_workers : int or None, default=None
+        Number of worker processes. If None, uses cpu_count() from
+        multiprocessing module (all available cores).
+
+    Attributes
+    ----------
+    num_workers : int
+        Number of worker processes being used
+
+    Methods
+    -------
+    render(animation_base, nframes, fps, save_path, ...)
+        Render animation frames in parallel and save to file
+
+    Example
+    -------
+    Basic usage with OptimizedAnimationBase:
+
+    >>> import numpy as np
+    >>> import matplotlib.pyplot as plt
+    >>> from canns.analyzer.visualization.core.animation import OptimizedAnimationBase
+    >>> from canns.analyzer.visualization.core.rendering import ParallelAnimationRenderer
+    >>> 
+    >>> # Define animation class
+    >>> class MyAnimation(OptimizedAnimationBase):
+    ...     def create_artists(self):
+    ...         self.line, = self.ax.plot([], [], 'b-', animated=True)
+    ...         self.ax.set_xlim(0, 2*np.pi)
+    ...         self.ax.set_ylim(-1, 1)
+    ...         return [self.line]
+    ...     
+    ...     def update_frame(self, frame_idx):
+    ...         x = np.linspace(0, 2*np.pi, 100)
+    ...         y = np.sin(x + frame_idx * 0.1)
+    ...         self.line.set_data(x, y)
+    ...         return (self.line,)
+    >>> 
+    >>> # Create animation instance
+    >>> fig, ax = plt.subplots()
+    >>> anim = MyAnimation(fig, ax)
+    >>> 
+    >>> # Render with parallel processing
+    >>> renderer = ParallelAnimationRenderer(num_workers=4)
+    >>> renderer.render(
+    ...     animation_base=anim,
+    ...     nframes=1000,
+    ...     fps=30,
+    ...     save_path='output.mp4',
+    ...     show_progress=True
+    ... )
+    Rendering 1000 frames using 4 workers...
+    Rendered 10/1000 frames...
+    ...
+    Animation saved successfully!
+
+    Control worker count for different systems:
+
+    >>> # Use all available cores
+    >>> renderer = ParallelAnimationRenderer()  # auto-detects CPU count
+    >>> 
+    >>> # Limit to 2 workers (less memory usage)
+    >>> renderer = ParallelAnimationRenderer(num_workers=2)
+    >>> 
+    >>> # Single worker (no parallelization, for debugging)
+    >>> renderer = ParallelAnimationRenderer(num_workers=1)
+
+    Handle pickling limitations:
+
+    >>> # If you get pickling errors, ensure:
+    >>> # 1. No lambda functions in animation
+    >>> # 2. All data is serializable (numpy arrays, basic Python types)
+    >>> # 3. No references to local variables from outer scope
+    >>> 
+    >>> # Example of picklable animation (good):
+    >>> class GoodAnimation(OptimizedAnimationBase):
+    ...     def __init__(self, fig, ax):
+    ...         super().__init__(fig, ax)
+    ...         self.data = np.random.randn(100, 100)  # Serializable
+    ...     
+    ...     def create_artists(self):
+    ...         self.im = self.ax.imshow(self.data, animated=True)
+    ...         return [self.im]
+    ...     
+    ...     def update_frame(self, frame_idx):
+    ...         self.im.set_array(self.data * np.sin(frame_idx / 10))
+    ...         return (self.im,)
+
+    See Also
+    --------
+    OptimizedAnimationBase : Base class for creating animations
+    get_optimal_worker_count : Get recommended worker count
+    AnimationConfig : Configuration with parallel rendering options
+
+    Notes
+    -----
+    **When to Use:**
+    - Animations with >500 frames
+    - Each frame takes noticeable time to render (>0.01s)
+    - Multi-core CPU available
+    - Animation objects are picklable
+
+    **When NOT to Use:**
+    - Small animations (<100 frames) - overhead not worth it
+    - Animation uses non-picklable objects
+    - Limited memory (each worker needs ~100-500MB)
+    - Already fast enough with standard rendering
+
+    **Performance Factors:**
+    - More workers = faster, but diminishing returns after cpu_count
+    - Startup overhead: ~1-2 seconds for process pool creation
+    - Memory per worker: ~100-500MB depending on figure complexity
+    - Speedup saturates around cpu_count workers
+
+    **Troubleshooting:**
+    - "Can't pickle" errors: Simplify animation, avoid lambdas
+    - Slow performance: Check if frame rendering is actually the bottleneck
+    - High memory usage: Reduce num_workers
+    - Errors in frames: Check individual frame rendering first
+
+    References
+    ----------
+    .. [1] Python multiprocessing: https://docs.python.org/3/library/multiprocessing.html
+    .. [2] Imageio documentation: https://imageio.readthedocs.io/
     """
 
     def __init__(self, num_workers: int | None = None):
         """Initialize the parallel renderer.
 
-        Args:
-            num_workers: Number of worker processes (uses CPU count if None)
+        Parameters
+        ----------
+        num_workers : int or None, default=None
+            Number of worker processes (uses CPU count if None)
         """
         self.num_workers = num_workers or cpu_count()
 
