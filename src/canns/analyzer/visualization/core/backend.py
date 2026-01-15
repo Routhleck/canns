@@ -43,32 +43,21 @@ def select_animation_backend(
     requested_backend: str | None = None,
     check_imageio_plugins: bool = True,
 ) -> BackendSelection:
-    """
-    Select the optimal animation rendering backend.
-
-    This function implements smart backend selection logic:
-    1. If user explicitly requests a backend, validate and use it
-    2. Otherwise, auto-select based on file format and available dependencies
-    3. For GIF: prefer imageio (parallel rendering)
-    4. For MP4: prefer imageio if plugins available, else matplotlib
-    5. Always fallback gracefully with helpful warnings
+    """Select the optimal animation rendering backend.
 
     Args:
-        save_path: Output file path (determines format)
-        requested_backend: User's backend preference ('imageio', 'matplotlib', 'auto', or None)
-        check_imageio_plugins: Whether to verify imageio can write the format
+        save_path: Output file path (determines format).
+        requested_backend: Backend preference ('imageio', 'matplotlib', 'auto', or None).
+        check_imageio_plugins: Whether to verify imageio can write the format.
 
     Returns:
-        BackendSelection with backend choice and metadata
+        BackendSelection with backend choice and metadata.
 
-    Example:
+    Examples:
+        >>> from canns.analyzer.visualization.core.backend import select_animation_backend
         >>> selection = select_animation_backend("output.mp4")
-        >>> print(f"Using {selection.backend}: {selection.reason}")
-        Using imageio: Parallel rendering available for MP4
-
-        >>> selection = select_animation_backend("output.gif", "matplotlib")
-        >>> print(selection.warnings)
-        ['Consider using imageio backend for faster GIF rendering']
+        >>> print(selection.backend in {"imageio", "matplotlib"})
+        True
     """
     warnings_list = []
 

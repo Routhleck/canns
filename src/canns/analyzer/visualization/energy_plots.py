@@ -211,16 +211,10 @@ def energy_landscape_1d_static(
     show: bool = True,
     **kwargs: Any,
 ):
-    """Plot a 1D static energy landscape using Matplotlib.
-
-    This mirrors the long-form description from the pre-reorganisation module so
-    existing documentation references stay accurate. The function accepts a
-    dictionary of datasets, plotting each curve on the same set of axes while
-    honouring the ``PlotConfig`` defaults callers relied on previously.
+    """Plot a 1D static energy landscape.
 
     Args:
-        data_sets: Mapping of series labels to ``(x, y)`` tuples representing
-            the energy curve to draw.
+        data_sets: Mapping ``label -> (x, y)`` where ``x`` and ``y`` are 1D arrays.
         config: Optional :class:`PlotConfig` carrying shared styling.
         title: Plot title when no config override is supplied.
         xlabel: X-axis label when no config override is supplied.
@@ -234,6 +228,17 @@ def energy_landscape_1d_static(
 
     Returns:
         Tuple[plt.Figure, plt.Axes]: The created figure and axes handles.
+
+    Examples:
+        >>> import numpy as np
+        >>> from canns.analyzer.visualization import energy_landscape_1d_static, PlotConfigs
+        >>>
+        >>> x = np.linspace(0, 1, 5)
+        >>> data_sets = {"u": (x, np.sin(x)), "Iext": (x, np.cos(x))}
+        >>> config = PlotConfigs.energy_landscape_1d_static(show=False)
+        >>> fig, ax = energy_landscape_1d_static(data_sets, config=config)
+        >>> print(fig is not None)
+        True
     """
 
     config = _ensure_plot_config(
@@ -291,16 +296,10 @@ def energy_landscape_1d_animation(
 ) -> animation.FuncAnimation:
     """Create an animation of an evolving 1D energy landscape.
 
-    The docstring intentionally preserves the guidance from the previous
-    implementation so existing callers can rely on the same parameter
-    explanations.
-
     Args:
-        data_sets: Dictionary whose keys are legend labels and values are
-            ``(x_data, y_data)`` tuples where ``y_data`` is shaped as
-            ``(time, state)``.
-        time_steps_per_second: Number of simulation time steps per second of
-            wall-clock time (e.g., ``1/dt``).
+        data_sets: Mapping ``label -> (x, y_series)``, where ``y_series`` is
+            shaped ``(timesteps, npoints)``.
+        time_steps_per_second: Simulation steps per second (e.g., ``1/dt``).
         config: Optional :class:`PlotConfig` with shared styling overrides.
         fps: Frames per second to render in the resulting animation.
         title: Title used when ``config`` is not provided.
@@ -320,6 +319,22 @@ def energy_landscape_1d_animation(
 
     Returns:
         ``matplotlib.animation.FuncAnimation``: The constructed animation.
+
+    Examples:
+        >>> import numpy as np
+        >>> from canns.analyzer.visualization import energy_landscape_1d_animation, PlotConfigs
+        >>>
+        >>> x = np.linspace(0, 1, 5)
+        >>> y_series = np.stack([np.sin(x), np.cos(x)], axis=0)
+        >>> data_sets = {"u": (x, y_series), "Iext": (x, y_series)}
+        >>> config = PlotConfigs.energy_landscape_1d_animation(
+        ...     time_steps_per_second=10,
+        ...     fps=2,
+        ...     show=False,
+        ... )
+        >>> anim = energy_landscape_1d_animation(data_sets, config=config)
+        >>> print(anim is not None)
+        True
     """
 
     config = _ensure_plot_config(
@@ -605,6 +620,16 @@ def energy_landscape_2d_static(
 
     Returns:
         Tuple[plt.Figure, plt.Axes]: The Matplotlib figure and axes objects.
+
+    Examples:
+        >>> import numpy as np
+        >>> from canns.analyzer.visualization import energy_landscape_2d_static, PlotConfigs
+        >>>
+        >>> z = np.random.rand(4, 4)
+        >>> config = PlotConfigs.energy_landscape_2d_static(show=False)
+        >>> fig, ax = energy_landscape_2d_static(z, config=config)
+        >>> print(fig is not None)
+        True
     """
 
     config = _ensure_plot_config(
@@ -673,9 +698,6 @@ def energy_landscape_2d_animation(
 ) -> animation.FuncAnimation:
     """Create an animation of an evolving 2D landscape.
 
-    The long-form description mirrors the previous implementation to maintain
-    backwards-compatible documentation for downstream users.
-
     Args:
         zs_data: Array of shape ``(timesteps, dim_y, dim_x)`` describing the
             landscape at each simulation step.
@@ -701,6 +723,20 @@ def energy_landscape_2d_animation(
 
     Returns:
         ``matplotlib.animation.FuncAnimation``: The constructed animation.
+
+    Examples:
+        >>> import numpy as np
+        >>> from canns.analyzer.visualization import energy_landscape_2d_animation, PlotConfigs
+        >>>
+        >>> zs = np.random.rand(3, 4, 4)
+        >>> config = PlotConfigs.energy_landscape_2d_animation(
+        ...     time_steps_per_second=10,
+        ...     fps=2,
+        ...     show=False,
+        ... )
+        >>> anim = energy_landscape_2d_animation(zs, config=config)
+        >>> print(anim is not None)
+        True
     """
 
     config = _ensure_plot_config(

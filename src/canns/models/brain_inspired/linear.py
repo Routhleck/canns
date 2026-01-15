@@ -11,22 +11,22 @@ __all__ = ["LinearLayer"]
 
 
 class LinearLayer(BrainInspiredModel):
-    """
-    Generic linear feedforward layer supporting multiple brain-inspired learning rules.
+    """Generic linear feedforward layer for brain-inspired learning rules.
 
-    This model provides a simple linear transformation with optional sliding threshold
-    for BCM-style plasticity. It can be used with various trainers:
-    - OjaTrainer: Normalized Hebbian learning for PCA
-    - BCMTrainer: Sliding threshold plasticity (requires use_bcm_threshold=True)
-    - HebbianTrainer: Standard Hebbian learning
-
-    Computation:
+    It computes a simple linear transform:
         y = W @ x
 
-    where W is the weight matrix, x is the input, and y is the output.
+    You can pair it with trainers like ``OjaTrainer``, ``BCMTrainer``, or
+    ``HebbianTrainer``.
 
-    For BCM learning, an optional sliding threshold θ tracks output activity:
-        θ ← θ + (1/τ) * (y² - θ)
+    Examples:
+        >>> import jax.numpy as jnp
+        >>> from canns.models.brain_inspired import LinearLayer
+        >>>
+        >>> layer = LinearLayer(input_size=3, output_size=2)
+        >>> y = layer.forward(jnp.array([1.0, 0.5, -1.0], dtype=jnp.float32))
+        >>> y.shape
+        (2,)
 
     References:
         - Oja (1982): Simplified neuron model as a principal component analyzer
@@ -73,14 +73,13 @@ class LinearLayer(BrainInspiredModel):
             self.theta = bm.Variable(jnp.ones(self.output_size, dtype=jnp.float32) * 0.1)
 
     def forward(self, x: jnp.ndarray) -> jnp.ndarray:
-        """
-        Forward pass through the layer.
+        """Compute the layer output for one input vector.
 
         Args:
-            x: Input vector of shape (input_size,)
+            x: Input vector of shape ``(input_size,)``.
 
         Returns:
-            Output vector of shape (output_size,)
+            Output vector of shape ``(output_size,)``.
         """
         self.x.value = jnp.asarray(x, dtype=jnp.float32)
         self.y.value = self.W.value @ self.x.value

@@ -69,9 +69,6 @@ def tuning_curve(
 ):
     """Plot the tuning curve for one or more neurons.
 
-    The wording mirrors the original ``visualize`` module to avoid API drift and
-    to keep existing references valid.
-
     Args:
         stimulus: 1D array with the stimulus value at each time step.
         firing_rates: 2D array of firing rates shaped ``(timesteps, neurons)``.
@@ -86,6 +83,17 @@ def tuning_curve(
         save_path: Optional location where the figure should be stored.
         show: Whether to display the plot interactively.
         **kwargs: Additional keyword arguments passed through to ``ax.plot``.
+
+    Examples:
+        >>> import numpy as np
+        >>> from canns.analyzer.visualization import tuning_curve, PlotConfigs
+        >>>
+        >>> stimulus = np.linspace(0, 1, 10)
+        >>> firing_rates = np.random.rand(10, 3)
+        >>> config = PlotConfigs.tuning_curve(num_bins=5, pref_stim=np.array([0.2, 0.5, 0.8]), show=False)
+        >>> fig, ax = tuning_curve(stimulus, firing_rates, neuron_indices=[0, 1], config=config)
+        >>> print(fig is not None)
+        True
     """
 
     config = _ensure_plot_config(

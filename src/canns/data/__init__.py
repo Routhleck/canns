@@ -1,8 +1,11 @@
-"""
-Data utilities for CANNs.
+"""Data utilities for CANNs.
 
-This module provides dataset management, loading, and downloading utilities.
-It consolidates data-related functionality previously scattered across the codebase.
+This namespace provides dataset registry, download helpers, and convenience
+loaders for common CANNs datasets.
+
+Examples:
+    >>> from canns import data
+    >>> print(list(data.DATASETS))
 """
 
 from .datasets import (

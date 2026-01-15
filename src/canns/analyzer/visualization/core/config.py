@@ -13,13 +13,19 @@ __all__ = ["PlotConfig", "PlotConfigs", "AnimationConfig", "finalize_figure"]
 
 @dataclass
 class PlotConfig:
-    """Unified configuration class for all plotting helpers in ``canns.analyzer``.
+    """Unified configuration class for plotting helpers in ``canns.analyzer``.
 
-    This mirrors the behaviour of the previous ``visualize`` module so that
-    reorganising the files does not affect the public API. The attributes map
-    directly to keyword arguments exposed by the high-level plotting functions,
-    allowing users to keep existing configuration objects unchanged after the
-    reorganisation.
+    Examples:
+        >>> import numpy as np
+        >>> from canns.analyzer.visualization import PlotConfig, energy_landscape_1d_static
+        >>>
+        >>> # Dummy input (matches test-style energy_landscape usage)
+        >>> x = np.linspace(0, 1, 5)
+        >>> data_sets = {"u": (x, np.sin(x))}
+        >>> config = PlotConfig(title="Demo", show=False)
+        >>> fig, ax = energy_landscape_1d_static(data_sets, config=config)
+        >>> print(fig is not None)
+        True
     """
 
     title: str = ""
@@ -109,6 +115,21 @@ def finalize_figure(
         rasterize_artists: Optional list of artists to rasterize before saving.
         savefig_kwargs: Extra kwargs merged into ``savefig`` (wins over config).
         always_close: If True, close the figure even when ``config.show`` is True.
+
+    Examples:
+        >>> import numpy as np
+        >>> from matplotlib import pyplot as plt
+        >>> from canns.analyzer.visualization import PlotConfig
+        >>> from canns.analyzer.visualization.core.config import finalize_figure
+        >>>
+        >>> x = np.linspace(0, 1, 5)
+        >>> y = np.sin(x)
+        >>> fig, ax = plt.subplots()
+        >>> _ = ax.plot(x, y)
+        >>> config = PlotConfig(title="Finalize Demo", show=False)
+        >>> finalized = finalize_figure(fig, config)
+        >>> print(finalized is not None)
+        True
     """
 
     from matplotlib import pyplot as plt
@@ -156,14 +177,13 @@ class AnimationConfig:
                                 more than this many frames
 
     Example:
-        >>> # High-quality animation (default)
-        >>> config = AnimationConfig(fps=30, quality='high')
+        >>> from canns.analyzer.visualization import AnimationConfig
         >>>
-        >>> # Fast draft mode for quick iteration
-        >>> draft_config = AnimationConfig(quality='draft')  # Auto: 15 FPS, 0.5x resolution
-        >>>
-        >>> # Force parallel rendering
-        >>> parallel_config = AnimationConfig(use_parallel=True, num_workers=8)
+        >>> # Dummy input representing total frames
+        >>> total_frames = 120
+        >>> config = AnimationConfig(fps=30, quality="high")
+        >>> print(config.fps, total_frames)
+        30 120
     """
 
     fps: int = 30
@@ -186,8 +206,16 @@ class AnimationConfig:
 class PlotConfigs:
     """Collection of commonly used plot configurations.
 
-    These helpers mirror the presets that existed in ``canns.analyzer.visualize``
-    so that callers relying on them continue to receive the exact same defaults.
+    Examples:
+        >>> import numpy as np
+        >>> from canns.analyzer.visualization import PlotConfigs, energy_landscape_1d_static
+        >>>
+        >>> x = np.linspace(0, 1, 5)
+        >>> data_sets = {"u": (x, np.sin(x))}
+        >>> config = PlotConfigs.energy_landscape_1d_static(show=False)
+        >>> fig, ax = energy_landscape_1d_static(data_sets, config=config)
+        >>> print(fig is not None)
+        True
     """
 
     @staticmethod

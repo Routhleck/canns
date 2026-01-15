@@ -179,15 +179,15 @@ def plot_firing_field_heatmap(
         tuple[plt.Figure, plt.Axes]: The figure and axis objects for further customization.
 
     Example:
-        >>> from canns.analyzer.metrics.spatial_metrics import compute_firing_field
+        >>> import numpy as np
         >>> from canns.analyzer.visualization import plot_firing_field_heatmap, PlotConfig
-        >>> # Compute firing field
-        >>> heatmaps = compute_firing_field(activity, positions, 5.0, 5.0, 50, 50)
-        >>> # Plot single neuron with PlotConfig
-        >>> config = PlotConfig(figsize=(6, 6), title='Neuron 0', save_path='neuron_0.png', show=False)
-        >>> fig, ax = plot_firing_field_heatmap(heatmaps[0], config=config)
-        >>> # Plot with legacy parameters
-        >>> fig, ax = plot_firing_field_heatmap(heatmaps[1], title='Neuron 1', cmap='viridis', save_path='neuron_1.png')
+        >>>
+        >>> # Dummy input heatmap (M x K)
+        >>> heatmap = np.random.rand(6, 6)
+        >>> config = PlotConfig(title="Neuron 0", show=False)
+        >>> fig, ax = plot_firing_field_heatmap(heatmap, config=config)
+        >>> print(fig is not None)
+        True
     """
     # Handle configuration
     if config is None:
@@ -272,14 +272,16 @@ def plot_autocorrelation(
         tuple[plt.Figure, plt.Axes]: Figure and axes objects.
 
     Example:
+        >>> import numpy as np
         >>> from canns.analyzer.metrics.spatial_metrics import compute_spatial_autocorrelation
         >>> from canns.analyzer.visualization import plot_autocorrelation, PlotConfigs
+        >>>
+        >>> rate_map = np.random.rand(10, 10)
         >>> autocorr = compute_spatial_autocorrelation(rate_map)
-        >>> # Modern approach
-        >>> config = PlotConfigs.grid_autocorrelation(save_path='autocorr.png')
+        >>> config = PlotConfigs.grid_autocorrelation(show=False)
         >>> fig, ax = plot_autocorrelation(autocorr, config=config)
-        >>> # Legacy approach
-        >>> fig, ax = plot_autocorrelation(autocorr, cmap='RdBu_r', save_path='autocorr.png')
+        >>> print(fig is not None)
+        True
 
     References:
         Sargolini et al. (2006). Conjunctive representation of position, direction,
@@ -369,12 +371,15 @@ def plot_grid_score(
         tuple[plt.Figure, plt.Axes]: Figure and axes objects.
 
     Example:
+        >>> import numpy as np
         >>> from canns.analyzer.metrics.spatial_metrics import compute_grid_score
         >>> from canns.analyzer.visualization import plot_grid_score
+        >>>
+        >>> autocorr = np.random.rand(10, 10)
         >>> grid_score, rotated_corrs = compute_grid_score(autocorr)
-        >>> fig, ax = plot_grid_score(rotated_corrs, grid_score)
-        >>> print(f"Grid score: {grid_score:.3f}")
-        Grid score: 0.456
+        >>> fig, ax = plot_grid_score(rotated_corrs, grid_score, show=False)
+        >>> print(isinstance(grid_score, float))
+        True
     """
     config = _ensure_plot_config(
         config,
@@ -483,11 +488,20 @@ def plot_grid_spacing_analysis(
         tuple[plt.Figure, plt.Axes]: Figure and axes objects.
 
     Example:
+        >>> import numpy as np
         >>> from canns.analyzer.metrics.spatial_metrics import find_grid_spacing
         >>> from canns.analyzer.visualization import plot_grid_spacing_analysis
-        >>> spacing_bins, spacing_m = find_grid_spacing(autocorr, bin_size=0.06)
-        >>> fig, ax = plot_grid_spacing_analysis(autocorr, spacing_bins, bin_size=0.06)
-        >>> print(f"Spacing: {spacing_m:.3f}m")
+        >>>
+        >>> autocorr = np.random.rand(12, 12)
+        >>> spacing_bins, spacing_m = find_grid_spacing(autocorr, bin_size=0.05)
+        >>> fig, ax = plot_grid_spacing_analysis(
+        ...     autocorr,
+        ...     spacing_bins,
+        ...     bin_size=0.05,
+        ...     show=False,
+        ... )
+        >>> print(spacing_m is not None)
+        True
     """
     config = _ensure_plot_config(
         config,
@@ -620,18 +634,29 @@ def create_grid_cell_tracking_animation(
         FuncAnimation | None: Animation object, or None if displayed in Jupyter.
 
     Example:
-        >>> from canns.analyzer.visualization import create_grid_cell_tracking_animation, PlotConfigs
-        >>> # Create animation
+        >>> import numpy as np
+        >>> from canns.analyzer.visualization import (
+        ...     create_grid_cell_tracking_animation,
+        ...     PlotConfigs,
+        ... )
+        >>>
+        >>> position = np.array([[0.0, 0.0], [0.1, 0.1], [0.2, 0.2]])
+        >>> activity = np.array([0.0, 0.5, 1.0])
+        >>> rate_map = np.random.rand(5, 5)
         >>> config = PlotConfigs.grid_cell_tracking_animation(
-        ...     time_steps_per_second=1000,  # dt=1.0ms
-        ...     fps=20,
-        ...     save_path="tracking.gif"
+        ...     time_steps_per_second=10,
+        ...     fps=2,
+        ...     show=False,
         ... )
         >>> anim = create_grid_cell_tracking_animation(
-        ...     position, activity, rate_map,
+        ...     position,
+        ...     activity,
+        ...     rate_map,
         ...     config=config,
-        ...     env_size=3.0
+        ...     env_size=1.0,
         ... )
+        >>> print(anim is not None)
+        True
     """
     config = _ensure_plot_config(
         config,

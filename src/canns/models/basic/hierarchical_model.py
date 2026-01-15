@@ -744,12 +744,29 @@ class GridCell(BasicModel):
 class HierarchicalPathIntegrationModel(BasicModelGroup):
     """A hierarchical model combining band cells and grid cells for path integration.
 
-    This model forms a single grid module. It consists of three `BandCell` modules,
-    each with a different preferred orientation (separated by 60 degrees), and one
-    `GridCell` module. The band cells integrate velocity along their respective
-    directions, and their combined outputs provide the input to the `GridCell`
-    network, effectively driving the grid cell's activity bump. The model can
-    also project its grid cell activity to a population of place cells.
+    This model forms a single grid module. It consists of three `BandCell` modules
+    (60 degrees apart) plus one `GridCell`. The band cells integrate velocity,
+    and their combined output drives the grid cell bump. The grid cell activity
+    can be projected to place cells.
+
+    Examples:
+        >>> import brainpy.math as bm
+        >>> from canns.models.basic.hierarchical_model import HierarchicalPathIntegrationModel
+        >>>
+        >>> bm.set_dt(0.1)
+        >>> place_center = bm.array([[0.0, 0.0], [1.0, 1.0]])
+        >>> model = HierarchicalPathIntegrationModel(
+        ...     spacing=2.5,
+        ...     angle=0.0,
+        ...     place_center=place_center,
+        ...     band_size=30,
+        ...     grid_num=10,
+        ... )
+        >>> velocity = bm.array([0.0, 0.0])
+        >>> position = bm.array([0.0, 0.0])
+        >>> model.update(velocity=velocity, loc=position, loc_input_stre=0.0)
+        >>> model.grid_output.value.shape
+        (2,)
 
     Attributes:
         band_cell_x (BandCell): The first band cell module (orientation `angle`).
@@ -988,6 +1005,16 @@ class HierarchicalPathIntegrationModel(BasicModelGroup):
         )
 
     def update(self, velocity, loc, loc_input_stre=0.0):
+        """Advance the model by one time step.
+
+        Args:
+            velocity (Array): 2D velocity vector, shape ``(2,)``.
+            loc (Array): 2D position vector, shape ``(2,)``.
+            loc_input_stre (float): Strength of optional location-based input.
+
+        Returns:
+            None
+        """
         self.band_cell_x(velocity=velocity, loc=loc, loc_input_stre=loc_input_stre)
         self.band_cell_y(velocity=velocity, loc=loc, loc_input_stre=loc_input_stre)
         self.band_cell_z(velocity=velocity, loc=loc, loc_input_stre=loc_input_stre)
@@ -1030,11 +1057,20 @@ class HierarchicalPathIntegrationModel(BasicModelGroup):
 class HierarchicalNetwork(BasicModelGroup):
     """A full hierarchical network composed of multiple grid modules.
 
-    This class creates and manages a collection of `HierarchicalPathIntegrationModel`
-    modules, each with a different grid spacing. By combining the outputs of these
-    modules, the network can represent position unambiguously over a large area.
-    The final output is a population of place cells whose activities are used to
-    decode the animal's estimated position.
+    Each module is a `HierarchicalPathIntegrationModel` with a different grid
+    spacing. The module outputs are combined to decode a single 2D position.
+
+    Examples:
+        >>> import brainpy.math as bm
+        >>> from canns.models.basic import HierarchicalNetwork
+        >>>
+        >>> bm.set_dt(0.1)
+        >>> model = HierarchicalNetwork(num_module=1, num_place=3)
+        >>> velocity = bm.array([0.0, 0.0])
+        >>> position = bm.array([0.0, 0.0])
+        >>> model.update(velocity=velocity, loc=position, loc_input_stre=0.0)
+        >>> model.decoded_pos.value.shape
+        (2,)
 
     Attributes:
         num_module (int): The number of grid modules in the network.
@@ -1163,6 +1199,16 @@ class HierarchicalNetwork(BasicModelGroup):
         self.decoded_pos = bm.Variable(bm.zeros(2))
 
     def update(self, velocity, loc, loc_input_stre=0.0):
+        """Advance the full network by one time step.
+
+        Args:
+            velocity (Array): 2D velocity vector, shape ``(2,)``.
+            loc (Array): 2D position vector, shape ``(2,)``.
+            loc_input_stre (float): Strength of optional location-based input.
+
+        Returns:
+            None
+        """
         grid_output = bm.zeros(self.num_place)
         for i in range(self.num_module):
             # update the band cell module

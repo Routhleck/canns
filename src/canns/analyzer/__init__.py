@@ -1,11 +1,12 @@
 """Analyzer utilities for inspecting CANNs models and simulations.
 
-NEW STRUCTURE:
-├── metrics/           - Model metrics computation
-├── visualization/     - Model visualization and animation
-├── data/              - Data analysis (experimental & synthetic)
-├── slow_points/       - Fixed point analysis
-└── model_specific/    - Specialized model analyzers
+This namespace groups analysis helpers such as model metrics, visualization,
+experimental or synthetic data analysis, slow-point (fixed-point) analysis,
+and model-specific tools.
+
+Examples:
+    >>> from canns import analyzer
+    >>> print(analyzer.__all__)
 """
 
 from . import data, metrics, model_specific, slow_points, visualization

@@ -1,8 +1,16 @@
-"""
-General utilities for CANNs.
+"""General utilities for CANNs.
 
-This module provides general-purpose utilities that don't fit into specific
-domain modules, such as benchmarking and performance measurement tools.
+This namespace provides small helpers that don't fit into a specific domain,
+such as benchmarking utilities.
+
+Examples:
+    >>> from canns.utils import benchmark
+    >>>
+    >>> @benchmark(runs=3)
+    ... def add():
+    ...     return 1 + 1
+    >>>
+    >>> add()
 """
 
 from .benchmark import benchmark

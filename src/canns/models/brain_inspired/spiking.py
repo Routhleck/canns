@@ -12,21 +12,32 @@ __all__ = ["SpikingLayer"]
 
 
 class SpikingLayer(BrainInspiredModel):
-    """
-    Simple Leaky Integrate-and-Fire (LIF) spiking neuron layer.
+    """Simple Leaky Integrate-and-Fire (LIF) spiking neuron layer.
 
-    This model provides a minimal spiking neuron implementation for demonstrating
-    spike-timing-dependent plasticity (STDP). It features:
-    - Leaky integration of input currents
-    - Threshold-based spike generation
-    - Reset mechanism after spiking
-    - Exponential spike traces for STDP learning
+    It supports STDP-style training by maintaining pre/post spike traces.
 
     Dynamics:
         v[t+1] = leak * v[t] + W @ x[t]
         spike = 1 if v >= threshold else 0
         v = v_reset if spike else v
         trace = decay * trace + spike
+
+    Notes:
+        - x[t] denotes the input current at time t. It can take arbitrary continuous
+          values; binary {0, 1} spike trains are a special case of such inputs.
+        - The layer does not internally binarize x; thresholding only applies to the
+          membrane potential to generate output spikes.
+
+    Examples:
+        >>> import jax.numpy as jnp
+        >>> from canns.models.brain_inspired import SpikingLayer
+        >>>
+        >>> layer = SpikingLayer(input_size=3, output_size=2, threshold=0.5)
+        >>> # Continuous input currents (binary spikes {0,1} are a special case)
+        >>> x = jnp.array([0.2, 0.5, 1.3], dtype=jnp.float32)
+        >>> spikes = layer.forward(x)
+        >>> spikes.shape
+        (2,)
 
     References:
         - Gerstner & Kistler (2002): Spiking Neuron Models
@@ -88,14 +99,14 @@ class SpikingLayer(BrainInspiredModel):
         self.trace_post = bm.Variable(jnp.zeros(self.output_size, dtype=jnp.float32))
 
     def forward(self, x: jnp.ndarray) -> jnp.ndarray:
-        """
-        Forward pass through the spiking layer.
+        """Compute spikes for one time step.
 
         Args:
-            x: Input spikes of shape (input_size,) with binary values (0 or 1)
+            x: Input currents of shape ``(input_size,)``. Can be continuous-valued
+                (e.g., synaptic currents) or binary spikes {0, 1} as a special case.
 
         Returns:
-            Output spikes of shape (output_size,) with binary values (0 or 1)
+            Output spikes of shape ``(output_size,)`` with values 0 or 1.
         """
         self.x.value = jnp.asarray(x, dtype=jnp.float32)
 

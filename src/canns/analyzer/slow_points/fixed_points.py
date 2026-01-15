@@ -9,6 +9,18 @@ class FixedPoints:
     This class stores fixed points found by the FixedPointFinder algorithm,
     along with associated metadata like Jacobians, eigenvalues, and stability.
 
+    Examples:
+        >>> import numpy as np
+        >>> from canns.analyzer.slow_points import FixedPoints
+        >>>
+        >>> # Dummy fixed point batch (n=2, n_states=3)
+        >>> xstar = np.array([[0.0, 0.1, -0.1], [0.2, 0.0, -0.2]], dtype=np.float32)
+        >>> inputs = np.zeros((2, 1), dtype=np.float32)
+        >>> qstar = np.array([1e-6, 2e-6], dtype=np.float32)
+        >>> fps = FixedPoints(xstar=xstar, inputs=inputs, qstar=qstar)
+        >>> print(len(fps))
+        2
+
     Attributes:
         xstar: [n x n_states] array of fixed point states.
         F_xstar: [n x n_states] array of states after one RNN step from xstar.

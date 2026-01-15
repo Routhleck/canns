@@ -33,14 +33,20 @@ def plot_fixed_points_2d(
         matplotlib Figure object.
 
     Example:
+        >>> import numpy as np
         >>> from canns.analyzer.slow_points import plot_fixed_points_2d, FixedPoints
         >>> from canns.analyzer.visualization import PlotConfig
-        >>> config = PlotConfig(
-        ...     title="Fixed Points Analysis",
-        ...     figsize=(10, 8),
-        ...     save_path="fps_2d.png"
+        >>>
+        >>> # Dummy inputs based on fixed-point tests
+        >>> state_traj = np.random.rand(4, 10, 3).astype(np.float32)
+        >>> fixed_points = FixedPoints(
+        ...     xstar=np.random.rand(2, 3).astype(np.float32),
+        ...     is_stable=np.array([True, False]),
         ... )
-        >>> fig = plot_fixed_points_2d(unique_fps, hiddens, config=config)
+        >>> config = PlotConfig(title="Fixed Points (2D)", show=False)
+        >>> fig = plot_fixed_points_2d(fixed_points, state_traj, config=config)
+        >>> print(fig is not None)
+        True
     """
     # Default config
     if config is None:
@@ -170,14 +176,20 @@ def plot_fixed_points_3d(
         matplotlib Figure object.
 
     Example:
+        >>> import numpy as np
         >>> from canns.analyzer.slow_points import plot_fixed_points_3d, FixedPoints
         >>> from canns.analyzer.visualization import PlotConfig
-        >>> config = PlotConfig(
-        ...     title="Fixed Points 3D",
-        ...     figsize=(12, 10),
-        ...     save_path="fps_3d.png"
+        >>>
+        >>> # Dummy inputs based on fixed-point tests
+        >>> state_traj = np.random.rand(3, 8, 4).astype(np.float32)
+        >>> fixed_points = FixedPoints(
+        ...     xstar=np.random.rand(2, 4).astype(np.float32),
+        ...     is_stable=np.array([True, False]),
         ... )
-        >>> fig = plot_fixed_points_3d(unique_fps, hiddens, config=config)
+        >>> config = PlotConfig(title="Fixed Points (3D)", show=False)
+        >>> fig = plot_fixed_points_3d(fixed_points, state_traj, config=config)
+        >>> print(fig is not None)
+        True
     """
 
     # Default config

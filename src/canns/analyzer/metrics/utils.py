@@ -21,6 +21,16 @@ def spike_train_to_firing_rate(
     Returns:
         np.ndarray:
             A 2D array of shape (timesteps_rate, num_neurons) with firing rates in Hz.
+
+    Examples:
+        >>> import numpy as np
+        >>> from canns.analyzer.metrics.utils import spike_train_to_firing_rate
+        >>>
+        >>> spike_train = np.zeros((1000, 3), dtype=int)
+        >>> spike_train[::100, 0] = 1
+        >>> firing_rates = spike_train_to_firing_rate(spike_train, dt_spike=0.001, dt_rate=0.1)
+        >>> print(firing_rates.shape)
+        (10, 3)
     """
     if spike_train.ndim != 2:
         raise ValueError("spike_train must be a 2D array.")
@@ -81,6 +91,15 @@ def firing_rate_to_spike_train(
         np.ndarray:
             A 2D integer array of shape (timesteps_spike, num_neurons) with binary
             values (0 or 1) representing the high-resolution spike train.
+
+    Examples:
+        >>> import numpy as np
+        >>> from canns.analyzer.metrics.utils import firing_rate_to_spike_train
+        >>>
+        >>> rates = np.full((10, 2), 0.5)  # 10 coarse timesteps, 2 neurons
+        >>> spikes = firing_rate_to_spike_train(rates, dt_rate=0.1, dt_spike=0.01)
+        >>> print(spikes.shape)
+        (100, 2)
     """
     if firing_rates.ndim != 2:
         raise ValueError("firing_rates must be a 2D array.")
@@ -135,6 +154,15 @@ def normalize_firing_rates(
     Returns:
         np.ndarray:
             A 2D array of shape (timesteps_rate, num_neurons) with normalized firing rates.
+
+    Examples:
+        >>> import numpy as np
+        >>> from canns.analyzer.metrics.utils import normalize_firing_rates
+        >>>
+        >>> rates = np.array([[0.0, 1.0], [2.0, 3.0]])
+        >>> normalized = normalize_firing_rates(rates, method="min_max")
+        >>> print(normalized.min(), normalized.max())
+        0.0 1.0
     """
     if firing_rates.ndim != 2:
         raise ValueError("firing_rates must be a 2D array.")

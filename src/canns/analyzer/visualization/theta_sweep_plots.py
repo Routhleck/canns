@@ -501,21 +501,35 @@ def plot_population_activity_with_theta(
     save_path: str | None = None,
     **kwargs,
 ) -> tuple[plt.Figure, plt.Axes]:
-    """
-    Plot neural population activity with theta oscillation markers and direction trace.
+    """Plot neural population activity with theta phase markers.
 
     Args:
-        time_steps: Array of time points
-        theta_phase: Array of theta phase values [-π, π]
-        net_activity: 2D array of network activity (time, neurons)
-        direction: Array of direction values
-        config: PlotConfig object for unified configuration
-        add_lines: Whether to add vertical lines at theta phase zeros
-        atol: Tolerance for detecting theta phase zeros
-        **kwargs: Additional parameters for backward compatibility
+        time_steps: Array of time points.
+        theta_phase: Theta phase values in ``[-pi, pi]``.
+        net_activity: 2D array of network activity ``(time, neurons)``.
+        direction: Direction values (radians) over time.
+        config: PlotConfig object for unified configuration.
+        add_lines: Whether to add vertical lines at theta phase zeros.
+        atol: Tolerance for detecting theta phase zeros.
+        **kwargs: Additional parameters for backward compatibility.
 
     Returns:
-        tuple: (figure, axis) objects
+        tuple: ``(figure, axis)`` objects.
+
+    Examples:
+        >>> import numpy as np
+        >>> from canns.analyzer.visualization import plot_population_activity_with_theta, PlotConfig
+        >>>
+        >>> time_steps = np.linspace(0, 1, 5)
+        >>> theta_phase = np.linspace(-np.pi, np.pi, 5)
+        >>> net_activity = np.random.rand(5, 4)
+        >>> direction = np.linspace(-np.pi, np.pi, 5)
+        >>> config = PlotConfig(show=False)
+        >>> fig, ax = plot_population_activity_with_theta(
+        ...     time_steps, theta_phase, net_activity, direction, config=config
+        ... )
+        >>> print(fig is not None)
+        True
     """
     # Handle configuration
     if config is None:
@@ -649,18 +663,28 @@ def plot_grid_cell_manifold(
     save_path: str | None = None,
     **kwargs,
 ) -> tuple[plt.Figure, plt.Axes]:
-    """
-    Plot grid cell activity on the twisted torus manifold.
+    """Plot grid cell activity on the twisted torus manifold.
 
     Args:
-        value_grid_twisted: Coordinates on twisted manifold
-        grid_cell_activity: 2D array of grid cell activities
-        config: PlotConfig object for unified configuration
-        ax: Optional axis to draw on instead of creating a new figure
-        **kwargs: Additional parameters for backward compatibility
+        value_grid_twisted: Coordinates on the twisted manifold ``(N, 2)``.
+        grid_cell_activity: 2D array of grid cell activities.
+        config: PlotConfig object for unified configuration.
+        ax: Optional axis to draw on instead of creating a new figure.
+        **kwargs: Additional parameters for backward compatibility.
 
     Returns:
-        tuple: (figure, axis) objects
+        tuple: ``(figure, axis)`` objects.
+
+    Examples:
+        >>> import numpy as np
+        >>> from canns.analyzer.visualization import plot_grid_cell_manifold, PlotConfig
+        >>>
+        >>> value_grid_twisted = np.random.rand(9, 2)
+        >>> grid_cell_activity = np.random.rand(3, 3)
+        >>> config = PlotConfig(show=False)
+        >>> fig, ax = plot_grid_cell_manifold(value_grid_twisted, grid_cell_activity, config=config)
+        >>> print(fig is not None)
+        True
     """
     # Handle configuration
     if config is None:
@@ -959,32 +983,51 @@ def create_theta_sweep_place_cell_animation(
     render_start_method: str | None = None,
     **kwargs,
 ) -> FuncAnimation | None:
-    """
-    Create theta sweep animation for place cell network with 2 panels:
-    1. Environment trajectory with place cell bump overlay
-    2. Population activity heatmap over time
+    """Create theta sweep animation for a place cell network.
 
     Args:
-        position_data: Animal position data (time, 2)
-        pc_activity_data: Place cell activity (time, num_cells)
-        pc_network: PlaceCellNetwork instance
-        navigation_task: BaseNavigationTask instance for environment visualization
-        dt: Time step size
-        config: PlotConfig object for unified configuration
-        n_step: Subsample every n_step frames for animation
-        fps: Frames per second for animation
-        figsize: Figure size (width, height)
-        save_path: Path to save animation (GIF or MP4)
-        show: Whether to display animation
-        show_progress_bar: Whether to show progress bar during saving
-        render_backend: Rendering backend ('imageio', 'matplotlib', or 'auto')
-        output_dpi: DPI for rendered frames (affects file size and quality)
-        render_workers: Number of parallel workers (None = auto-detect)
-        render_start_method: Multiprocessing start method ('fork', 'spawn', or None)
-        **kwargs: Additional parameters (cmap, alpha, etc.)
+        position_data: Animal position data ``(time, 2)``.
+        pc_activity_data: Place cell activity ``(time, num_cells)``.
+        pc_network: PlaceCellNetwork-like object with ``geodesic_result``.
+        navigation_task: BaseNavigationTask-like object with ``env``.
+        dt: Time step size.
+        config: PlotConfig object for unified configuration.
+        n_step: Subsample every n_step frames for animation.
+        fps: Frames per second for animation.
+        figsize: Figure size (width, height).
+        save_path: Path to save animation (GIF or MP4).
+        show: Whether to display animation.
+        show_progress_bar: Whether to show progress bar during saving.
+        render_backend: Rendering backend ('imageio', 'matplotlib', or 'auto').
+        output_dpi: DPI for rendered frames (affects file size and quality).
+        render_workers: Number of parallel workers (None = auto-detect).
+        render_start_method: Multiprocessing start method ('fork', 'spawn', or None).
+        **kwargs: Additional parameters (cmap, alpha, etc.).
 
     Returns:
-        FuncAnimation: Matplotlib animation object
+        FuncAnimation: Matplotlib animation object.
+
+    Examples:
+        This example demonstrates the basic structure. For complete usage, see the
+        documentation or example scripts.
+
+        >>> import numpy as np
+        >>> from canns.analyzer.visualization import PlotConfig
+        >>>
+        >>> # Prepare your data from simulation
+        >>> position_data = np.array([[0.1, 0.1], [0.2, 0.2], [0.3, 0.3]])
+        >>> pc_activity_data = np.random.rand(3, 4)  # (time, num_cells)
+        >>>
+        >>> # Assuming you have pc_network and navigation_task from your model
+        >>> # anim = create_theta_sweep_place_cell_animation(
+        >>> #     position_data,
+        >>> #     pc_activity_data,
+        >>> #     pc_network,  # Your PlaceCellNetwork instance
+        >>> #     navigation_task,  # Your BaseNavigationTask instance
+        >>> #     config=PlotConfig(show=False),
+        >>> #     n_step=1,
+        >>> #     fps=10,
+        >>> # )  # doctest: +SKIP
     """
     # Handle configuration
     if config is None:
@@ -1335,32 +1378,69 @@ def create_theta_sweep_grid_cell_animation(
     render_start_method: str | None = None,
     **kwargs,
 ) -> FuncAnimation | None:
-    """
-    Create comprehensive theta sweep animation with 4 panels (optimized for speed):
-    1. Animal trajectory
-    2. Direction cell polar plot
-    3. Grid cell activity on manifold
-    4. Grid cell activity in real space
+    """Create a theta sweep animation with four panels.
+
+    Panels:
+        1) Animal trajectory
+        2) Direction cell polar plot
+        3) Grid cell activity on manifold
+        4) Grid cell activity in real space
 
     Args:
-        position_data: Animal position data (time, 2)
-        direction_data: Direction data (time,)
-        dc_activity_data: Direction cell activity (time, neurons)
-        gc_activity_data: Grid cell activity (time, neurons)
-        gc_network: GridCellNetwork instance for coordinate transformations
-        env_size: Environment size
-        mapping_ratio: Mapping ratio for grid cells
-        dt: Time step size
-        config: PlotConfig object for unified configuration
-        n_step: Subsample every n_step frames for animation
-        render_backend: Rendering backend. Use 'matplotlib', 'imageio', or 'auto'/'None' for auto-detect.
-        output_dpi: Target DPI when rendering frames with non-interactive backends
-        render_workers: Worker processes for imageio backend. ``None`` auto-selects, 0 disables.
-        render_start_method: Multiprocessing start method ('fork', 'spawn', 'forkserver') or None for auto
-        **kwargs: Additional parameters for backward compatibility
+        position_data: Animal position data ``(time, 2)``.
+        direction_data: Direction data ``(time,)``.
+        dc_activity_data: Direction cell activity ``(time, neurons)``.
+        gc_activity_data: Grid cell activity ``(time, neurons)``.
+        gc_network: GridCellNetwork instance for coordinate transforms.
+        env_size: Environment size.
+        mapping_ratio: Mapping ratio for grid cells.
+        dt: Time step size.
+        config: PlotConfig object for unified configuration.
+        n_step: Subsample every n_step frames for animation.
+        render_backend: Rendering backend. Use 'matplotlib', 'imageio', or 'auto'.
+        output_dpi: Target DPI for non-interactive rendering.
+        render_workers: Worker processes for imageio backend.
+        render_start_method: Multiprocessing start method ('fork', 'spawn', or None).
+        **kwargs: Additional parameters for backward compatibility.
 
     Returns:
-        FuncAnimation | None: Matplotlib animation object for interactive backend, otherwise None
+        FuncAnimation | None: Animation object (None if displayed inline).
+
+    Examples:
+        This is a minimal structural example using synthetic data to demonstrate
+        the API. For realistic usage, run a GridCellNetwork simulation to obtain
+        actual activity data.
+
+        >>> import numpy as np
+        >>> import brainpy.math as bm
+        >>> from canns.models.basic.theta_sweep_model import GridCellNetwork
+        >>> from canns.analyzer.visualization import PlotConfig
+        >>>
+        >>> # Minimal example with synthetic data (for structure demonstration)
+        >>> bm.set_dt(1.0)
+        >>> gc_network = GridCellNetwork(num_dc=4, num_gc_x=4, mapping_ratio=1.0)
+        >>> T = 5
+        >>> # NOTE: In real usage, obtain these from actual model simulation
+        >>> position_data = np.random.rand(T, 2)
+        >>> direction_data = np.linspace(-np.pi, np.pi, T)
+        >>> dc_activity_data = np.random.rand(T, gc_network.num_dc)
+        >>> gc_activity_data = np.random.rand(T, gc_network.num)
+        >>>
+        >>> config = PlotConfig(show=False)
+        >>> anim = create_theta_sweep_grid_cell_animation(
+        ...     position_data,
+        ...     direction_data,
+        ...     dc_activity_data,
+        ...     gc_activity_data,
+        ...     gc_network,
+        ...     env_size=1.0,
+        ...     mapping_ratio=1.0,
+        ...     config=config,
+        ...     n_step=1,
+        ...     fps=2,
+        ... )
+        >>> print(anim is not None)
+        True
     """
     # Handle configuration
     if config is None:
