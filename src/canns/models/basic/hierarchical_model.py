@@ -28,24 +28,111 @@ class GaussRecUnits(BasicModel):
     such as heading direction. The connectivity between neurons is Gaussian, and the
     network dynamics include divisive normalization.
 
-    Attributes:
-        size (int): The number of neurons in the network.
-        tau (float): The time constant for the synaptic input `u`.
-        k (float): The inhibition strength for divisive normalization.
-        a (float): The width of the Gaussian connection profile.
-        noise_0 (float): The standard deviation of the Gaussian noise added to the system.
-        z_min (float): The minimum value of the encoded feature space.
-        z_max (float): The maximum value of the encoded feature space.
-        z_range (float): The range of the feature space (z_max - z_min).
-        x (bm.math.ndarray): The preferred feature values for each neuron.
-        rho (float): The neural density (number of neurons per unit of feature space).
-        dx (float): The stimulus density (feature space range per neuron).
-        J (float): The final connection strength, scaled by J0.
-        conn_mat (bm.math.ndarray): The connection matrix.
-        r (bm.Variable): The firing rates of the neurons.
-        u (bm.Variable): The synaptic inputs to the neurons.
-        center (bm.Variable): The decoded center of the activity bump.
-        input (bm.Variable): The external input to the network.
+    Parameters
+    ----------
+    size : int
+        The number of neurons in the network
+    tau : float, default=1.0
+        The time constant for the synaptic input u
+    J0 : float, default=1.1
+        A scaling factor for the critical connection strength
+    k : float, default=5e-4
+        The strength of the global inhibition
+    a : float, default=2*π/9
+        The width of the Gaussian connection profile
+    z_min : float, default=-π
+        The minimum value of the encoded feature space
+    z_max : float, default=π
+        The maximum value of the encoded feature space
+    noise : float, default=2.0
+        The level of noise in the system
+
+    Attributes
+    ----------
+    size : int
+        The number of neurons in the network.
+    tau : float
+        The time constant for the synaptic input `u`.
+    k : float
+        The inhibition strength for divisive normalization.
+    a : float
+        The width of the Gaussian connection profile.
+    noise_0 : float
+        The standard deviation of the Gaussian noise added to the system.
+    z_min : float
+        The minimum value of the encoded feature space.
+    z_max : float
+        The maximum value of the encoded feature space.
+    z_range : float
+        The range of the feature space (z_max - z_min).
+    x : bm.math.ndarray
+        The preferred feature values for each neuron.
+    rho : float
+        The neural density (number of neurons per unit of feature space).
+    dx : float
+        The stimulus density (feature space range per neuron).
+    J : float
+        The final connection strength, scaled by J0.
+    conn_mat : bm.math.ndarray
+        The connection matrix.
+    r : bm.Variable
+        The firing rates of the neurons.
+    u : bm.Variable
+        The synaptic inputs to the neurons.
+    center : bm.Variable
+        The decoded center of the activity bump.
+    input : bm.Variable
+        The external input to the network.
+
+    Methods
+    -------
+    make_conn()
+        Constructs the periodic Gaussian connection matrix
+    Jc()
+        Calculates the critical connection strength
+    dist(d)
+        Calculates the periodic distance in feature space
+    decode(r, axis=0)
+        Decodes the center of the activity bump
+    update(input)
+        Updates the neural activity for one time step
+
+    Example
+    -------
+    Create and run a heading direction network:
+
+    >>> import brainpy.math as bm
+    >>> from canns.models.basic.hierarchical_model import GaussRecUnits
+    >>> 
+    >>> # Create network for heading direction (-π to π)
+    >>> hd_network = GaussRecUnits(
+    ...     size=360,        # 1 neuron per degree
+    ...     tau=1.0,
+    ...     J0=1.1,
+    ...     k=5e-4,
+    ...     noise=0.5
+    ... )
+    >>> 
+    >>> # Create input stimulus at direction π/4
+    >>> import numpy as np
+    >>> target_direction = np.pi / 4
+    >>> stimulus = 10.0 * bm.exp(-0.5 * bm.square(
+    ...     (hd_network.x - target_direction) / hd_network.a
+    ... )) / (bm.sqrt(2 * bm.pi) * hd_network.a)
+    >>> 
+    >>> # Simulate for 100 time steps
+    >>> bm.random.seed(42)
+    >>> for _ in range(100):
+    ...     hd_network.update(stimulus)
+    >>> 
+    >>> # Decode the represented direction
+    >>> decoded_direction = hd_network.center.value[0]
+    >>> print(f"Target: {target_direction:.3f}, Decoded: {decoded_direction:.3f}")
+
+    See Also
+    --------
+    NonRecUnits : Non-recurrent units used in hierarchical models
+    BandCell : Band cell module using GaussRecUnits
     """
 
     def __init__(
@@ -177,7 +264,70 @@ class NonRecUnits(BasicModel):
 
     This class implements a simple leaky integrator model for a population of
     neurons that do not have recurrent connections among themselves. They respond
-    to external inputs and have a non-linear activation function.
+    to external inputs and have a non-linear activation function. Used as auxiliary
+    populations in hierarchical path integration models like BandCell.
+
+    Parameters
+    ----------
+    size : int
+        The number of neurons in the population
+    tau : float, default=0.1
+        The time constant for the leaky integrator dynamics
+    z_min : float, default=-π
+        The minimum value of the feature space
+    z_max : float, default=π
+        The maximum value of the feature space
+    noise : float, default=2.0
+        The noise level in the system
+
+    Attributes
+    ----------
+    size : int
+        Number of neurons
+    tau : float
+        Time constant
+    x : bm.math.ndarray
+        Preferred feature values for each neuron
+    r : bm.Variable
+        Firing rates of neurons
+    u : bm.Variable
+        Membrane potentials / synaptic inputs
+    input : bm.Variable
+        External input to the network
+
+    Methods
+    -------
+    update(input)
+        Update neural activity for one time step
+
+    Example
+    -------
+    Create and simulate non-recurrent units:
+
+    >>> import brainpy.math as bm
+    >>> from canns.models.basic.hierarchical_model import NonRecUnits
+    >>> 
+    >>> # Create population
+    >>> units = NonRecUnits(size=100, tau=0.1)
+    >>> 
+    >>> # Create input stimulus
+    >>> stimulus = bm.exp(-0.5 * bm.square(
+    ...     (units.x - 0.5) / 0.3
+    ... ))
+    >>> 
+    >>> # Simulate for 50 steps
+    >>> for _ in range(50):
+    ...     units.update(stimulus * 5.0)
+    >>> 
+    >>> # Check activity
+    >>> peak_activity = bm.max(units.r.value)
+    >>> print(f"Peak activity: {peak_activity:.2f}")
+
+    See Also
+    --------
+    GaussRecUnits : Recurrent units with attractor dynamics
+    BandCell : Band cell module using NonRecUnits for shifts
+    """
 
     Attributes:
         size (int): The number of neurons.
@@ -286,19 +436,104 @@ class BandCell(BasicModel):
     network based on velocity input. This mechanism allows the module to integrate
     the component of velocity along its preferred direction.
 
-    Attributes:
-        size (int): The number of neurons in each sub-population.
-        spacing (float): The spacing between the bands in the 2D environment.
-        angle (float): The orientation angle of the bands.
-        proj_k (bm.math.ndarray): The projection vector for converting 2D position/velocity to 1D phase.
-        band_cells (GaussRecUnits): The core recurrent network representing the phase.
-        left (NonRecUnits): A population of non-recurrent units for positive shifts.
-        right (NonRecUnits): A population of non-recurrent units for negative shifts.
-        w_L2S (float): Connection weight from band cells to left/right units.
-        w_S2L (float): Connection weight from left/right units to band cells.
-        gain (float): A gain factor for velocity-modulated input.
-        center_ideal (bm.Variable): The ideal, noise-free center based on velocity integration.
-        center (bm.Variable): The actual decoded center of the band cell activity bump.
+    Parameters
+    ----------
+    angle : float
+        The orientation angle of the bands (radians)
+    spacing : float
+        The spacing between the bands in the 2D environment (meters)
+    size : int, default=180
+        The number of neurons in each sub-population
+    z_min : float, default=-π
+        The minimum value of the feature space (phase)
+    z_max : float, default=π
+        The maximum value of the feature space (phase)
+    noise : float, default=2.0
+        The noise level for the neuron groups
+    w_L2S : float, default=0.2
+        Weight from band cells to shifter units
+    w_S2L : float, default=1.0
+        Weight from shifter units to band cells
+    gain : float, default=0.2
+        A gain factor for the velocity signal
+    gauss_tau : float, default=1.0
+        Time constant for GaussRecUnits
+    gauss_J0 : float, default=1.1
+        Connection strength scaling factor for GaussRecUnits
+    gauss_k : float, default=5e-4
+        Global inhibition strength for GaussRecUnits
+    gauss_a : float, default=2*π/9
+        Gaussian connection width for GaussRecUnits
+    nonrec_tau : float, default=0.1
+        Time constant for NonRecUnits
+
+    Attributes
+    ----------
+    size : int
+        The number of neurons in each neuron group except DN.
+    spacing : float
+        The spacing between the bands.
+    angle : float
+        The orientation angle of the bands.
+    proj_k : bm.math.ndarray
+        The projection vector for converting 2D position/velocity to 1D phase.
+    band_cells : GaussRecUnits
+        The core recurrent network representing the phase.
+    left : NonRecUnits
+        A population of non-recurrent units for positive shifts.
+    right : NonRecUnits
+        A population of non-recurrent units for negative shifts.
+    w_L2S : float
+        Connection weight from band cells to left/right units.
+    w_S2L : float
+        Connection weight from left/right units to band cells.
+    gain : float
+        A gain factor for velocity-modulated input.
+    center_ideal : bm.Variable
+        The ideal, noise-free center based on velocity integration.
+    center : bm.Variable
+        The actual decoded center of the band cell activity bump.
+
+    Methods
+    -------
+    update(velocity)
+        Update module state given 2D velocity input
+    get_center()
+        Get current phase center
+    set_center(center)
+        Set phase center directly
+
+    Example
+    -------
+    Create and use a band cell module:
+
+    >>> import brainpy.math as bm
+    >>> import numpy as np
+    >>> from canns.models.basic.hierarchical_model import BandCell
+    >>> 
+    >>> # Create band cell module oriented at 45 degrees
+    >>> band = BandCell(
+    ...     angle=np.pi/4,    # 45 degrees
+    ...     spacing=0.5,      # 0.5 meter spacing
+    ...     size=180,
+    ...     noise=0.5
+    ... )
+    >>> 
+    >>> # Simulate movement with constant velocity
+    >>> velocity = bm.array([0.1, 0.1])  # Moving diagonally
+    >>> 
+    >>> for _ in range(100):
+    ...     band.update(velocity)
+    >>> 
+    >>> # Check decoded phase
+    >>> phase = band.center.value[0]
+    >>> print(f"Phase: {phase:.3f} radians")
+
+    See Also
+    --------
+    GaussRecUnits : The core attractor network
+    NonRecUnits : Auxiliary populations for shifting
+    GridCell : Grid cell module using multiple band cells
     """
 
     def __init__(
@@ -545,24 +780,120 @@ class GridCell(BasicModel):
     This class implements a 2D continuous attractor network on a toroidal manifold
     to model the firing patterns of grid cells. The network dynamics include
     synaptic depression or adaptation, which helps stabilize the activity bumps.
-    The connectivity is defined on a hexagonal grid structure.
+    The connectivity is defined on a hexagonal grid structure to produce the
+    characteristic hexagonal firing pattern of grid cells.
 
-    Attributes:
-        num (int): The total number of neurons (num_side x num_side).
-        tau (float): The synaptic time constant for `u`.
-        tau_v (float): The time constant for the adaptation variable `v`.
-        k (float): The degree of rescaled inhibition.
-        a (float): The half-width of the excitatory connection range.
-        A (float): The magnitude of the external input.
-        J0 (float): The maximum connection value.
-        m (float): The strength of the adaptation.
-        angle (float): The orientation of the grid.
-        value_grid (bm.math.ndarray): The (x, y) preferred phase coordinates for each neuron.
-        conn_mat (bm.math.ndarray): The connection matrix.
-        r (bm.Variable): The firing rates of the neurons.
-        u (bm.Variable): The synaptic inputs to the neurons.
-        v (bm.Variable): The adaptation variables for the neurons.
-        center (bm.Variable): The decoded 2D center of the activity bump.
+    Parameters
+    ----------
+    num : int
+        The number of neurons along one dimension of the square grid (total = num²)
+    angle : float
+        The orientation angle of the grid pattern (radians)
+    spacing : float
+        The spacing of the grid pattern in physical space (meters)
+    tau : float, default=0.1
+        The synaptic time constant
+    tau_v : float, default=10.0
+        The adaptation time constant
+    k : float, default=5e-3
+        The strength of global inhibition
+    a : float, default=π/9
+        The width of the connection profile
+    A : float, default=1.0
+        The magnitude of external input
+    J0 : float, default=1.0
+        The maximum connection strength
+    mbar : float, default=1.0
+        The base strength of adaptation
+
+    Attributes
+    ----------
+    num : int
+        The total number of neurons (num_side x num_side).
+    tau : float
+        The synaptic time constant for `u`.
+    tau_v : float
+        The time constant for the adaptation variable `v`.
+    k : float
+        The degree of rescaled inhibition.
+    a : float
+        The half-width of the excitatory connection range.
+    A : float
+        The magnitude of the external input.
+    J0 : float
+        The maximum connection value.
+    m : float
+        The strength of the adaptation.
+    angle : float
+        The orientation of the grid.
+    value_grid : bm.math.ndarray
+        The (x, y) preferred phase coordinates for each neuron.
+    conn_mat : bm.math.ndarray
+        The connection matrix.
+    r : bm.Variable
+        The firing rates of the neurons.
+    u : bm.Variable
+        The synaptic inputs to the neurons.
+    v : bm.Variable
+        The adaptation variables for the neurons.
+    center : bm.Variable
+        The decoded 2D center of the activity bump.
+
+    Methods
+    -------
+    make_conn()
+        Constructs the 2D hexagonal connection matrix
+    dist(d)
+        Calculates periodic distance on toroidal manifold
+    decode(r)
+        Decodes the 2D center of activity
+    update(velocity)
+        Updates network state given velocity input
+
+    Example
+    -------
+    Create and simulate a grid cell module:
+
+    >>> import brainpy.math as bm
+    >>> import numpy as np
+    >>> from canns.models.basic.hierarchical_model import GridCell
+    >>> 
+    >>> # Create grid cell module
+    >>> grid = GridCell(
+    ...     num=20,           # 20x20 = 400 neurons
+    ...     angle=0.0,        # Grid orientation
+    ...     spacing=0.4,      # 40 cm grid spacing
+    ...     tau=0.1,
+    ...     tau_v=10.0
+    ... )
+    >>> 
+    >>> # Simulate with velocity input
+    >>> velocity = bm.array([0.05, 0.03])  # 5 cm/s east, 3 cm/s north
+    >>> 
+    >>> bm.random.seed(42)
+    >>> for step in range(200):
+    ...     grid.update(velocity)
+    >>> 
+    >>> # Check decoded position
+    >>> position = grid.center.value
+    >>> print(f"Decoded position: ({position[0]:.3f}, {position[1]:.3f})")
+    >>> 
+    >>> # Visualize firing rate pattern
+    >>> firing_rates = grid.r.value.reshape(20, 20)
+    >>> print(f"Peak firing rate: {firing_rates.max():.2f}")
+
+    See Also
+    --------
+    BandCell : Band cell module (1D phase integration)
+    HierarchicalPathIntegrationModel : Full hierarchical model
+    GaussRecUnits : 1D attractor network component
+
+    Notes
+    -----
+    - The hexagonal connectivity produces triangular/hexagonal grid patterns
+    - Grid spacing in neural space (2π) maps to physical spacing via the ratio parameter
+    - Multiple grid cell modules with different spacings form grid cell hierarchy
+    - Adaptation (v) helps maintain stable bumps during movement
     """
 
     def __init__(
