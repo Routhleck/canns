@@ -315,15 +315,91 @@ def get_recommended_format(
     """
     Get recommended file format and extension for different use cases.
 
-    Args:
-        use_case: Target use case
+    Provides expert recommendations for animation format selection based on
+    the intended use case, balancing file size, quality, and compatibility.
 
-    Returns:
-        Tuple of (format, extension) - format string and file extension with dot
+    Parameters
+    ----------
+    use_case : {"web", "publication", "github", "presentation"}, default="web"
+        Target use case for the animation:
+        - "web": Universal browser compatibility, fast encoding
+        - "publication": High quality for academic papers
+        - "github": Inline display in README files
+        - "presentation": Smooth playback for slides
 
-    Examples:
-        >>> format_str, ext = get_recommended_format('web')
-        >>> save_path = f'animation{ext}'  # 'animation.mp4'
+    Returns
+    -------
+    tuple[str, str]
+        Tuple of (format, extension):
+        - format: Format name (e.g., "mp4", "gif")
+        - extension: File extension with dot (e.g., ".mp4", ".gif")
+
+    Raises
+    ------
+    ValueError
+        If use_case is not one of the recognized options
+
+    Example
+    -------
+    Get recommended format for different use cases:
+
+    >>> from canns.analyzer.visualization.core.writers import get_recommended_format
+    >>> 
+    >>> # Web embedding
+    >>> format_type, ext = get_recommended_format('web')
+    >>> print(f"Format: {format_type}, Extension: {ext}")
+    Format: mp4, Extension: .mp4
+    >>> save_path = f'animation{ext}'  # 'animation.mp4'
+    
+    >>> # GitHub README
+    >>> format_type, ext = get_recommended_format('github')
+    >>> print(f"Format: {format_type}, Extension: {ext}")
+    Format: gif, Extension: .gif
+    >>> # GIF displays inline in GitHub markdown
+
+    Use with animation creation:
+
+    >>> # Select format based on target platform
+    >>> import matplotlib.pyplot as plt
+    >>> from matplotlib.animation import FuncAnimation
+    >>> 
+    >>> use_case = "publication"
+    >>> format_type, ext = get_recommended_format(use_case)
+    >>> save_path = f"figure_{use_case}{ext}"
+    >>> 
+    >>> # Create and save animation
+    >>> fig, ax = plt.subplots()
+    >>> anim = FuncAnimation(fig, update_func, frames=100)
+    >>> anim.save(save_path, fps=30, dpi=150)
+
+    See Also
+    --------
+    create_optimized_writer : Create writer with recommended settings
+    OptimizedAnimationWriter : High-performance animation writer
+
+    Notes
+    -----
+    **Format Recommendations:**
+    
+    - **web**: MP4 with H.264 codec
+        - Universal browser support (Chrome, Firefox, Safari, Edge)
+        - Fast encoding (~1000 FPS)
+        - Good compression (small file size)
+    
+    - **publication**: MP4 with high quality
+        - High visual quality for papers/journals
+        - Smaller file size than GIF
+        - Widely accepted by publishers
+    
+    - **github**: GIF format
+        - Displays inline in GitHub README
+        - No need to click through to view
+        - Larger file size but convenient
+    
+    - **presentation**: MP4 with smooth playback
+        - Works in PowerPoint, Keynote, Google Slides
+        - Smooth playback even for long animations
+        - Professional appearance
     """
     recommendations = {
         "web": ("mp4", ".mp4", "Universal browser support, fast encoding"),
@@ -347,31 +423,101 @@ def create_optimized_writer(
     """
     Factory function to create an optimized animation writer.
 
-    This is the recommended way to create writers for CANNs animations.
+    This is the recommended way to create writers for CANNS animations,
+    providing automatic format detection and optimized encoding settings.
 
-    Args:
-        save_path: Output file path
-        fps: Frames per second
-        encoding_speed: 'fast', 'balanced', or 'quality'
-        **kwargs: Additional parameters passed to writer
+    Parameters
+    ----------
+    save_path : str
+        Output file path (extension determines format)
+    fps : int, default=10
+        Frames per second for the animation
+    encoding_speed : {"fast", "balanced", "quality"}, default="balanced"
+        Encoding speed vs quality tradeoff:
+        - "fast": Fastest encoding, good quality
+        - "balanced": Good balance (recommended)
+        - "quality": Best quality, slower encoding
+    **kwargs
+        Additional parameters passed to OptimizedAnimationWriter:
+        - codec: str - Override automatic codec selection
+        - bitrate: int - Video bitrate in kbps
+        - dpi: int - Figure DPI for rendering (default: 100)
 
-    Returns:
-        OptimizedAnimationWriter instance
+    Returns
+    -------
+    OptimizedAnimationWriter
+        Configured writer instance ready to use
 
-    Examples:
-        >>> # Fast GIF for quick iteration
-        >>> writer = create_optimized_writer(
-        ...     'output.gif',
-        ...     fps=10,
-        ...     encoding_speed='fast'
-        ... )
+    Example
+    -------
+    Create writer for fast iteration:
 
-        >>> # High-quality MP4 for publication
-        >>> writer = create_optimized_writer(
-        ...     'output.mp4',
-        ...     fps=30,
-        ...     encoding_speed='quality'
-        ... )
+    >>> from canns.analyzer.visualization.core.writers import create_optimized_writer
+    >>> import matplotlib.pyplot as plt
+    >>> 
+    >>> # Fast GIF for quick testing
+    >>> writer = create_optimized_writer(
+    ...     'test_output.gif',
+    ...     fps=10,
+    ...     encoding_speed='fast'
+    ... )
+    >>> 
+    >>> # Use with matplotlib animation
+    >>> fig, ax = plt.subplots()
+    >>> # ... create animation ...
+    >>> writer.setup(fig, 'test_output.gif')
+    >>> for frame_idx in range(100):
+    ...     # ... update plot ...
+    ...     writer.grab_frame()
+    >>> writer.finish()
+
+    High-quality MP4 for publication:
+
+    >>> # High-quality settings for paper
+    >>> writer = create_optimized_writer(
+    ...     'figure_publication.mp4',
+    ...     fps=30,
+    ...     encoding_speed='quality',
+    ...     bitrate=5000,  # 5 Mbps
+    ...     dpi=150
+    ... )
+
+    Using with FuncAnimation:
+
+    >>> from matplotlib.animation import FuncAnimation
+    >>> 
+    >>> fig, ax = plt.subplots()
+    >>> line, = ax.plot([], [])
+    >>> 
+    >>> def update(frame):
+    ...     line.set_data(x[:frame], y[:frame])
+    ...     return line,
+    >>> 
+    >>> # Create writer
+    >>> writer = create_optimized_writer('output.mp4', fps=24)
+    >>> 
+    >>> # Animate and save
+    >>> anim = FuncAnimation(fig, update, frames=200)
+    >>> anim.save('output.mp4', writer=writer)
+
+    See Also
+    --------
+    OptimizedAnimationWriter : The writer class being instantiated
+    get_recommended_format : Get recommended format for use case
+
+    Notes
+    -----
+    **Performance Tips:**
+    - MP4 encodes ~36x faster than GIF (1000 FPS vs 27 FPS)
+    - Use 'fast' encoding for iteration, 'quality' for final output
+    - Higher DPI increases encoding time significantly
+    - Bitrate controls file size vs quality tradeoff
+
+    **Format Detection:**
+    - .gif → GIF with optimization
+    - .mp4 → H.264 MP4 video
+    - .webm → WebM video (requires ffmpeg)
+    - Other extensions default to MP4
     """
     return OptimizedAnimationWriter(
         save_path=save_path, fps=fps, encoding_speed=encoding_speed, **kwargs
@@ -388,14 +534,60 @@ def warn_double_rendering(nframes: int, save_path: str, *, stacklevel: int = 2) 
 
     This can significantly increase total processing time, especially for long animations.
 
-    Args:
-        nframes: Number of frames in the animation
-        save_path: Path where animation will be saved
-        stacklevel: Stack level for the warning (default: 2, caller's caller)
+    Parameters
+    ----------
+    nframes : int
+        Number of frames in the animation
+    save_path : str
+        Path where animation will be saved
+    stacklevel : int, default=2
+        Stack level for the warning (2 points to caller's caller)
 
-    Example:
-        >>> if save_path and show and nframes > 50:
-        ...     warn_double_rendering(nframes, save_path, stacklevel=2)
+    Example
+    -------
+    Warn about double rendering overhead:
+
+    >>> from canns.analyzer.visualization.core.writers import warn_double_rendering
+    >>> 
+    >>> # In animation function
+    >>> def create_animation(save_path=None, show=False):
+    ...     nframes = 1000
+    ...     
+    ...     # Warn if both save and show are enabled
+    ...     if save_path and show and nframes > 50:
+    ...         warn_double_rendering(nframes, save_path, stacklevel=2)
+    ...     
+    ...     # ... create and render animation ...
+
+    Typical usage pattern:
+
+    >>> # Good: Only save (renders once)
+    >>> create_animation(save_path="output.mp4", show=False)
+    
+    >>> # Also good: Only show (renders once)
+    >>> create_animation(save_path=None, show=True)
+    
+    >>> # Warning: Both enabled (renders twice - slow!)
+    >>> create_animation(save_path="output.mp4", show=True)
+    # UserWarning: Both save_path and show=True are enabled...
+
+    See Also
+    --------
+    warn_gif_format : Warn about GIF performance issues
+    create_optimized_writer : Create fast animation writer
+
+    Notes
+    -----
+    **Performance Impact:**
+    - MP4 encoding: ~1000 FPS (very fast)
+    - GUI display: ~10-30 FPS (slow, limited by refresh rate)
+    - For 1000 frames: encoding takes ~1s, display takes ~30-100s
+    - Total time with both: ~31-101s vs ~1s for save-only
+
+    **Recommendations:**
+    - For batch processing: Use show=False
+    - For preview: View the saved file after encoding
+    - Threshold: Warn for animations >50 frames
     """
     warnings.warn(
         f"Both save_path and show=True are enabled for {nframes} frames. "
@@ -417,12 +609,74 @@ def warn_gif_format(*, stacklevel: int = 2) -> None:
     - GIF: ~27 FPS encoding (256 colors, larger files)
     - MP4: ~1000 FPS encoding (36.8x faster, full color, smaller files)
 
-    Args:
-        stacklevel: Stack level for the warning (default: 2, caller's caller)
+    This warning helps users make informed decisions about format selection.
 
-    Example:
-        >>> if save_path.endswith('.gif'):
-        ...     warn_gif_format(stacklevel=2)
+    Parameters
+    ----------
+    stacklevel : int, default=2
+        Stack level for the warning (2 points to caller's caller)
+
+    Example
+    -------
+    Warn about GIF performance in format detection:
+
+    >>> from canns.analyzer.visualization.core.writers import warn_gif_format
+    >>> 
+    >>> # In file format detection code
+    >>> def detect_format(save_path):
+    ...     if save_path.endswith('.gif'):
+    ...         warn_gif_format(stacklevel=2)
+    ...         return 'gif'
+    ...     return 'mp4'
+
+    User sees warning when creating GIF:
+
+    >>> # User code
+    >>> save_path = "animation.gif"
+    >>> detect_format(save_path)
+    # UserWarning: Using GIF format. For 36.8x faster encoding, consider using MP4...
+    'gif'
+
+    Conditional warning for large animations:
+
+    >>> def create_animation(save_path, nframes):
+    ...     # Only warn for large GIF animations
+    ...     if save_path.endswith('.gif') and nframes > 100:
+    ...         warn_gif_format(stacklevel=2)
+    ...     # ... proceed with animation creation ...
+
+    See Also
+    --------
+    warn_double_rendering : Warn about double render performance
+    get_recommended_format : Get optimal format for use case
+    create_optimized_writer : Create writer with automatic warnings
+
+    Notes
+    -----
+    **Performance Comparison:**
+    - GIF encoding: ~27 FPS
+    - MP4 encoding: ~1000 FPS
+    - Speedup: 36.8x faster with MP4
+
+    **GIF Limitations:**
+    - Limited to 256 colors (color quantization artifacts)
+    - Larger file sizes (poor compression)
+    - Slower encoding (CPU-intensive quantization)
+
+    **MP4 Advantages:**
+    - Full 24-bit color (16.7 million colors)
+    - Better compression (smaller files)
+    - Much faster encoding (hardware acceleration)
+    - Universal playback support
+
+    **When to Use GIF:**
+    - GitHub README inline display
+    - Websites that don't support video embedding
+    - When you specifically need the GIF format
+
+    **Recommended Action:**
+    Change `.gif` to `.mp4` for better performance unless you specifically
+    need GIF format for inline display (e.g., GitHub README).
     """
     warnings.warn(
         "Using GIF format. For 36.8x faster encoding, consider using MP4 format instead:\n"

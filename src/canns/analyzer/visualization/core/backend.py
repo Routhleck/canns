@@ -14,7 +14,63 @@ from typing import Literal
 
 
 class AnimationBackend(Enum):
-    """Available animation rendering backends."""
+    """
+    Available animation rendering backends.
+
+    Enumeration of supported backends for rendering matplotlib animations
+    to video files. Each backend has different performance characteristics
+    and dependency requirements.
+
+    Attributes
+    ----------
+    IMAGEIO : str
+        Use imageio library for rendering. Supports parallel rendering for
+        significant speedup on multi-core systems. Requires imageio package.
+        Best for: Large animations (>500 frames), when imageio is installed.
+    MATPLOTLIB : str
+        Use matplotlib's built-in writers. Single-threaded but always
+        available with no extra dependencies. Generally slower than imageio.
+        Best for: Small animations, when imageio is unavailable.
+    AUTO : str
+        Automatically select the best backend based on file format and
+        available dependencies. Preferred option for most users.
+
+    Example
+    -------
+    Specify backend explicitly:
+
+    >>> from canns.analyzer.visualization.core.backend import AnimationBackend
+    >>> from canns.analyzer.visualization.core.backend import select_animation_backend
+    >>> 
+    >>> # Request specific backend
+    >>> selection = select_animation_backend(
+    ...     "output.mp4",
+    ...     requested_backend=AnimationBackend.IMAGEIO.value
+    ... )
+    >>> print(f"Using: {selection.backend}")
+    Using: imageio
+
+    Use AUTO selection (recommended):
+
+    >>> # Let system choose optimal backend
+    >>> selection = select_animation_backend(
+    ...     "output.gif",
+    ...     requested_backend=AnimationBackend.AUTO.value
+    ... )
+    >>> print(f"Selected {selection.backend}: {selection.reason}")
+    Selected imageio: Parallel rendering available for GIF
+
+    See Also
+    --------
+    BackendSelection : Result of backend selection process
+    select_animation_backend : Smart backend selection function
+
+    Notes
+    -----
+    - **IMAGEIO**: 3-4x faster for large animations, requires `pip install imageio`
+    - **MATPLOTLIB**: Always available, single-threaded
+    - **AUTO**: Recommended - selects imageio when available, falls back to matplotlib
+    """
 
     IMAGEIO = "imageio"  # Supports parallel rendering, requires imageio package
     MATPLOTLIB = "matplotlib"  # Single-threaded, always available
@@ -23,7 +79,73 @@ class AnimationBackend(Enum):
 
 @dataclass
 class BackendSelection:
-    """Result of backend selection process."""
+    """
+    Result of backend selection process.
+
+    Contains the selected backend along with metadata about the selection,
+    including performance capabilities and any warnings for the user.
+
+    Attributes
+    ----------
+    backend : Literal["imageio", "matplotlib"]
+        The selected backend name
+    supports_parallel : bool
+        Whether this backend supports parallel frame rendering
+    reason : str
+        Human-readable explanation of why this backend was selected
+    warnings : list[str]
+        Any warnings or suggestions for the user about the selection
+
+    Example
+    -------
+    Get backend selection information:
+
+    >>> from canns.analyzer.visualization.core.backend import select_animation_backend
+    >>> 
+    >>> # Select backend for GIF
+    >>> selection = select_animation_backend("output.gif")
+    >>> print(f"Backend: {selection.backend}")
+    Backend: imageio
+    >>> print(f"Supports parallel: {selection.supports_parallel}")
+    Supports parallel: True
+    >>> print(f"Reason: {selection.reason}")
+    Reason: Parallel rendering available for GIF
+    >>> 
+    >>> # Check for warnings
+    >>> if selection.warnings:
+    ...     print("Warnings:", selection.warnings)
+
+    Handle fallback to matplotlib:
+
+    >>> # When imageio unavailable
+    >>> selection = select_animation_backend("output.mp4", "auto")
+    >>> if selection.backend == "matplotlib":
+    ...     print(f"Using fallback: {selection.reason}")
+    ...     for warning in selection.warnings:
+    ...         print(f"Warning: {warning}")
+
+    Use selection result:
+
+    >>> # Use selected backend in rendering
+    >>> if selection.supports_parallel and num_frames > 500:
+    ...     # Use parallel rendering
+    ...     renderer = ParallelAnimationRenderer()
+    ... else:
+    ...     # Use standard matplotlib rendering
+    ...     anim = FuncAnimation(fig, update_frame, frames=num_frames)
+
+    See Also
+    --------
+    AnimationBackend : Enumeration of available backends
+    select_animation_backend : Function that creates BackendSelection
+
+    Notes
+    -----
+    - This is a dataclass with immutable fields (frozen=False by default)
+    - warnings list may be empty if selection is optimal
+    - supports_parallel indicates potential speedup for large animations
+    - reason provides context for debugging and user communication
+    """
 
     backend: Literal["imageio", "matplotlib"]
     """The selected backend."""
@@ -185,16 +307,75 @@ def get_imageio_writer_kwargs(save_path: str, fps: int) -> tuple[dict, str | Non
     """
     Get appropriate kwargs for imageio.get_writer() based on file format.
 
-    Args:
-        save_path: Output file path
-        fps: Frames per second
+    Determines optimal imageio writer configuration based on the output file
+    extension. Returns format-specific parameters for GIF or video encoding.
 
-    Returns:
-        Tuple of (writer_kwargs, mode) where mode is for get_writer()
+    Parameters
+    ----------
+    save_path : str
+        Output file path (extension determines format)
+    fps : int
+        Frames per second for the animation
 
-    Example:
-        >>> kwargs, mode = get_imageio_writer_kwargs("output.gif", 10)
-        >>> writer = imageio.get_writer("output.gif", mode=mode, **kwargs)
+    Returns
+    -------
+    tuple[dict, str | None]
+        Tuple of (writer_kwargs, mode):
+        - writer_kwargs: Dictionary of parameters for imageio.get_writer()
+        - mode: Mode string for get_writer() ('I' for GIF, None for video)
+
+    Example
+    -------
+    Get writer configuration and create imageio writer:
+
+    >>> from canns.analyzer.visualization.core.backend import get_imageio_writer_kwargs
+    >>> import imageio
+    >>> 
+    >>> # Get configuration for GIF output
+    >>> kwargs, mode = get_imageio_writer_kwargs("animation.gif", fps=10)
+    >>> print(kwargs)
+    {'duration': 0.1, 'loop': 0}
+    >>> print(mode)
+    'I'
+    >>> 
+    >>> # Create writer with configuration
+    >>> with imageio.get_writer("animation.gif", mode=mode, **kwargs) as writer:
+    ...     for frame in frames:
+    ...         writer.append_data(frame)
+
+    MP4 video configuration:
+
+    >>> # Get configuration for MP4 output
+    >>> kwargs, mode = get_imageio_writer_kwargs("video.mp4", fps=30)
+    >>> print(kwargs)
+    {'fps': 30, 'codec': 'libx264', 'pixelformat': 'yuv420p'}
+    >>> print(mode)
+    None
+    >>> 
+    >>> # MP4 writer uses different parameters
+    >>> with imageio.get_writer("video.mp4", **kwargs) as writer:
+    ...     for frame in frames:
+    ...         writer.append_data(frame)
+
+    See Also
+    --------
+    select_animation_backend : High-level backend selection
+    create_optimized_writer : Create optimized animation writer
+
+    Notes
+    -----
+    **GIF format** (.gif):
+    - duration: Time per frame (1/fps)
+    - loop: 0 for infinite loop
+    - mode: 'I' (image mode)
+
+    **Video formats** (.mp4, .avi, etc.):
+    - fps: Frames per second
+    - codec: libx264 (H.264 encoding)
+    - pixelformat: yuv420p (widely compatible)
+    - mode: None (default)
+
+    The returned kwargs can be passed directly to imageio.get_writer() via **kwargs unpacking.
     """
     file_ext = _get_file_extension(save_path)
 
@@ -261,8 +442,40 @@ def get_optimal_worker_count() -> int:
     """
     Get optimal number of parallel workers for this system.
 
-    Returns:
+    Calculates the recommended worker count for parallel rendering by using
+    cpu_count - 1 (leaving one core free for the main process), with a
+    minimum of 1 worker.
+
+    Returns
+    -------
+    int
         Number of workers (cpu_count - 1, minimum 1)
+
+    Example
+    -------
+    Determine optimal parallelism for animation rendering:
+
+    >>> from canns.analyzer.visualization.core.backend import get_optimal_worker_count
+    >>> 
+    >>> # Get recommended worker count
+    >>> num_workers = get_optimal_worker_count()
+    >>> print(f"Using {num_workers} workers for parallel rendering")
+    Using 3 workers for parallel rendering
+    >>> 
+    >>> # Use in parallel rendering configuration
+    >>> from canns.analyzer.visualization.core.rendering import ParallelAnimationRenderer
+    >>> renderer = ParallelAnimationRenderer(num_workers=num_workers)
+
+    See Also
+    --------
+    get_multiprocessing_context : Get appropriate multiprocessing context
+    ParallelAnimationRenderer : Multi-process parallel renderer
+
+    Notes
+    -----
+    - Leaves one CPU core free to avoid system slowdown
+    - Minimum of 1 worker ensures functionality on single-core systems
+    - Worker count affects memory usage (each worker needs separate memory)
     """
     import multiprocessing as mp
 
@@ -273,11 +486,64 @@ def get_multiprocessing_context(prefer_fork: bool = False):
     """
     Get appropriate multiprocessing context for this platform.
 
-    Args:
-        prefer_fork: Whether to prefer 'fork' over 'spawn' (Linux only)
+    Selects the optimal multiprocessing start method based on platform and
+    loaded libraries. Automatically handles JAX compatibility issues and
+    platform-specific constraints.
 
-    Returns:
-        Multiprocessing context or None if unavailable
+    Parameters
+    ----------
+    prefer_fork : bool, default=False
+        Whether to prefer 'fork' over 'spawn' on Linux. Fork is faster but
+        incompatible with some libraries (e.g., JAX). Only effective on Linux.
+
+    Returns
+    -------
+    multiprocessing.context.BaseContext or None
+        Multiprocessing context suitable for this platform, or None if
+        multiprocessing is unavailable
+
+    Example
+    -------
+    Create multiprocessing context for parallel rendering:
+
+    >>> from canns.analyzer.visualization.core.backend import get_multiprocessing_context
+    >>> import multiprocessing as mp
+    >>> 
+    >>> # Get appropriate context
+    >>> ctx = get_multiprocessing_context()
+    >>> if ctx:
+    ...     # Use context to create worker pool
+    ...     with ctx.Pool(processes=4) as pool:
+    ...         results = pool.map(process_frame, frame_indices)
+    >>> 
+    >>> # Force spawn method (safer with JAX/TensorFlow)
+    >>> ctx = get_multiprocessing_context(prefer_fork=False)
+
+    Using with parallel animation rendering:
+
+    >>> from canns.analyzer.visualization.core import ParallelAnimationRenderer
+    >>> 
+    >>> # Context is automatically handled internally
+    >>> renderer = ParallelAnimationRenderer(num_workers=4)
+    >>> # render() will use appropriate context based on platform
+
+    See Also
+    --------
+    get_optimal_worker_count : Get recommended number of workers
+    ParallelAnimationRenderer : Renderer using multiprocessing
+
+    Notes
+    -----
+    - **'spawn'** (default): Works on all platforms, slower startup
+    - **'fork'** (Linux only): Faster startup but incompatible with JAX
+    - Automatically detects JAX and avoids 'fork' to prevent deadlocks
+    - Returns None if multiprocessing is unavailable
+    - Context must be obtained before creating worker pools
+
+    Warnings
+    --------
+    - Using 'fork' with JAX/TensorFlow can cause deadlocks
+    - The function automatically detects and warns about this
     """
     import multiprocessing as mp
 
@@ -306,6 +572,57 @@ def get_multiprocessing_context(prefer_fork: bool = False):
 
 
 def emit_backend_warnings(warnings_list: list[str], stacklevel: int = 2):
-    """Emit all backend selection warnings."""
+    """
+    Emit all backend selection warnings to the user.
+
+    Iterates through a list of warning messages and emits each as a
+    RuntimeWarning. Used by backend selection logic to inform users about
+    sub-optimal configurations or missing dependencies.
+
+    Parameters
+    ----------
+    warnings_list : list[str]
+        List of warning messages to emit
+    stacklevel : int, default=2
+        Stack level for warning origin (2 points to caller of the function
+        that called emit_backend_warnings)
+
+    Example
+    -------
+    Emit warnings from backend selection:
+
+    >>> from canns.analyzer.visualization.core.backend import emit_backend_warnings
+    >>> 
+    >>> # Collect warnings during backend selection
+    >>> warnings = []
+    >>> if not imageio_available:
+    ...     warnings.append("imageio not found; using slower matplotlib backend")
+    >>> if file_format == "gif":
+    ...     warnings.append("GIF encoding is slower than MP4; consider using .mp4")
+    >>> 
+    >>> # Emit all warnings at once
+    >>> emit_backend_warnings(warnings)
+
+    Internal usage in select_animation_backend:
+
+    >>> from canns.analyzer.visualization.core.backend import select_animation_backend
+    >>> 
+    >>> selection = select_animation_backend("output.gif", "matplotlib")
+    >>> # Warnings automatically emitted about sub-optimal choice
+    >>> print(selection.warnings)
+    ['Consider using imageio backend for faster GIF rendering']
+
+    See Also
+    --------
+    select_animation_backend : Smart backend selection with automatic warnings
+    BackendSelection : Result object containing warning list
+
+    Notes
+    -----
+    - All warnings are emitted as RuntimeWarning type
+    - Stacklevel controls where the warning appears to originate
+    - Empty list is safe (no warnings emitted)
+    - Used internally by backend selection logic
+    """
     for warning_msg in warnings_list:
         warnings.warn(warning_msg, RuntimeWarning, stacklevel=stacklevel)
