@@ -329,21 +329,6 @@ class NonRecUnits(BasicModel):
     BandCell : Band cell module using NonRecUnits for shifts
     """
 
-    Attributes:
-        size (int): The number of neurons.
-        noise_0 (float): The standard deviation of the Gaussian noise.
-        tau (float): The time constant for the synaptic input `u`.
-        z_min (float): The minimum value of the encoded feature space.
-        z_max (float): The maximum value of the encoded feature space.
-        z_range (float): The range of the feature space.
-        x (bm.ndarray): The preferred feature values for each neuron.
-        rho (float): The neural density.
-        dx (float): The stimulus density.
-        r (bm.Variable): The firing rates of the neurons.
-        u (bm.Variable): The synaptic inputs to the neurons.
-        input (bm.Variable): The external input to the neurons.
-    """
-
     def __init__(
         self,
         size: int,
