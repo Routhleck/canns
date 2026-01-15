@@ -32,11 +32,44 @@ try:
 except ImportError:
     HAS_NUMPY = False
 
-# Default data directory
+# Default data directory for storing downloaded datasets
 DEFAULT_DATA_DIR = Path.home() / ".canns" / "data"
+"""Path: Default directory path for caching downloaded CANNS datasets.
+
+This directory is created in the user's home directory (~/.canns/data) and is used
+to store all downloaded datasets. The directory is created automatically when needed.
+
+Example:
+    >>> from canns.data.datasets import DEFAULT_DATA_DIR
+    >>> print(DEFAULT_DATA_DIR)
+    PosixPath('/home/user/.canns/data')
+    >>> # Check if default data directory exists
+    >>> DEFAULT_DATA_DIR.exists()
+    False
+    >>> # Create the directory
+    >>> DEFAULT_DATA_DIR.mkdir(parents=True, exist_ok=True)
+    >>> DEFAULT_DATA_DIR.exists()
+    True
+"""
 
 # URLs for datasets on Hugging Face
 HUGGINGFACE_REPO = "canns-team/data-analysis-datasets"
+"""str: Hugging Face repository identifier for CANNS analysis datasets.
+
+This constant specifies the Hugging Face Datasets repository that hosts the
+example datasets used in CANNS analysis workflows. The repository contains
+preprocessed neural recording data for demonstrations and tutorials.
+
+Example:
+    >>> from canns.data.datasets import HUGGINGFACE_REPO
+    >>> print(HUGGINGFACE_REPO)
+    'canns-team/data-analysis-datasets'
+    >>> # Construct full URL to a dataset file
+    >>> base_url = f"https://huggingface.co/datasets/{HUGGINGFACE_REPO}/resolve/main/"
+    >>> file_url = base_url + "ROI_data.txt"
+    >>> print(file_url)
+    'https://huggingface.co/datasets/canns-team/data-analysis-datasets/resolve/main/ROI_data.txt'
+"""
 BASE_URL = f"https://huggingface.co/datasets/{HUGGINGFACE_REPO}/resolve/main/"
 
 # Dataset registry with metadata
