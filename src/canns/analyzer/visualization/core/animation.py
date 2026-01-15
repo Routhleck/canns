@@ -17,26 +17,181 @@ from .config import AnimationConfig
 
 
 class OptimizedAnimationBase(ABC):
-    """High-performance animation base class with blitting support.
+    """
+    High-performance animation base class with blitting support.
 
-    This abstract base class enforces best practices for matplotlib animations:
-    - Artists are pre-created in create_artists()
-    - Frame updates only modify data, never rebuild objects
-    - Automatic blitting support detection
-    - Optional parallel rendering for long animations
+    This abstract base class enforces best practices for matplotlib animations
+    by separating artist creation from frame updates, enabling automatic blitting
+    for significant performance improvements (2-10x faster rendering).
 
-    Subclasses must implement:
-    - create_artists(): Pre-create all artist objects with animated=True
-    - update_frame(frame_idx): Update artist data and return modified artists
+    The class provides:
+    - Automatic blitting support detection and fallback
+    - Optional parallel rendering for long animations (>500 frames)
+    - Consistent API for creating optimized animations
+    - Integration with imageio and matplotlib backends
+
+    Subclasses must implement
+    -----------------------
+    create_artists()
+        Pre-create all artist objects with animated=True. Called once before
+        animation starts. Should create and return all plot objects (lines,
+        scatter, images, etc.) that will be animated.
+    
+    update_frame(frame_idx)
+        Update artist data for a specific frame. Called for each frame.
+        Should only modify data (via set_data(), set_array(), etc.), never
+        recreate artists or call ax.clear().
+
+    Parameters
+    ----------
+    fig : matplotlib.figure.Figure
+        Matplotlib figure to animate
+    ax : matplotlib.axes.Axes
+        Matplotlib axes to animate
+    config : AnimationConfig or None, default=None
+        Animation configuration with fps, blitting, and parallel rendering
+        settings. Uses AnimationConfig() defaults if None.
+
+    Attributes
+    ----------
+    fig : matplotlib.figure.Figure
+        The figure being animated
+    ax : matplotlib.axes.Axes
+        The axes being animated
+    config : AnimationConfig
+        Configuration for animation rendering
+    artists : list[Artist]
+        List of animated artist objects (populated by create_artists())
+
+    Methods
+    -------
+    render_animation(nframes, interval=None, repeat=True, save_path=None, **save_kwargs)
+        Render the complete animation with automatic optimization
+    create_artists()
+        Abstract method - must be implemented by subclasses
+    update_frame(frame_idx)
+        Abstract method - must be implemented by subclasses
+
+    Example
+    -------
+    Create a simple line animation:
+
+    >>> import numpy as np
+    >>> import matplotlib.pyplot as plt
+    >>> from canns.analyzer.visualization.core.animation import OptimizedAnimationBase
+    >>> from canns.analyzer.visualization.core.config import AnimationConfig
+    >>> 
+    >>> class SineWaveAnimation(OptimizedAnimationBase):
+    ...     def __init__(self, fig, ax, config=None):
+    ...         super().__init__(fig, ax, config)
+    ...         self.x = np.linspace(0, 2*np.pi, 100)
+    ...         self.line = None
+    ...     
+    ...     def create_artists(self):
+    ...         # Pre-create line with empty data
+    ...         self.line, = self.ax.plot([], [], 'b-', animated=True)
+    ...         self.ax.set_xlim(0, 2*np.pi)
+    ...         self.ax.set_ylim(-1.5, 1.5)
+    ...         return [self.line]
+    ...     
+    ...     def update_frame(self, frame_idx):
+    ...         # Only update data, don't recreate
+    ...         phase = frame_idx * 0.1
+    ...         y = np.sin(self.x + phase)
+    ...         self.line.set_data(self.x, y)
+    ...         return (self.line,)
+    >>> 
+    >>> # Create and render animation
+    >>> fig, ax = plt.subplots()
+    >>> config = AnimationConfig(fps=30, enable_blitting=True)
+    >>> anim = SineWaveAnimation(fig, ax, config)
+    >>> animation = anim.render_animation(
+    ...     nframes=100,
+    ...     save_path='sine_wave.mp4'
+    ... )
+
+    Heatmap animation with blitting:
+
+    >>> class HeatmapAnimation(OptimizedAnimationBase):
+    ...     def __init__(self, fig, ax, data_func, config=None):
+    ...         super().__init__(fig, ax, config)
+    ...         self.data_func = data_func
+    ...         self.im = None
+    ...     
+    ...     def create_artists(self):
+    ...         # Pre-create image with initial data
+    ...         initial_data = self.data_func(0)
+    ...         self.im = self.ax.imshow(
+    ...             initial_data,
+    ...             animated=True,
+    ...             cmap='viridis'
+    ...         )
+    ...         plt.colorbar(self.im, ax=self.ax)
+    ...         return [self.im]
+    ...     
+    ...     def update_frame(self, frame_idx):
+    ...         # Only update array data
+    ...         data = self.data_func(frame_idx)
+    ...         self.im.set_array(data)
+    ...         return (self.im,)
+    >>> 
+    >>> # Use with dynamic data
+    >>> def generate_heatmap(frame):
+    ...     return np.random.randn(50, 50) * (frame / 100)
+    >>> 
+    >>> fig, ax = plt.subplots()
+    >>> anim = HeatmapAnimation(fig, ax, generate_heatmap)
+    >>> animation = anim.render_animation(nframes=200)
+
+    See Also
+    --------
+    AnimationConfig : Configuration for animation rendering
+    ParallelAnimationRenderer : Parallel rendering for long animations
+    create_optimized_writer : Create optimized video writer
+
+    Notes
+    -----
+    **Performance Benefits:**
+    - Blitting: 2-10x faster than standard matplotlib animations
+    - Parallel rendering: 3-4x additional speedup for >500 frames
+    - Artist pre-creation eliminates per-frame overhead
+
+    **Best Practices:**
+    1. Create all artists once in create_artists()
+    2. Only update data in update_frame(), never recreate objects
+    3. Set animated=True on all artists that will change
+    4. Use numpy arrays for efficient data updates
+    5. Avoid calling ax.clear() or fig.clear() in update_frame()
+
+    **Blitting Requirements:**
+    - Backend must support blitting (TkAgg, Qt5Agg work; some don't)
+    - Artists must have animated=True
+    - Only works with backends that have canvas.copy_from_bbox()
+    - Automatically disabled if backend doesn't support it
+
+    **When to Use Parallel Rendering:**
+    - Animations with >500 frames
+    - Each frame takes significant time to compute
+    - Multi-core CPU available
+    - Using imageio backend (matplotlib doesn't support parallel)
+
+    References
+    ----------
+    .. [1] Matplotlib Animation Tutorial: https://matplotlib.org/stable/api/animation_api.html
+    .. [2] Blitting for speed: https://matplotlib.org/stable/tutorials/advanced/blitting.html
     """
 
     def __init__(self, fig, ax, config: AnimationConfig | None = None):
         """Initialize the animation base.
 
-        Args:
-            fig: Matplotlib figure
-            ax: Matplotlib axes
-            config: Animation configuration (uses defaults if None)
+        Parameters
+        ----------
+        fig : matplotlib.figure.Figure
+            Matplotlib figure to animate
+        ax : matplotlib.axes.Axes
+            Matplotlib axes to animate
+        config : AnimationConfig or None, default=None
+            Animation configuration (uses defaults if None)
         """
         self.fig = fig
         self.ax = ax
