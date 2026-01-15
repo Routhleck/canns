@@ -54,18 +54,19 @@ class GridCell2DPosition(BasicModel):
 
     Example:
         >>> import brainpy.math as bm
-        >>> from canns.models.basic import GridCell2D
+        >>> from canns.models.basic import GridCell2DPosition
         >>>
         >>> bm.set_dt(1.0)
-        >>> model = GridCell2D(length=30, mapping_ratio=1.5)
+        >>> model = GridCell2DPosition(length=16, mapping_ratio=1.5)
         >>>
-        >>> # Update with 2D position
-        >>> position = [0.5, 0.3]
+        >>> # Update with a 2D position
+        >>> position = bm.array([0.5, 0.3])
         >>> model.update(position)
         >>>
         >>> # Access decoded position
         >>> decoded_pos = model.center_position.value
-        >>> print(f"Decoded position: {decoded_pos}")
+        >>> decoded_pos.shape
+        (2,)
 
     References:
         Burak, Y., & Fiete, I. R. (2009).
@@ -387,11 +388,11 @@ class GridCell2DVelocity(BasicModel):
         >>> bm.set_dt(5e-4)  # Small timestep for accurate integration
         >>> model = GridCell2DVelocity(length=40)
         >>>
-        >>> # Healing process (critical!)
-        >>> model.heal_network()
+        >>> # Healing process (recommended before simulation)
+        >>> model.heal_network(num_healing_steps=50, dt_healing=1e-3)
         >>>
         >>> # Update with 2D velocity
-        >>> velocity = [0.1, 0.05]  # [vx, vy] in m/s
+        >>> velocity = bm.array([0.1, 0.05])  # [vx, vy]
         >>> model.update(velocity)
 
     References:

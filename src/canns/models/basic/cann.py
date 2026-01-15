@@ -76,11 +76,20 @@ class BaseCANN(BasicModel):
 
 
 class BaseCANN1D(BaseCANN):
-    """
-    Base class for 1D Continuous Attractor Neural Network (CANN) models.
-    This class sets up the fundamental properties of the network, including
-    neuronal properties, feature space, and the connectivity matrix, which
-    are shared by different CANN model variations.
+    """Base class for 1D Continuous Attractor Neural Network (CANN) models.
+
+    It builds the 1D feature space, connectivity kernel, and stimulus helpers
+    shared by 1D CANN variants.
+
+    Examples:
+        >>> import brainpy.math as bm
+        >>> from canns.models.basic.cann import BaseCANN1D
+        >>>
+        >>> bm.set_dt(0.1)
+        >>> model = BaseCANN1D(num=64)
+        >>> stimulus = model.get_stimulus_by_pos(0.0)
+        >>> stimulus.shape
+        (64,)
     """
 
     def __init__(
@@ -181,10 +190,21 @@ class BaseCANN1D(BaseCANN):
 
 
 class CANN1D(BaseCANN1D):
-    """
-    A standard 1D Continuous Attractor Neural Network (CANN) model.
-    This model implements the core dynamics where a localized "bump" of activity
-    can be sustained and moved by external inputs.
+    """Standard 1D Continuous Attractor Neural Network (CANN) model.
+
+    This model sustains a localized "bump" of activity that can be driven by
+    external input.
+
+    Examples:
+        >>> import brainpy.math as bm
+        >>> from canns.models.basic import CANN1D
+        >>>
+        >>> bm.set_dt(0.1)
+        >>> model = CANN1D(num=64)
+        >>> stimulus = model.get_stimulus_by_pos(0.0)
+        >>> model.update(stimulus)
+        >>> model.r.value.shape
+        (64,)
 
     Reference:
         Wu, S., Hamaguchi, K., & Amari, S. I. (2008). Dynamics and computation of continuous attractors.
@@ -210,11 +230,13 @@ class CANN1D(BaseCANN1D):
         self.inp = bm.Variable(bm.zeros(self.shape))
 
     def update(self, inp):
-        """
-        The main update function, defining the dynamics of the network for one time step.
+        """Advance the network by one time step.
 
         Args:
-            inp (Array): The external input for the current time step.
+            inp (Array): External input vector of shape ``(num,)``.
+
+        Returns:
+            None
         """
         self.inp.value = inp
         # The numerator for the firing rate calculation (a non-linear activation function).
@@ -231,10 +253,21 @@ class CANN1D(BaseCANN1D):
 
 
 class CANN1D_SFA(BaseCANN1D):
-    """
-    A 1D CANN model that incorporates Spike-Frequency Adaptation (SFA).
-    SFA is a slow negative feedback mechanism that causes neurons to fire less
-    over time for a sustained input, which can induce anticipative tracking behavior.
+    """1D CANN model with spike-frequency adaptation (SFA).
+
+    SFA adds a slow negative feedback term that can create anticipative tracking
+    under sustained inputs.
+
+    Examples:
+        >>> import brainpy.math as bm
+        >>> from canns.models.basic import CANN1D_SFA
+        >>>
+        >>> bm.set_dt(0.1)
+        >>> model = CANN1D_SFA(num=64)
+        >>> stimulus = model.get_stimulus_by_pos(0.0)
+        >>> model.update(stimulus)
+        >>> model.r.value.shape
+        (64,)
 
     Reference:
         Mi, Y., Fung, C. C., Wong, K. Y., & Wu, S. (2014). Spike frequency adaptation
@@ -278,12 +311,13 @@ class CANN1D_SFA(BaseCANN1D):
         self.inp = bm.Variable(bm.zeros(self.shape))  # External input.
 
     def update(self, inp):
-        """
-        The main update function for the SFA model. It includes dynamics for both
-        the membrane potential and the adaptation variable.
+        """Advance the network by one time step with adaptation.
 
         Args:
-            inp (Array): The external input for the current time step.
+            inp (Array): External input vector of shape ``(num,)``.
+
+        Returns:
+            None
         """
         self.inp.value = inp
         # Firing rate calculation is the same as the standard CANN model.
@@ -302,11 +336,20 @@ class CANN1D_SFA(BaseCANN1D):
 
 
 class BaseCANN2D(BaseCANN):
-    """
-    Base class for 2D Continuous Attractor Neural Network (CANN) models.
-    This class sets up the fundamental properties of the network, including
-    neuronal properties, feature space, and the connectivity matrix, which
-    are shared by different CANN model variations.
+    """Base class for 2D Continuous Attractor Neural Network (CANN) models.
+
+    It builds the 2D feature space, connectivity kernel, and stimulus helpers
+    shared by 2D CANN variants.
+
+    Examples:
+        >>> import brainpy.math as bm
+        >>> from canns.models.basic.cann import BaseCANN2D
+        >>>
+        >>> bm.set_dt(0.1)
+        >>> model = BaseCANN2D(length=16)
+        >>> stimulus = model.get_stimulus_by_pos([0.0, 0.0])
+        >>> stimulus.shape
+        (16, 16)
     """
 
     def __init__(
@@ -456,10 +499,18 @@ class BaseCANN2D(BaseCANN):
 
 
 class CANN2D(BaseCANN2D):
-    """
-    A 2D Continuous Attractor Neural Network (CANN) model.
-    This model extends the base CANN2D class to include specific dynamics
-    and properties for a 2D neural network.
+    """2D Continuous Attractor Neural Network (CANN) model.
+
+    Examples:
+        >>> import brainpy.math as bm
+        >>> from canns.models.basic import CANN2D
+        >>>
+        >>> bm.set_dt(0.1)
+        >>> model = CANN2D(length=16)
+        >>> stimulus = model.get_stimulus_by_pos([0.0, 0.0])
+        >>> model.update(stimulus)
+        >>> model.r.value.shape
+        (16, 16)
 
     Reference:
         Wu, S., Hamaguchi, K., & Amari, S. I. (2008). Dynamics and computation of continuous attractors.
@@ -485,11 +536,13 @@ class CANN2D(BaseCANN2D):
         self.inp = bm.Variable(bm.zeros((self.length, self.length)))
 
     def update(self, inp):
-        """
-        The main update function, defining the dynamics of the network for one time step.
+        """Advance the network by one time step.
 
         Args:
-            inp (Array): The external input to the network, which can be a stimulus or other driving force.
+            inp (Array): External input grid of shape ``(length, length)``.
+
+        Returns:
+            None
         """
         self.inp.value = inp
         # The numerator for the firing rate calculation (a non-linear activation function).
@@ -505,10 +558,18 @@ class CANN2D(BaseCANN2D):
 
 
 class CANN2D_SFA(BaseCANN2D):
-    """
-    A 2D Continuous Attractor Neural Network (CANN) model with a specific
-    implementation of the Synaptic Firing Activity (SFA) dynamics.
-    This model extends the base CANN2D class to include SFA-specific dynamics.
+    """2D CANN model with spike-frequency adaptation (SFA) dynamics.
+
+    Examples:
+        >>> import brainpy.math as bm
+        >>> from canns.models.basic import CANN2D_SFA
+        >>>
+        >>> bm.set_dt(0.1)
+        >>> model = CANN2D_SFA(length=16)
+        >>> stimulus = model.get_stimulus_by_pos([0.0, 0.0])
+        >>> model.update(stimulus)
+        >>> model.r.value.shape
+        (16, 16)
     """
 
     def __init__(
@@ -544,12 +605,13 @@ class CANN2D_SFA(BaseCANN2D):
         self.inp = bm.Variable(bm.zeros((self.length, self.length)))  # External input.
 
     def update(self, inp):
-        """
-        The main update function for the SFA model. It includes dynamics for both
-        the membrane potential and the adaptation variable.
+        """Advance the network by one time step with adaptation.
 
         Args:
-            inp (Array): The external input for the current time step.
+            inp (Array): External input grid of shape ``(length, length)``.
+
+        Returns:
+            None
         """
         self.inp.value = inp
         # Firing rate calculation is the same as the standard CANN model.

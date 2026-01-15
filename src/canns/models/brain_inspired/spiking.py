@@ -12,21 +12,24 @@ __all__ = ["SpikingLayer"]
 
 
 class SpikingLayer(BrainInspiredModel):
-    """
-    Simple Leaky Integrate-and-Fire (LIF) spiking neuron layer.
+    """Simple Leaky Integrate-and-Fire (LIF) spiking neuron layer.
 
-    This model provides a minimal spiking neuron implementation for demonstrating
-    spike-timing-dependent plasticity (STDP). It features:
-    - Leaky integration of input currents
-    - Threshold-based spike generation
-    - Reset mechanism after spiking
-    - Exponential spike traces for STDP learning
+    It supports STDP-style training by maintaining pre/post spike traces.
 
     Dynamics:
         v[t+1] = leak * v[t] + W @ x[t]
         spike = 1 if v >= threshold else 0
         v = v_reset if spike else v
         trace = decay * trace + spike
+
+    Examples:
+        >>> import jax.numpy as jnp
+        >>> from canns.models.brain_inspired import SpikingLayer
+        >>>
+        >>> layer = SpikingLayer(input_size=3, output_size=2, threshold=0.5)
+        >>> spikes = layer.forward(jnp.array([1.0, 0.0, 1.0], dtype=jnp.float32))
+        >>> spikes.shape
+        (2,)
 
     References:
         - Gerstner & Kistler (2002): Spiking Neuron Models
@@ -88,14 +91,13 @@ class SpikingLayer(BrainInspiredModel):
         self.trace_post = bm.Variable(jnp.zeros(self.output_size, dtype=jnp.float32))
 
     def forward(self, x: jnp.ndarray) -> jnp.ndarray:
-        """
-        Forward pass through the spiking layer.
+        """Compute spikes for one time step.
 
         Args:
-            x: Input spikes of shape (input_size,) with binary values (0 or 1)
+            x: Input spikes of shape ``(input_size,)`` with values 0 or 1.
 
         Returns:
-            Output spikes of shape (output_size,) with binary values (0 or 1)
+            Output spikes of shape ``(output_size,)`` with values 0 or 1.
         """
         self.x.value = jnp.asarray(x, dtype=jnp.float32)
 
