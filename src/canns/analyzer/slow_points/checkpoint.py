@@ -15,9 +15,22 @@ def save_checkpoint(model: bp.DynamicalSystem, filepath: str) -> None:
         filepath: Path to save the checkpoint file.
 
     Example:
+        >>> import tempfile
+        >>> import brainpy as bp
+        >>> import brainpy.math as bm
         >>> from canns.analyzer.slow_points import save_checkpoint
-        >>> save_checkpoint(rnn, "my_model.msgpack")
-        Saved checkpoint to: my_model.msgpack
+        >>>
+        >>> class DummyModel(bp.DynamicalSystem):
+        ...     def __init__(self):
+        ...         super().__init__()
+        ...         self.w = bm.Variable(bm.ones(1))
+        >>>
+        >>> model = DummyModel()
+        >>> with tempfile.TemporaryDirectory() as tmpdir:
+        ...     path = f"{tmpdir}/model.msgpack"
+        ...     save_checkpoint(model, path)
+        ...     print(path.endswith(".msgpack"))
+        True
     """
     # Extract all states from model (parameters and state variables)
     states = bp.save_state(model)
@@ -40,13 +53,23 @@ def load_checkpoint(model: bp.DynamicalSystem, filepath: str) -> bool:
         True if checkpoint was loaded successfully, False otherwise.
 
     Example:
-        >>> from canns.analyzer.slow_points import load_checkpoint
-        >>> if load_checkpoint(rnn, "my_model.msgpack"):
-        ...     print("Loaded successfully")
-        ... else:
-        ...     print("No checkpoint found")
-        Loaded checkpoint from: my_model.msgpack
-        Loaded successfully
+        >>> import tempfile
+        >>> import brainpy as bp
+        >>> import brainpy.math as bm
+        >>> from canns.analyzer.slow_points import save_checkpoint, load_checkpoint
+        >>>
+        >>> class DummyModel(bp.DynamicalSystem):
+        ...     def __init__(self):
+        ...         super().__init__()
+        ...         self.w = bm.Variable(bm.ones(1))
+        >>>
+        >>> model = DummyModel()
+        >>> with tempfile.TemporaryDirectory() as tmpdir:
+        ...     path = f"{tmpdir}/model.msgpack"
+        ...     save_checkpoint(model, path)
+        ...     ok = load_checkpoint(model, path)
+        ...     print(ok)
+        True
     """
     # Check if file exists
     if not os.path.exists(filepath):

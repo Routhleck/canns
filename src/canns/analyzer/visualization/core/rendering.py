@@ -286,46 +286,40 @@ def render_animation_parallel(
     show_progress: bool = True,
     file_format: str | None = None,
 ):
-    """Universal parallel animation renderer for all CANNS animation functions.
-
-    This function provides a unified interface for parallel frame rendering that can be
-    used by ANY animation function in the codebase. It handles:
-    - Format detection (GIF vs MP4)
-    - Parallel vs sequential rendering
-    - Progress bars
-    - Optimal writer selection
+    """Universal parallel animation renderer for analyzer animations.
 
     Args:
         render_frame_func: Callable that renders a single frame:
-                          func(frame_idx, frame_data) -> np.ndarray (H, W, 3 or 4)
-        frame_data: Data needed by render_frame_func (will be passed to workers)
-        num_frames: Total number of frames to render
-        save_path: Output file path (extension determines format)
-        fps: Frames per second
-        num_workers: Number of parallel workers (None = auto-detect)
-        show_progress: Whether to show progress bar (default: True)
-        file_format: Override file format detection ('gif', 'mp4', etc.)
+            ``func(frame_idx, frame_data) -> np.ndarray (H, W, 3 or 4)``.
+        frame_data: Data needed by ``render_frame_func`` (passed to workers).
+        num_frames: Total number of frames to render.
+        save_path: Output file path (extension determines format).
+        fps: Frames per second.
+        num_workers: Number of parallel workers (None = auto-detect).
+        show_progress: Whether to show progress bar.
+        file_format: Override file format detection ('gif', 'mp4', etc.).
 
     Returns:
-        None (saves animation to file)
+        None (saves animation to file).
 
-    Example:
-        >>> def render_my_frame(idx, data):
-        ...     # Your frame rendering logic here
-        ...     return frame_array  # shape (H, W, 3)
+    Examples:
+        >>> import numpy as np
+        >>> from canns.analyzer.visualization.core.rendering import render_animation_parallel
+        >>> from canns.analyzer.visualization.core import rendering
         >>>
-        >>> render_animation_parallel(
-        ...     render_my_frame,
-        ...     my_data,
-        ...     num_frames=200,
-        ...     save_path="output.mp4",
-        ...     fps=10
-        ... )
-
-    Performance:
-        - GIF: 3-4x speedup with parallel rendering
-        - MP4: 2-3x speedup (rendering parallel, encoding sequential)
-        - Automatically falls back to sequential for short animations (<50 frames)
+        >>> def render_frame(idx, data):
+        ...     frame = data[idx]
+        ...     return frame  # (H, W, 3)
+        >>>
+        >>> frames = [np.zeros((10, 10, 3), dtype=np.uint8) for _ in range(2)]
+        >>> # Save a tiny animation if imageio is available
+        >>> if rendering.IMAGEIO_AVAILABLE:
+        ...     render_animation_parallel(
+        ...         render_frame, frames, num_frames=2, save_path="demo.gif", fps=2
+        ...     )
+        ...     print("saved")
+        ... else:
+        ...     print("imageio not available")
     """
     import os
     import multiprocessing as mp

@@ -439,31 +439,21 @@ def warn_gif_format(*, stacklevel: int = 2) -> None:
 
 
 def get_matplotlib_writer(save_path: str, fps: int = 10, **kwargs):
-    """
-    Create appropriate matplotlib animation writer based on file extension.
-
-    This function automatically selects the correct writer:
-    - .mp4 → FFMpegWriter (H.264 codec, high quality, fast encoding)
-    - .gif → PillowWriter (universal compatibility)
-    - others → FFMpegWriter (default)
+    """Create a Matplotlib animation writer based on file extension.
 
     Args:
-        save_path: Output file path (extension determines format)
-        fps: Frames per second
-        **kwargs: Additional arguments passed to the writer
-            For FFMpegWriter: codec, bitrate, extra_args
-            For PillowWriter: codec (ignored)
+        save_path: Output file path (extension determines format).
+        fps: Frames per second.
+        **kwargs: Additional arguments passed to the writer.
 
     Returns:
-        Matplotlib animation writer instance
+        Matplotlib animation writer instance.
 
-    Example:
-        >>> from matplotlib import animation
-        >>> writer = get_matplotlib_writer('output.mp4', fps=20)
-        >>> ani.save('output.mp4', writer=writer)
-
-        >>> # With custom codec
-        >>> writer = get_matplotlib_writer('output.mp4', fps=30, bitrate=8000)
+    Examples:
+        >>> from canns.analyzer.visualization.core.writers import get_matplotlib_writer
+        >>> writer = get_matplotlib_writer("output.gif", fps=5)
+        >>> print(writer is not None)
+        True
     """
     import os
 
