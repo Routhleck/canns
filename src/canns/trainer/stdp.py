@@ -26,7 +26,7 @@ class STDPTrainer(Trainer):
     --------------------------
     .. math::
 
-        \\Delta W_{ij} = A_{+} \\cdot \\text{trace}_{\\text{pre}}[j] \\cdot \\text{spike}_{\\text{post}}[i] 
+        \\Delta W_{ij} = A_{+} \\cdot \\text{trace}_{\\text{pre}}[j] \\cdot \\text{spike}_{\\text{post}}[i] \\\\
                         - A_{-} \\cdot \\text{trace}_{\\text{post}}[i] \\cdot \\text{spike}_{\\text{pre}}[j]
 
     where:
@@ -91,8 +91,9 @@ class STDPTrainer(Trainer):
     >>> # Generate spike patterns (Poisson-like)
     >>> np.random.seed(42)
     >>> n_patterns = 100
+    >>> spike_prob = 0.1  # 10% spike probability per neuron
     >>> spike_patterns = [
-    ...     (np.random.rand(20) < 0.1).astype(float)  # 10% spike probability
+    ...     (np.random.rand(20) < spike_prob).astype(float)
     ...     for _ in range(n_patterns)
     ... ]
     >>> 
@@ -100,7 +101,8 @@ class STDPTrainer(Trainer):
     >>> trainer.train(spike_patterns)
     >>> 
     >>> # Test prediction
-    >>> test_spikes = (np.random.rand(20) < 0.15).astype(float)
+    >>> test_spike_prob = 0.15
+    >>> test_spikes = (np.random.rand(20) < test_spike_prob).astype(float)
     >>> output_spikes = trainer.predict(test_spikes)
     >>> print(f"Input spikes: {test_spikes.sum()}")
     >>> print(f"Output spikes: {output_spikes.sum()}")
