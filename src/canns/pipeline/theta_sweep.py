@@ -34,118 +34,17 @@ class ThetaSweepPipeline(Pipeline):
     on experimental trajectory data, making it accessible to researchers who want
     to analyze neural responses without diving into implementation details.
 
-    The pipeline integrates direction cells and grid cells with theta oscillation
-    modulation to simulate spatial navigation. It generates visualizations including
-    population activity plots and animated neural dynamics.
+    Example:
+        ```python
+        # Simple usage - just provide trajectory data
+        pipeline = ThetaSweepPipeline(
+            trajectory_data=positions,  # shape: (n_steps, 2)
+            times=times                 # shape: (n_steps,)
+        )
 
-    Parameters
-    ----------
-    trajectory_data : np.ndarray
-        Position coordinates with shape (n_steps, 2) for 2D trajectories. Each row
-        represents a position (x, y) at one time step.
-    times : np.ndarray or None, optional
-        Time array with shape (n_steps,). If None, uniform time steps are generated.
-    env_size : float, default=2.0
-        Environment size in meters (assumes square environment)
-    dt : float, default=0.001
-        Simulation time step in seconds
-    direction_cell_params : dict or None, optional
-        Parameters for DirectionCellNetwork. If None, uses defaults:
-        {"num": 100, "adaptation_strength": 15, "noise_strength": 0.0}
-    grid_cell_params : dict or None, optional
-        Parameters for GridCellNetwork. If None, uses defaults including
-        grid spacing and neuron counts
-    theta_params : dict or None, optional
-        Parameters for theta modulation. If None, uses defaults for
-        frequency and amplitude
-    spatial_nav_params : dict or None, optional
-        Additional parameters for OpenLoopNavigationTask
-
-    Attributes
-    ----------
-    trajectory_data : np.ndarray
-        Stored input trajectory
-    simulation_results : dict or None
-        Results from simulation after run() is called
-    spatial_nav_task : OpenLoopNavigationTask or None
-        Spatial navigation task instance
-    direction_network : DirectionCellNetwork or None
-        Direction cell network instance
-    grid_network : GridCellNetwork or None
-        Grid cell network instance
-
-    Methods
-    -------
-    run(output_dir="theta_sweep_results", verbose=True, generate_plots=True,
-        generate_animation=True, fps=30, dpi=100)
-        Execute the complete theta sweep analysis pipeline
-
-    Example
-    -------
-    Basic usage with synthetic trajectory:
-
-    >>> import numpy as np
-    >>> from canns.pipeline import ThetaSweepPipeline
-    >>> 
-    >>> # Create circular trajectory
-    >>> t = np.linspace(0, 4*np.pi, 200)
-    >>> trajectory = np.column_stack([
-    ...     np.cos(t) * 0.4 + 0.5,  # x: center at 0.5, radius 0.4
-    ...     np.sin(t) * 0.4 + 0.5   # y: center at 0.5, radius 0.4
-    >>> ])
-    >>> 
-    >>> # Run analysis
-    >>> pipeline = ThetaSweepPipeline(
-    ...     trajectory_data=trajectory,
-    ...     env_size=2.0,
-    ...     dt=0.001
-    >>> )
-    >>> results = pipeline.run(output_dir="my_results/", verbose=True)
-    >>> 
-    >>> # Access results
-    >>> print(f"Animation: {results['animation_path']}")
-    >>> print(f"Plots: {list(results['plots'].keys())}")
-
-    Advanced usage with custom parameters:
-
-    >>> # Custom network parameters
-    >>> direction_params = {
-    ...     "num": 200,              # More direction cells
-    ...     "adaptation_strength": 20,
-    ...     "noise_strength": 0.1
-    >>> }
-    >>> 
-    >>> grid_params = {
-    ...     "num_per_scale": 8,      # Neurons per grid scale
-    ...     "mapping_ratio": 1.5
-    >>> }
-    >>> 
-    >>> theta_params = {
-    ...     "frequency": 8.0,        # 8 Hz theta
-    ...     "amplitude": 0.5
-    >>> }
-    >>> 
-    >>> pipeline = ThetaSweepPipeline(
-    ...     trajectory_data=trajectory,
-    ...     direction_cell_params=direction_params,
-    ...     grid_cell_params=grid_params,
-    ...     theta_params=theta_params
-    >>> )
-    >>> results = pipeline.run()
-
-    See Also
-    --------
-    load_trajectory_from_csv : Load trajectory from CSV and run analysis
-    batch_process_trajectories : Process multiple trajectories
-    DirectionCellNetwork : Direction cell model
-    GridCellNetwork : Grid cell model
-
-    Notes
-    -----
-    - The pipeline automatically handles model initialization and simulation
-    - Generated files include plots (PNG) and animations (GIF/MP4)
-    - Simulation uses JAX for efficient computation
-    - Default parameters are suitable for most experimental data
+        results = pipeline.run(output_dir="my_results/")
+        print(f"Animation saved to: {results['animation_path']}")
+        ```
     """
 
     def __init__(
@@ -614,94 +513,15 @@ def load_trajectory_from_csv(
     """
     Load trajectory data from CSV file and run theta sweep analysis.
 
-    This convenience function reads trajectory data from a CSV file and automatically
-    runs the ThetaSweepPipeline, making it easy to analyze experimental trajectory
-    data without manual data loading and pipeline configuration.
+    Args:
+        filepath: Path to CSV file
+        x_col: Column name for x coordinates
+        y_col: Column name for y coordinates
+        time_col: Column name for time data (optional)
+        **kwargs: Additional parameters passed to ThetaSweepPipeline
 
-    Parameters
-    ----------
-    filepath : str or Path
-        Path to CSV file containing trajectory data
-    x_col : str, default="x"
-        Name of the column containing x coordinates
-    y_col : str, default="y"
-        Name of the column containing y coordinates
-    time_col : str or None, default="time"
-        Name of the column containing time values. If None or column not found,
-        uniform time steps will be used
-    **kwargs : dict
-        Additional parameters passed to ThetaSweepPipeline constructor
-        (e.g., env_size, dt, direction_cell_params, grid_cell_params)
-
-    Returns
-    -------
-    dict[str, Any]
-        Dictionary containing analysis results with keys:
-        - 'animation_path': Path to generated animation file
-        - 'plots': Dictionary of plot file paths
-        - 'simulation_results': Raw simulation data
-        - Other pipeline-specific outputs
-
-    Raises
-    ------
-    FileNotFoundError
-        If the specified CSV file does not exist
-    KeyError
-        If specified column names are not found in the CSV file
-    ValueError
-        If trajectory data has invalid shape or format
-
-    Example
-    -------
-    Analyze trajectory from CSV file:
-
-    >>> import numpy as np
-    >>> import pandas as pd
-    >>> from canns.pipeline import load_trajectory_from_csv
-    >>> from pathlib import Path
-    >>> import tempfile
-    >>> 
-    >>> # Create example CSV file
-    >>> with tempfile.NamedTemporaryFile(mode='w', suffix='.csv', delete=False) as f:
-    ...     # Generate circular trajectory
-    ...     t = np.linspace(0, 2*np.pi, 100)
-    ...     df = pd.DataFrame({
-    ...         'time': np.linspace(0, 10, 100),
-    ...         'x': np.cos(t) * 0.5 + 0.5,
-    ...         'y': np.sin(t) * 0.5 + 0.5
-    ...     })
-    ...     df.to_csv(f.name, index=False)
-    ...     csv_path = f.name
-    >>> 
-    >>> # Load and analyze
-    >>> results = load_trajectory_from_csv(
-    ...     csv_path,
-    ...     x_col='x',
-    ...     y_col='y',
-    ...     time_col='time',
-    ...     env_size=2.0
-    ... )
-    >>> print("Analysis complete!")
-    >>> print(f"Animation: {results.get('animation_path')}")
-    >>> 
-    >>> # Clean up
-    >>> Path(csv_path).unlink()
-
-    With custom column names:
-
-    >>> # CSV with different column names
-    >>> # Assuming 'position_x', 'position_y', 'timestamp' columns
-    >>> results = load_trajectory_from_csv(
-    ...     "my_data.csv",
-    ...     x_col="position_x",
-    ...     y_col="position_y",
-    ...     time_col="timestamp"
-    ... )
-
-    See Also
-    --------
-    ThetaSweepPipeline : The underlying pipeline used for analysis
-    batch_process_trajectories : Process multiple trajectories at once
+    Returns:
+        Dictionary containing analysis results and file paths
     """
     import pandas as pd
 
@@ -718,97 +538,15 @@ def batch_process_trajectories(
     trajectory_list: list, output_base_dir: str = "batch_results", **kwargs
 ) -> dict[str, dict[str, Any]]:
     """
-    Process multiple trajectories in batch with theta sweep analysis.
+    Process multiple trajectories in batch.
 
-    This function enables parallel processing of multiple trajectory datasets,
-    organizing outputs into separate subdirectories for each trajectory. Useful
-    for analyzing multiple experimental sessions or comparing conditions.
+    Args:
+        trajectory_list: List of (trajectory_data, times) tuples or trajectory_data arrays
+        output_base_dir: Base directory for batch results
+        **kwargs: Additional parameters passed to ThetaSweepPipeline
 
-    Parameters
-    ----------
-    trajectory_list : list
-        List of trajectory inputs. Each element can be:
-        - A tuple of (trajectory_data, times) where trajectory_data is array of
-          shape (n_steps, 2) and times is array of shape (n_steps,)
-        - A trajectory_data array alone (times will be set to None)
-    output_base_dir : str, default="batch_results"
-        Base directory for organizing batch results. Each trajectory gets
-        its own subdirectory (trajectory_000, trajectory_001, etc.)
-    **kwargs : dict
-        Additional parameters passed to ThetaSweepPipeline constructor for
-        all trajectories (e.g., env_size, dt, grid_cell_params)
-
-    Returns
-    -------
-    dict[str, dict[str, Any]]
-        Dictionary mapping trajectory identifiers to their results:
-        - Keys: Trajectory identifiers (e.g., "trajectory_000", "trajectory_001")
-        - Values: Result dictionaries from ThetaSweepPipeline.run(), or
-          {"error": str} if processing failed for that trajectory
-
-    Example
-    -------
-    Process multiple trajectories:
-
-    >>> import numpy as np
-    >>> from canns.pipeline import batch_process_trajectories
-    >>> 
-    >>> # Generate multiple synthetic trajectories
-    >>> trajectories = []
-    >>> for i in range(3):
-    ...     t = np.linspace(0, 2*np.pi, 100)
-    ...     # Each trajectory has different radius
-    ...     radius = 0.3 + i * 0.1
-    ...     traj = np.column_stack([
-    ...         np.cos(t) * radius + 0.5,
-    ...         np.sin(t) * radius + 0.5
-    ...     ])
-    ...     trajectories.append(traj)
-    >>> 
-    >>> # Process all trajectories
-    >>> results = batch_process_trajectories(
-    ...     trajectories,
-    ...     output_base_dir="batch_output",
-    ...     env_size=2.0
-    ... )
-    >>> 
-    >>> # Check results
-    >>> print(f"Processed {len(results)} trajectories")
-    >>> for traj_id, result in results.items():
-    ...     if 'error' in result:
-    ...         print(f"{traj_id}: Failed - {result['error']}")
-    ...     else:
-    ...         print(f"{traj_id}: Success - {result.get('animation_path')}")
-
-    Process with time data:
-
-    >>> # Trajectories with explicit time stamps
-    >>> trajectories_with_time = []
-    >>> for i in range(2):
-    ...     t = np.linspace(0, 10, 100)
-    ...     traj = np.column_stack([
-    ...         np.cos(t) * 0.4,
-    ...         np.sin(t) * 0.4
-    ...     ])
-    ...     times = t
-    ...     trajectories_with_time.append((traj, times))
-    >>> 
-    >>> results = batch_process_trajectories(
-    ...     trajectories_with_time,
-    ...     output_base_dir="timed_batch"
-    ... )
-
-    See Also
-    --------
-    ThetaSweepPipeline : The underlying pipeline used for each trajectory
-    load_trajectory_from_csv : Process single trajectory from CSV file
-
-    Notes
-    -----
-    - Failed trajectories will not interrupt batch processing
-    - Each trajectory is processed sequentially (not parallelized)
-    - Output directories are created automatically
-    - Progress is printed to stdout during processing
+    Returns:
+        Dictionary mapping trajectory indices to results
     """
     batch_results = {}
 
