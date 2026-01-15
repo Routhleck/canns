@@ -22,15 +22,17 @@ class STDPTrainer(Trainer):
     strengthened when pre-synaptic spikes precede post-synaptic spikes (LTP),
     and weakened when the order is reversed (LTD).
 
-    Trace-based Learning Rule:
-        ΔW_ij = A_plus * trace_pre[j] * spike_post[i] - A_minus * trace_post[i] * spike_pre[j]
+    Trace-based Learning Rule
+    --------------------------
+    .. math::
+
+        \\Delta W_{ij} = A_{+} \\cdot \\text{trace}_{\\text{pre}}[j] \\cdot \\text{spike}_{\\text{post}}[i] 
+                        - A_{-} \\cdot \\text{trace}_{\\text{post}}[i] \\cdot \\text{spike}_{\\text{pre}}[j]
 
     where:
-        - W_ij is the weight from input j to neuron i
-        - spike_pre[j] is the presynaptic spike (0 or 1)
-        - spike_post[i] is the postsynaptic spike (0 or 1)
-        - trace_pre[j] is the exponential trace of presynaptic spikes
-        - trace_post[i] is the exponential trace of postsynaptic spikes
+        - :math:`W_{ij}` is the weight from input j to neuron i
+        - spike_pre[j], spike_post[i] are binary spike indicators (0 or 1)
+        - trace_pre[j], trace_post[i] are exponential traces of spikes
         - A_plus controls LTP (long-term potentiation) magnitude
         - A_minus controls LTD (long-term depression) magnitude
 
@@ -39,10 +41,115 @@ class STDPTrainer(Trainer):
 
     This provides a temporal window for spike-timing correlations.
 
-    References:
-        - Gerstner & Kistler (2002): Spiking Neuron Models
-        - Morrison et al. (2008): Phenomenological models of synaptic plasticity
-        - Bi & Poo (1998): Synaptic modifications in cultured hippocampal neurons
+    Parameters
+    ----------
+    model : BrainInspiredModel
+        The spiking model to train (typically SpikingLayer)
+    learning_rate : float, default=0.01
+        Global learning rate multiplier
+    A_plus : float, default=0.005
+        LTP magnitude (potentiation when pre before post)
+    A_minus : float, default=0.00525
+        LTD magnitude (depression when post before pre), slightly > A_plus for stability
+    weight_attr : str, default="W"
+        Name of model attribute holding the connection weights
+    w_min : float, default=0.0
+        Minimum weight value (typically 0 for excitatory synapses)
+    w_max : float, default=1.0
+        Maximum weight value
+    compiled : bool, default=True
+        Whether to use JIT-compiled training loop
+    **kwargs
+        Additional arguments passed to parent Trainer
+
+    Example
+    -------
+    Train spiking network with STDP:
+
+    >>> import numpy as np
+    >>> from canns.models.brain_inspired import SpikingLayer
+    >>> from canns.trainer import STDPTrainer
+    >>> 
+    >>> # Create spiking model
+    >>> model = SpikingLayer(
+    ...     input_size=20,
+    ...     output_size=10,
+    ...     threshold=1.0,
+    ...     trace_decay=0.95
+    ... )
+    >>> 
+    >>> # Create STDP trainer
+    >>> trainer = STDPTrainer(
+    ...     model=model,
+    ...     learning_rate=0.01,
+    ...     A_plus=0.005,
+    ...     A_minus=0.00525,
+    ...     w_min=0.0,
+    ...     w_max=1.0
+    ... )
+    >>> 
+    >>> # Generate spike patterns (Poisson-like)
+    >>> np.random.seed(42)
+    >>> n_patterns = 100
+    >>> spike_patterns = [
+    ...     (np.random.rand(20) < 0.1).astype(float)  # 10% spike probability
+    ...     for _ in range(n_patterns)
+    ... ]
+    >>> 
+    >>> # Train with STDP
+    >>> trainer.train(spike_patterns)
+    >>> 
+    >>> # Test prediction
+    >>> test_spikes = (np.random.rand(20) < 0.15).astype(float)
+    >>> output_spikes = trainer.predict(test_spikes)
+    >>> print(f"Input spikes: {test_spikes.sum()}")
+    >>> print(f"Output spikes: {output_spikes.sum()}")
+    >>> print(f"Output spike pattern: {output_spikes}")
+
+    Temporal pattern learning:
+
+    >>> # Learn specific spike timing patterns
+    >>> # Pattern: spike at position 0, then 5, then 10
+    >>> temporal_pattern = np.zeros(20)
+    >>> temporal_pattern[[0, 5, 10]] = 1.0
+    >>> 
+    >>> # Repeat pattern to strengthen learning
+    >>> patterns = [temporal_pattern for _ in range(50)]
+    >>> 
+    >>> trainer_temporal = STDPTrainer(
+    ...     model=SpikingLayer(20, 5),
+    ...     A_plus=0.01,
+    ...     A_minus=0.01
+    ... )
+    >>> trainer_temporal.train(patterns)
+    >>> 
+    >>> # Test with learned pattern
+    >>> response = trainer_temporal.predict(temporal_pattern)
+    >>> print(f"Response to learned pattern: {response.sum()} spikes")
+
+    See Also
+    --------
+    SpikingLayer : Compatible spiking neural network model
+    HebbianTrainer : Rate-based Hebbian learning
+    BCMTrainer : BCM rule with threshold
+
+    References
+    ----------
+    .. [1] Bi, G. Q., & Poo, M. M. (1998). Synaptic modifications in cultured
+           hippocampal neurons: dependence on spike timing, synaptic strength, and
+           postsynaptic cell type. Journal of neuroscience, 18(24), 10464-10472.
+    .. [2] Song, S., Miller, K. D., & Abbott, L. F. (2000). Competitive Hebbian learning
+           through spike-timing-dependent synaptic plasticity. Nature neuroscience, 3(9), 919-926.
+    .. [3] Morrison, A., Diesmann, M., & Gerstner, W. (2008). Phenomenological models
+           of synaptic plasticity based on spike timing. Biological cybernetics, 98(6), 459-478.
+
+    Notes
+    -----
+    - Model must have 'trace_pre' and 'trace_post' attributes
+    - A_minus is typically slightly larger than A_plus for stability
+    - Weights are clipped to [w_min, w_max] to prevent divergence
+    - Trace decay controls the temporal window of spike correlations
+    - Common in spiking neural network (SNN) training
     """
 
     def __init__(

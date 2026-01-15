@@ -22,23 +22,126 @@ class OjaTrainer(Trainer):
     normalization term, enabling single-neuron principal component extraction
     without unbounded weight magnitudes.
 
-    Learning Rule:
-        ΔW_ij = η * (y_i * x_j - y_i^2 * W_ij)
+    Learning Rule
+    -------------
+    .. math::
+
+        \\Delta W_{ij} = \\eta (y_i x_j - y_i^2 W_{ij})
 
     where:
-        - W_ij is the weight from input j to output i
-        - x_j is the input activity
-        - y_i is the output activity (y = W @ x)
-        - η is the learning rate
+        - :math:`W_{ij}` is the weight from input j to output i
+        - :math:`x_j` is the input activity
+        - :math:`y_i` is the output activity (y = W @ x)
+        - :math:`\\eta` is the learning rate
 
     The rule can be rewritten as:
         ΔW = η * (y @ x^T - diag(y^2) @ W)
 
     This naturally leads to weight normalization and PCA extraction.
 
-    Reference:
-        Oja, E. (1982). Simplified neuron model as a principal component analyzer.
-        Journal of Mathematical Biology, 15(3), 267-273.
+    Parameters
+    ----------
+    model : BrainInspiredModel
+        The model to train (typically LinearLayer)
+    learning_rate : float, default=0.01
+        Learning rate η for weight updates
+    normalize_weights : bool, default=True
+        Whether to normalize weights to unit norm after each update
+    weight_attr : str, default="W"
+        Name of model attribute holding the connection weights
+    compiled : bool, default=True
+        Whether to use JIT-compiled training loop for efficiency
+    **kwargs
+        Additional arguments passed to parent Trainer
+
+    Attributes
+    ----------
+    learning_rate : float
+        Stored learning rate
+    normalize_weights : bool
+        Weight normalization flag
+    weight_attr : str
+        Name of weight parameter
+    compiled : bool
+        Compilation flag
+
+    Methods
+    -------
+    train(train_data)
+        Train model using Oja's rule
+    predict(pattern, *args, **kwargs)
+        Generate prediction for input pattern
+
+    Example
+    -------
+    Extract principal component from data:
+
+    >>> import numpy as np
+    >>> from canns.models.brain_inspired import LinearLayer
+    >>> from canns.trainer import OjaTrainer
+    >>> 
+    >>> # Create model (1 output neuron extracts 1st PC)
+    >>> model = LinearLayer(input_size=10, output_size=1)
+    >>> 
+    >>> # Create trainer
+    >>> trainer = OjaTrainer(
+    ...     model=model,
+    ...     learning_rate=0.01,
+    ...     normalize_weights=True
+    ... )
+    >>> 
+    >>> # Generate correlated training data
+    >>> np.random.seed(42)
+    >>> # Data mostly along first axis
+    >>> patterns = [
+    ...     np.random.randn(10) * [2.0, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5]
+    ...     for _ in range(100)
+    ... ]
+    >>> 
+    >>> # Train to extract principal component
+    >>> trainer.train(patterns)
+    >>> 
+    >>> # Check learned weights (should be largest for first dimension)
+    >>> weights = model.W.value
+    >>> print(f"Weight magnitudes: {np.abs(weights[0])[:3]}")  # First 3 dims
+    >>> 
+    >>> # Test prediction
+    >>> test_pattern = np.random.randn(10)
+    >>> pc_value = trainer.predict(test_pattern)
+    >>> print(f"PC projection: {pc_value}")
+
+    Multiple principal components:
+
+    >>> # Extract 3 principal components
+    >>> model_3pc = LinearLayer(input_size=10, output_size=3)
+    >>> trainer_3pc = OjaTrainer(model_3pc, learning_rate=0.005)
+    >>> 
+    >>> # Train
+    >>> trainer_3pc.train(patterns)
+    >>> 
+    >>> # Each output neuron now represents one PC
+    >>> pcs = trainer_3pc.predict(test_pattern)
+    >>> print(f"3 PC projections shape: {pcs.shape}")
+
+    See Also
+    --------
+    SangerTrainer : Multiple orthogonal PCs with Gram-Schmidt
+    HebbianTrainer : Standard Hebbian learning without normalization
+    LinearLayer : Compatible linear model
+
+    References
+    ----------
+    .. [1] Oja, E. (1982). Simplified neuron model as a principal component analyzer.
+           Journal of Mathematical Biology, 15(3), 267-273.
+    .. [2] Oja, E. (1989). Neural networks, principal components, and subspaces.
+           International journal of neural systems, 1(01), 61-68.
+
+    Notes
+    -----
+    - The single-neuron version extracts the first principal component
+    - Multi-neuron version may extract multiple PCs but they aren't guaranteed orthogonal
+    - For orthogonal PCs, use SangerTrainer instead
+    - Weight normalization is recommended for stability
     """
 
     def __init__(

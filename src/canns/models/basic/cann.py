@@ -22,9 +22,115 @@ __all__ = [
 class BaseCANN(BasicModel):
     """
     Base class for Continuous Attractor Neural Network (CANN) models.
-    This class sets up the fundamental properties of the network, including
-    neuronal properties, feature space, and the connectivity matrix, which
-    are shared by different CANN model variations.
+
+    This abstract base class establishes the fundamental structure for CANN models,
+    which maintain stable activity "bumps" that can represent continuous variables
+    such as spatial position, heading direction, or other feature dimensions. The
+    class provides the foundational properties including neuronal count, feature
+    space representation, and connectivity patterns that are common across different
+    CANN variants.
+
+    CANNs are characterized by:
+    - Recurrent connectivity with local excitation and global inhibition
+    - Ability to maintain persistent activity bumps
+    - Translation-invariant dynamics
+    - Smooth attractor manifold structure
+
+    Parameters
+    ----------
+    shape : int or tuple of int
+        Number of neurons in the network. If int, creates a 1D network with that
+        many neurons. If tuple, defines multi-dimensional network shape (e.g.,
+        (100,) for 1D or (50, 50) for 2D networks). Internally always stored as tuple.
+    **kwargs
+        Additional keyword arguments passed to parent BasicModel, which may include
+        simulation parameters, mode settings, and other model configuration options.
+
+    Attributes
+    ----------
+    shape : tuple of int
+        Network shape as tuple, even if initialized with single integer
+
+    Methods
+    -------
+    make_conn()
+        Construct connectivity matrix (must be implemented by subclasses)
+    get_stimulus_by_pos(pos)
+        Generate external stimulus for given position (must be implemented)
+
+    Raises
+    ------
+    TypeError
+        If shape is not int or tuple of ints
+    NotImplementedError
+        If abstract methods are called without subclass implementation
+
+    Example
+    -------
+    Creating a CANN subclass:
+
+    >>> import brainpy.math as bm
+    >>> from canns.models.basic.cann import BaseCANN
+    >>> 
+    >>> class MyCANN(BaseCANN):
+    ...     def __init__(self, shape, **kwargs):
+    ...         super().__init__(shape, **kwargs)
+    ...         self.conn_mat = self.make_conn()
+    ...     
+    ...     def make_conn(self):
+    ...         # Simple uniform connectivity
+    ...         n = self.shape[0]
+    ...         return bm.ones((n, n)) / n
+    ...     
+    ...     def get_stimulus_by_pos(self, pos):
+    ...         # Gaussian stimulus centered at pos
+    ...         n = self.shape[0]
+    ...         x = bm.linspace(0, 1, n)
+    ...         return bm.exp(-((x - pos)**2) / 0.1)
+    >>> 
+    >>> # Create 1D network with 100 neurons
+    >>> model = MyCANN(shape=100)
+    >>> print(model.shape)
+    (100,)
+    >>> 
+    >>> # Create 2D network
+    >>> model_2d = MyCANN(shape=(50, 50))
+    >>> print(model_2d.shape)
+    (50, 50)
+
+    Using standard CANN models:
+
+    >>> from canns.models.basic import CANN1D
+    >>> 
+    >>> # Create 1D CANN for heading direction
+    >>> cann = CANN1D(num=100, k=8.1, a=0.5)
+    >>> 
+    >>> # Generate stimulus at position π/2
+    >>> import numpy as np
+    >>> stimulus = cann.get_stimulus_by_pos(np.pi/2)
+    >>> print(stimulus.shape)
+    (100,)
+
+    See Also
+    --------
+    BaseCANN1D : 1D CANN base class with additional 1D-specific features
+    BaseCANN2D : 2D CANN base class for spatial representations
+    CANN1D : Complete 1D CANN implementation
+    CANN2D : Complete 2D CANN implementation
+
+    Notes
+    -----
+    - This is an abstract base class; use concrete implementations like CANN1D or CANN2D
+    - Subclasses must implement `make_conn()` and `get_stimulus_by_pos()`
+    - The connectivity pattern determines the attractor dynamics
+    - Shape parameter determines the resolution of the represented feature space
+
+    References
+    ----------
+    .. [1] Wu, S., Hamaguchi, K., & Amari, S. I. (2008). Dynamics and computation
+           of continuous attractors. Neural computation, 20(4), 994-1025.
+    .. [2] Zhang, K. (1996). Representation of spatial orientation by the intrinsic
+           dynamics of the head-direction cell ensemble. Neural Networks, 9(2), 245-259.
     """
 
     def __init__(

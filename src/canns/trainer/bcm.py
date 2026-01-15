@@ -21,14 +21,17 @@ class BCMTrainer(Trainer):
     potentiation and depression based on recent activity, yielding stable
     receptive-field development and experience-dependent refinement.
 
-    Learning Rule:
-        ΔW_ij = η * y_i * (y_i - θ_i) * x_j
+    Learning Rule
+    -------------
+    .. math::
+
+        \\Delta W_{ij} = \\eta y_i (y_i - \\theta_i) x_j
 
     where:
-        - W_ij is the weight from input j to neuron i
-        - x_j is the presynaptic activity
-        - y_i is the postsynaptic activity
-        - θ_i is the modification threshold for neuron i
+        - :math:`W_{ij}` is the weight from input j to neuron i
+        - :math:`x_j` is the presynaptic activity
+        - :math:`y_i` is the postsynaptic activity
+        - :math:`\\theta_i` is the modification threshold for neuron i
 
     The threshold θ evolves as a sliding average:
         θ_i = <y_i^2>
@@ -37,9 +40,82 @@ class BCMTrainer(Trainer):
         - If y > θ: potentiation (LTP, strengthen synapses)
         - If y < θ: depression (LTD, weaken synapses)
 
-    Reference:
-        Bienenstock, E. L., Cooper, L. N., & Munro, P. W. (1982).
-        Theory for the development of neuron selectivity. Journal of Neuroscience, 2(1), 32-48.
+    Parameters
+    ----------
+    model : BrainInspiredModel
+        The model to train (typically LinearLayer with use_bcm_threshold=True)
+    learning_rate : float, default=0.01
+        Learning rate η for weight updates
+    weight_attr : str, default="W"
+        Name of model attribute holding the connection weights
+    compiled : bool, default=True
+        Whether to use JIT-compiled training loop
+    **kwargs
+        Additional arguments passed to parent Trainer
+
+    Example
+    -------
+    Train with BCM rule for selective receptive fields:
+
+    >>> import numpy as np
+    >>> from canns.models.brain_inspired import LinearLayer
+    >>> from canns.trainer import BCMTrainer
+    >>> 
+    >>> # Create model with BCM threshold
+    >>> model = LinearLayer(
+    ...     input_size=20,
+    ...     output_size=5,
+    ...     use_bcm_threshold=True,
+    ...     threshold_tau=100.0
+    ... )
+    >>> 
+    >>> # Create BCM trainer
+    >>> trainer = BCMTrainer(
+    ...     model=model,
+    ...     learning_rate=0.001
+    ... )
+    >>> 
+    >>> # Generate structured training patterns
+    >>> np.random.seed(42)
+    >>> # Two types of patterns
+    >>> patterns_A = [np.concatenate([np.random.randn(10) * 2, np.zeros(10)])
+    ...               for _ in range(50)]
+    >>> patterns_B = [np.concatenate([np.zeros(10), np.random.randn(10) * 2])
+    ...               for _ in range(50)]
+    >>> patterns = patterns_A + patterns_B
+    >>> np.random.shuffle(patterns)
+    >>> 
+    >>> # Train with BCM rule
+    >>> trainer.train(patterns)
+    >>> 
+    >>> # Check learned selectivity
+    >>> test_A = np.concatenate([np.ones(10), np.zeros(10)])
+    >>> test_B = np.concatenate([np.zeros(10), np.ones(10)])
+    >>> response_A = trainer.predict(test_A)
+    >>> response_B = trainer.predict(test_B)
+    >>> print(f"Response to pattern A: {response_A[:2]}")
+    >>> print(f"Response to pattern B: {response_B[:2]}")
+
+    See Also
+    --------
+    OjaTrainer : Oja's rule without sliding threshold
+    HebbianTrainer : Standard Hebbian learning
+    LinearLayer : Compatible model with BCM threshold support
+
+    References
+    ----------
+    .. [1] Bienenstock, E. L., Cooper, L. N., & Munro, P. W. (1982).
+           Theory for the development of neuron selectivity: orientation specificity
+           and binocular interaction in visual cortex. Journal of Neuroscience, 2(1), 32-48.
+    .. [2] Cooper, L. N., & Bear, M. F. (2012). The BCM theory of synapse modification
+           at 30: interaction of theory with experiment. Nature Reviews Neuroscience, 13(11), 798-810.
+
+    Notes
+    -----
+    - Model must have 'theta' attribute for sliding threshold
+    - Threshold adapts based on recent activity history
+    - Enables stable, selective receptive field development
+    - Weight clipping prevents divergence
     """
 
     def __init__(

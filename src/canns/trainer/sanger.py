@@ -21,20 +21,111 @@ class SangerTrainer(Trainer):
     Extends Oja's rule with Gram-Schmidt orthogonalization to extract multiple
     principal components. Each neuron learns to be orthogonal to all previous ones.
 
-    Learning Rule:
-        ΔW_i = η * (y_i * x - y_i * Σ_{j≤i} y_j * W_j)
+    Learning Rule
+    -------------
+    .. math::
+
+        \\Delta W_i = \\eta (y_i x - y_i \\sum_{j \\leq i} y_j W_j)
 
     where:
-        - W_i is the i-th neuron's weight vector
-        - y = W @ x is the output vector
+        - :math:`W_i` is the i-th neuron's weight vector
+        - :math:`y = W @ x` is the output vector
         - The sum enforces orthogonality (Gram-Schmidt process)
 
     This allows sequential extraction of orthogonal principal components,
     with neuron i converging to the i-th principal component.
 
-    Reference:
-        Sanger, T. D. (1989). Optimal unsupervised learning in a single-layer
-        linear feedforward neural network. Neural Networks, 2(6), 459-473.
+    Parameters
+    ----------
+    model : BrainInspiredModel
+        The model to train (typically LinearLayer)
+    learning_rate : float, default=0.01
+        Learning rate η for weight updates
+    normalize_weights : bool, default=True
+        Whether to normalize weights to unit norm after each update
+    weight_attr : str, default="W"
+        Name of model attribute holding the connection weights
+    compiled : bool, default=True
+        Whether to use JIT-compiled training loop
+    **kwargs
+        Additional arguments passed to parent Trainer
+
+    Example
+    -------
+    Extract multiple orthogonal principal components:
+
+    >>> import numpy as np
+    >>> from canns.models.brain_inspired import LinearLayer
+    >>> from canns.trainer import SangerTrainer
+    >>> 
+    >>> # Create model for 3 principal components
+    >>> model = LinearLayer(input_size=10, output_size=3)
+    >>> 
+    >>> # Create Sanger trainer
+    >>> trainer = SangerTrainer(
+    ...     model=model,
+    ...     learning_rate=0.01,
+    ...     normalize_weights=True
+    ... )
+    >>> 
+    >>> # Generate data with 3 main variance directions
+    >>> np.random.seed(42)
+    >>> n_samples = 200
+    >>> # Data with decreasing variance along 3 axes
+    >>> base_data = np.random.randn(n_samples, 10)
+    >>> base_data[:, 0] *= 3.0  # Largest variance (PC1)
+    >>> base_data[:, 1] *= 2.0  # Medium variance (PC2)
+    >>> base_data[:, 2] *= 1.5  # Smaller variance (PC3)
+    >>> patterns = [base_data[i] for i in range(n_samples)]
+    >>> 
+    >>> # Train to extract orthogonal PCs
+    >>> trainer.train(patterns)
+    >>> 
+    >>> # Test: project data onto learned PCs
+    >>> test_pattern = np.random.randn(10)
+    >>> pcs = trainer.predict(test_pattern)
+    >>> print(f"PC projections shape: {pcs.shape}")
+    >>> print(f"PC values: {pcs}")
+    >>> 
+    >>> # Check orthogonality of learned weights
+    >>> W = model.W.value
+    >>> gram = W @ W.T  # Should be close to identity
+    >>> print(f"Gram matrix diagonal: {np.diag(gram)}")
+    >>> print(f"Gram matrix off-diagonal: {gram[0,1]:.4f}, {gram[0,2]:.4f}")
+
+    Compare with Oja (non-orthogonal):
+
+    >>> from canns.trainer import OjaTrainer
+    >>> 
+    >>> # Oja's rule doesn't enforce orthogonality
+    >>> model_oja = LinearLayer(input_size=10, output_size=3)
+    >>> trainer_oja = OjaTrainer(model_oja, learning_rate=0.01)
+    >>> trainer_oja.train(patterns)
+    >>> 
+    >>> # Check orthogonality (will be worse than Sanger)
+    >>> W_oja = model_oja.W.value
+    >>> gram_oja = W_oja @ W_oja.T
+    >>> print(f"Oja off-diagonal: {gram_oja[0,1]:.4f}")
+
+    See Also
+    --------
+    OjaTrainer : Single PC without orthogonalization
+    HebbianTrainer : Standard Hebbian without normalization
+    LinearLayer : Compatible linear model
+
+    References
+    ----------
+    .. [1] Sanger, T. D. (1989). Optimal unsupervised learning in a single-layer
+           linear feedforward neural network. Neural Networks, 2(6), 459-473.
+    .. [2] Oja, E. (1992). Principal components, minor components, and linear neural networks.
+           Neural Networks, 5(6), 927-935.
+
+    Notes
+    -----
+    - Extracts orthogonal principal components in order of decreasing variance
+    - More computationally expensive than Oja due to Gram-Schmidt term
+    - Neurons converge to PCs in sequential order: neuron 0 → PC1, neuron 1 → PC2, etc.
+    - Weight normalization helps convergence stability
     """
 
     def __init__(
