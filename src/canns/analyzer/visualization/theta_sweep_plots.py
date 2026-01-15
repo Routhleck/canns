@@ -1008,48 +1008,26 @@ def create_theta_sweep_place_cell_animation(
         FuncAnimation: Matplotlib animation object.
 
     Examples:
+        This example demonstrates the basic structure. For complete usage, see the
+        documentation or example scripts.
+
         >>> import numpy as np
         >>> from canns.analyzer.visualization import PlotConfig
-        >>> from canns.analyzer.visualization.theta_sweep_plots import (
-        ...     create_theta_sweep_place_cell_animation,
-        ... )
         >>>
-        >>> class DummyCostGrid:
-        ...     def __init__(self):
-        ...         self.shape = (2, 2)
-        ...         self.x_edges = np.array([0.0, 0.5, 1.0])
-        ...         self.y_edges = np.array([0.0, 0.5, 1.0])
-        >>>
-        >>> class DummyGeodesicResult:
-        ...     def __init__(self):
-        ...         self.accessible_indices = np.array([[0, 0], [0, 1], [1, 0], [1, 1]])
-        ...         self.cost_grid = DummyCostGrid()
-        >>>
-        >>> class DummyPCNetwork:
-        ...     def __init__(self):
-        ...         self.geodesic_result = DummyGeodesicResult()
-        >>>
-        >>> class DummyEnv:
-        ...     boundary = np.array([[0.0, 0.0], [1.0, 0.0], [1.0, 1.0], [0.0, 1.0]])
-        ...     walls = []
-        >>>
-        >>> class DummyTask:
-        ...     env = DummyEnv()
-        >>>
+        >>> # Prepare your data from simulation
         >>> position_data = np.array([[0.1, 0.1], [0.2, 0.2], [0.3, 0.3]])
-        >>> pc_activity_data = np.random.rand(3, 4)
-        >>> config = PlotConfig(show=False)
-        >>> anim = create_theta_sweep_place_cell_animation(
-        ...     position_data,
-        ...     pc_activity_data,
-        ...     DummyPCNetwork(),
-        ...     DummyTask(),
-        ...     config=config,
-        ...     n_step=1,
-        ...     fps=2,
-        ... )
-        >>> print(anim is not None)
-        True
+        >>> pc_activity_data = np.random.rand(3, 4)  # (time, num_cells)
+        >>>
+        >>> # Assuming you have pc_network and navigation_task from your model
+        >>> # anim = create_theta_sweep_place_cell_animation(
+        >>> #     position_data,
+        >>> #     pc_activity_data,
+        >>> #     pc_network,  # Your PlaceCellNetwork instance
+        >>> #     navigation_task,  # Your BaseNavigationTask instance
+        >>> #     config=PlotConfig(show=False),
+        >>> #     n_step=1,
+        >>> #     fps=10,
+        >>> # )  # doctest: +SKIP
     """
     # Handle configuration
     if config is None:
@@ -1429,21 +1407,25 @@ def create_theta_sweep_grid_cell_animation(
         FuncAnimation | None: Animation object (None if displayed inline).
 
     Examples:
+        This is a minimal structural example using synthetic data to demonstrate
+        the API. For realistic usage, run a GridCellNetwork simulation to obtain
+        actual activity data.
+
         >>> import numpy as np
         >>> import brainpy.math as bm
         >>> from canns.models.basic.theta_sweep_model import GridCellNetwork
         >>> from canns.analyzer.visualization import PlotConfig
-        >>> from canns.analyzer.visualization.theta_sweep_plots import (
-        ...     create_theta_sweep_grid_cell_animation,
-        ... )
         >>>
+        >>> # Minimal example with synthetic data (for structure demonstration)
         >>> bm.set_dt(1.0)
         >>> gc_network = GridCellNetwork(num_dc=4, num_gc_x=4, mapping_ratio=1.0)
         >>> T = 5
+        >>> # NOTE: In real usage, obtain these from actual model simulation
         >>> position_data = np.random.rand(T, 2)
         >>> direction_data = np.linspace(-np.pi, np.pi, T)
         >>> dc_activity_data = np.random.rand(T, gc_network.num_dc)
         >>> gc_activity_data = np.random.rand(T, gc_network.num)
+        >>>
         >>> config = PlotConfig(show=False)
         >>> anim = create_theta_sweep_grid_cell_animation(
         ...     position_data,

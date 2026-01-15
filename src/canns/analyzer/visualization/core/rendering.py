@@ -304,6 +304,8 @@ def render_animation_parallel(
 
     Examples:
         >>> import numpy as np
+        >>> import tempfile
+        >>> from pathlib import Path
         >>> from canns.analyzer.visualization.core.rendering import render_animation_parallel
         >>> from canns.analyzer.visualization.core import rendering
         >>>
@@ -314,10 +316,12 @@ def render_animation_parallel(
         >>> frames = [np.zeros((10, 10, 3), dtype=np.uint8) for _ in range(2)]
         >>> # Save a tiny animation if imageio is available
         >>> if rendering.IMAGEIO_AVAILABLE:
-        ...     render_animation_parallel(
-        ...         render_frame, frames, num_frames=2, save_path="demo.gif", fps=2
-        ...     )
-        ...     print("saved")
+        ...     with tempfile.TemporaryDirectory() as tmpdir:
+        ...         save_path = Path(tmpdir) / "demo.gif"
+        ...         render_animation_parallel(
+        ...             render_frame, frames, num_frames=2, save_path=str(save_path), fps=2
+        ...         )
+        ...         print("saved")
         ... else:
         ...     print("imageio not available")
     """
