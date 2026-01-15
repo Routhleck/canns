@@ -42,6 +42,38 @@ __all__ = [
 ]
 
 INT32_MAX = np.iinfo(np.int32).max
+"""int: Maximum value for 32-bit signed integer.
+
+Used as a sentinel value to mark impassable/blocked cells in movement cost grids.
+In navigation tasks, cells with cost equal to INT32_MAX are treated as obstacles
+that cannot be traversed.
+
+Example
+-------
+Mark obstacles in a cost grid:
+
+>>> import numpy as np
+>>> from canns.task.navigation_base import INT32_MAX
+>>> 
+>>> # Create cost grid (1 = passable, INT32_MAX = obstacle)
+>>> cost_grid = np.ones((10, 10), dtype=np.int32)
+>>> 
+>>> # Add obstacles (walls)
+>>> cost_grid[5, :] = INT32_MAX  # Horizontal wall
+>>> cost_grid[:, 5] = INT32_MAX  # Vertical wall
+>>> 
+>>> # Check if cell is passable
+>>> def is_passable(cost):
+...     return cost < INT32_MAX
+>>> 
+>>> print(f"Cell (3, 3) passable: {is_passable(cost_grid[3, 3])}")
+>>> print(f"Cell (5, 5) passable: {is_passable(cost_grid[5, 5])}")
+
+See Also
+--------
+MovementCostGrid : Dataclass holding cost grid and spatial information
+BaseNavigationTask : Navigation task using cost grids for path planning
+"""
 EPSILON = 1e-12
 
 
@@ -276,6 +308,126 @@ def _compute_all_distances_parallel(
 
 @dataclass(frozen=True)
 class MovementCostGrid:
+    """
+    Dataclass representing a discretized spatial grid with movement costs.
+
+    This immutable dataclass stores a 2D grid where each cell has an associated
+    movement cost. It is used in navigation tasks to represent environments with
+    obstacles and accessible regions. Cells are passable (cost=1) or blocked
+    (cost=INT32_MAX).
+
+    The grid maintains spatial information (cell edges, dimensions) and can
+    optionally track accessible cells for efficient geodesic distance computations.
+
+    Parameters
+    ----------
+    costs : np.ndarray
+        2D array of movement costs. Shape (n_rows, n_cols).
+        Values: 1 for passable cells, INT32_MAX for obstacles.
+    x_edges : np.ndarray
+        1D array of x-coordinate bin edges. Length n_cols + 1.
+        Defines vertical boundaries of grid cells.
+    y_edges : np.ndarray
+        1D array of y-coordinate bin edges. Length n_rows + 1.
+        Defines horizontal boundaries, typically in descending order
+        (max_y to min_y) to match array row indexing.
+    dx : float
+        Width of each grid cell (x-direction spacing)
+    dy : float
+        Height of each grid cell (y-direction spacing)
+    accessible_indices : np.ndarray or None, optional
+        1D array of linear indices for accessible (passable) cells.
+        Used for efficient geodesic distance matrix computation.
+    _index_map : np.ndarray or None, optional
+        2D array mapping (row, col) to index in accessible_indices.
+        Value is -1 for inaccessible cells. Enables O(1) lookups.
+
+    Attributes
+    ----------
+    shape : tuple[int, int] (property)
+        Shape of the cost grid (n_rows, n_cols)
+    x_centers : np.ndarray (property)
+        X-coordinates of grid cell centers
+    y_centers : np.ndarray (property)
+        Y-coordinates of grid cell centers
+    accessible_mask : np.ndarray (property)
+        Boolean mask where True indicates passable cells
+
+    Methods
+    -------
+    get_cell_index(pos)
+        Get geodesic index of cell containing given position (JAX-compatible)
+
+    Example
+    -------
+    Create a simple movement cost grid:
+
+    >>> import numpy as np
+    >>> from canns.task.navigation_base import MovementCostGrid, INT32_MAX
+    >>> 
+    >>> # Define grid edges
+    >>> x_edges = np.linspace(0, 10, 11)  # 10 cells in x
+    >>> y_edges = np.linspace(10, 0, 11)  # 10 cells in y (descending)
+    >>> dx, dy = 1.0, 1.0
+    >>> 
+    >>> # Create cost grid with obstacle
+    >>> costs = np.ones((10, 10), dtype=np.int32)
+    >>> costs[5, :] = INT32_MAX  # Horizontal wall at y=5
+    >>> 
+    >>> # Create MovementCostGrid
+    >>> grid = MovementCostGrid(
+    ...     costs=costs,
+    ...     x_edges=x_edges,
+    ...     y_edges=y_edges,
+    ...     dx=dx,
+    ...     dy=dy
+    ... )
+    >>> 
+    >>> # Access properties
+    >>> print(f"Grid shape: {grid.shape}")
+    >>> print(f"Cell centers (x): {grid.x_centers[:3]}")
+    >>> print(f"Number of accessible cells: {grid.accessible_mask.sum()}")
+
+    With accessible indices for geodesic distances:
+
+    >>> # Identify accessible cells
+    >>> accessible_mask = (costs == 1)
+    >>> accessible_linear = np.where(accessible_mask.ravel())[0]
+    >>> 
+    >>> # Create index map
+    >>> index_map = np.full((10, 10), -1, dtype=np.int32)
+    >>> for i, linear_idx in enumerate(accessible_linear):
+    ...     row, col = divmod(linear_idx, 10)
+    ...     index_map[row, col] = i
+    >>> 
+    >>> grid_indexed = MovementCostGrid(
+    ...     costs=costs,
+    ...     x_edges=x_edges,
+    ...     y_edges=y_edges,
+    ...     dx=dx,
+    ...     dy=dy,
+    ...     accessible_indices=accessible_linear,
+    ...     _index_map=index_map
+    ... )
+    >>> 
+    >>> # Look up cell index for a position
+    >>> pos = (2.5, 7.5)  # Position in continuous space
+    >>> cell_idx = grid_indexed.get_cell_index(pos)
+    >>> print(f"Geodesic cell index: {cell_idx}")
+
+    See Also
+    --------
+    GeodesicDistanceResult : Result of geodesic distance computation
+    BaseNavigationTask : Navigation task using cost grids
+    INT32_MAX : Sentinel value for blocked cells
+
+    Notes
+    -----
+    - Frozen dataclass ensures immutability for safe sharing
+    - y_edges typically descends to align with array row indexing
+    - accessible_indices and _index_map are optional but required for get_cell_index()
+    - JAX-compatible methods enable use in JIT-compiled code
+    """
     costs: np.ndarray
     x_edges: np.ndarray
     y_edges: np.ndarray
@@ -286,18 +438,22 @@ class MovementCostGrid:
 
     @property
     def shape(self) -> tuple[int, int]:
+        """Grid shape (n_rows, n_cols)."""
         return self.costs.shape
 
     @property
     def x_centers(self) -> np.ndarray:
+        """X-coordinates of grid cell centers."""
         return self.x_edges[:-1] + self.dx / 2
 
     @property
     def y_centers(self) -> np.ndarray:
+        """Y-coordinates of grid cell centers."""
         return self.y_edges[:-1] - self.dy / 2
 
     @property
     def accessible_mask(self) -> np.ndarray:
+        """Boolean mask where True indicates passable cells (cost == 1)."""
         return self.costs == 1
 
     def get_cell_index(self, pos: Sequence[float]) -> int:
@@ -364,6 +520,103 @@ class MovementCostGrid:
 
 @dataclass(frozen=True)
 class GeodesicDistanceResult:
+    """
+    Result of geodesic distance computation on a movement cost grid.
+
+    This immutable dataclass stores the precomputed pairwise geodesic distances
+    between all accessible cells in a spatial grid. Geodesic distances account
+    for obstacles and follow the shortest navigable path between cells.
+
+    Used in navigation tasks and spatial analysis where Euclidean distance
+    would be inaccurate due to environmental constraints (walls, barriers, etc.).
+
+    Parameters
+    ----------
+    distances : np.ndarray
+        Pairwise distance matrix of shape (n_accessible, n_accessible).
+        distances[i, j] is the geodesic distance from cell i to cell j,
+        where i and j are indices into accessible_indices.
+        Unreachable pairs have distance np.inf.
+    accessible_indices : np.ndarray
+        1D array of linear indices for accessible cells in the original grid.
+        Length n_accessible. Maps matrix indices to grid positions.
+    cost_grid : MovementCostGrid
+        The movement cost grid used to compute distances. Contains spatial
+        information and cost values.
+
+    Example
+    -------
+    Access geodesic distances:
+
+    >>> import numpy as np
+    >>> from canns.task.navigation_base import (
+    ...     GeodesicDistanceResult, MovementCostGrid, INT32_MAX
+    ... )
+    >>> 
+    >>> # Assume we have computed geodesic distances
+    >>> # (normally done via BaseNavigationTask.compute_geodesic_distances())
+    >>> # For illustration, create dummy data
+    >>> 
+    >>> # Cost grid (5x5 with no obstacles)
+    >>> costs = np.ones((5, 5), dtype=np.int32)
+    >>> x_edges = np.linspace(0, 5, 6)
+    >>> y_edges = np.linspace(5, 0, 6)
+    >>> 
+    >>> cost_grid = MovementCostGrid(
+    ...     costs=costs,
+    ...     x_edges=x_edges,
+    ...     y_edges=y_edges,
+    ...     dx=1.0,
+    ...     dy=1.0
+    ... )
+    >>> 
+    >>> # All cells are accessible
+    >>> accessible_indices = np.arange(25)  # 5x5 = 25 cells
+    >>> 
+    >>> # Example distance matrix (simplified)
+    >>> distances = np.random.rand(25, 25) * 10
+    >>> np.fill_diagonal(distances, 0)  # Distance to self is 0
+    >>> 
+    >>> result = GeodesicDistanceResult(
+    ...     distances=distances,
+    ...     accessible_indices=accessible_indices,
+    ...     cost_grid=cost_grid
+    ... )
+    >>> 
+    >>> # Query distance between cells 0 and 24
+    >>> dist = result.distances[0, 24]
+    >>> print(f"Geodesic distance: {dist:.2f}")
+    >>> 
+    >>> # Find cells within radius 3.0 of cell 10
+    >>> cell_idx = 10
+    >>> nearby = np.where(result.distances[cell_idx] < 3.0)[0]
+    >>> print(f"Cells within radius 3.0: {len(nearby)}")
+
+    Using in navigation task:
+
+    >>> from canns.task import BaseNavigationTask
+    >>> # Assume task is initialized with environment
+    >>> # result = task.compute_geodesic_distances(show_progress=True)
+    >>> # 
+    >>> # Access precomputed distances for path planning
+    >>> # start_idx = task.cost_grid.get_cell_index(start_pos)
+    >>> # goal_idx = task.cost_grid.get_cell_index(goal_pos)
+    >>> # distance = result.distances[start_idx, goal_idx]
+
+    See Also
+    --------
+    MovementCostGrid : Grid structure used for distance computation
+    BaseNavigationTask : Task class that computes geodesic distances
+    BaseNavigationTask.compute_geodesic_distances : Method to generate this result
+
+    Notes
+    -----
+    - Distances use Dijkstra's algorithm accounting for obstacles
+    - Computation can be parallelized using Numba for large grids
+    - Matrix is symmetric for undirected navigation
+    - Infinite distances indicate unreachable cell pairs
+    - Frozen dataclass ensures thread-safe sharing
+    """
     distances: np.ndarray
     accessible_indices: np.ndarray
     cost_grid: MovementCostGrid
@@ -499,7 +752,160 @@ class BaseNavigationTask(Task):
 
     This class provides common functionality for both open-loop and closed-loop
     navigation tasks, including environment setup, agent initialization, and
-    geodesic distance computation on discretized grids.
+    geodesic distance computation on discretized grids. It integrates with
+    the canns-lib spatial navigation module to simulate realistic agent movement
+    in 2D environments with obstacles.
+
+    The task supports:
+    - Custom 2D environments with boundaries, walls, holes, and objects
+    - Simulated agent with realistic movement dynamics and thigmotaxis
+    - Geodesic distance computation using Dijkstra's algorithm
+    - Grid-based spatial discretization for CANN integration
+    - Parallel computation with Numba acceleration
+
+    Parameters
+    ----------
+    start_pos : tuple[float, float], default=(2.5, 2.5)
+        Initial (x, y) position of the agent in meters
+    width : float, default=5
+        Environment width in meters
+    height : float, default=5
+        Environment height in meters
+    dimensionality : str, default="2D"
+        Spatial dimensionality ("2D" only; "1D" not supported)
+    boundary_conditions : str, default="solid"
+        Type of boundary ("solid" or others supported by Environment)
+    scale : float or None, default=None
+        Scaling factor for environment (defaults to height if None)
+    dx : float, default=0.01
+        Resolution for visualization
+    grid_dx : float or None, default=None
+        Horizontal grid cell size for cost grid (defaults to dx if None)
+    grid_dy : float or None, default=None
+        Vertical grid cell size for cost grid (defaults to dx if None)
+    boundary : list or None, default=None
+        Custom boundary specification for Environment
+    walls : list or None, default=None
+        List of wall specifications (each a dict with geometry)
+    holes : list or None, default=None
+        List of hole specifications (inaccessible regions)
+    objects : list or None, default=None
+        List of object specifications for the environment
+    dt : float or None, default=None
+        Simulation time step (uses brainpy default if None)
+    speed_mean : float, default=0.04
+        Mean agent speed in m/s
+    speed_std : float, default=0.016
+        Standard deviation of agent speed
+    speed_coherence_time : float, default=0.7
+        Time scale for speed persistence (seconds)
+    rotational_velocity_coherence_time : float, default=0.08
+        Time scale for rotational velocity persistence (seconds)
+    rotational_velocity_std : float, default=120*π/180
+        Standard deviation of rotational velocity (radians/s)
+    head_direction_smoothing_timescale : float, default=0.15
+        Time scale for head direction smoothing (seconds)
+    initial_head_direction : float or None, default=None
+        Initial heading angle (radians). Random if None.
+    thigmotaxis : float, default=0.5
+        Wall-following tendency (0=none, 1=strong)
+    wall_repel_distance : float, default=0.1
+        Distance threshold for wall repulsion (meters)
+    wall_repel_strength : float, default=1.0
+        Strength of wall repulsion force
+    rng_seed : int or None, default=None
+        Random seed for reproducibility
+    data_class : type or None, default=None
+        Custom data class for task outputs
+
+    Attributes
+    ----------
+    env : Environment
+        Spatial environment instance from canns-lib
+    agent : Agent
+        Agent instance with movement dynamics
+    cost_grid : MovementCostGrid or None
+        Discretized cost grid for the environment
+    geodesic_result : GeodesicDistanceResult or None
+        Precomputed geodesic distances (if computed)
+
+    Methods
+    -------
+    set_grid_resolution(grid_dx, grid_dy)
+        Update grid resolution and rebuild cost grid
+    compute_geodesic_distances(show_progress=False, use_numba=True, 
+                                use_parallel=True, backend="auto")
+        Compute pairwise geodesic distances between accessible cells
+
+    Example
+    -------
+    Create navigation task with obstacles:
+
+    >>> import numpy as np
+    >>> from canns.task import BaseNavigationTask
+    >>> 
+    >>> # Define walls (horizontal and vertical barriers)
+    >>> walls = [
+    ...     {"geometry": "line", "x0": 1.0, "y0": 2.5, "x1": 4.0, "y1": 2.5},  # Horizontal
+    ...     {"geometry": "line", "x0": 2.5, "y0": 1.0, "x1": 2.5, "y1": 4.0}   # Vertical
+    ... ]
+    >>> 
+    >>> # Create navigation task
+    >>> task = BaseNavigationTask(
+    ...     start_pos=(0.5, 0.5),
+    ...     width=5.0,
+    ...     height=5.0,
+    ...     walls=walls,
+    ...     grid_dx=0.1,
+    ...     grid_dy=0.1,
+    ...     speed_mean=0.05,
+    ...     thigmotaxis=0.3,
+    ...     rng_seed=42
+    ... )
+    >>> 
+    >>> # Access environment and agent
+    >>> print(f"Environment size: {task.width} x {task.height}")
+    >>> print(f"Grid shape: {task.cost_grid.shape}")
+    >>> print(f"Agent start: {task.start_pos}")
+
+    Compute geodesic distances:
+
+    >>> # Compute pairwise distances accounting for walls
+    >>> result = task.compute_geodesic_distances(
+    ...     show_progress=True,
+    ...     use_parallel=True
+    ... )
+    >>> 
+    >>> # Access distance matrix
+    >>> print(f"Distance matrix shape: {result.distances.shape}")
+    >>> print(f"Number of accessible cells: {len(result.accessible_indices)}")
+    >>> 
+    >>> # Query distance between two positions
+    >>> pos_a = (1.0, 1.0)
+    >>> pos_b = (4.0, 4.0)
+    >>> idx_a = result.cost_grid.get_cell_index(pos_a)
+    >>> idx_b = result.cost_grid.get_cell_index(pos_b)
+    >>> if idx_a >= 0 and idx_b >= 0:
+    ...     geodesic_dist = result.distances[idx_a, idx_b]
+    ...     euclidean_dist = np.linalg.norm(np.array(pos_b) - np.array(pos_a))
+    ...     print(f"Geodesic distance: {geodesic_dist:.2f}")
+    ...     print(f"Euclidean distance: {euclidean_dist:.2f}")
+
+    See Also
+    --------
+    MovementCostGrid : Grid representation of environment
+    GeodesicDistanceResult : Result of distance computation
+    OpenLoopNavigationTask : Subclass for open-loop navigation
+    ClosedLoopNavigationTask : Subclass for closed-loop navigation
+
+    Notes
+    -----
+    - Only 2D environments are supported; 1D raises NotImplementedError
+    - Geodesic distances account for obstacles using Dijkstra's algorithm
+    - Numba acceleration provides significant speedup for large grids
+    - Parallel computation uses multiple CPU cores via Numba's prange
+    - Cost grid is automatically rebuilt when grid resolution changes
+    - Agent dynamics follow biologically-plausible movement patterns
     """
 
     def __init__(
