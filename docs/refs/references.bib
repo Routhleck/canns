@@ -444,15 +444,24 @@
 % Core dependency of this library, provides JAX-based high-performance neural simulation
 % Document location: Mentioned frequently throughout documentation
 % Citation format: :cite:`wang2023brainpy`
-@article{wang2023brainpy,
-  title={BrainPy, a flexible, integrative, efficient, and extensible framework for general-purpose brain dynamics programming},
-  author={Wang, Chaoming and Zhang, Tianqiu and Chen, Xiaoyu and He, Sichao and Li, Shangyang and Wu, Si},
-  journal={elife},
-  volume={12},
-  pages={e86365},
-  year={2023},
-  publisher={eLife Sciences Publications Limited},
-  doi={10.7554/eLife.86365}
+
+@article {wang2023brainpy,
+    article_type = {journal},
+    title = {BrainPy, a flexible, integrative, efficient, and extensible framework for general-purpose brain dynamics programming},
+    author = {Wang, Chaoming and Zhang, Tianqiu and Chen, Xiaoyu and He, Sichao and Li, Shangyang and Wu, Si},
+    editor = {Stimberg, Marcel},
+    volume = 12,
+    year = 2023,
+    month = {dec},
+    pub_date = {2023-12-22},
+    pages = {e86365},
+    citation = {eLife 2023;12:e86365},
+    doi = {10.7554/eLife.86365},
+    url = {https://doi.org/10.7554/eLife.86365},
+    abstract = {Elucidating the intricate neural mechanisms underlying brain functions requires integrative brain dynamics modeling. To facilitate this process, it is crucial to develop a general-purpose programming framework that allows users to freely define neural models across multiple scales, efficiently simulate, train, and analyze model dynamics, and conveniently incorporate new modeling approaches. In response to this need, we present BrainPy. BrainPy leverages the advanced just-in-time (JIT) compilation capabilities of JAX and XLA to provide a powerful infrastructure tailored for brain dynamics programming. It offers an integrated platform for building, simulating, training, and analyzing brain dynamics models. Models defined in BrainPy can be JIT compiled into binary instructions for various devices, including Central Processing Unit (CPU), Graphics Processing Unit (GPU), and Tensor Processing Unit (TPU), which ensures high running performance comparable to native C or CUDA. Additionally, BrainPy features an extensible architecture that allows for easy expansion of new infrastructure, utilities, and machine-learning approaches. This flexibility enables researchers to incorporate cutting-edge techniques and adapt the framework to their specific needs},
+    journal = {eLife},
+    issn = {2050-084X},
+    publisher = {eLife Sciences Publications, Ltd},
 }
 
 % JAX - Google's composable transformations framework
@@ -613,4 +622,77 @@
   pages={e1000291},
   year={2009},
   publisher={Public Library of Science San Francisco, USA}
+}
+
+% Related Works
+@ARTICLE{Gewaltig:NEST,
+  author  = {Marc-Oliver Gewaltig and Markus Diesmann},
+  title   = {NEST (NEural Simulation Tool)},
+  journal = {Scholarpedia},
+  year    = {2007},
+  volume  = {2},
+  pages   = {1430},
+  number  = {4}
+}
+
+@article{stimberg2019brian,
+  title={Brian 2, an intuitive and efficient neural simulator},
+  author={Stimberg, Marcel and Brette, Romain and Goodman, Dan FM},
+  journal={elife},
+  volume={8},
+  pages={e47314},
+  year={2019},
+  publisher={eLife Sciences Publications, Ltd}
+}
+
+@article{hines1997neuron,
+  title={The NEURON simulation environment},
+  author={Hines, Michael L and Carnevale, Nicholas T},
+  journal={Neural computation},
+  volume={9},
+  number={6},
+  pages={1179--1209},
+  year={1997},
+  publisher={MIT Press}
+}
+
+@inproceedings{wolf-etal-2020-transformers,
+    title = "Transformers: State-of-the-Art Natural Language Processing",
+    author = "Thomas Wolf and Lysandre Debut and Victor Sanh and Julien Chaumond and Clement Delangue and Anthony Moi and Pierric Cistac and Tim Rault and Rémi Louf and Morgan Funtowicz and Joe Davison and Sam Shleifer and Patrick von Platen and Clara Ma and Yacine Jernite and Julien Plu and Canwen Xu and Teven Le Scao and Sylvain Gugger and Mariama Drame and Quentin Lhoest and Alexander M. Rush",
+    booktitle = "Proceedings of the 2020 Conference on Empirical Methods in Natural Language Processing: System Demonstrations",
+    month = oct,
+    year = "2020",
+    address = "Online",
+    publisher = "Association for Computational Linguistics",
+    url = "https://www.aclweb.org/anthology/2020.emnlp-demos.6",
+    pages = "38--45"
+}
+
+@inproceedings{Ansel_PyTorch_2_Faster_2024,
+author = {Ansel, Jason and Yang, Edward and He, Horace and Gimelshein, Natalia and Jain, Animesh and Voznesensky, Michael and Bao, Bin and Bell, Peter and Berard, David and Burovski, Evgeni and Chauhan, Geeta and Chourdia, Anjali and Constable, Will and Desmaison, Alban and DeVito, Zachary and Ellison, Elias and Feng, Will and Gong, Jiong and Gschwind, Michael and Hirsh, Brian and Huang, Sherlock and Kalambarkar, Kshiteej and Kirsch, Laurent and Lazos, Michael and Lezcano, Mario and Liang, Yanbo and Liang, Jason and Lu, Yinghai and Luk, CK and Maher, Bert and Pan, Yunjie and Puhrsch, Christian and Reso, Matthias and Saroufim, Mark and Siraichi, Marcos Yukio and Suk, Helen and Suo, Michael and Tillet, Phil and Wang, Eikan and Wang, Xiaodong and Wen, William and Zhang, Shunting and Zhao, Xu and Zhou, Keren and Zou, Richard and Mathews, Ajit and Chanan, Gregory and Wu, Peng and Chintala, Soumith},
+booktitle = {29th ACM International Conference on Architectural Support for Programming Languages and Operating Systems, Volume 2 (ASPLOS '24)},
+doi = {10.1145/3620665.3640366},
+month = apr,
+publisher = {ACM},
+title = {{PyTorch 2: Faster Machine Learning Through Dynamic Python Bytecode Transformation and Graph Compilation}},
+url = {https://docs.pytorch.org/assets/pytorch2-2.pdf},
+year = {2024}
+}
+
+@software{Abadi_TensorFlow_Large-scale_machine_2015,
+author = {Abadi, Martín and Agarwal, Ashish and Barham, Paul and Brevdo, Eugene and Chen, Zhifeng and Citro, Craig and Corrado, Greg S. and Davis, Andy and Dean, Jeffrey and Devin, Matthieu and Ghemawat, Sanjay and Goodfellow, Ian and Harp, Andrew and Irving, Geoffrey and Isard, Michael and Jozefowicz, Rafal and Jia, Yangqing and Kaiser, Lukasz and Kudlur, Manjunath and Levenberg, Josh and Mané, Dan and Schuster, Mike and Monga, Rajat and Moore, Sherry and Murray, Derek and Olah, Chris and Shlens, Jonathon and Steiner, Benoit and Sutskever, Ilya and Talwar, Kunal and Tucker, Paul and Vanhoucke, Vincent and Vasudevan, Vijay and Viégas, Fernanda and Vinyals, Oriol and Warden, Pete and Wattenberg, Martin and Wicke, Martin and Yu, Yuan and Zheng, Xiaoqiang},
+doi = {10.5281/zenodo.4724125},
+license = {Apache-2.0},
+month = nov,
+title = {{TensorFlow, Large-scale machine learning on heterogeneous systems}},
+year = {2015}
+}
+
+@software{torchvision2016,
+  title = {TorchVision: PyTorch's Computer Vision library},
+  author = {TorchVision maintainers and contributors},
+  year = {2016},
+  journal = {GitHub repository},
+  publisher = {GitHub},
+  howpublished = {\url{https://github.com/pytorch/vision}}
 }
