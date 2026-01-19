@@ -1223,8 +1223,7 @@ def create_theta_sweep_place_cell_animation(
         if backend == "imageio":
             # Use imageio backend with parallel rendering
             workers = render_workers if render_workers is not None else get_optimal_worker_count()
-            ctx = get_multiprocessing_context(prefer_fork=(render_start_method == "fork"))
-            start_method = ctx.method if ctx is not None else None
+            ctx, start_method = get_multiprocessing_context(prefer_fork=(render_start_method == "fork"))
 
             _emit_info(
                 f"Parallel rendering enabled: {workers} workers (start_method={start_method})"
@@ -1506,8 +1505,7 @@ def create_theta_sweep_grid_cell_animation(
         workers = render_workers if render_workers is not None else get_optimal_worker_count()
 
         # Get multiprocessing context
-        ctx = get_multiprocessing_context(prefer_fork=True)
-        start_method = ctx.method if ctx is not None else None
+        ctx, start_method = get_multiprocessing_context(prefer_fork=True)
 
         if workers > 0 and ctx is None:
             warnings.warn(

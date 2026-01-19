@@ -266,7 +266,7 @@ def get_multiprocessing_context(prefer_fork: bool = False):
         prefer_fork: Whether to prefer 'fork' over 'spawn' (Linux only)
 
     Returns:
-        Multiprocessing context or None if unavailable
+        Tuple of (multiprocessing context, method name) or (None, None) if unavailable
     """
     import multiprocessing as mp
 
@@ -282,16 +282,16 @@ def get_multiprocessing_context(prefer_fork: bool = False):
                     RuntimeWarning,
                     stacklevel=3,
                 )
-                return mp.get_context("spawn")
-            return mp.get_context("fork")
+                return mp.get_context("spawn"), "spawn"
+            return mp.get_context("fork"), "fork"
         except (RuntimeError, ValueError):
             pass
 
     # Default to spawn (works everywhere)
     try:
-        return mp.get_context("spawn")
+        return mp.get_context("spawn"), "spawn"
     except (RuntimeError, ValueError):
-        return None
+        return None, None
 
 
 def emit_backend_warnings(warnings_list: list[str], stacklevel: int = 2):

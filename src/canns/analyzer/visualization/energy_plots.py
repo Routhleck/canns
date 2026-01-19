@@ -458,7 +458,7 @@ def energy_landscape_1d_animation(
             if backend == "imageio":
                 # Use imageio backend with parallel rendering
                 workers = render_workers if render_workers is not None else get_optimal_worker_count()
-                ctx = get_multiprocessing_context(prefer_fork=(render_start_method == "fork"))
+                ctx, start_method = get_multiprocessing_context(prefer_fork=(render_start_method == "fork"))
 
                 # Create render options
                 render_options = _Energy1DRenderOptions(
@@ -854,7 +854,7 @@ def energy_landscape_2d_animation(
             if backend == "imageio":
                 # Use imageio backend with parallel rendering
                 workers = render_workers if render_workers is not None else get_optimal_worker_count()
-                ctx = get_multiprocessing_context(prefer_fork=(render_start_method == "fork"))
+                ctx, start_method = get_multiprocessing_context(prefer_fork=(render_start_method == "fork"))
 
                 # Create render options
                 render_options = _Energy2DRenderOptions(
