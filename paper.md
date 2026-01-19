@@ -84,14 +84,21 @@ The library supports four distinct research workflows: (1) CANN modeling and sim
 for processing experimental neural recordings; (3) brain-inspired learning with biologically plausible plasticity rules; and (4) end-to-end pipelines for automated parameter sweeps and reproducible experiments. All models inherit from BrainPy's
 `DynamicalSystem` base class [@wang2023brainpy], leveraging JAX's JIT compilation for GPU/TPU acceleration while maintaining simple
 Python APIs. For operations where Python overhead is significant, the companion `canns-lib` Rust library provides optional accelerated
-backends—notably achieving a 400× speedup for spatial navigation tasks and a 1.13-1.82× speedup for topological data analysis—without
-requiring code structure changes.
+backends that can substantially improve performance in internal benchmarks for spatial navigation tasks and topological data analysis,
+without requiring code structure changes.
 
-# Related Works
+# State of the field
 
 While general-purpose neural network simulators like NEST [@Gewaltig:NEST], Brian 2 [@stimberg2019brian], and NEURON [@hines1997neuron] exist, they lack specialized support for continuous attractor networks. Existing CANN implementations remain fragmented, lab-specific codebases without standardized APIs or comprehensive tooling.
 
-CANNs builds upon BrainPy [@wang2023brainpy], a powerful brain dynamics framework leveraging JAX [@jax2018github] for JIT compilation and GPU/TPU acceleration. CANNs extends BrainPy with CANN-specific abstractions: standardized model implementations, task-generation APIs, analysis pipelines, and optional Rust-accelerated backends for performance-critical operations.
+CANNs builds upon BrainPy [@wang2023brainpy; @wang2025integrating], a powerful brain dynamics framework leveraging JAX [@jax2018github] for JIT compilation and GPU/TPU acceleration. CANNs extends BrainPy with CANN-specific abstractions: standardized model implementations, task-generation APIs, analysis pipelines, and optional Rust-accelerated backends for performance-critical operations.
+
+# Research impact statement
+
+CANNs provides full-detail, runnable modeling tutorials that reproduce recent CANN-related studies, packaged as standardized pipelines
+with consistent inputs, analysis steps, and visualizations. This allows researchers to verify published results and compare alternative
+mechanisms under a shared experimental setup, reducing the need for lab-specific reimplementations. The reproduced workflows include
+spike-frequency adaptation [@mi2014spike; @li2025dynamics] and theta-sweep dynamics in head-direction/grid and place-cell systems [@ji2025phase; @ji2025systems; @chu2024firing], offering trusted baselines for new modeling and benchmarking studies.
 
 # AI usage disclosure
 
@@ -99,6 +106,6 @@ AI-assisted tools were used for code quality reviews and documentation writing. 
 
 # Acknowledgements
 
-We acknowledge the BrainPy development team for providing the foundational framework upon which this library is built, and the broader open-source community for tools and libraries that enabled this work.
+This work was supported by the National Natural Science Foundation of China (no. T2421004 to S.W.),the National Key Research and Development Program of China (2024YFF1206500),  the Science and Technology Innovation 2030-Brain Science and Brain-inspired Intelligence Project (no. 2021ZD0200204, S.W.).
 
 # References
