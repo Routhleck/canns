@@ -59,7 +59,7 @@ direction systems [@taube1990head]. Despite the importance, the CANN research su
 from scratch, use incompatible codebases, and face significant reproducibility barriers. This lack of standardization slows progress
 and creates steep learning curves for newcomers.
 
-CANNs toolkit addresses this gap by providing a unified Python toolkit built on a user-friendly and efficient programming framework BrainPy [@wang2023brainpy]. It delivers: (1) standardized
+CANNs toolkit addresses this gap by providing a unified Python toolkit built on a user-friendly and efficient programming framework BrainPy [@wang2023brainpy; @wang2025integrating]. It delivers: (1) standardized
 implementations of CANNs and related brain-inspired models, including mathematically tractable CANN models [@amari1977dynamics; @wu2008dynamics],
 adaptation-augmented CANN models [@mi2014spike; @li2025dynamics], grid cell networks [@burak2009accurate], alongside additional attractor
 architectures; (2) integrated task generation, simulation, and analysis pipelines; (3) high-performance computation via JAX JIT
@@ -82,7 +82,7 @@ seamlessly integrate with the built-in ecosystem.
 
 The library supports four distinct research workflows: (1) CANN modeling and simulation for studying attractor dynamics; (2) data analysis
 for processing experimental neural recordings; (3) brain-inspired learning with biologically plausible plasticity rules; and (4) end-to-end pipelines for automated parameter sweeps and reproducible experiments. All models inherit from BrainPy's
-`DynamicalSystem` base class [@wang2023brainpy], leveraging JAX's JIT compilation for GPU/TPU acceleration while maintaining simple
+`DynamicalSystem` base class, leveraging JAX's JIT compilation for GPU/TPU acceleration while maintaining simple
 Python APIs. For operations where Python overhead is significant, the companion `canns-lib` Rust library provides optional accelerated
 backends that can substantially improve performance in internal benchmarks for spatial navigation tasks and topological data analysis,
 without requiring code structure changes.
