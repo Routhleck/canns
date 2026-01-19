@@ -5,6 +5,26 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.12.7] - 2026-01-19
+
+### Added
+- Initial paper draft (`paper.md`) describing CANNs toolkit motivation and design
+- Comprehensive docstrings with usage examples across all major modules (PR #81)
+- New test file `tests/analyzer/visualization/test_backend.py` with 6 tests for multiprocessing context
+- Expanded `docs/refs/references.bib` with additional related works
+
+### Changed
+- Enhanced module-level docstrings for package namespaces with clearer documentation
+- Improved docstrings for model classes (CANN, grid cell, hierarchical, Hopfield, linear, spiking)
+- Expanded task module documentation with step-by-step workflows and examples
+- Updated analyzer module docstrings with concrete usage examples
+- Modified `get_multiprocessing_context()` to return tuple `(context, method_name)` (PR #82)
+
+### Fixed
+- Fixed AttributeError in multiprocessing context on Linux with JAX (PR #82)
+- Updated 5 call sites in visualization modules to unpack multiprocessing context tuple
+- Added deterministic tests using monkeypatch for JAX-dependent behavior
+
 ## [0.12.6] - 2026-01-14
 
 ### Added
