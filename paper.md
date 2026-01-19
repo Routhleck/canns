@@ -1,5 +1,5 @@
 ---
-title: "CANNs: Continuous Attractor Neural Networks Toolkit with ASA for Attractor Structure Analysis"
+title: "CANNs: Continuous Attractor Neural Networks Toolkit"
 tags:
   - Python
   - continuous attractor neural networks
@@ -8,42 +8,40 @@ tags:
 authors:
   - name: Sichao He
     orcid: 0009-0009-4564-1753
-    affiliation: 1
+    affiliation: "1, 2, 3, 4"
   - name: Aiersi Tuerhong
     orcid: 0009-0006-4603-4734
-    affiliation: 2
+    affiliation: 5
   - name: Shangjun She
     orcid: 0009-0008-4490-7612
-    affiliation: 3
-  - name: Tianhao Chu  
+    affiliation: "1, 2, 3, 4"
+  - name: Tianhao Chu
     orcid: 0000-0001-9910-9361
-    affiliation: 3
+    affiliation: "1, 2, 3, 4"
   - name: Yuling Wu
     orcid: 0009-0001-5303-5413
-    affiliation: 1
+    affiliation: "1, 2, 3, 4"
   - name: Junfeng Zuo
-    affiliation: 1
+    affiliation: "1, 2, 3, 4"
   - name: Si Wu
     orcid: 0000-0001-9650-6935
     corresponding: true
-    affiliation: "1, 3, 4, 5, 6"
+    affiliation: "1, 2, 3, 4"
       
 affiliations:
-  - name: Peking-Tsinghua Center for Life Sciences, Academy for Advanced Interdisciplinary Studies, Peking University, Beijing, China
-    index: 1
-  - name: College of Mathematics and Statistics, Chongqing University, Chongqing, China
-    index: 2
   - name: School of Psychological and Cognitive Sciences, Peking University, Beijing, China
-    index: 3
-  - name: School of Psychology and Cognitive Sciences, Peking University, Beijing, China
-    index: 4
+    index: 1
+  - name: Peking-Tsinghua Center for Life Sciences, Academy for Advanced Interdisciplinary Studies, Peking University, Beijing, China
+    index: 2
   - name: PKU-IDG/McGovern Institute for Brain Research, Peking University, Beijing, China
-    index: 5
+    index: 3
   - name: Center of Quantitative Biology, Peking University, Beijing, China
-    index: 6
+    index: 4
+  - name: College of Mathematics and Statistics, Chongqing University, Chongqing, China
+    index: 5
 
-date: 16 January 2026
-bibliography: docs/refs/references.bib
+date: 19 January 2026
+bibliography: paper.bib
 ---
 # Summary
 
@@ -55,24 +53,21 @@ from ideas to reproducible simulations.
 
 # Statement of need
 
-Continuous Attractor Neural Networks (CANNs) provide a theoretical framework for understanding how the brain encodes continuous
-variables—such as spatial position, head direction, and movement trajectories—through stable neural activity patterns. These models
+Continuous Attractor Neural Networks (CANNs) are a canonical neural circuit model for information processing in the brain and are receiving increasing attention in the fields of neuroscience and brain-inspired computing.   They not only provide a  mathematical model for understanding how the brain encodes continuous variables, such as spatial position, head direction, and moving direction, but also serve as a theoretical framework for elucidating how the brain processes abstract features and relationships. Known examples include that CANNs successfully
 explain key phenomena in hippocampal place cells [@o1971hippocampus], entorhinal grid cells [@hafting2005microstructure], and head
-direction systems [@taube1990head]. Despite their importance, CANN research suffers from fragmentation: researchers implement models
+direction systems [@taube1990head]. Despite the importance, the CANN research suffers from fragmentation: researchers implement models
 from scratch, use incompatible codebases, and face significant reproducibility barriers. This lack of standardization slows progress
 and creates steep learning curves for newcomers.
 
-CANNs addresses this gap by providing a unified Python toolkit built on BrainPy [@wang2023brainpy]. It delivers: (1) standardized
-implementations of CANN and related brain-inspired models, including canonical frameworks (Wu-Amari-Wong [@amari1977dynamics; @wu2008dynamics],
-adaptation-augmented CANNs [@mi2014spike; @li2025dynamics], grid cell networks [@burak2009accurate]), alongside additional attractor
-architectures; (2) integrated task generation, simulation, and analysis pipelines; and (3) high-performance computation via JAX JIT
-compilation and optional Rust acceleration. By standardizing workflows—analogous to Hugging Face
-Transformers in deep learning—this library accelerates reproducible research and lowers barriers for computational neuroscientists,
-AI engineers, and students exploring attractor dynamics.
+CANNs toolkit addresses this gap by providing a unified Python toolkit built on a user-friendly and efficient programming framework BrainPy [@wang2023brainpy]. It delivers: (1) standardized
+implementations of CANNs and related brain-inspired models, including mathematically tractable CANN models [@amari1977dynamics; @wu2008dynamics],
+adaptation-augmented CANN models [@mi2014spike; @li2025dynamics], grid cell networks [@burak2009accurate], alongside additional attractor
+architectures; (2) integrated task generation, simulation, and analysis pipelines; (3) high-performance computation via JAX JIT
+compilation and optional Rust acceleration. By standardizing the workflow—analogous to Hugging Face Transformers in deep learning—this library accelerates reproducible research and lowers barriers for computational neuroscientists, AI engineers, and students exploring attractor dynamics.
 
 # Software design
 
-![Layer hierarchy of the CANNs library showing five levels: Application (Pipeline orchestration), Functional (Task, Trainer, Analyzer, Utils modules), Core Models (CANN implementations), Foundation (BrainPy/JAX and Rust FFI backends), and Hardware (CPU/GPU/TPU support).\label{fig:architecture}](images/architecture.png)
+![Layer hierarchy of the CANNs library showing five levels: Application (Pipeline orchestration), Functional (Task, Trainer, Analyzer, Utils modules), Core Models (CANN implementations), Foundation (BrainPy/JAX and Rust FFI backends), and Hardware (CPU/GPU/TPU support).\label{fig:architecture}](img/architecture.png)
 
 The CANNs library follows a modular architecture (\autoref{fig:architecture}) guided by two core principles: **separation of concerns** and **extensibility through
 base classes**. The design separates functional responsibilities into five independent modules: (1) **Models** (`canns.models`) define
@@ -86,45 +81,24 @@ parameters. This separation ensures maintainability, testability, and extensibil
 seamlessly integrate with the built-in ecosystem.
 
 The library supports four distinct research workflows: (1) CANN modeling and simulation for studying attractor dynamics; (2) data analysis
-for processing experimental neural recordings; (3) brain-inspired learning with biologically plausible plasticity rules (Hebbian, STDP,
-BCM); and (4) end-to-end pipelines for automated parameter sweeps and reproducible experiments. All models inherit from BrainPy's
+for processing experimental neural recordings; (3) brain-inspired learning with biologically plausible plasticity rules; and (4) end-to-end pipelines for automated parameter sweeps and reproducible experiments. All models inherit from BrainPy's
 `DynamicalSystem` base class [@wang2023brainpy], leveraging JAX's JIT compilation for GPU/TPU acceleration while maintaining simple
 Python APIs. For operations where Python overhead is significant, the companion `canns-lib` Rust library provides optional accelerated
-backends—notably achieving 400× speedup for spatial navigation tasks and 1.13-1.82× speedup for topological data analysis—without
+backends—notably achieving a 400× speedup for spatial navigation tasks and a 1.13-1.82× speedup for topological data analysis—without
 requiring code structure changes.
 
 # Related Works
 
-Computational neuroscience has established simulators for spiking neural networks, including NEST [@Gewaltig:NEST]
-for large-scale network models, Brian 2 [@stimberg2019brian] for rapid prototyping with user-friendly syntax, and
-NEURON [@hines1997neuron] for detailed biophysical simulations. However, these general-purpose tools lack specialized support
-for continuous attractor dynamics and require significant implementation effort for CANN-specific workflows. While individual CANN
-implementations exist (e.g., [cann_base](https://github.com/fccaa/cann_base) on GitHub), they remain fragmented, lab-specific codebases
-without standardized APIs, comprehensive task generation, or analysis tools—paralleling the pre-standardization era of deep learning before
-frameworks like Hugging Face Transformers [@wolf-etal-2020-transformers] unified model definitions and usage patterns.
+While general-purpose neural network simulators like NEST [@Gewaltig:NEST], Brian 2 [@stimberg2019brian], and NEURON [@hines1997neuron] exist, they lack specialized support for continuous attractor networks. Existing CANN implementations remain fragmented, lab-specific codebases without standardized APIs or comprehensive tooling.
 
-CANNs builds upon BrainPy [@wang2023brainpy], a modern brain dynamics framework leveraging
-JAX [@jax2018github] for JIT compilation and autodifferentiation. BrainPy provides the foundational infrastructure—state
-management, time stepping, and GPU/TPU acceleration—that CANNs extends with CANN-specific abstractions: standardized model implementations,
-task-generation APIs, analysis pipelines, and Rust-accelerated backends. This layered approach mirrors successful deep learning ecosystems:
-PyTorch [@Ansel_PyTorch_2_Faster_2024] and TensorFlow [@Abadi_TensorFlow_Large-scale_machine_2015] provide low-level tensor operations, while domain-specific
-libraries (e.g., Transformers [[@wolf-etal-2020-transformers]] for NLP, torchvision [torchvision2016] for computer vision) deliver standardized high-level
-components. CANNs fills this role for continuous attractor research, reducing fragmentation and accelerating reproducible science.
+CANNs builds upon BrainPy [@wang2023brainpy], a powerful brain dynamics framework leveraging JAX [@jax2018github] for JIT compilation and GPU/TPU acceleration. CANNs extends BrainPy with CANN-specific abstractions: standardized model implementations, task-generation APIs, analysis pipelines, and optional Rust-accelerated backends for performance-critical operations.
 
 # AI usage disclosure
 
-AI-assisted tools were used during the development of this software in limited, auxiliary capacities. Sourcery AI was employed for
-automated code quality reviews and refactoring suggestions in pull requests. Large language models (including Claude and ChatGPT) assisted
-with documentation writing, including docstring generation, tutorial content drafting, and technical writing refinement. However, all core
-library code—including model implementations, task generators, analyzers, and algorithmic components—was written by human developers. All
-AI-generated content was reviewed, validated, and edited by the authors to ensure technical accuracy and consistency with project standards.
-The software architecture, design decisions, and scientific contributions represent original human intellectual work.
+AI-assisted tools were used for code quality reviews and documentation writing. All core library code was written by human developers, and AI-generated content was reviewed and validated by the authors.
 
 # Acknowledgements
 
-We thank Aiersi Tuerhong and Shangjun She for their collaborative development contributions to the library implementation. We are grateful
-to Tianhao Chu, Yuling Wu, and Junfeng Zuo for valuable discussions, feedback, and guidance throughout the project development. We especially
-thank Si Wu for overall scientific guidance and mentorship. We acknowledge the BrainPy development team for providing the foundational
-framework upon which this library is built, and the broader open-source community for tools and libraries that enabled this work.
+We acknowledge the BrainPy development team for providing the foundational framework upon which this library is built, and the broader open-source community for tools and libraries that enabled this work.
 
 # References
