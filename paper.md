@@ -67,7 +67,7 @@ compilation and optional Rust acceleration. By standardizing the workflow—anal
 
 # Software design
 
-![Layer hierarchy of the CANNs library showing five levels: Application (Pipeline orchestration), Functional (Task, Trainer, Analyzer, Utils modules), Core Models (CANN implementations), Foundation (BrainPy/JAX and Rust FFI backends), and Hardware (CPU/GPU/TPU support).\label{fig:architecture}](img/architecture.png)
+![Layer hierarchy of the CANNs library showing five levels: Application (Pipeline orchestration), Functional (Task, Trainer, Analyzer, Utils modules), Core Models (CANN implementations), Foundation (BrainPy/JAX and Rust FFI backends), and Hardware (CPU/GPU/TPU support).\label{fig:architecture}](images/architecture.png)
 
 The CANNs library follows a modular architecture (\autoref{fig:architecture}) guided by two core principles: **separation of concerns** and **extensibility through
 base classes**. The design separates functional responsibilities into five independent modules: (1) **Models** (`canns.models`) define
