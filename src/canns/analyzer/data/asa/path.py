@@ -225,7 +225,36 @@ def align_coords_to_position(
     times_box: np.ndarray | None,
     interp_to_full: bool,
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, str]:
-    """Align coords2 to (x,y,t) using times_box if requested."""
+    """Align decoded coordinates to the original (x, y, t) trajectory.
+
+    Parameters
+    ----------
+    t_full, x_full, y_full : np.ndarray
+        Full-length trajectory arrays of shape (T,).
+    coords2 : np.ndarray
+        Decoded coordinates of shape (K, 2) or (T, 2).
+    use_box : bool
+        Whether to use ``times_box`` to align to the original trajectory.
+    times_box : np.ndarray | None
+        Time indices or timestamps corresponding to ``coords2`` when ``use_box=True``.
+    interp_to_full : bool
+        If True, interpolate decoded coords back to full length; otherwise return a subset.
+
+    Returns
+    -------
+    tuple
+        ``(t_aligned, x_aligned, y_aligned, coords_aligned, tag)`` where ``tag`` describes
+        the alignment path used.
+
+    Examples
+    --------
+    >>> t, x, y, coords2, tag = align_coords_to_position(  # doctest: +SKIP
+    ...     t_full, x_full, y_full, coords2,
+    ...     use_box=True, times_box=decoding["times_box"], interp_to_full=True
+    ... )
+    >>> coords2.shape[1]
+    2
+    """
     t_full = np.asarray(t_full).ravel()
     x_full = np.asarray(x_full).ravel()
     y_full = np.asarray(y_full).ravel()
@@ -322,7 +351,27 @@ def snake_wrap_trail_in_parallelogram(
 
 
 def apply_angle_scale(coords2: np.ndarray, scale: str) -> np.ndarray:
-    """Scale/convert angles before wrapping."""
+    """Convert angle units to radians before wrapping.
+
+    Parameters
+    ----------
+    coords2 : np.ndarray
+        Angle array of shape (T, 2) in the given ``scale``.
+    scale : {"rad", "deg", "unit", "auto"}
+        ``rad``  : already in radians.
+        ``deg``  : degrees -> radians.
+        ``unit`` : unit circle in [0, 1] -> radians.
+        ``auto`` : infer unit circle if values look like [0, 1].
+
+    Returns
+    -------
+    np.ndarray
+        Angles in radians.
+
+    Examples
+    --------
+    >>> apply_angle_scale([[0.25, 0.5]], "unit")  # doctest: +SKIP
+    """
     coords2 = np.asarray(coords2, float)
     if scale == "rad":
         return coords2

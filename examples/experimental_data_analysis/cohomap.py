@@ -18,7 +18,7 @@ grid_data_embedded["spike"] = spikes
 tda_cfg = data.TDAConfig(maxdim=1, do_shuffle=False, show=True, progress_bar=True)
 result = data.tda_vis(embed_data=spikes, config=tda_cfg)
 
-decoding = data.decode_circular_coordinates2(
+decoding = data.decode_circular_coordinates_multi(
     persistence_result=result,
     spike_data=grid_data_embedded,
     num_circ=2,
@@ -26,7 +26,7 @@ decoding = data.decode_circular_coordinates2(
 
 config = PlotConfigs.cohomap(show=True)
 
-data.plot_cohomap1(
+data.plot_cohomap_multi(
     decoding_result=decoding,
     position_data={"x": grid_data["x"], "y": grid_data["y"]},
     config=config,

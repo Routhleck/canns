@@ -21,29 +21,36 @@ def decode_circular_coordinates(
     """
     Decode circular coordinates (bump positions) from cohomology.
 
-    Parameters:
-        persistence_result : dict containing persistence analysis results with keys:
-            - 'persistence': persistent homology result
-            - 'indstemp': indices of sampled points
-            - 'movetimes': selected time points
-            - 'n_points': number of sampled points
-        spike_data : dict, optional
-            Spike data dictionary containing 'spike', 't', and optionally 'x', 'y'
-        real_ground : bool
-            Whether x, y, t ground truth exists
-        real_of : bool
-            Whether experiment was performed in open field
-        save_path : str, optional
-            Path to save decoding results. If None, saves to 'Results/spikes_decoding.npz'
+    Parameters
+    ----------
+    persistence_result : dict
+        Output from :func:`canns.analyzer.data.tda_vis`, containing keys:
+        ``persistence``, ``indstemp``, ``movetimes``, ``n_points``.
+    spike_data : dict
+        Spike data dictionary containing ``'spike'``, ``'t'`` and optionally ``'x'``/``'y'``.
+    real_ground : bool
+        Whether x/y/t ground-truth exists (controls whether speed filtering is applied).
+    real_of : bool
+        Whether the experiment is open-field (controls box coordinate handling).
+    save_path : str, optional
+        Path to save decoding results. Defaults to ``Results/spikes_decoding.npz``.
 
-    Returns:
-        dict : Dictionary containing decoding results with keys:
-            - 'coords': decoded coordinates for all timepoints
-            - 'coordsbox': decoded coordinates for box timepoints
-            - 'times': time indices for coords
-            - 'times_box': time indices for coordsbox
-            - 'centcosall': cosine centroids
-            - 'centsinall': sine centroids
+    Returns
+    -------
+    dict
+        Dictionary containing:
+        - ``coords``: decoded coordinates for all timepoints.
+        - ``coordsbox``: decoded coordinates for box timepoints.
+        - ``times``: time indices for ``coords``.
+        - ``times_box``: time indices for ``coordsbox``.
+        - ``centcosall`` / ``centsinall``: cosine/sine centroids.
+
+    Examples
+    --------
+    >>> from canns.analyzer.data import tda_vis, decode_circular_coordinates
+    >>> persistence = tda_vis(embed_spikes, config=tda_cfg)  # doctest: +SKIP
+    >>> decoding = decode_circular_coordinates(persistence, spike_data)  # doctest: +SKIP
+    >>> decoding["coords"].shape  # doctest: +SKIP
     """
     ph_classes = [0, 1]  # Decode the ith most persistent cohomology class
     num_circ = len(ph_classes)
@@ -177,33 +184,7 @@ def decode_circular_coordinates1(
     spike_data: dict[str, Any],
     save_path: str | None = None,
 ) -> dict[str, Any]:
-    """
-    Decode circular coordinates (bump positions) from cohomology.
-
-    Parameters:
-        persistence_result : dict containing persistence analysis results with keys:
-            - 'persistence': persistent homology result
-            - 'indstemp': indices of sampled points
-            - 'movetimes': selected time points
-            - 'n_points': number of sampled points
-        spike_data : dict, optional
-            Spike data dictionary containing 'spike', 't', and optionally 'x', 'y'
-        real_ground : bool
-            Whether x, y, t ground truth exists
-        real_of : bool
-            Whether experiment was performed in open field
-        save_path : str, optional
-            Path to save decoding results. If None, saves to 'Results/spikes_decoding.npz'
-
-    Returns:
-        dict : Dictionary containing decoding results with keys:
-            - 'coords': decoded coordinates for all timepoints
-            - 'coordsbox': decoded coordinates for box timepoints
-            - 'times': time indices for coords
-            - 'times_box': time indices for coordsbox
-            - 'centcosall': cosine centroids
-            - 'centsinall': sine centroids
-    """
+    """Legacy helper kept for backward compatibility."""
     ph_classes = [0, 1]  # Decode the ith most persistent cohomology class
     num_circ = len(ph_classes)
     dec_tresh = 0.99
@@ -282,12 +263,36 @@ def decode_circular_coordinates1(
     return results
 
 
-def decode_circular_coordinates2(
+def decode_circular_coordinates_multi(
     persistence_result: dict,
     spike_data: dict,
     save_path: str | None = None,
     num_circ: int = 2,  # Number of H1 cocycles/circular coordinates to decode
 ) -> dict:
+    """Decode multiple circular coordinates from TDA persistence.
+
+    Parameters
+    ----------
+    persistence_result : dict
+        Output from :func:`canns.analyzer.data.tda_vis`, containing keys:
+        ``persistence``, ``indstemp``, ``movetimes``, ``n_points``.
+    spike_data : dict
+        Spike data dictionary containing ``'spike'``, ``'t'`` and optionally ``'x'``/``'y'``.
+    save_path : str, optional
+        Path to save decoding results. Defaults to ``Results/spikes_decoding.npz``.
+    num_circ : int
+        Number of H1 cocycles/circular coordinates to decode.
+
+    Returns
+    -------
+    dict
+        Dictionary with ``coords``, ``coordsbox``, ``times``, ``times_box`` and centroid terms.
+
+    Examples
+    --------
+    >>> decoding = decode_circular_coordinates_multi(persistence, spike_data, num_circ=2)  # doctest: +SKIP
+    >>> decoding["coords"].shape  # doctest: +SKIP
+    """
     from sklearn import preprocessing
 
     dec_tresh = 0.99

@@ -163,7 +163,8 @@ def plot_projection(
     """
     Plot a 3D projection of the embedded data.
 
-    Parameters:
+    Parameters
+    ----------
         reduce_func (callable): Function to reduce the dimensionality of the data.
         embed_data (ndarray): Data to be projected.
         config (PlotConfig, optional): Configuration object for unified plotting parameters
@@ -177,8 +178,14 @@ def plot_projection(
         dpi (int): Dots per inch for saving the figure.
         figsize (tuple): Size of the figure.
 
-    Returns:
-        fig: The created figure object.
+    Returns
+    -------
+    matplotlib.figure.Figure
+        The created figure.
+
+    Examples
+    --------
+    >>> fig = plot_projection(reduce_func, embed_data, show=False)  # doctest: +SKIP
     """
 
     # Handle backward compatibility and configuration
@@ -241,7 +248,28 @@ def plot_path_compare(
     show: bool = True,
     save_path: str | None = None,
 ) -> tuple[plt.Figure, np.ndarray]:
-    """Plot physical path vs decoded coho-space path side-by-side."""
+    """Plot physical path vs decoded coho-space path side-by-side.
+
+    Parameters
+    ----------
+    x, y : np.ndarray
+        Physical position arrays of shape (T,).
+    coords : np.ndarray
+        Decoded circular coordinates, shape (T, 1) or (T, 2).
+    config : PlotConfig, optional
+        Plot configuration. If None, a default config is created.
+    title, figsize, show, save_path : optional
+        Backward-compatibility parameters.
+
+    Returns
+    -------
+    (Figure, ndarray)
+        Figure and axes array.
+
+    Examples
+    --------
+    >>> fig, axes = plot_path_compare(x, y, coords, show=False)  # doctest: +SKIP
+    """
     from .path import draw_base_parallelogram, skew_transform, snake_wrap_trail_in_parallelogram
 
     x = np.asarray(x).ravel()
@@ -330,15 +358,18 @@ def plot_cohomap(
         subsample : int, default=10
             Subsampling interval for plotting (plot every Nth timepoint)
 
-    Returns:
-        plt.Figure : The matplotlib figure object
+    Returns
+    -------
+    matplotlib.figure.Figure
+        The matplotlib figure object.
 
     Raises:
         KeyError : If required keys are missing from input dictionaries
         ValueError : If data dimensions are inconsistent
         IndexError : If time indices are out of bounds
 
-    Examples:
+    Examples
+    --------
         >>> # Decode coordinates
         >>> decoding = decode_circular_coordinates(persistence_result, spike_data)
         >>> # Visualize with trajectory data
@@ -407,7 +438,7 @@ def plot_cohomap(
     return fig
 
 
-def plot_cohomap1(
+def plot_cohomap_multi(
     decoding_result: dict,
     position_data: dict,
     config: PlotConfig | None = None,
@@ -418,10 +449,38 @@ def plot_cohomap1(
     subsample: int = 10,
 ) -> plt.Figure:
     """
-    Visualize CohoMap: decoded circular coordinates mapped onto spatial trajectory.
-    Automatically handles N-dimensional coordsbox.
+    Visualize CohoMap with N-dimensional decoded coordinates.
 
-    Each subplot shows the spatial trajectory colored by cos(coord_i)
+    Each subplot shows the spatial trajectory colored by ``cos(coord_i)`` for a single
+    circular coordinate.
+
+    Parameters
+    ----------
+    decoding_result : dict
+        Dictionary containing ``coordsbox`` and ``times_box``.
+    position_data : dict
+        Position data containing ``x`` and ``y`` arrays.
+    config : PlotConfig, optional
+        Plot configuration for styling, saving, and showing.
+    save_path : str, optional
+        Path to save the figure.
+    show : bool
+        Whether to show the figure.
+    figsize : tuple[int, int]
+        Figure size in inches.
+    dpi : int
+        Save DPI.
+    subsample : int
+        Subsample stride for plotting.
+
+    Returns
+    -------
+    matplotlib.figure.Figure
+        The created figure.
+
+    Examples
+    --------
+    >>> fig = plot_cohomap_multi(decoding, {"x": xx, "y": yy}, show=False)  # doctest: +SKIP
     """
     config = _ensure_plot_config(
         config,
@@ -524,8 +583,14 @@ def plot_3d_bump_on_torus(
         figsize : tuple[int, int]
             Figure size for the animation
 
-    Returns:
-        matplotlib.animation.FuncAnimation | None: The animation object, or None when shown in Jupyter.
+    Returns
+    -------
+    matplotlib.animation.FuncAnimation | None
+        The animation object, or None when shown in Jupyter.
+
+    Examples
+    --------
+    >>> ani = plot_3d_bump_on_torus(decoding, spike_data, show=False)  # doctest: +SKIP
     """
     # Handle backward compatibility and configuration
     if config is None:
@@ -934,13 +999,16 @@ def plot_2d_bump_on_manifold(
         figsize: Figure size (width, height) in inches
         show_progress: Show progress bar during processing
 
-    Returns:
-        FuncAnimation object (or None in Jupyter when showing)
+    Returns
+    -------
+    matplotlib.animation.FuncAnimation | None
+        Animation object (or None in Jupyter when showing).
 
     Raises:
         ProcessingError: If mode is invalid or animation generation fails
 
-    Example:
+    Examples
+    --------
         >>> # Fast 2D visualization (recommended for daily use)
         >>> ani = plot_2d_bump_on_manifold(
         ...     decoding_result, spike_data,

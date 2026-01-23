@@ -59,6 +59,12 @@ def compute_fr_heatmap_matrix(
     -------
     M : np.ndarray
         Heatmap matrix. Default shape (N_sel, T_sel) if transpose=True.
+
+    Examples
+    --------
+    >>> M = compute_fr_heatmap_matrix(spikes, transpose=True)  # doctest: +SKIP
+    >>> M.ndim
+    2
     """
     spike = np.asarray(spike)
     if spike.ndim != 2:
@@ -109,10 +115,37 @@ def save_fr_heatmap_png(
     """
     Save a heatmap PNG from a matrix (typically output of compute_fr_heatmap_matrix).
 
+    Parameters
+    ----------
+    M : np.ndarray
+        Heatmap matrix (2D).
+    title, xlabel, ylabel : str
+        Plot labels (used when ``config`` is None or missing fields).
+    cmap, interpolation, origin, aspect : str, optional
+        Matplotlib imshow options.
+    clabel : str, optional
+        Colorbar label (defaults to ``config.clabel``).
+    colorbar : bool
+        Whether to draw a colorbar.
+    dpi : int
+        Save DPI.
+    show : bool | None
+        Whether to show the plot (overrides ``config.show`` if not None).
+    config : PlotConfig, optional
+        Plot configuration. Use ``config.save_path`` to specify output file.
+    **kwargs : Any
+        Additional ``imshow`` keyword arguments. ``save_path`` may be provided here
+        as a fallback if not set in ``config``.
+
     Notes
     -----
     - Does not reorder neurons.
     - Uses matplotlib only here (ASA core stays compute-friendly).
+
+    Examples
+    --------
+    >>> config = PlotConfig.for_static_plot(save_path="fr.png", show=False)  # doctest: +SKIP
+    >>> save_fr_heatmap_png(M, config=config)  # doctest: +SKIP
     """
     import matplotlib.pyplot as plt  # local import to keep ASA light
 
@@ -176,6 +209,23 @@ def save_fr_heatmap_png(
 
 @dataclass
 class FRMResult:
+    """Return object for firing-rate map computation.
+
+    Attributes
+    ----------
+    frm : np.ndarray
+        Firing rate map (bins_x, bins_y).
+    occupancy : np.ndarray
+        Occupancy counts per spatial bin.
+    spike_sum : np.ndarray
+        Spike counts per spatial bin.
+    x_edges, y_edges : np.ndarray
+        Bin edges used for the FRM computation.
+
+    Examples
+    --------
+    >>> res = FRMResult(frm=None, occupancy=None, spike_sum=None, x_edges=None, y_edges=None)  # doctest: +SKIP
+    """
     frm: np.ndarray
     occupancy: np.ndarray
     spike_sum: np.ndarray
@@ -225,6 +275,11 @@ def compute_frm(
     -------
     FRMResult
         frm: 2D array (bins_x, bins_y) in Hz-like units per sample (relative scale).
+
+    Examples
+    --------
+    >>> res = compute_frm(spikes, x, y, neuron_id=0)  # doctest: +SKIP
+    >>> res.frm.shape  # doctest: +SKIP
     """
     spike = np.asarray(spike)
     x = np.asarray(x).ravel()
@@ -320,6 +375,27 @@ def plot_frm(
 ) -> None:
     """
     Save FRM as PNG. Expects frm as 2D array (bins,bins).
+
+    Parameters
+    ----------
+    frm : np.ndarray
+        Firing rate map (2D).
+    title : str
+        Figure title (used when ``config`` is None or missing fields).
+    dpi : int
+        Save DPI.
+    show : bool | None
+        Whether to show the plot (overrides ``config.show`` if not None).
+    config : PlotConfig, optional
+        Plot configuration. Use ``config.save_path`` to specify output file.
+    **kwargs : Any
+        Additional ``imshow`` keyword arguments. ``save_path`` may be provided here
+        as a fallback if not set in ``config``.
+
+    Examples
+    --------
+    >>> cfg = PlotConfig.for_static_plot(save_path="frm.png", show=False)  # doctest: +SKIP
+    >>> plot_frm(frm, config=cfg)  # doctest: +SKIP
     """
     from ...visualization import plot_firing_field_heatmap
 

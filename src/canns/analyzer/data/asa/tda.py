@@ -32,20 +32,34 @@ def tda_vis(embed_data: np.ndarray, config: TDAConfig | None = None, **kwargs) -
     """
     Topological Data Analysis visualization with optional shuffle testing.
 
-    Parameters:
-        embed_data : ndarray
-            Embedded spike train data.
-        config : TDAConfig, optional
-            Configuration object with all TDA parameters
-        **kwargs : backward compatibility parameters
+    Parameters
+    ----------
+    embed_data : np.ndarray
+        Embedded spike train data of shape (T, N).
+    config : TDAConfig, optional
+        Configuration object with all TDA parameters. If None, legacy kwargs are used.
+    **kwargs : Any
+        Legacy keyword parameters (``dim``, ``num_times``, ``active_times``, ``k``,
+        ``n_points``, ``metric``, ``nbs``, ``maxdim``, ``coeff``, ``show``,
+        ``do_shuffle``, ``num_shuffles``, ``progress_bar``).
 
-    Returns:
-        dict : Dictionary containing:
-            - persistence: persistence diagrams from real data
-            - indstemp: indices of sampled points
-            - movetimes: selected time points
-            - n_points: number of sampled points
-            - shuffle_max: shuffle analysis results (if do_shuffle=True, otherwise None)
+    Returns
+    -------
+    dict
+        Dictionary containing:
+        - ``persistence``: persistence diagrams from real data.
+        - ``indstemp``: indices of sampled points.
+        - ``movetimes``: selected time points.
+        - ``n_points``: number of sampled points.
+        - ``shuffle_max``: shuffle analysis results (if ``do_shuffle=True``), else ``None``.
+
+    Examples
+    --------
+    >>> from canns.analyzer.data import TDAConfig, tda_vis
+    >>> cfg = TDAConfig(maxdim=1, do_shuffle=False, show=False)
+    >>> result = tda_vis(embed_data, config=cfg)  # doctest: +SKIP
+    >>> sorted(result.keys())
+    ['indstemp', 'movetimes', 'n_points', 'persistence', 'shuffle_max']
     """
     # Handle backward compatibility and configuration
     if config is None:

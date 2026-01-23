@@ -1,15 +1,11 @@
 from __future__ import annotations
 
+# Coho-space analysis + visualization
 from .cohospace import (
     compute_cohoscore,
-    draw_torus_parallelogram_grid,
     plot_cohospace_neuron,
-    plot_cohospace_neuron_skewed,
     plot_cohospace_population,
-    plot_cohospace_population_skewed,
     plot_cohospace_trajectory,
-    skew_transform_torus,
-    tile_parallelogram_points,
 )
 from .config import (
     CANN2DError,
@@ -20,12 +16,7 @@ from .config import (
     SpikeEmbeddingConfig,
     TDAConfig,
 )
-from .decode import (
-    _get_coords,
-    decode_circular_coordinates,
-    decode_circular_coordinates1,
-    decode_circular_coordinates2,
-)
+from .decode import decode_circular_coordinates, decode_circular_coordinates_multi
 from .embedding import embed_spike_trains
 from .fr import (
     FRMResult,
@@ -34,62 +25,22 @@ from .fr import (
     plot_frm,
     save_fr_heatmap_png,
 )
-from .path import (
-    align_coords_to_position,
-    apply_angle_scale,
-    as_1d,
-    draw_base_parallelogram,
-    find_coords_matrix,
-    find_times_box,
-    interp_coords_to_full,
-    load_npz_any,
-    parse_times_box_to_indices,
-    resolve_time_slice,
-    skew_transform,
-    snake_wrap_trail_in_parallelogram,
-    unwrap_container,
-)
+
+# Path utilities
+from .path import align_coords_to_position, apply_angle_scale
+
+# Higher-level plotting helpers
 from .plotting import (
-    _smooth_image,
-    _smooth_tuning_map,
     plot_2d_bump_on_manifold,
     plot_3d_bump_on_torus,
     plot_cohomap,
-    plot_cohomap1,
+    plot_cohomap_multi,
     plot_path_compare,
     plot_projection,
 )
-from .tda import (
-    HAS_NUMBA,
-    _apply_denoising,
-    _apply_pca_reduction,
-    _build_adjacency_matrix_numba,
-    _build_distance_matrix_numba,
-    _compute_membership_strengths,
-    _compute_persistence,
-    _compute_persistence_homology,
-    _compute_real_persistence,
-    _downsample_timepoints,
-    _fast_pca_transform,
-    _greedy_sampling_numba,
-    _handle_visualization,
-    _pca,
-    _perform_shuffle_analysis,
-    _plot_barcode,
-    _plot_barcode_with_shuffle,
-    _print_shuffle_summary,
-    _process_single_shuffle,
-    _run_shuffle_analysis,
-    _run_shuffle_analysis_multiprocessing,
-    _sample_denoising,
-    _sample_denoising_numba,
-    _sample_denoising_numpy,
-    _second_build,
-    _select_active_timepoints,
-    _shuffle_spike_trains,
-    _smooth_knn_dist,
-    tda_vis,
-)
+
+# TDA entry point
+from .tda import tda_vis
 
 __all__ = [
     "SpikeEmbeddingConfig",
@@ -99,16 +50,14 @@ __all__ = [
     "CANN2DError",
     "DataLoadError",
     "ProcessingError",
-    "HAS_NUMBA",
     "embed_spike_trains",
     "tda_vis",
     "decode_circular_coordinates",
-    "decode_circular_coordinates1",
-    "decode_circular_coordinates2",
+    "decode_circular_coordinates_multi",
     "plot_projection",
     "plot_path_compare",
     "plot_cohomap",
-    "plot_cohomap1",
+    "plot_cohomap_multi",
     "plot_3d_bump_on_torus",
     "plot_2d_bump_on_manifold",
     "compute_fr_heatmap_matrix",
@@ -120,52 +69,6 @@ __all__ = [
     "plot_cohospace_neuron",
     "plot_cohospace_population",
     "compute_cohoscore",
-    "skew_transform_torus",
-    "draw_torus_parallelogram_grid",
-    "tile_parallelogram_points",
-    "plot_cohospace_neuron_skewed",
-    "plot_cohospace_population_skewed",
-    "load_npz_any",
-    "unwrap_container",
-    "as_1d",
-    "find_times_box",
-    "find_coords_matrix",
-    "resolve_time_slice",
-    "skew_transform",
-    "draw_base_parallelogram",
-    "parse_times_box_to_indices",
-    "interp_coords_to_full",
     "align_coords_to_position",
-    "snake_wrap_trail_in_parallelogram",
     "apply_angle_scale",
-    "_get_coords",
-    "_plot_barcode",
-    "_plot_barcode_with_shuffle",
-    "_smooth_tuning_map",
-    "_smooth_image",
-    "_compute_real_persistence",
-    "_downsample_timepoints",
-    "_select_active_timepoints",
-    "_apply_pca_reduction",
-    "_apply_denoising",
-    "_compute_persistence_homology",
-    "_perform_shuffle_analysis",
-    "_print_shuffle_summary",
-    "_handle_visualization",
-    "_compute_persistence",
-    "_pca",
-    "_sample_denoising",
-    "_sample_denoising_numpy",
-    "_sample_denoising_numba",
-    "_build_adjacency_matrix_numba",
-    "_greedy_sampling_numba",
-    "_build_distance_matrix_numba",
-    "_smooth_knn_dist",
-    "_compute_membership_strengths",
-    "_second_build",
-    "_fast_pca_transform",
-    "_run_shuffle_analysis",
-    "_run_shuffle_analysis_multiprocessing",
-    "_process_single_shuffle",
-    "_shuffle_spike_trains",
 ]

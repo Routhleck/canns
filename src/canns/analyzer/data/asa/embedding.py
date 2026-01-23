@@ -16,17 +16,33 @@ def embed_spike_trains(spike_trains, config: SpikeEmbeddingConfig | None = None,
     This function converts raw spike times into a time-binned spike matrix,
     optionally applying Gaussian smoothing and filtering based on animal movement speed.
 
-    Parameters:
-        spike_trains : dict containing 'spike', 't', and optionally 'x', 'y'.
-        config : SpikeEmbeddingConfig, optional configuration object
-        **kwargs : backward compatibility parameters
+    Parameters
+    ----------
+    spike_trains : dict
+        Dictionary containing ``'spike'`` and ``'t'``, and optionally ``'x'``/``'y'``.
+        ``'spike'`` can be a dict of neuron->spike_times, a list/array of arrays, or
+        a numpy object array from ``np.load``.
+    config : SpikeEmbeddingConfig, optional
+        Configuration object controlling binning, smoothing, and speed filtering.
+    **kwargs : Any
+        Legacy keyword parameters (``res``, ``dt``, ``sigma``, ``smooth0``, ``speed0``,
+        ``min_speed``). Prefer ``config`` in new code.
 
-    Returns:
-        tuple: (spikes_bin, xx, yy, tt)
-            spikes_bin (ndarray): Binned and optionally smoothed spike matrix of shape (T, N).
-            xx (ndarray | None): X coordinates (if speed_filter=True).
-            yy (ndarray | None): Y coordinates (if speed_filter=True).
-            tt (ndarray | None): Time points (if speed_filter=True).
+    Returns
+    -------
+    tuple
+        ``(spikes_bin, xx, yy, tt)`` where:
+        - ``spikes_bin`` is a (T, N) binned spike matrix.
+        - ``xx``, ``yy``, ``tt`` are position/time arrays when ``speed_filter=True``,
+          otherwise ``None``.
+
+    Examples
+    --------
+    >>> from canns.analyzer.data import SpikeEmbeddingConfig, embed_spike_trains
+    >>> cfg = SpikeEmbeddingConfig(smooth=False, speed_filter=False)
+    >>> spikes, xx, yy, tt = embed_spike_trains(mock_data, config=cfg)  # doctest: +SKIP
+    >>> spikes.ndim
+    2
     """
     # Handle backward compatibility and configuration
     if config is None:

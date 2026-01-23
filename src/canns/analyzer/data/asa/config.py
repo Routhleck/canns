@@ -7,7 +7,30 @@ from ...visualization import PlotConfig
 
 @dataclass
 class SpikeEmbeddingConfig:
-    """Configuration for spike train embedding."""
+    """Configuration for spike train embedding.
+
+    Attributes
+    ----------
+    res : int
+        Time scaling factor that converts seconds to integer bins.
+    dt : int
+        Bin width in the same scaled units as ``res``.
+    sigma : int
+        Gaussian smoothing width (scaled units).
+    smooth : bool
+        Whether to apply temporal smoothing to spike counts.
+    speed_filter : bool
+        Whether to filter by animal speed (requires x/y/t in the input).
+    min_speed : float
+        Minimum speed threshold for ``speed_filter`` (cm/s by convention).
+
+    Examples
+    --------
+    >>> from canns.analyzer.data import SpikeEmbeddingConfig
+    >>> cfg = SpikeEmbeddingConfig(smooth=False, speed_filter=False)
+    >>> cfg.min_speed
+    2.5
+    """
 
     res: int = 100000
     dt: int = 1000
@@ -19,7 +42,44 @@ class SpikeEmbeddingConfig:
 
 @dataclass
 class TDAConfig:
-    """Configuration for Topological Data Analysis."""
+    """Configuration for Topological Data Analysis (TDA).
+
+    Attributes
+    ----------
+    dim : int
+        Target PCA dimension before TDA.
+    num_times : int
+        Downsampling stride in time.
+    active_times : int
+        Number of most active time points to keep.
+    k : int
+        Number of neighbors used in denoising.
+    n_points : int
+        Number of points sampled for persistent homology.
+    metric : str
+        Distance metric for point cloud (e.g., "cosine").
+    nbs : int
+        Number of neighbors for distance matrix construction.
+    maxdim : int
+        Maximum homology dimension for persistence.
+    coeff : int
+        Field coefficient for persistent homology.
+    show : bool
+        Whether to show barcode plots.
+    do_shuffle : bool
+        Whether to run shuffle analysis.
+    num_shuffles : int
+        Number of shuffles for null distribution.
+    progress_bar : bool
+        Whether to show progress bars.
+
+    Examples
+    --------
+    >>> from canns.analyzer.data import TDAConfig
+    >>> cfg = TDAConfig(maxdim=1, do_shuffle=False, show=False)
+    >>> cfg.maxdim
+    1
+    """
 
     dim: int = 6
     num_times: int = 5
@@ -38,7 +98,18 @@ class TDAConfig:
 
 @dataclass
 class CANN2DPlotConfig(PlotConfig):
-    """Specialized PlotConfig for CANN2D visualizations."""
+    """Specialized PlotConfig for CANN2D visualizations.
+
+    Extends :class:`canns.analyzer.visualization.PlotConfig` with fields that
+    control 3D projection and torus animation parameters.
+
+    Examples
+    --------
+    >>> from canns.analyzer.data import CANN2DPlotConfig
+    >>> cfg = CANN2DPlotConfig.for_projection_3d(title="Projection")
+    >>> cfg.zlabel
+    'Component 3'
+    """
 
     # 3D projection specific parameters
     zlabel: str = "Component 3"
@@ -54,7 +125,14 @@ class CANN2DPlotConfig(PlotConfig):
 
     @classmethod
     def for_projection_3d(cls, **kwargs) -> CANN2DPlotConfig:
-        """Create configuration for 3D projection plots."""
+        """Create configuration for 3D projection plots.
+
+        Examples
+        --------
+        >>> cfg = CANN2DPlotConfig.for_projection_3d(figsize=(6, 5))
+        >>> cfg.figsize
+        (6, 5)
+        """
         defaults = {
             "title": "3D Data Projection",
             "xlabel": "Component 1",
@@ -68,7 +146,14 @@ class CANN2DPlotConfig(PlotConfig):
 
     @classmethod
     def for_torus_animation(cls, **kwargs) -> CANN2DPlotConfig:
-        """Create configuration for 3D torus bump animations."""
+        """Create configuration for 3D torus bump animations.
+
+        Examples
+        --------
+        >>> cfg = CANN2DPlotConfig.for_torus_animation(fps=10, n_frames=50)
+        >>> cfg.fps, cfg.n_frames
+        (10, 50)
+        """
         defaults = {
             "title": "3D Bump on Torus",
             "figsize": (8, 8),
@@ -99,7 +184,14 @@ class CANN2DPlotConfig(PlotConfig):
 
 
 class Constants:
-    """Constants used throughout CANN2D analysis."""
+    """Constants used throughout CANN2D analysis.
+
+    Examples
+    --------
+    >>> from canns.analyzer.data import Constants
+    >>> Constants.DEFAULT_DPI
+    300
+    """
 
     DEFAULT_FIGSIZE = (10, 8)
     DEFAULT_DPI = 300
@@ -113,18 +205,42 @@ class Constants:
 
 
 class CANN2DError(Exception):
-    """Base exception for CANN2D analysis errors."""
+    """Base exception for CANN2D analysis errors.
+
+    Examples
+    --------
+    >>> try:  # doctest: +SKIP
+    ...     raise CANN2DError("boom")
+    ... except CANN2DError:
+    ...     pass
+    """
 
     pass
 
 
 class DataLoadError(CANN2DError):
-    """Raised when data loading fails."""
+    """Raised when data loading fails.
+
+    Examples
+    --------
+    >>> try:  # doctest: +SKIP
+    ...     raise DataLoadError("missing data")
+    ... except DataLoadError:
+    ...     pass
+    """
 
     pass
 
 
 class ProcessingError(CANN2DError):
-    """Raised when data processing fails."""
+    """Raised when data processing fails.
+
+    Examples
+    --------
+    >>> try:  # doctest: +SKIP
+    ...     raise ProcessingError("processing failed")
+    ... except ProcessingError:
+    ...     pass
+    """
 
     pass

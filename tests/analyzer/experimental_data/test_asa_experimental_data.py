@@ -1,0 +1,143 @@
+#!/usr/bin/env python3
+"""
+Smoke tests for the ASA experimental-data analysis API.
+"""
+
+import numpy as np
+
+from canns.analyzer import data
+from canns.analyzer.visualization import PlotConfig
+
+
+def create_mock_spike_data(num_neurons: int = 30, num_timepoints: int = 400):
+    """Create mock spike train data for testing."""
+    rng = np.random.default_rng(0)
+    spikes = {}
+    for i in range(num_neurons):
+        num_spikes = rng.integers(0, 15)
+        spike_times = np.sort(rng.uniform(0, 1, num_spikes))
+        spikes[i] = spike_times
+
+    t = np.linspace(0, 1, num_timepoints)
+    x = np.cumsum(rng.standard_normal(num_timepoints) * 0.01)
+    y = np.cumsum(rng.standard_normal(num_timepoints) * 0.01)
+    return {"spike": spikes, "t": t, "x": x, "y": y}
+
+
+def test_embed_spike_trains_basic():
+    mock_data = create_mock_spike_data(num_neurons=12, num_timepoints=200)
+    cfg = data.SpikeEmbeddingConfig(smooth=False, speed_filter=False)
+    spikes, xx, yy, tt = data.embed_spike_trains(mock_data, config=cfg)
+
+    assert isinstance(spikes, np.ndarray)
+    assert spikes.ndim == 2
+    assert spikes.shape[1] == 12
+    assert xx is None and yy is None and tt is None
+
+
+def test_embed_spike_trains_speed_filter():
+    mock_data = create_mock_spike_data(num_neurons=8, num_timepoints=200)
+    cfg = data.SpikeEmbeddingConfig(smooth=False, speed_filter=True, min_speed=0.01)
+    spikes, xx, yy, tt = data.embed_spike_trains(mock_data, config=cfg)
+
+    assert isinstance(spikes, np.ndarray)
+    assert spikes.ndim == 2
+    assert spikes.shape[1] == 8
+    assert xx is not None and yy is not None and tt is not None
+
+
+def test_tda_decode_and_cohomap():
+    mock_data = create_mock_spike_data(num_neurons=20, num_timepoints=300)
+    spike_cfg = data.SpikeEmbeddingConfig(smooth=True, speed_filter=False)
+    spikes, *_ = data.embed_spike_trains(mock_data, config=spike_cfg)
+
+    tda_cfg = data.TDAConfig(
+        dim=3,
+        num_times=8,
+        active_times=40,
+        k=20,
+        n_points=80,
+        metric="cosine",
+        nbs=40,
+        maxdim=1,
+        coeff=47,
+        show=False,
+        do_shuffle=False,
+        progress_bar=False,
+    )
+
+    persistence = data.tda_vis(spikes, config=tda_cfg)
+
+    spike_data = dict(mock_data)
+    spike_data["spike"] = spikes
+
+    decoding = data.decode_circular_coordinates_multi(
+        persistence_result=persistence,
+        spike_data=spike_data,
+        num_circ=1,
+    )
+
+    assert "coords" in decoding and "coordsbox" in decoding
+
+    config = PlotConfig.for_static_plot(show=False)
+    data.plot_cohomap_multi(
+        decoding_result=decoding,
+        position_data={"x": mock_data["x"], "y": mock_data["y"]},
+        config=config,
+    )
+
+
+def test_cohospace_and_path_compare():
+    mock_data = create_mock_spike_data(num_neurons=15, num_timepoints=250)
+    spike_cfg = data.SpikeEmbeddingConfig(smooth=True, speed_filter=False)
+    spikes, *_ = data.embed_spike_trains(mock_data, config=spike_cfg)
+
+    rng = np.random.default_rng(1)
+    coords = rng.random((spikes.shape[0], 2)) * 2 * np.pi
+
+    data.plot_cohospace_trajectory(coords, show=False)
+    data.plot_cohospace_neuron(
+        coords=coords,
+        activity=spikes,
+        neuron_id=0,
+        mode="fr",
+        top_percent=5,
+        show=False,
+    )
+
+    t_full = mock_data["t"]
+    times_box = np.arange(0, len(t_full), 2)
+    coords_box = rng.random((len(times_box), 2)) * 2 * np.pi
+
+    t_aligned, x_aligned, y_aligned, coords_aligned, _ = data.align_coords_to_position(
+        t_full=mock_data["t"],
+        x_full=mock_data["x"],
+        y_full=mock_data["y"],
+        coords2=coords_box,
+        use_box=True,
+        times_box=times_box,
+        interp_to_full=True,
+    )
+    assert len(t_aligned) == len(mock_data["t"])
+    coords_aligned = data.apply_angle_scale(coords_aligned, "rad")
+
+    data.plot_path_compare(
+        x_aligned,
+        y_aligned,
+        coords_aligned,
+        config=PlotConfig.for_static_plot(show=False),
+    )
+
+
+def test_fr_heatmap_and_frm(tmp_path):
+    mock_data = create_mock_spike_data(num_neurons=10, num_timepoints=200)
+    spike_cfg = data.SpikeEmbeddingConfig(smooth=False, speed_filter=True, min_speed=0.01)
+    spikes, xx, yy, _ = data.embed_spike_trains(mock_data, config=spike_cfg)
+
+    mat = data.compute_fr_heatmap_matrix(spikes, transpose=True, normalize=None)
+    cfg = PlotConfig.for_static_plot(save_path=str(tmp_path / "fr_heatmap.png"), show=False)
+    data.save_fr_heatmap_png(mat, config=cfg, dpi=120)
+
+    frm_result = data.compute_frm(spikes, xx, yy, neuron_id=0, bins=20)
+    frm_cfg = PlotConfig.for_static_plot(save_path=str(tmp_path / "frm.png"), show=False)
+    data.plot_frm(frm_result.frm, config=frm_cfg, dpi=120)

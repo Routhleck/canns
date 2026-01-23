@@ -21,7 +21,7 @@ asa_embedded["spike"] = spikes
 tda_cfg = data.TDAConfig(maxdim=1, do_shuffle=False, show=True, progress_bar=True)
 result = data.tda_vis(embed_data=spikes, config=tda_cfg)
 
-decoding = data.decode_circular_coordinates2(
+decoding = data.decode_circular_coordinates_multi(
     persistence_result=result,
     spike_data=asa_embedded,
     num_circ=2,
