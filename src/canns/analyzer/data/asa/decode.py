@@ -171,6 +171,7 @@ def decode_circular_coordinates(
 
     return results
 
+
 def decode_circular_coordinates1(
     persistence_result: dict[str, Any],
     spike_data: dict[str, Any],
@@ -230,8 +231,6 @@ def decode_circular_coordinates1(
         coords1[c, :], inds = _get_coords(cocycle, threshold, len(indstemp), dists_land, coeff)
 
     sspikes = spike_data["spike"]
-    xx, yy, tt = spike_data["x"], spike_data["y"], spike_data["t"]
-
     num_neurons = sspikes.shape[1]
     centcosall = np.zeros((num_neurons, 2, n_points))
     centsinall = np.zeros((num_neurons, 2, n_points))
@@ -241,7 +240,6 @@ def decode_circular_coordinates1(
         spktemp = dspk[:, neurid].copy()
         centcosall[neurid, :, :] = np.multiply(np.cos(coords1[:, :] * 2 * np.pi), spktemp)
         centsinall[neurid, :, :] = np.multiply(np.sin(coords1[:, :] * 2 * np.pi), spktemp)
-
 
     times = np.where(np.sum(sspikes > 0, 1) >= 1)[0]
     dspk = preprocessing.scale(sspikes)
@@ -283,14 +281,16 @@ def decode_circular_coordinates1(
 
     return results
 
+
 def decode_circular_coordinates2(
     persistence_result: dict,
     spike_data: dict,
     save_path: str | None = None,
-    num_circ: int = 2  # Number of H1 cocycles/circular coordinates to decode
+    num_circ: int = 2,  # Number of H1 cocycles/circular coordinates to decode
 ) -> dict:
-    from sklearn import preprocessing
     import os
+
+    from sklearn import preprocessing
 
     dec_tresh = 0.99
     coeff = 47
@@ -326,7 +326,6 @@ def decode_circular_coordinates2(
         coords1[i, :], _ = _get_coords(cocycle, threshold, len(indstemp), dists_land, coeff)
 
     sspikes = spike_data["spike"]
-    xx, yy, tt = spike_data["x"], spike_data["y"], spike_data["t"]
     num_neurons = sspikes.shape[1]
 
     centcosall = np.zeros((num_neurons, num_circ, n_points))
@@ -347,8 +346,8 @@ def decode_circular_coordinates2(
     c = np.zeros((len(sspikes), num_circ, num_neurons))
 
     for n in range(num_neurons):
-        a[:, :, n] = dspk[:, n:n+1] * np.sum(centcosall[n, :, :], axis=1)
-        c[:, :, n] = dspk[:, n:n+1] * np.sum(centsinall[n, :, :], axis=1)
+        a[:, :, n] = dspk[:, n : n + 1] * np.sum(centcosall[n, :, :], axis=1)
+        c[:, :, n] = dspk[:, n : n + 1] * np.sum(centsinall[n, :, :], axis=1)
 
     mtot1 = np.sum(a, 2)
     mtot2 = np.sum(c, 2)
@@ -360,7 +359,7 @@ def decode_circular_coordinates2(
         "times": times,
         "times_box": times.copy(),
         "centcosall": centcosall,
-        "centsinall": centsinall
+        "centsinall": centsinall,
     }
 
     if save_path is None:
@@ -370,6 +369,7 @@ def decode_circular_coordinates2(
         os.makedirs(os.path.dirname(save_path), exist_ok=True)
         np.savez_compressed(save_path, **results)
     return results
+
 
 def _get_coords(cocycle, threshold, num_sampled, dists, coeff):
     """

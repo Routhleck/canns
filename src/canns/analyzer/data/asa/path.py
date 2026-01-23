@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from typing import Optional, Tuple
-
 import numpy as np
 
 
@@ -35,14 +33,22 @@ def as_1d(x) -> np.ndarray:
     return np.asarray(x).ravel()
 
 
-def find_times_box(dec: dict) -> Tuple[Optional[np.ndarray], Optional[str]]:
+def find_times_box(dec: dict) -> tuple[np.ndarray | None, str | None]:
     """Try to find a 'times_box' / keep-index vector in decoding dict."""
     keys = [
-        "times_box", "timesbox", "t_box",
-        "idx_box", "index_box", "indices_box",
-        "keep", "keep_idx", "keep_indices",
-        "idx", "indices",
-        "times", "t",
+        "times_box",
+        "timesbox",
+        "t_box",
+        "idx_box",
+        "index_box",
+        "indices_box",
+        "keep",
+        "keep_idx",
+        "keep_indices",
+        "idx",
+        "indices",
+        "times",
+        "t",
     ]
     for k in keys:
         if k in dec:
@@ -59,9 +65,9 @@ def _is_2col(arr) -> bool:
 
 def find_coords_matrix(
     dec: dict,
-    coords_key: Optional[str] = None,
+    coords_key: str | None = None,
     prefer_box_fallback: bool = False,
-) -> Tuple[np.ndarray, str]:
+) -> tuple[np.ndarray, str]:
     """Find a decoded coords matrix (N,D>=2) in decoding dict.
 
     IMPORTANT: to match your original test1 behavior, we ALWAYS prefer a true (N,2)
@@ -76,7 +82,9 @@ def find_coords_matrix(
             raise KeyError(f"--coords-key '{coords_key}' not found. keys={list(dec.keys())}")
         arr = np.asarray(dec[coords_key])
         if arr.ndim != 2 or arr.shape[1] < 2:
-            raise ValueError(f"--coords-key '{coords_key}' must be 2D with >=2 cols, got {arr.shape}")
+            raise ValueError(
+                f"--coords-key '{coords_key}' must be 2D with >=2 cols, got {arr.shape}"
+            )
         return arr, coords_key
 
     base_keys = ["coords", "theta", "thetas", "circular_coords", "cc", "decoded_coords"]
@@ -114,7 +122,7 @@ def find_coords_matrix(
     raise KeyError(f"Cannot find decoded coords matrix. keys={list(dec.keys())}")
 
 
-def resolve_time_slice(t: np.ndarray, tmin, tmax, imin, imax) -> Tuple[int, int]:
+def resolve_time_slice(t: np.ndarray, tmin, tmax, imin, imax) -> tuple[int, int]:
     """Return [i0,i1) slice bounds using either index bounds or time bounds."""
     T = len(t)
     if imin is not None or imax is not None:
@@ -157,7 +165,7 @@ def draw_base_parallelogram(ax):
     ax.plot(poly[:, 0], poly[:, 1], lw=1.2, color="0.35")
 
 
-def parse_times_box_to_indices(times_box: np.ndarray, t_full: np.ndarray) -> Tuple[np.ndarray, str]:
+def parse_times_box_to_indices(times_box: np.ndarray, t_full: np.ndarray) -> tuple[np.ndarray, str]:
     """Convert times_box to integer indices into t_full."""
     tb = as_1d(times_box)
     T_full = len(t_full)
@@ -214,9 +222,9 @@ def align_coords_to_position(
     y_full: np.ndarray,
     coords2: np.ndarray,
     use_box: bool,
-    times_box: Optional[np.ndarray],
+    times_box: np.ndarray | None,
     interp_to_full: bool,
-) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, str]:
+) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, str]:
     """Align coords2 to (x,y,t) using times_box if requested."""
     t_full = np.asarray(t_full).ravel()
     x_full = np.asarray(x_full).ravel()
@@ -235,14 +243,26 @@ def align_coords_to_position(
 
     if times_box is None:
         if len(coords2) == T_full:
-            return t_full, x_full, y_full, coords2, "full(use-box but no times_box; treated as full)"
+            return (
+                t_full,
+                x_full,
+                y_full,
+                coords2,
+                "full(use-box but no times_box; treated as full)",
+            )
         raise KeyError("use_box=True but times_box not found, and coords is not full-length.")
 
     idx_map, kind = parse_times_box_to_indices(times_box, t_full)
 
     # If coords already full and times_box also full, keep full
     if len(coords2) == T_full and len(idx_map) == T_full:
-        return t_full, x_full, y_full, coords2, f"full(coords already full; times_box kind={kind} ignored)"
+        return (
+            t_full,
+            x_full,
+            y_full,
+            coords2,
+            f"full(coords already full; times_box kind={kind} ignored)",
+        )
 
     if len(idx_map) != len(coords2):
         raise ValueError(f"times_box length {len(idx_map)} != coords length {len(coords2)}")
@@ -253,13 +273,27 @@ def align_coords_to_position(
 
     if interp_to_full:
         coords_full = interp_coords_to_full(idx_map, coords2, T_full)
-        return t_full, x_full, y_full, coords_full, f"interp_to_full(times_box kind={kind}, K={len(idx_map)})"
+        return (
+            t_full,
+            x_full,
+            y_full,
+            coords_full,
+            f"interp_to_full(times_box kind={kind}, K={len(idx_map)})",
+        )
 
     idx_map = np.clip(idx_map, 0, T_full - 1)
-    return t_full[idx_map], x_full[idx_map], y_full[idx_map], coords2, f"subset(times_box kind={kind}, K={len(idx_map)})"
+    return (
+        t_full[idx_map],
+        x_full[idx_map],
+        y_full[idx_map],
+        coords2,
+        f"subset(times_box kind={kind}, K={len(idx_map)})",
+    )
 
 
-def snake_wrap_trail_in_parallelogram(xy_base: np.ndarray, e1: np.ndarray, e2: np.ndarray) -> np.ndarray:
+def snake_wrap_trail_in_parallelogram(
+    xy_base: np.ndarray, e1: np.ndarray, e2: np.ndarray
+) -> np.ndarray:
     """Insert NaNs when the trail wraps across the torus fundamental domain."""
     xy_base = np.asarray(xy_base, float)
     if xy_base.ndim != 2 or xy_base.shape[1] != 2:

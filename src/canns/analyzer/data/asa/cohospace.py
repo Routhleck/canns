@@ -33,9 +33,11 @@ def _ensure_parent_dir(save_path: str | None) -> None:
         if parent:
             os.makedirs(parent, exist_ok=True)
 
+
 # =====================================================================
 # CohoSpace visualization and selectivity metrics (CohoScore)
 # =====================================================================
+
 
 def _coho_coords_to_degrees(coords: np.ndarray) -> np.ndarray:
     """
@@ -186,12 +188,13 @@ def plot_cohospace_trajectory(
     finalize_figure(fig, config)
     return ax
 
+
 def plot_cohospace_neuron(
     coords: np.ndarray,
     activity: np.ndarray,
     neuron_id: int,
-    mode: str = "fr",           # "fr" or "spike"
-    top_percent: float = 5.0,   # Used in FR mode
+    mode: str = "fr",  # "fr" or "spike"
+    top_percent: float = 5.0,  # Used in FR mode
     times: np.ndarray | None = None,
     figsize: tuple = (6, 6),
     cmap: str = "hot",
@@ -287,8 +290,8 @@ def plot_cohospace_population(
     coords: np.ndarray,
     activity: np.ndarray,
     neuron_ids: list[int] | np.ndarray,
-    mode: str = "fr",           # "fr" or "spike"
-    top_percent: float = 5.0,   # Used in FR mode
+    mode: str = "fr",  # "fr" or "spike"
+    top_percent: float = 5.0,  # Used in FR mode
     times: np.ndarray | None = None,
     figsize: tuple = (6, 6),
     cmap: str = "hot",
@@ -451,8 +454,6 @@ def compute_cohoscore(
     return scores
 
 
-
-
 def skew_transform_torus(coords):
     """
     Convert torus angles (theta1, theta2) into coordinates in a skewed parallelogram fundamental domain.
@@ -488,13 +489,7 @@ def skew_transform_torus(coords):
     return np.stack([x, y], axis=1)
 
 
-def draw_torus_parallelogram_grid(
-    ax,
-    n_tiles=1,
-    color="0.7",
-    lw=1.0,
-    alpha=0.8
-):
+def draw_torus_parallelogram_grid(ax, n_tiles=1, color="0.7", lw=1.0, alpha=0.8):
     """
     Draw parallelogram grid corresponding to torus fundamental domain.
 
@@ -509,23 +504,16 @@ def draw_torus_parallelogram_grid(
         How many tiles to draw in +/- directions (visual aid).
         n_tiles=1 means draw [-1, 0, 1] shifts.
     """
-    e1 = np.array([2*np.pi, 0.0])
-    e2 = np.array([np.pi, np.sqrt(3)*np.pi])
+    e1 = np.array([2 * np.pi, 0.0])
+    e2 = np.array([np.pi, np.sqrt(3) * np.pi])
 
     shifts = range(-n_tiles, n_tiles + 1)
 
     for i in shifts:
         for j in shifts:
             origin = i * e1 + j * e2
-            corners = np.array([
-                origin,
-                origin + e1,
-                origin + e1 + e2,
-                origin + e2,
-                origin
-            ])
-            ax.plot(corners[:, 0], corners[:, 1],
-                    color=color, lw=lw, alpha=alpha)
+            corners = np.array([origin, origin + e1, origin + e1 + e2, origin + e2, origin])
+            ax.plot(corners[:, 0], corners[:, 1], color=color, lw=lw, alpha=alpha)
 
 
 def tile_parallelogram_points(xy, n_tiles=1):
@@ -551,8 +539,8 @@ def tile_parallelogram_points(xy, n_tiles=1):
     """
     xy = np.asarray(xy, dtype=float)
 
-    e1 = np.array([2*np.pi, 0.0])
-    e2 = np.array([np.pi, np.sqrt(3)*np.pi])
+    e1 = np.array([2 * np.pi, 0.0])
+    e2 = np.array([np.pi, np.sqrt(3) * np.pi])
 
     out = []
     for i in range(-n_tiles, n_tiles + 1):
@@ -666,14 +654,16 @@ def plot_cohospace_neuron_skewed(
 
         bbox = dict(facecolor="white", edgecolor="none", alpha=0.7, pad=1.0)
 
-        ax.text(P00[0] + padx, P00[1] + pady, "(0,0)",
-                fontsize=10, ha="left", va="bottom", bbox=bbox)
-        ax.text(P10[0] - padx, P10[1] + pady, "(2π,0)",
-                fontsize=10, ha="right", va="bottom", bbox=bbox)
-        ax.text(P01[0] + padx, P01[1] - pady, "(0,2π)",
-                fontsize=10, ha="left", va="top", bbox=bbox)
-        ax.text(P11[0] - padx, P11[1] - pady, "(2π,2π)",
-                fontsize=10, ha="right", va="top", bbox=bbox)
+        ax.text(
+            P00[0] + padx, P00[1] + pady, "(0,0)", fontsize=10, ha="left", va="bottom", bbox=bbox
+        )
+        ax.text(
+            P10[0] - padx, P10[1] + pady, "(2π,0)", fontsize=10, ha="right", va="bottom", bbox=bbox
+        )
+        ax.text(P01[0] + padx, P01[1] - pady, "(0,2π)", fontsize=10, ha="left", va="top", bbox=bbox)
+        ax.text(
+            P11[0] - padx, P11[1] - pady, "(2π,2π)", fontsize=10, ha="right", va="top", bbox=bbox
+        )
 
     # --- skew transform
     xy = skew_transform_torus(coords[mask])

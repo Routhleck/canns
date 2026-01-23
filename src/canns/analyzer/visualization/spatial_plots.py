@@ -49,9 +49,10 @@ def _render_single_grid_tracking_frame(
     options: _GridCellTrackingRenderOptions,
 ) -> np.ndarray:
     """Render a single frame for grid cell tracking animation (module-level for pickling)."""
+    from io import BytesIO
+
     import matplotlib.pyplot as plt
     import numpy as np
-    from io import BytesIO
 
     fig, (ax1, ax2, ax3) = plt.subplots(1, 3, figsize=options.figsize)
     sim_idx = options.sim_indices_to_render[frame_index]
@@ -84,12 +85,19 @@ def _render_single_grid_tracking_frame(
 
     # Panel 3: Rate map with position
     im = ax3.imshow(
-        options.rate_map.T, origin="lower", cmap="hot",
-        extent=[0, options.env_size, 0, options.env_size], aspect="auto"
+        options.rate_map.T,
+        origin="lower",
+        cmap="hot",
+        extent=[0, options.env_size, 0, options.env_size],
+        aspect="auto",
     )
     ax3.plot(
-        [options.position[sim_idx, 0]], [options.position[sim_idx, 1]], "c*",
-        markersize=15, markeredgecolor="white", markeredgewidth=1.5
+        [options.position[sim_idx, 0]],
+        [options.position[sim_idx, 1]],
+        "c*",
+        markersize=15,
+        markeredgecolor="white",
+        markeredgewidth=1.5,
     )
     ax3.set_xlabel("X Position (m)", fontsize=10)
     ax3.set_ylabel("Y Position (m)", fontsize=10)
@@ -97,7 +105,9 @@ def _render_single_grid_tracking_frame(
     plt.colorbar(im, ax=ax3, fraction=0.046, pad=0.04)
 
     # Overall title with time
-    fig.suptitle(f"{options.title}  |  Time: {current_time_s:.2f} s", fontsize=13, fontweight="bold")
+    fig.suptitle(
+        f"{options.title}  |  Time: {current_time_s:.2f} s", fontsize=13, fontweight="bold"
+    )
 
     fig.tight_layout()
 
@@ -792,8 +802,12 @@ def create_grid_cell_tracking_animation(
 
             if backend == "imageio":
                 # Use imageio backend with parallel rendering
-                workers = render_workers if render_workers is not None else get_optimal_worker_count()
-                ctx, start_method = get_multiprocessing_context(prefer_fork=(render_start_method == "fork"))
+                workers = (
+                    render_workers if render_workers is not None else get_optimal_worker_count()
+                )
+                ctx, start_method = get_multiprocessing_context(
+                    prefer_fork=(render_start_method == "fork")
+                )
 
                 # Create render options
                 render_options = _GridCellTrackingRenderOptions(
@@ -813,11 +827,14 @@ def create_grid_cell_tracking_animation(
                 writer_kwargs, mode = get_imageio_writer_kwargs(config.save_path, config.fps)
 
                 try:
-                    import imageio
                     from functools import partial
 
+                    import imageio
+
                     # Create partial function with options
-                    render_func = partial(_render_single_grid_tracking_frame, options=render_options)
+                    render_func = partial(
+                        _render_single_grid_tracking_frame, options=render_options
+                    )
 
                     with imageio.get_writer(config.save_path, mode=mode, **writer_kwargs) as writer:
                         if workers > 1 and ctx is not None:
@@ -851,6 +868,7 @@ def create_grid_cell_tracking_animation(
 
                 except Exception as e:
                     import warnings
+
                     warnings.warn(
                         f"imageio rendering failed: {e}. Falling back to matplotlib.",
                         RuntimeWarning,
@@ -880,7 +898,9 @@ def create_grid_cell_tracking_animation(
                         pbar.update(1)
 
                     try:
-                        ani.save(config.save_path, writer=writer, progress_callback=progress_callback)
+                        ani.save(
+                            config.save_path, writer=writer, progress_callback=progress_callback
+                        )
                         print(f"Animation saved to: {config.save_path}")
                     finally:
                         pbar.close()

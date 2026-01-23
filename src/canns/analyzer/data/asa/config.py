@@ -53,7 +53,7 @@ class CANN2DPlotConfig(PlotConfig):
     n_frames: int = 20
 
     @classmethod
-    def for_projection_3d(cls, **kwargs) -> "CANN2DPlotConfig":
+    def for_projection_3d(cls, **kwargs) -> CANN2DPlotConfig:
         """Create configuration for 3D projection plots."""
         defaults = {
             "title": "3D Data Projection",
@@ -67,7 +67,7 @@ class CANN2DPlotConfig(PlotConfig):
         return cls.for_static_plot(**defaults)
 
     @classmethod
-    def for_torus_animation(cls, **kwargs) -> "CANN2DPlotConfig":
+    def for_torus_animation(cls, **kwargs) -> CANN2DPlotConfig:
         """Create configuration for 3D torus bump animations."""
         defaults = {
             "title": "3D Bump on Torus",
@@ -97,6 +97,7 @@ class CANN2DPlotConfig(PlotConfig):
 
 # ==================== Constants ====================
 
+
 class Constants:
     """Constants used throughout CANN2D analysis."""
 
@@ -110,15 +111,18 @@ class Constants:
 
 # ==================== Custom Exceptions ====================
 
+
 class CANN2DError(Exception):
     """Base exception for CANN2D analysis errors."""
 
     pass
 
+
 class DataLoadError(CANN2DError):
     """Raised when data loading fails."""
 
     pass
+
 
 class ProcessingError(CANN2DError):
     """Raised when data processing fails."""

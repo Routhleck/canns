@@ -85,6 +85,7 @@ def _gaussian_filter1d(
     weights = _gaussian_kernel1d(sigma, order, lw)[::-1]
     return _correlate1d(input, weights, axis, output, mode, cval, 0)
 
+
 def _gaussian_kernel1d(sigma, order, radius):
     """
     Computes a 1-D Gaussian convolution kernel.
@@ -114,6 +115,7 @@ def _gaussian_kernel1d(sigma, order, radius):
             q = Q_deriv.dot(q)
         q = (x[:, None] ** exponent_range).dot(q)
         return q * phi_x
+
 
 def _correlate1d(input, weights, axis=-1, output=None, mode="reflect", cval=0.0, origin=0):
     """Calculate a 1-D correlation along the given axis.
@@ -172,6 +174,7 @@ def _correlate1d(input, weights, axis=-1, output=None, mode="reflect", cval=0.0,
     _nd_image.correlate1d(input, weights, axis, output, mode, cval, origin)
     return output
 
+
 def _complex_via_real_components(func, input, weights, output, cval, **kwargs):
     """Complex convolution via a linear combination of real convolutions."""
     complex_input = input.dtype.kind == "c"
@@ -192,6 +195,7 @@ def _complex_via_real_components(func, input, weights, output, cval, **kwargs):
         func(input, weights.real, output=output.real, cval=cval, **kwargs)
         func(input, weights.imag, output=output.imag, cval=cval, **kwargs)
     return output
+
 
 def _normalize_axis_index(axis, ndim):
     # Check if `axis` is in the correct range and normalize it

@@ -62,6 +62,7 @@ def embed_spike_trains(spike_trains, config: SpikeEmbeddingConfig | None = None,
     except Exception as e:
         raise ProcessingError(f"Failed to embed spike trains: {e}") from e
 
+
 def _extract_spike_data(
     spike_trains: dict[str, Any], config: SpikeEmbeddingConfig
 ) -> dict[int, np.ndarray]:
@@ -114,6 +115,7 @@ def _extract_spike_data(
     except Exception as e:
         raise ProcessingError(f"Error extracting spike data: {e}") from e
 
+
 def _create_time_bins(t: np.ndarray, config: SpikeEmbeddingConfig) -> np.ndarray:
     """Create time bins for spike discretization."""
     min_time0 = np.min(t)
@@ -123,6 +125,7 @@ def _create_time_bins(t: np.ndarray, config: SpikeEmbeddingConfig) -> np.ndarray
     max_time = max_time0 * config.res
 
     return np.arange(np.floor(min_time), np.ceil(max_time) + 1, config.dt)
+
 
 def _bin_spike_data(
     spikes: dict[int, np.ndarray], time_bins: np.ndarray, config: SpikeEmbeddingConfig
@@ -146,6 +149,7 @@ def _bin_spike_data(
 
     return spikes_bin
 
+
 def _apply_temporal_smoothing(spikes_bin: np.ndarray, config: SpikeEmbeddingConfig) -> np.ndarray:
     """Apply Gaussian temporal smoothing to spike matrix."""
     # Calculate smoothing parameters (legacy implementation used custom kernel)
@@ -167,6 +171,7 @@ def _apply_temporal_smoothing(spikes_bin: np.ndarray, config: SpikeEmbeddingConf
     normalization_factor = 1 / np.sqrt(2 * np.pi * (config.sigma / config.res) ** 2)
     return smoothed * normalization_factor
 
+
 def _apply_speed_filtering(
     spikes_bin: np.ndarray, spike_trains: dict[str, Any], config: SpikeEmbeddingConfig
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
@@ -184,6 +189,7 @@ def _apply_speed_filtering(
         raise DataLoadError(f"Missing position data for speed filtering: {e}") from e
     except Exception as e:
         raise ProcessingError(f"Error in speed filtering: {e}") from e
+
 
 def _load_pos(t, x, y, res=100000, dt=1000):
     """

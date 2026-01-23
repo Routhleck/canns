@@ -8,10 +8,9 @@ import matplotlib.pyplot as plt
 import numpy as np
 from canns_lib.ripser import ripser
 from matplotlib import gridspec
-from scipy.spatial.distance import pdist, squareform
 from scipy.sparse import coo_matrix
+from scipy.spatial.distance import pdist, squareform
 from sklearn import preprocessing
-from tqdm import tqdm
 
 from .config import Constants, ProcessingError, TDAConfig
 
@@ -100,6 +99,7 @@ def tda_vis(embed_data: np.ndarray, config: TDAConfig | None = None, **kwargs) -
     except Exception as e:
         raise ProcessingError(f"TDA analysis failed: {e}") from e
 
+
 def _compute_real_persistence(embed_data: np.ndarray, config: TDAConfig) -> dict[str, Any]:
     """Compute persistent homology for real data with progress tracking."""
 
@@ -135,9 +135,11 @@ def _compute_real_persistence(embed_data: np.ndarray, config: TDAConfig) -> dict
         "n_points": config.n_points,
     }
 
+
 def _downsample_timepoints(embed_data: np.ndarray, num_times: int) -> np.ndarray:
     """Downsample timepoints for computational efficiency."""
     return np.arange(0, embed_data.shape[0], num_times)
+
 
 def _select_active_timepoints(
     embed_data: np.ndarray, times_cube: np.ndarray, active_times: int
@@ -148,11 +150,13 @@ def _select_active_timepoints(
     movetimes = np.sort(np.argsort(activity_scores)[-active_times:])
     return times_cube[movetimes]
 
+
 def _apply_pca_reduction(embed_data: np.ndarray, movetimes: np.ndarray, dim: int) -> np.ndarray:
     """Apply PCA dimensionality reduction."""
     scaled_data = preprocessing.scale(embed_data[movetimes, :])
     dimred, *_ = _pca(scaled_data, dim=dim)
     return dimred
+
 
 def _apply_denoising(dimred: np.ndarray, config: TDAConfig) -> np.ndarray:
     """Apply point cloud denoising."""
@@ -164,6 +168,7 @@ def _apply_denoising(dimred: np.ndarray, config: TDAConfig) -> np.ndarray:
         metric=config.metric,
     )
     return indstemp
+
 
 def _compute_persistence_homology(
     dimred: np.ndarray, indstemp: np.ndarray, config: TDAConfig
@@ -180,6 +185,7 @@ def _compute_persistence_homology(
         distance_matrix=True,
         progress_bar=config.progress_bar,
     )
+
 
 def _perform_shuffle_analysis(embed_data: np.ndarray, config: TDAConfig) -> dict[int, Any]:
     """Perform shuffle analysis with progress tracking."""
@@ -211,6 +217,7 @@ def _perform_shuffle_analysis(embed_data: np.ndarray, config: TDAConfig) -> dict
 
     return shuffle_max
 
+
 def _print_shuffle_summary(shuffle_max: dict[int, Any]) -> None:
     """Print summary of shuffle analysis results."""
     print("\nSummary of shuffle-based analysis:")
@@ -222,6 +229,7 @@ def _print_shuffle_summary(shuffle_max: dict[int, Any]) -> None:
                 f"Mean maximum persistence: {np.mean(values):.4f} | "
                 f"99.9th percentile: {np.percentile(values, 99.9):.4f}"
             )
+
 
 def _handle_visualization(
     real_persistence: dict[str, Any], shuffle_max: dict[int, Any] | None, config: TDAConfig
@@ -235,7 +243,6 @@ def _handle_visualization(
         plt.show()
     else:
         plt.close()
-
 
 
 def _compute_persistence(
@@ -281,6 +288,7 @@ def _compute_persistence(
 
     return persistence
 
+
 def _pca(data, dim=2):
     """
     Perform PCA (Principal Component Analysis) for dimensionality reduction.
@@ -321,6 +329,7 @@ def _pca(data, dim=2):
     components = np.dot(evecs.T, data.T).T
     return components, var_exp, evals[:dim]
 
+
 def _sample_denoising(data, k=10, num_sample=500, omega=0.2, metric="euclidean"):
     """
     Perform denoising and greedy sampling based on mutual k-NN graph.
@@ -341,6 +350,7 @@ def _sample_denoising(data, k=10, num_sample=500, omega=0.2, metric="euclidean")
         return _sample_denoising_numba(data, k, num_sample, omega, metric)
     else:
         return _sample_denoising_numpy(data, k, num_sample, omega, metric)
+
 
 def _sample_denoising_numpy(data, k=10, num_sample=500, omega=0.2, metric="euclidean"):
     """Original numpy implementation for fallback."""
@@ -382,6 +392,7 @@ def _sample_denoising_numpy(data, k=10, num_sample=500, omega=0.2, metric="eucli
         d[j, :] = X[i, inds]
     return inds, d, Fs
 
+
 def _sample_denoising_numba(data, k=10, num_sample=500, omega=0.2, metric="euclidean"):
     """Optimized numba implementation."""
     n = data.shape[0]
@@ -405,7 +416,6 @@ def _sample_denoising_numba(data, k=10, num_sample=500, omega=0.2, metric="eucli
 
 
 @njit(fastmath=True)
-
 def _build_adjacency_matrix_numba(rows, cols, vals, n):
     """Build symmetric adjacency matrix efficiently with numba.
 
@@ -430,7 +440,6 @@ def _build_adjacency_matrix_numba(rows, cols, vals, n):
 
 
 @njit(fastmath=True)
-
 def _greedy_sampling_numba(X, num_sample, omega):
     """Optimized greedy sampling with numba."""
     n = X.shape[0]
@@ -469,7 +478,6 @@ def _greedy_sampling_numba(X, num_sample, omega):
 
 
 @njit(fastmath=True)
-
 def _build_distance_matrix_numba(X, inds):
     """Build final distance matrix efficiently with numba."""
     num_sample = len(inds)
@@ -483,7 +491,6 @@ def _build_distance_matrix_numba(X, inds):
 
 
 @njit(fastmath=True)
-
 def _smooth_knn_dist(distances, k, n_iter=64, local_connectivity=0.0, bandwidth=1.0):
     """
     Compute smoothed local distances for kNN graph with entropy balancing.
@@ -561,7 +568,6 @@ def _smooth_knn_dist(distances, k, n_iter=64, local_connectivity=0.0, bandwidth=
 
 
 @njit(parallel=True, fastmath=True)
-
 def _compute_membership_strengths(knn_indices, knn_dists, sigmas, rhos):
     """
     Compute membership strength matrix from smoothed kNN graph.
@@ -599,6 +605,7 @@ def _compute_membership_strengths(knn_indices, knn_dists, sigmas, rhos):
             vals[i * n_neighbors + j] = val
 
     return rows, cols, vals
+
 
 def _second_build(data, indstemp, nbs=800, metric="cosine"):
     """
@@ -643,10 +650,10 @@ def _second_build(data, indstemp, nbs=800, metric="cosine"):
 
     return d
 
+
 def _fast_pca_transform(data, components):
     """Fast PCA transformation using numba."""
     return np.dot(data, components.T)
-
 
 
 def _run_shuffle_analysis(sspikes, num_shuffles=1000, num_cores=4, progress_bar=True, **kwargs):
@@ -654,6 +661,7 @@ def _run_shuffle_analysis(sspikes, num_shuffles=1000, num_cores=4, progress_bar=
     return _run_shuffle_analysis_multiprocessing(
         sspikes, num_shuffles, num_cores, progress_bar, **kwargs
     )
+
 
 def _run_shuffle_analysis_multiprocessing(
     sspikes, num_shuffles=1000, num_cores=4, progress_bar=True, **kwargs
@@ -695,7 +703,6 @@ def _run_shuffle_analysis_multiprocessing(
 
 
 @njit(fastmath=True)
-
 def _process_single_shuffle(args):
     """Process a single shuffle task."""
     i, sspikes, kwargs = args
@@ -717,6 +724,7 @@ def _process_single_shuffle(args):
         print(f"Shuffle {i} failed: {str(e)}")
         return {}
 
+
 def _shuffle_spike_trains(sspikes):
     """Perform random circular shift on spike trains."""
     shuffled = sspikes.copy()
@@ -728,7 +736,6 @@ def _shuffle_spike_trains(sspikes):
         shuffled[:, n] = np.roll(shuffled[:, n], shift)
 
     return shuffled
-
 
 
 def _plot_barcode(persistence):
@@ -794,6 +801,7 @@ def _plot_barcode(persistence):
 
     plt.tight_layout()
     return fig
+
 
 def _plot_barcode_with_shuffle(persistence, shuffle_max):
     """

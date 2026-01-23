@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import os
 from dataclasses import dataclass
-from typing import Optional, Tuple, Union
 
 import numpy as np
 
@@ -15,7 +14,8 @@ def _ensure_parent_dir(save_path: str | None) -> None:
         if parent:
             os.makedirs(parent, exist_ok=True)
 
-def _slice_range(r: Optional[Tuple[int, int]], length: int) -> slice:
+
+def _slice_range(r: tuple[int, int] | None, length: int) -> slice:
     """Convert (start, end) into a safe Python slice within [0, length]."""
     if r is None:
         return slice(0, length)
@@ -31,11 +31,11 @@ def _slice_range(r: Optional[Tuple[int, int]], length: int) -> slice:
 
 def compute_fr_heatmap_matrix(
     spike: np.ndarray,
-    neuron_range: Optional[Tuple[int, int]] = None,
-    time_range: Optional[Tuple[int, int]] = None,
+    neuron_range: tuple[int, int] | None = None,
+    time_range: tuple[int, int] | None = None,
     *,
     transpose: bool = True,
-    normalize: Optional[str] = None,
+    normalize: str | None = None,
 ) -> np.ndarray:
     """
     Compute a matrix for FR heatmap display from spike-like data.
@@ -140,7 +140,9 @@ def save_fr_heatmap_png(
             config.ylabel = ylabel
 
     if config.save_path is None:
-        raise ValueError("save_path must be provided via config.save_path or as a keyword argument.")
+        raise ValueError(
+            "save_path must be provided via config.save_path or as a keyword argument."
+        )
 
     config.save_dpi = dpi
 
@@ -188,8 +190,8 @@ def compute_frm(
     neuron_id: int,
     *,
     bins: int = 50,
-    x_range: Optional[Tuple[float, float]] = None,
-    y_range: Optional[Tuple[float, float]] = None,
+    x_range: tuple[float, float] | None = None,
+    y_range: tuple[float, float] | None = None,
     min_occupancy: int = 1,
     smoothing: bool = False,
     sigma: float = 1.0,
@@ -232,7 +234,9 @@ def compute_frm(
         raise ValueError(f"spike must be 2D (T,N), got shape={spike.shape}")
     T, N = spike.shape
     if len(x) != T or len(y) != T:
-        raise ValueError(f"x/y length must match spike rows T={T}, got len(x)={len(x)}, len(y)={len(y)}")
+        raise ValueError(
+            f"x/y length must match spike rows T={T}, got len(x)={len(x)}, len(y)={len(y)}"
+        )
     if not (0 <= int(neuron_id) < N):
         raise ValueError(f"neuron_id out of range: {neuron_id} for N={N}")
 
@@ -286,6 +290,7 @@ def compute_frm(
     if smoothing:
         try:
             from scipy.ndimage import gaussian_filter
+
             # Smooth while respecting NaNs (simple approach: fill NaN -> 0, smooth weights)
             if np.any(np.isnan(frm)):
                 val = np.nan_to_num(frm, nan=0.0)
@@ -299,7 +304,9 @@ def compute_frm(
             # If scipy not available, just skip smoothing
             pass
 
-    return FRMResult(frm=frm, occupancy=occupancy, spike_sum=spike_sum, x_edges=x_edges, y_edges=y_edges)
+    return FRMResult(
+        frm=frm, occupancy=occupancy, spike_sum=spike_sum, x_edges=x_edges, y_edges=y_edges
+    )
 
 
 def plot_frm(
@@ -340,7 +347,9 @@ def plot_frm(
             config.ylabel = "Y bin"
 
     if config.save_path is None:
-        raise ValueError("save_path must be provided via config.save_path or as a keyword argument.")
+        raise ValueError(
+            "save_path must be provided via config.save_path or as a keyword argument."
+        )
 
     config.save_dpi = dpi
 

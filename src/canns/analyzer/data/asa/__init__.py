@@ -1,14 +1,5 @@
 from __future__ import annotations
 
-from .config import (
-    CANN2DPlotConfig,
-    CANN2DError,
-    Constants,
-    DataLoadError,
-    ProcessingError,
-    SpikeEmbeddingConfig,
-    TDAConfig,
-)
 from .cohospace import (
     compute_cohoscore,
     draw_torus_parallelogram_grid,
@@ -19,6 +10,15 @@ from .cohospace import (
     plot_cohospace_trajectory,
     skew_transform_torus,
     tile_parallelogram_points,
+)
+from .config import (
+    CANN2DError,
+    CANN2DPlotConfig,
+    Constants,
+    DataLoadError,
+    ProcessingError,
+    SpikeEmbeddingConfig,
+    TDAConfig,
 )
 from .decode import (
     _get_coords,
@@ -31,8 +31,8 @@ from .fr import (
     FRMResult,
     compute_fr_heatmap_matrix,
     compute_frm,
-    save_fr_heatmap_png,
     plot_frm,
+    save_fr_heatmap_png,
 )
 from .path import (
     align_coords_to_position,

@@ -5,7 +5,7 @@ from typing import Any
 
 import matplotlib.pyplot as plt
 import numpy as np
-from matplotlib import animation, cm, gridspec
+from matplotlib import animation, cm
 from scipy import signal
 from scipy.ndimage import binary_closing, gaussian_filter
 from scipy.stats import binned_statistic_2d, multivariate_normal
@@ -52,8 +52,9 @@ def _ensure_parent_dir(save_path: str | None) -> None:
 
 
 def _render_torus_frame(frame_index: int, frame_data: dict[str, Any]) -> np.ndarray:
-    import numpy as np
     from io import BytesIO
+
+    import numpy as np
 
     fig = plt.figure(figsize=frame_data["figsize"])
     ax = fig.add_subplot(111, projection="3d")
@@ -292,7 +293,6 @@ def plot_path_compare(
     return fig, axes
 
 
-
 def plot_cohomap(
     decoding_result: dict[str, Any],
     position_data: dict[str, Any],
@@ -404,6 +404,7 @@ def plot_cohomap(
     finalize_figure(fig, config)
     return fig
 
+
 def plot_cohomap1(
     decoding_result: dict,
     position_data: dict,
@@ -461,7 +462,6 @@ def plot_cohomap1(
     _ensure_parent_dir(config.save_path)
     finalize_figure(fig, config)
     return fig
-
 
 
 def plot_3d_bump_on_torus(
@@ -814,6 +814,7 @@ def plot_3d_bump_on_torus(
         plt.close(fig)
         raise ProcessingError(f"Failed to create torus animation: {e}") from e
 
+
 def _smooth_tuning_map(mtot, numangsint, sig, bClose=True):
     """
     Smooth activity map over circular topology (e.g., torus).
@@ -850,6 +851,7 @@ def _smooth_tuning_map(mtot, numangsint, sig, bClose=True):
             (numangsint_1) + (int(i / 2) + 1) : (numangsint_1) * 2 + (int(i / 2) + 1),
         ]
     return mtot_out
+
 
 def _smooth_image(img, sigma):
     """
@@ -895,7 +897,6 @@ def _smooth_image(img, sigma):
     imgC = np.divide(imgA, imgB)
     imgC[imgD == 0] = -np.inf
     return imgC
-
 
 
 def plot_2d_bump_on_manifold(
