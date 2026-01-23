@@ -269,6 +269,83 @@ class PlotConfigs:
         return PlotConfig.for_animation(time_steps, **defaults)
 
     @staticmethod
+    def cohomap(**kwargs: Any) -> PlotConfig:
+        defaults: dict[str, Any] = {
+            "title": "CohoMap",
+            "xlabel": "",
+            "ylabel": "",
+            "figsize": (10, 4),
+        }
+        defaults.update(kwargs)
+        return PlotConfig.for_static_plot(**defaults)
+
+    @staticmethod
+    def cohospace_trajectory(**kwargs: Any) -> PlotConfig:
+        defaults: dict[str, Any] = {
+            "title": "CohoSpace trajectory",
+            "xlabel": "theta1 (deg)",
+            "ylabel": "theta2 (deg)",
+            "figsize": (6, 6),
+        }
+        defaults.update(kwargs)
+        return PlotConfig.for_static_plot(**defaults)
+
+    @staticmethod
+    def cohospace_neuron(**kwargs: Any) -> PlotConfig:
+        defaults: dict[str, Any] = {
+            "title": "Neuron activity on coho-space",
+            "xlabel": "Theta 1 (deg)",
+            "ylabel": "Theta 2 (deg)",
+            "figsize": (6, 6),
+        }
+        defaults.update(kwargs)
+        return PlotConfig.for_static_plot(**defaults)
+
+    @staticmethod
+    def cohospace_population(**kwargs: Any) -> PlotConfig:
+        defaults: dict[str, Any] = {
+            "title": "Population activity on coho-space",
+            "xlabel": "Theta 1 (deg)",
+            "ylabel": "Theta 2 (deg)",
+            "figsize": (6, 6),
+        }
+        defaults.update(kwargs)
+        return PlotConfig.for_static_plot(**defaults)
+
+    @staticmethod
+    def fr_heatmap(**kwargs: Any) -> PlotConfig:
+        defaults: dict[str, Any] = {
+            "title": "Firing Rate Heatmap",
+            "xlabel": "Time",
+            "ylabel": "Neuron",
+            "figsize": (10, 5),
+            "clabel": "Value",
+        }
+        defaults.update(kwargs)
+        return PlotConfig.for_static_plot(**defaults)
+
+    @staticmethod
+    def frm(**kwargs: Any) -> PlotConfig:
+        defaults: dict[str, Any] = {
+            "title": "Firing Rate Map",
+            "xlabel": "X bin",
+            "ylabel": "Y bin",
+            "figsize": (6, 5),
+            "clabel": "Rate",
+        }
+        defaults.update(kwargs)
+        return PlotConfig.for_static_plot(**defaults)
+
+    @staticmethod
+    def path_compare(**kwargs: Any) -> PlotConfig:
+        defaults: dict[str, Any] = {
+            "title": "Path Compare",
+            "figsize": (12, 5),
+        }
+        defaults.update(kwargs)
+        return PlotConfig.for_static_plot(**defaults)
+
+    @staticmethod
     def raster_plot(mode: str = "block", **kwargs: Any) -> PlotConfig:
         defaults: dict[str, Any] = {
             "title": "Raster Plot",

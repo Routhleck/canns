@@ -25,7 +25,6 @@ from tqdm import tqdm
 
 from .core.backend import (
     emit_backend_warnings,
-    get_imageio_writer_kwargs,
     get_multiprocessing_context,
     get_optimal_worker_count,
     select_animation_backend,
@@ -851,9 +850,10 @@ def _render_single_place_cell_frame(
     options: _PlaceCellRenderOptions,
 ) -> np.ndarray:
     """Render a single frame for place cell animation (module-level for pickling)."""
+    from io import BytesIO
+
     import matplotlib.pyplot as plt
     import numpy as np
-    from io import BytesIO
 
     fig, axes = plt.subplots(1, 2, figsize=options.figsize, width_ratios=[1, 1])
     ax_env, ax_activity = axes
@@ -1223,7 +1223,9 @@ def create_theta_sweep_place_cell_animation(
         if backend == "imageio":
             # Use imageio backend with parallel rendering
             workers = render_workers if render_workers is not None else get_optimal_worker_count()
-            ctx, start_method = get_multiprocessing_context(prefer_fork=(render_start_method == "fork"))
+            ctx, start_method = get_multiprocessing_context(
+                prefer_fork=(render_start_method == "fork")
+            )
 
             _emit_info(
                 f"Parallel rendering enabled: {workers} workers (start_method={start_method})"
@@ -1232,7 +1234,11 @@ def create_theta_sweep_place_cell_animation(
             # Prepare environment data
             env = navigation_task.env
             boundary_array = np.array(env.boundary) if env.boundary is not None else None
-            walls_arrays = [np.array(wall) for wall in env.walls] if env.walls is not None and len(env.walls) > 0 else None
+            walls_arrays = (
+                [np.array(wall) for wall in env.walls]
+                if env.walls is not None and len(env.walls) > 0
+                else None
+            )
 
             # Get accessible indices
             accessible_indices = pc_network.geodesic_result.accessible_indices
@@ -1257,11 +1263,14 @@ def create_theta_sweep_place_cell_animation(
             writer_kwargs, mode = get_imageio_writer_kwargs(config.save_path, config.fps)
 
             try:
-                import imageio
                 from functools import partial
 
+                import imageio
+
                 # Create partial function with data and options
-                render_func = partial(_render_single_place_cell_frame, data=data, options=render_options)
+                render_func = partial(
+                    _render_single_place_cell_frame, data=data, options=render_options
+                )
 
                 with imageio.get_writer(config.save_path, mode=mode, **writer_kwargs) as writer:
                     if workers > 1 and ctx is not None:

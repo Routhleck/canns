@@ -45,9 +45,10 @@ def _render_single_energy_1d_frame(
     options: _Energy1DRenderOptions,
 ) -> np.ndarray:
     """Render a single frame for 1D energy landscape animation (module-level for pickling)."""
+    from io import BytesIO
+
     import matplotlib.pyplot as plt
     import numpy as np
-    from io import BytesIO
 
     fig, ax = plt.subplots(figsize=options.figsize)
     sim_index = options.sim_indices_to_render[frame_index]
@@ -121,9 +122,10 @@ def _render_single_energy_2d_frame(
     options: _Energy2DRenderOptions,
 ) -> np.ndarray:
     """Render a single frame for 2D energy landscape animation (module-level for pickling)."""
+    from io import BytesIO
+
     import matplotlib.pyplot as plt
     import numpy as np
-    from io import BytesIO
 
     fig, ax = plt.subplots(figsize=options.figsize)
     sim_index = options.sim_indices_to_render[frame_index]
@@ -457,8 +459,12 @@ def energy_landscape_1d_animation(
 
             if backend == "imageio":
                 # Use imageio backend with parallel rendering
-                workers = render_workers if render_workers is not None else get_optimal_worker_count()
-                ctx, start_method = get_multiprocessing_context(prefer_fork=(render_start_method == "fork"))
+                workers = (
+                    render_workers if render_workers is not None else get_optimal_worker_count()
+                )
+                ctx, start_method = get_multiprocessing_context(
+                    prefer_fork=(render_start_method == "fork")
+                )
 
                 # Create render options
                 render_options = _Energy1DRenderOptions(
@@ -481,8 +487,9 @@ def energy_landscape_1d_animation(
                 writer_kwargs, mode = get_imageio_writer_kwargs(config.save_path, config.fps)
 
                 try:
-                    import imageio
                     from functools import partial
+
+                    import imageio
 
                     # Create partial function with options
                     render_func = partial(_render_single_energy_1d_frame, options=render_options)
@@ -519,6 +526,7 @@ def energy_landscape_1d_animation(
 
                 except Exception as e:
                     import warnings
+
                     warnings.warn(
                         f"imageio rendering failed: {e}. Falling back to matplotlib.",
                         RuntimeWarning,
@@ -853,8 +861,12 @@ def energy_landscape_2d_animation(
 
             if backend == "imageio":
                 # Use imageio backend with parallel rendering
-                workers = render_workers if render_workers is not None else get_optimal_worker_count()
-                ctx, start_method = get_multiprocessing_context(prefer_fork=(render_start_method == "fork"))
+                workers = (
+                    render_workers if render_workers is not None else get_optimal_worker_count()
+                )
+                ctx, start_method = get_multiprocessing_context(
+                    prefer_fork=(render_start_method == "fork")
+                )
 
                 # Create render options
                 render_options = _Energy2DRenderOptions(
@@ -877,8 +889,9 @@ def energy_landscape_2d_animation(
                 writer_kwargs, mode = get_imageio_writer_kwargs(config.save_path, config.fps)
 
                 try:
-                    import imageio
                     from functools import partial
+
+                    import imageio
 
                     # Create partial function with options
                     render_func = partial(_render_single_energy_2d_frame, options=render_options)
@@ -915,6 +928,7 @@ def energy_landscape_2d_animation(
 
                 except Exception as e:
                     import warnings
+
                     warnings.warn(
                         f"imageio rendering failed: {e}. Falling back to matplotlib.",
                         RuntimeWarning,

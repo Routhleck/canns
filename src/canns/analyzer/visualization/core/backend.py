@@ -99,7 +99,7 @@ def select_animation_backend(
             return BackendSelection(
                 backend="imageio",
                 supports_parallel=True,
-                reason=f"User explicitly requested imageio backend",
+                reason="User explicitly requested imageio backend",
                 warnings=[],
             )
 

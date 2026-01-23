@@ -692,7 +692,9 @@ class OpenLoopNavigationTask(BaseNavigationTask):
 
         if not hasattr(self, "agent") or self.agent is None:
             self.agent = Agent(
-                environment=self.env, params=copy.deepcopy(self.agent_params), rng_seed=self.rng_seed
+                environment=self.env,
+                params=copy.deepcopy(self.agent_params),
+                rng_seed=self.rng_seed,
             )
 
         # Set initial position

@@ -325,10 +325,9 @@ def render_animation_parallel(
         ... else:
         ...     print("imageio not available")
     """
-    import os
     import multiprocessing as mp
-    import platform
-    from concurrent.futures import ProcessPoolExecutor
+    import os
+
     from tqdm import tqdm
 
     # Detect file format
@@ -487,7 +486,12 @@ def _render_mp4_parallel(
     if IMAGEIO_AVAILABLE:
         # Try imageio first (simpler, more reliable if ffmpeg plugin available)
         try:
-            writer_kwargs = {"fps": fps, "codec": "libx264", "pixelformat": "yuv420p", "bitrate": "5000k"}
+            writer_kwargs = {
+                "fps": fps,
+                "codec": "libx264",
+                "pixelformat": "yuv420p",
+                "bitrate": "5000k",
+            }
             with imageio.get_writer(save_path, **writer_kwargs) as writer:
                 for frame in frames:
                     # Ensure RGB format
@@ -512,14 +516,14 @@ def _render_mp4_parallel(
     h, w = frames[0].shape[:2]
     fig = plt.figure(figsize=(w / 100, h / 100), dpi=100, frameon=False)
     ax = fig.add_axes([0, 0, 1, 1])
-    ax.axis('off')
+    ax.axis("off")
 
     writer = FFMpegWriter(fps=fps, codec="h264", bitrate=5000)
     with writer.saving(fig, save_path, dpi=100):
         for frame in frames:
             ax.clear()
             ax.imshow(frame)
-            ax.axis('off')
+            ax.axis("off")
             writer.grab_frame()
 
     plt.close(fig)

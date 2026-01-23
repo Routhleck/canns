@@ -29,8 +29,8 @@ from sklearn import preprocessing
 from tqdm import tqdm
 
 # Import PlotConfig for unified plotting
-from ..visualization import PlotConfig
-from ..visualization.core.jupyter_utils import (
+from ...visualization import PlotConfig
+from ...visualization.core.jupyter_utils import (
     display_animation_in_jupyter,
     is_jupyter_environment,
 )
@@ -2168,7 +2168,7 @@ def plot_2d_bump_on_manifold(
     """
     import matplotlib.animation as animation
 
-    from ..visualization.core.jupyter_utils import (
+    from ...visualization.core.jupyter_utils import (
         display_animation_in_jupyter,
         is_jupyter_environment,
     )

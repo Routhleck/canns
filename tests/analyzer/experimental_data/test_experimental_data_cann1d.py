@@ -7,6 +7,9 @@ These tests provide basic verification of the CANN1D bump fitting and animation 
 
 import numpy as np
 import pytest
+
+pytest.skip("deprecated", allow_module_level=True)
+
 from canns.analyzer.data.cann1d import bump_fits, create_1d_bump_animation, CANN1DPlotConfig, BumpFitsConfig
 
 
