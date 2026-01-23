@@ -79,15 +79,17 @@ def _render_torus_frame(frame_index: int, frame_data: dict[str, Any]) -> np.ndar
     )
 
     time_label = frame.get("time")
+    label_text = f"Frame: {frame_index + 1}/{len(frame_data['frames'])}"
     if time_label is not None:
-        ax.text2D(
-            0.05,
-            0.95,
-            f"Frame: {frame_index + 1}/{len(frame_data['frames'])}",
-            transform=ax.transAxes,
-            fontsize=12,
-            bbox=dict(facecolor="white", alpha=0.7),
-        )
+        label_text = f"{label_text} | Time: {time_label}"
+    ax.text2D(
+        0.05,
+        0.95,
+        label_text,
+        transform=ax.transAxes,
+        fontsize=12,
+        bbox=dict(facecolor="white", alpha=0.7),
+    )
 
     fig.tight_layout()
 

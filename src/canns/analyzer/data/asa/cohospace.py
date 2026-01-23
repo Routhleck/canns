@@ -52,6 +52,7 @@ def _align_activity_to_coords(
     times: np.ndarray | None = None,
     *,
     label: str = "activity",
+    auto_filter: bool = True,
 ) -> np.ndarray:
     """
     Align activity to coords by optional time indices and validate lengths.
@@ -70,7 +71,7 @@ def _align_activity_to_coords(
 
     if activity.shape[0] != coords.shape[0]:
         # Try to reproduce decode's zero-spike filtering if lengths mismatch.
-        if times is None and activity.ndim == 2:
+        if auto_filter and times is None and activity.ndim == 2:
             mask = np.sum(activity > 0, axis=1) >= 1
             if mask.sum() == coords.shape[0]:
                 activity = activity[mask]
@@ -196,6 +197,7 @@ def plot_cohospace_neuron(
     mode: str = "fr",  # "fr" or "spike"
     top_percent: float = 5.0,  # Used in FR mode
     times: np.ndarray | None = None,
+    auto_filter: bool = True,
     figsize: tuple = (6, 6),
     cmap: str = "hot",
     save_path: str | None = None,
@@ -217,6 +219,8 @@ def plot_cohospace_neuron(
         Activity matrix (continuous firing rate or binned spikes).
     times : ndarray, optional, shape (T_coords,)
         Optional indices to align activity to coords when coords are computed on a subset of timepoints.
+    auto_filter : bool
+        If True and lengths mismatch, auto-filter activity with activity>0 to mimic decode filtering.
     neuron_id : int
         Neuron index to visualize.
     mode : {"fr", "spike"}
@@ -229,7 +233,9 @@ def plot_cohospace_neuron(
     ax : matplotlib.axes.Axes
     """
     coords = np.asarray(coords)
-    activity = _align_activity_to_coords(coords, activity, times, label="activity")
+    activity = _align_activity_to_coords(
+        coords, activity, times, label="activity", auto_filter=auto_filter
+    )
     theta_deg = _coho_coords_to_degrees(coords)
 
     signal = activity[:, neuron_id]
@@ -293,6 +299,7 @@ def plot_cohospace_population(
     mode: str = "fr",  # "fr" or "spike"
     top_percent: float = 5.0,  # Used in FR mode
     times: np.ndarray | None = None,
+    auto_filter: bool = True,
     figsize: tuple = (6, 6),
     cmap: str = "hot",
     save_path: str | None = None,
@@ -316,6 +323,8 @@ def plot_cohospace_population(
     activity : ndarray, shape (T, N)
     times : ndarray, optional, shape (T_coords,)
         Optional indices to align activity to coords when coords are computed on a subset of timepoints.
+    auto_filter : bool
+        If True and lengths mismatch, auto-filter activity with activity>0 to mimic decode filtering.
     neuron_ids : iterable[int]
         Neuron indices to include (use range(N) to include all).
     mode : {"fr", "spike"}
@@ -328,7 +337,9 @@ def plot_cohospace_population(
     ax : matplotlib.axes.Axes
     """
     coords = np.asarray(coords)
-    activity = _align_activity_to_coords(coords, activity, times, label="activity")
+    activity = _align_activity_to_coords(
+        coords, activity, times, label="activity", auto_filter=auto_filter
+    )
     neuron_ids = np.asarray(neuron_ids, dtype=int)
 
     theta_deg = _coho_coords_to_degrees(coords)
@@ -393,6 +404,7 @@ def compute_cohoscore(
     activity: np.ndarray,
     top_percent: float = 2.0,
     times: np.ndarray | None = None,
+    auto_filter: bool = True,
 ) -> np.ndarray:
     """
     Compute a simple cohomology-space selectivity score (CohoScore) for each neuron.
@@ -414,6 +426,8 @@ def compute_cohoscore(
     activity : ndarray, shape (T, N)
     times : ndarray, optional, shape (T_coords,)
         Optional indices to align activity to coords when coords are computed on a subset of timepoints.
+    auto_filter : bool
+        If True and lengths mismatch, auto-filter activity with activity>0 to mimic decode filtering.
         Activity matrix (FR or spikes).
     top_percent : float | None
         Percentage for selecting active points (e.g., 2.0 means top 2%%). If None, use activity>0.
@@ -424,7 +438,9 @@ def compute_cohoscore(
         CohoScore per neuron (NaN for neurons with too few points).
     """
     coords = np.asarray(coords)
-    activity = _align_activity_to_coords(coords, activity, times, label="activity")
+    activity = _align_activity_to_coords(
+        coords, activity, times, label="activity", auto_filter=auto_filter
+    )
     T, N = activity.shape
 
     theta = coords % (2 * np.pi)  # Ensure values are in [0, 2π)
@@ -557,6 +573,7 @@ def plot_cohospace_neuron_skewed(
     mode="spike",
     top_percent=2.0,
     times: np.ndarray | None = None,
+    auto_filter: bool = True,
     save_path=None,
     show=None,
     ax=None,
@@ -582,9 +599,13 @@ def plot_cohospace_neuron_skewed(
         fr: use top_percent threshold
     top_percent : float
         Percentile for FR thresholding.
+    auto_filter : bool
+        If True and lengths mismatch, auto-filter activity with activity>0 to mimic decode filtering.
     """
     coords = np.asarray(coords)
-    activity = _align_activity_to_coords(coords, activity, times, label="activity")
+    activity = _align_activity_to_coords(
+        coords, activity, times, label="activity", auto_filter=auto_filter
+    )
 
     # --- normalize angles to [0, 2π)
     coords = coords % (2 * np.pi)
@@ -623,7 +644,8 @@ def plot_cohospace_neuron_skewed(
         if not config.ylabel:
             config.ylabel = r"$\frac{\sqrt{3}}{2}\theta_2$"
 
-    if ax is None:
+    created_fig = ax is None
+    if created_fig:
         fig, ax = plt.subplots(figsize=config.figsize)
     else:
         fig = ax.figure
@@ -719,7 +741,7 @@ def plot_cohospace_neuron_skewed(
     ax.set_ylabel(config.ylabel)
     ax.set_title(config.title)
 
-    if ax is None:
+    if created_fig:
         _ensure_parent_dir(config.save_path)
         finalize_figure(fig, config)
     else:
@@ -739,6 +761,7 @@ def plot_cohospace_population_skewed(
     mode="spike",
     top_percent=2.0,
     times: np.ndarray | None = None,
+    auto_filter: bool = True,
     save_path=None,
     show=False,
     ax=None,
@@ -753,9 +776,13 @@ def plot_cohospace_population_skewed(
 
     neuron_ids : list or ndarray
         Neurons to include (e.g. top-K by CohoScore).
+    auto_filter : bool
+        If True and lengths mismatch, auto-filter activity with activity>0 to mimic decode filtering.
     """
     coords = np.asarray(coords)
-    activity = _align_activity_to_coords(coords, activity, times, label="activity")
+    activity = _align_activity_to_coords(
+        coords, activity, times, label="activity", auto_filter=auto_filter
+    )
     coords = coords % (2 * np.pi)
 
     if config is None:
@@ -779,7 +806,8 @@ def plot_cohospace_population_skewed(
         if not config.ylabel:
             config.ylabel = r"$\frac{\sqrt{3}}{2}\theta_2$"
 
-    if ax is None:
+    created_fig = ax is None
+    if created_fig:
         fig, ax = plt.subplots(figsize=config.figsize)
     else:
         fig = ax.figure
@@ -847,7 +875,7 @@ def plot_cohospace_population_skewed(
     ax.set_ylabel(config.ylabel)
     ax.set_title(config.title)
 
-    if ax is None:
+    if created_fig:
         _ensure_parent_dir(config.save_path)
         finalize_figure(fig, config)
     else:

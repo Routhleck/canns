@@ -288,8 +288,6 @@ def decode_circular_coordinates2(
     save_path: str | None = None,
     num_circ: int = 2,  # Number of H1 cocycles/circular coordinates to decode
 ) -> dict:
-    import os
-
     from sklearn import preprocessing
 
     dec_tresh = 0.99

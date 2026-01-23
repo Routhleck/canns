@@ -7,12 +7,12 @@ from canns.analyzer import data
 from canns.analyzer.visualization import PlotConfigs
 from canns.data.loaders import load_grid_data
 
-gird_data = load_grid_data()
+grid_data = load_grid_data()
 
 spike_cfg = data.SpikeEmbeddingConfig(smooth=True, speed_filter=False, min_speed=2.5)
-spikes, *_ = data.embed_spike_trains(gird_data, config=spike_cfg)
+spikes, *_ = data.embed_spike_trains(grid_data, config=spike_cfg)
 
-asa_embedded = dict(gird_data)
+asa_embedded = dict(grid_data)
 asa_embedded["spike"] = spikes
 
 tda_cfg = data.TDAConfig(maxdim=1, do_shuffle=False, show=True, progress_bar=True)
