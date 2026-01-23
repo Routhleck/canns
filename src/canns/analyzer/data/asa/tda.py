@@ -295,7 +295,7 @@ def _pca(data, dim=2):
     """
     if dim < 2:
         return data, [0], np.array([])
-    m, n = data.shape
+    _ = data.shape
     # mean center the data
     # data -= data.mean(axis=0)
     # calculate the covariance matrix

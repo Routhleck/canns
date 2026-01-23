@@ -657,7 +657,7 @@ def plot_3d_bump_on_torus(
 
         # Initialize with first frame
         first_frame = frame_data[0]
-        surface = ax.plot_surface(
+        ax.plot_surface(
             torus_x,  # Pre-computed geometry
             torus_y,  # Pre-computed geometry
             torus_z,  # Pre-computed geometry
