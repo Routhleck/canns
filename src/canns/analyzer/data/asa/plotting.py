@@ -485,7 +485,7 @@ def plot_3d_bump_on_torus(
     output_dpi: int = 150,
     render_workers: int | None = None,
     **kwargs,
-) -> animation.FuncAnimation:
+) -> animation.FuncAnimation | None:
     """
     Visualize the movement of the neural activity bump on a torus using matplotlib animation.
 
@@ -525,7 +525,7 @@ def plot_3d_bump_on_torus(
             Figure size for the animation
 
     Returns:
-        matplotlib.animation.FuncAnimation : The animation object
+        matplotlib.animation.FuncAnimation | None: The animation object, or None when shown in Jupyter.
     """
     # Handle backward compatibility and configuration
     if config is None:
@@ -672,9 +672,6 @@ def plot_3d_bump_on_torus(
 
         def animate(frame_idx):
             """Optimized animation update - reuses pre-computed geometry."""
-            if frame_idx >= len(frame_data):
-                return (surface,)
-
             frame = frame_data[frame_idx]
 
             # 3D surfaces require clear (no blitting support), but minimize overhead
@@ -831,7 +828,6 @@ def _smooth_tuning_map(mtot, numangsint, sig, bClose=True):
         mtot_out (ndarray): Smoothed map matrix.
     """
     numangsint_1 = numangsint - 1
-    mid = int((numangsint_1) / 2)
     indstemp1 = np.zeros((numangsint_1, numangsint_1), dtype=int)
     indstemp1[indstemp1 == 0] = np.arange((numangsint_1) ** 2)
     mid = int((numangsint_1) / 2)
@@ -917,7 +913,7 @@ def plot_2d_bump_on_manifold(
     render_backend: str | None = "auto",
     output_dpi: int = 150,
     render_workers: int | None = None,
-):
+) -> animation.FuncAnimation | None:
     """
     Create 2D projection animation of CANN2D bump activity with full blitting support.
 

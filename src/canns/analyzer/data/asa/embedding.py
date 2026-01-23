@@ -76,7 +76,7 @@ def _extract_spike_data(
         elif isinstance(spike_data, dict):
             # Already a dictionary
             spikes_all = spike_data
-        elif isinstance(spike_data, list | np.ndarray):
+        elif isinstance(spike_data, (list, np.ndarray)):
             # List or array format
             spikes_all = spike_data
         else:

@@ -69,11 +69,11 @@ def decode_circular_coordinates(
 
     for c in ph_classes:
         cocycle = cocycles[iMax[-(c + 1)]]
-        coords1[c, :], inds = _get_coords(cocycle, threshold, len(indstemp), dists_land, coeff)
+        coords1[c, :], _ = _get_coords(cocycle, threshold, len(indstemp), dists_land, coeff)
 
     # Whether the user-provided dataset has ground-truth x/y/t.
     if real_ground:
-        sspikes, xx, yy, tt = embed_spike_trains(
+        sspikes, _, _, _ = embed_spike_trains(
             spike_data, config=SpikeEmbeddingConfig(smooth=True, speed_filter=True)
         )
     else:
@@ -93,7 +93,7 @@ def decode_circular_coordinates(
 
     # Whether the user-provided dataset has ground-truth x/y/t.
     if real_ground:
-        sspikes, xx, yy, tt = embed_spike_trains(
+        sspikes, _, _, _ = embed_spike_trains(
             spike_data, config=SpikeEmbeddingConfig(smooth=True, speed_filter=True)
         )
         spikes, __, __, __ = embed_spike_trains(
@@ -129,7 +129,7 @@ def decode_circular_coordinates(
         coordsbox = coords.copy()
         times_box = times.copy()
     else:
-        sspikes, xx, yy, tt = embed_spike_trains(
+        sspikes, _, _, _ = embed_spike_trains(
             spike_data, config=SpikeEmbeddingConfig(smooth=True, speed_filter=True)
         )
         spikes, __, __, __ = embed_spike_trains(
@@ -228,7 +228,7 @@ def decode_circular_coordinates1(
 
     for c in ph_classes:
         cocycle = cocycles[iMax[-(c + 1)]]
-        coords1[c, :], inds = _get_coords(cocycle, threshold, len(indstemp), dists_land, coeff)
+        coords1[c, :], _ = _get_coords(cocycle, threshold, len(indstemp), dists_land, coeff)
 
     sspikes = spike_data["spike"]
     num_neurons = sspikes.shape[1]

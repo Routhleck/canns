@@ -15,26 +15,17 @@ from sklearn import preprocessing
 from .config import Constants, ProcessingError, TDAConfig
 
 try:
-    from numba import jit, njit, prange
+    from numba import njit
 
     HAS_NUMBA = True
 except ImportError:
     HAS_NUMBA = False
-
-    def jit(*args, **kwargs):
-        def decorator(func):
-            return func
-
-        return decorator
 
     def njit(*args, **kwargs):
         def decorator(func):
             return func
 
         return decorator
-
-    def prange(x):
-        return range(x)
 
 
 def tda_vis(embed_data: np.ndarray, config: TDAConfig | None = None, **kwargs) -> dict[str, Any]:
@@ -303,7 +294,7 @@ def _pca(data, dim=2):
         evals (ndarray): Eigenvalues corresponding to the selected components.
     """
     if dim < 2:
-        return data, [0]
+        return data, [0], np.array([])
     m, n = data.shape
     # mean center the data
     # data -= data.mean(axis=0)
@@ -674,11 +665,6 @@ def _run_shuffle_analysis_multiprocessing(
         2: np.full(num_shuffles, np.nan),
     }
 
-    # Estimate runtime with a test iteration
-    logging.info("Running test iteration to estimate runtime...")
-
-    _ = _process_single_shuffle((0, sspikes, kwargs))
-
     # Prepare task list
     tasks = [(i, sspikes, kwargs) for i in range(num_shuffles)]
     logging.info(
@@ -702,7 +688,6 @@ def _run_shuffle_analysis_multiprocessing(
     return max_lifetimes
 
 
-@njit(fastmath=True)
 def _process_single_shuffle(args):
     """Process a single shuffle task."""
     i, sspikes, kwargs = args
