@@ -77,8 +77,12 @@ def decode_circular_coordinates(
     for c in ph_classes:
         cocycle = cocycles[iMax[-(c + 1)]]
         f, verts = _get_coords(cocycle, threshold, len(indstemp), dists_land, coeff)
-        coords1[c, :] = 0.0
-        coords1[c, verts] = f
+        if len(verts) != len(indstemp):
+            raise ValueError(
+                "Circular coordinate reconstruction returned fewer vertices than sampled points. "
+                "Increase n_points/active_times or use denser data."
+            )
+        coords1[c, :] = f
 
     # Whether the user-provided dataset has ground-truth x/y/t.
     if real_ground:
@@ -212,8 +216,12 @@ def decode_circular_coordinates1(
     for c in ph_classes:
         cocycle = cocycles[iMax[-(c + 1)]]
         f, verts = _get_coords(cocycle, threshold, len(indstemp), dists_land, coeff)
-        coords1[c, :] = 0.0
-        coords1[c, verts] = f
+        if len(verts) != len(indstemp):
+            raise ValueError(
+                "Circular coordinate reconstruction returned fewer vertices than sampled points. "
+                "Increase n_points/active_times or use denser data."
+            )
+        coords1[c, :] = f
 
     sspikes = spike_data["spike"]
     num_neurons = sspikes.shape[1]
@@ -331,8 +339,12 @@ def decode_circular_coordinates_multi(
         threshold = births1[idx] + (deaths1[idx] - births1[idx]) * dec_tresh
         cocycle = cocycles[idx]
         f, verts = _get_coords(cocycle, threshold, len(indstemp), dists_land, coeff)
-        coords1[i, :] = 0.0
-        coords1[i, verts] = f
+        if len(verts) != len(indstemp):
+            raise ValueError(
+                "Circular coordinate reconstruction returned fewer vertices than sampled points. "
+                "Increase n_points/active_times or use denser data."
+            )
+        coords1[i, :] = f
 
     sspikes = spike_data["spike"]
     num_neurons = sspikes.shape[1]

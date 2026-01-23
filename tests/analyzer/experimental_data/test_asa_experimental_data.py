@@ -4,24 +4,105 @@ Smoke tests for the ASA experimental-data analysis API.
 """
 
 import numpy as np
+import pytest
 
 from canns.analyzer import data
 from canns.analyzer.visualization import PlotConfig
+from canns.data.loaders import load_grid_data
 
 
-def create_mock_spike_data(num_neurons: int = 30, num_timepoints: int = 400):
+def create_mock_spike_data(
+    num_neurons: int = 30,
+    num_timepoints: int = 400,
+    density: float = 1.0,
+    structured: bool = False,
+    duration: float = 10.0,
+    seed: int = 0,
+):
     """Create mock spike train data for testing."""
-    rng = np.random.default_rng(0)
+    rng = np.random.default_rng(seed)
+    t = np.linspace(0, duration, num_timepoints, endpoint=False)
+    dt = t[1] - t[0] if num_timepoints > 1 else duration
+
+    if structured:
+        theta1 = np.cumsum(rng.normal(scale=0.12, size=num_timepoints)) % (2 * np.pi)
+        theta2 = np.cumsum(rng.normal(scale=0.10, size=num_timepoints)) % (2 * np.pi)
+        x = (
+            0.6 * np.cos(theta1)
+            + 0.4 * np.cos(theta2)
+            + rng.normal(scale=0.05, size=num_timepoints)
+        )
+        y = (
+            0.6 * np.sin(theta1)
+            + 0.4 * np.sin(theta2)
+            + rng.normal(scale=0.05, size=num_timepoints)
+        )
+
+        base_rate = 0.2
+        peak_rate = 1.5 * density
+        kappa = 1.2
+
+        spikes = {}
+        pref1 = rng.uniform(0, 2 * np.pi, size=num_neurons)
+        pref2 = rng.uniform(0, 2 * np.pi, size=num_neurons)
+        for i in range(num_neurons):
+            rate = base_rate + peak_rate * np.exp(
+                kappa * (np.cos(theta1 - pref1[i]) + np.cos(theta2 - pref2[i]))
+            )
+            counts = rng.poisson(rate * dt)
+            spike_times = []
+            for ti, c in enumerate(counts):
+                if c > 0:
+                    spike_times.extend(t[ti] + rng.random(c) * dt)
+            spikes[i] = np.sort(np.asarray(spike_times))
+        return {"spike": spikes, "t": t, "x": x, "y": y}
+
     spikes = {}
     for i in range(num_neurons):
-        num_spikes = rng.integers(0, 15)
-        spike_times = np.sort(rng.uniform(0, 1, num_spikes))
+        low = max(5, int(25 * density))
+        high = max(low + 1, int(60 * density))
+        num_spikes = rng.integers(low, high)
+        spike_times = np.sort(rng.uniform(0, duration, num_spikes))
         spikes[i] = spike_times
 
-    t = np.linspace(0, 1, num_timepoints)
-    x = np.cumsum(rng.standard_normal(num_timepoints) * 0.01)
-    y = np.cumsum(rng.standard_normal(num_timepoints) * 0.01)
+    x = np.cumsum(rng.standard_normal(num_timepoints) * 0.05)
+    y = np.cumsum(rng.standard_normal(num_timepoints) * 0.05)
     return {"spike": spikes, "t": t, "x": x, "y": y}
+
+
+def _subset_grid_data(
+    grid_data: dict,
+    num_neurons: int = 50,
+    num_timepoints: int = 3000,
+) -> dict:
+    spike_data = grid_data["spike"]
+    if hasattr(spike_data, "item") and callable(spike_data.item):
+        spike_data = spike_data.item()
+
+    t = grid_data["t"]
+    end_idx = min(num_timepoints, len(t))
+    if end_idx < 2:
+        return grid_data
+
+    t_window = t[:end_idx]
+    t_min = t_window[0]
+    t_max = t_window[-1]
+
+    if isinstance(spike_data, dict):
+        keys = sorted(spike_data.keys())[:num_neurons]
+        spikes = {}
+        for i, key in enumerate(keys):
+            s = np.asarray(spike_data[key])
+            spikes[i] = s[(s >= t_min) & (s <= t_max)]
+    else:
+        spikes = spike_data[:num_neurons]
+
+    result = {"spike": spikes, "t": t_window}
+    if "x" in grid_data:
+        result["x"] = grid_data["x"][:end_idx]
+    if "y" in grid_data:
+        result["y"] = grid_data["y"][:end_idx]
+    return result
 
 
 def test_embed_spike_trains_basic():
@@ -47,42 +128,61 @@ def test_embed_spike_trains_speed_filter():
 
 
 def test_tda_decode_and_cohomap():
-    mock_data = create_mock_spike_data(num_neurons=20, num_timepoints=300)
-    spike_cfg = data.SpikeEmbeddingConfig(smooth=True, speed_filter=False)
-    spikes, *_ = data.embed_spike_trains(mock_data, config=spike_cfg)
-
-    tda_cfg = data.TDAConfig(
-        dim=3,
-        num_times=8,
-        active_times=40,
-        k=20,
-        n_points=80,
-        metric="cosine",
-        nbs=40,
-        maxdim=1,
-        coeff=47,
-        show=False,
-        do_shuffle=False,
-        progress_bar=False,
+    # grid_data = load_grid_data()
+    # if grid_data is None:
+    grid_data = create_mock_spike_data(
+        num_neurons=50,
+        num_timepoints=3000,
+        density=2.0,
+        structured=True,
+        duration=30.0,
     )
+    # else:
+    #     grid_data = _subset_grid_data(grid_data, num_neurons=50, num_timepoints=3000)
 
-    persistence = data.tda_vis(spikes, config=tda_cfg)
+    spike_cfg = data.SpikeEmbeddingConfig(smooth=True, speed_filter=False)
+    spikes, *_ = data.embed_spike_trains(grid_data, config=spike_cfg)
 
-    spike_data = dict(mock_data)
+    spike_data = dict(grid_data)
     spike_data["spike"] = spikes
 
-    decoding = data.decode_circular_coordinates_multi(
-        persistence_result=persistence,
-        spike_data=spike_data,
-        num_circ=1,
-    )
+    decoding = None
+    for n_points in (120, 80, 60, 40):
+        tda_cfg = data.TDAConfig(
+            dim=3,
+            num_times=8,
+            active_times=max(3 * n_points, 60),
+            k=20,
+            n_points=n_points,
+            metric="cosine",
+            nbs=40,
+            maxdim=1,
+            coeff=47,
+            show=False,
+            do_shuffle=False,
+            progress_bar=False,
+        )
+
+        persistence = data.tda_vis(spikes, config=tda_cfg)
+        try:
+            decoding = data.decode_circular_coordinates_multi(
+                persistence_result=persistence,
+                spike_data=spike_data,
+                num_circ=1,
+            )
+            break
+        except ValueError:
+            continue
+
+    if decoding is None:
+        pytest.fail("decode_circular_coordinates_multi failed for all n_points settings")
 
     assert "coords" in decoding and "coordsbox" in decoding
 
     config = PlotConfig.for_static_plot(show=False)
     data.plot_cohomap_multi(
         decoding_result=decoding,
-        position_data={"x": mock_data["x"], "y": mock_data["y"]},
+        position_data={"x": grid_data["x"], "y": grid_data["y"]},
         config=config,
     )
 
