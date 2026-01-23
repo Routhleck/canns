@@ -76,7 +76,9 @@ def decode_circular_coordinates(
 
     for c in ph_classes:
         cocycle = cocycles[iMax[-(c + 1)]]
-        coords1[c, :], _ = _get_coords(cocycle, threshold, len(indstemp), dists_land, coeff)
+        f, verts = _get_coords(cocycle, threshold, len(indstemp), dists_land, coeff)
+        coords1[c, :] = 0.0
+        coords1[c, verts] = f
 
     # Whether the user-provided dataset has ground-truth x/y/t.
     if real_ground:
@@ -209,7 +211,9 @@ def decode_circular_coordinates1(
 
     for c in ph_classes:
         cocycle = cocycles[iMax[-(c + 1)]]
-        coords1[c, :], _ = _get_coords(cocycle, threshold, len(indstemp), dists_land, coeff)
+        f, verts = _get_coords(cocycle, threshold, len(indstemp), dists_land, coeff)
+        coords1[c, :] = 0.0
+        coords1[c, verts] = f
 
     sspikes = spike_data["spike"]
     num_neurons = sspikes.shape[1]
@@ -326,7 +330,9 @@ def decode_circular_coordinates_multi(
         idx = iMax[-(i + 1)]
         threshold = births1[idx] + (deaths1[idx] - births1[idx]) * dec_tresh
         cocycle = cocycles[idx]
-        coords1[i, :], _ = _get_coords(cocycle, threshold, len(indstemp), dists_land, coeff)
+        f, verts = _get_coords(cocycle, threshold, len(indstemp), dists_land, coeff)
+        coords1[i, :] = 0.0
+        coords1[i, verts] = f
 
     sspikes = spike_data["spike"]
     num_neurons = sspikes.shape[1]
