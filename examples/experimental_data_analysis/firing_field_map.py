@@ -9,14 +9,14 @@ from canns.analyzer import data
 from canns.analyzer.visualization import PlotConfigs
 from canns.data.loaders import load_grid_data
 
-asa = load_grid_data()
+grid_data = load_grid_data()
 
-spike_cfg = data.SpikeEmbeddingConfig(smooth=False, speed_filter=True, min_speed=2.5)
-spikes, *_ = data.embed_spike_trains(asa, config=spike_cfg)
+spike_cfg = data.SpikeEmbeddingConfig(smooth=True, speed_filter=False, min_speed=2.5)
+spikes, *_ = data.embed_spike_trains(grid_data, config=spike_cfg)
 
-x = asa["x"]
-y = asa["y"]
-neuron_id = 0
+x = grid_data["x"]
+y = grid_data["y"]
+neuron_id = 130
 
 frm_res = data.compute_frm(
     spikes,
@@ -25,7 +25,7 @@ frm_res = data.compute_frm(
     neuron_id,
     bins=50,
     min_occupancy=1,
-    smoothing=False,
+    smoothing=True,
     sigma=1.0,
     nan_for_empty=True,
 )
@@ -33,11 +33,13 @@ frm_res = data.compute_frm(
 out_dir = Path("Results/examples/frm")
 out_dir.mkdir(parents=True, exist_ok=True)
 
-config = PlotConfigs.frm(show=True)
+config = PlotConfigs.frm(
+    show=True,
+    save_path=f"{out_dir}/frm.png",
+)
 
-data.save_frm_png(
+data.plot_frm(
     frm_res.frm,
-    str(out_dir / "frm_neuron0000.png"),
     config=config,
     dpi=200,
 )

@@ -32,7 +32,7 @@ from .fr import (
     compute_fr_heatmap_matrix,
     compute_frm,
     save_fr_heatmap_png,
-    save_frm_png,
+    plot_frm,
 )
 from .path import (
     align_coords_to_position,
@@ -56,6 +56,7 @@ from .plotting import (
     plot_3d_bump_on_torus,
     plot_cohomap,
     plot_cohomap1,
+    plot_path_compare,
     plot_projection,
 )
 from .tda import (
@@ -105,6 +106,7 @@ __all__ = [
     "decode_circular_coordinates1",
     "decode_circular_coordinates2",
     "plot_projection",
+    "plot_path_compare",
     "plot_cohomap",
     "plot_cohomap1",
     "plot_3d_bump_on_torus",
@@ -113,7 +115,7 @@ __all__ = [
     "save_fr_heatmap_png",
     "FRMResult",
     "compute_frm",
-    "save_frm_png",
+    "plot_frm",
     "plot_cohospace_trajectory",
     "plot_cohospace_neuron",
     "plot_cohospace_population",

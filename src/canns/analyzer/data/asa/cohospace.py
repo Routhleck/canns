@@ -67,11 +67,23 @@ def _align_activity_to_coords(
             ) from exc
 
     if activity.shape[0] != coords.shape[0]:
-        raise ValueError(
-            f"{label} length must match coords length. Got {activity.shape[0]} vs {coords.shape[0]}. "
-            "If coords are computed on a subset of timepoints (e.g., decode['times']), pass "
-            "`times=decoding['times']` or slice the activity accordingly."
-        )
+        # Try to reproduce decode's zero-spike filtering if lengths mismatch.
+        if times is None and activity.ndim == 2:
+            mask = np.sum(activity > 0, axis=1) >= 1
+            if mask.sum() == coords.shape[0]:
+                activity = activity[mask]
+            else:
+                raise ValueError(
+                    f"{label} length must match coords length. Got {activity.shape[0]} vs {coords.shape[0]}. "
+                    "If coords are computed on a subset of timepoints (e.g., decode['times']), pass "
+                    "`times=decoding['times']` or slice the activity accordingly."
+                )
+        else:
+            raise ValueError(
+                f"{label} length must match coords length. Got {activity.shape[0]} vs {coords.shape[0]}. "
+                "If coords are computed on a subset of timepoints (e.g., decode['times']), pass "
+                "`times=decoding['times']` or slice the activity accordingly."
+            )
 
     return activity
 
@@ -214,7 +226,7 @@ def plot_cohospace_neuron(
     ax : matplotlib.axes.Axes
     """
     coords = np.asarray(coords)
-    # activity = _align_activity_to_coords(coords, activity, times, label="activity")
+    activity = _align_activity_to_coords(coords, activity, times, label="activity")
     theta_deg = _coho_coords_to_degrees(coords)
 
     signal = activity[:, neuron_id]

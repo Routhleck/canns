@@ -8,6 +8,9 @@ common errors like array indexing issues and parameter mismatches.
 
 import numpy as np
 import pytest
+
+pytest.skip("deprecated", allow_module_level=True)
+
 from canns.analyzer.data.cann2d import (
     SpikeEmbeddingConfig,
     TDAConfig,

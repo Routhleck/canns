@@ -337,6 +337,15 @@ class PlotConfigs:
         return PlotConfig.for_static_plot(**defaults)
 
     @staticmethod
+    def path_compare(**kwargs: Any) -> PlotConfig:
+        defaults: dict[str, Any] = {
+            "title": "Path Compare",
+            "figsize": (12, 5),
+        }
+        defaults.update(kwargs)
+        return PlotConfig.for_static_plot(**defaults)
+
+    @staticmethod
     def raster_plot(mode: str = "block", **kwargs: Any) -> PlotConfig:
         defaults: dict[str, Any] = {
             "title": "Raster Plot",

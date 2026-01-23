@@ -91,14 +91,20 @@ def compute_fr_heatmap_matrix(
 
 def save_fr_heatmap_png(
     M: np.ndarray,
-    save_path: Union[str, "os.PathLike[str]"],
     *,
     title: str = "Firing Rate Heatmap",
     xlabel: str = "Time",
     ylabel: str = "Neuron",
+    cmap: str | None = None,
+    interpolation: str | None = "nearest",
+    origin: str | None = "lower",
+    aspect: str | None = "auto",
+    clabel: str | None = None,
+    colorbar: bool = True,
     dpi: int = 200,
-    show: bool = False,
+    show: bool | None = None,
     config: PlotConfig | None = None,
+    **kwargs,
 ) -> None:
     """
     Save a heatmap PNG from a matrix (typically output of compute_fr_heatmap_matrix).
@@ -110,16 +116,20 @@ def save_fr_heatmap_png(
     """
     import matplotlib.pyplot as plt  # local import to keep ASA light
 
+    save_path = kwargs.pop("save_path", None)
+
     if config is None:
+        show_val = False if show is None else show
         config = PlotConfig.for_static_plot(
             title=title,
             xlabel=xlabel,
             ylabel=ylabel,
-            save_path=str(save_path),
-            show=show,
+            save_path=str(save_path) if save_path is not None else None,
+            show=show_val,
         )
     else:
-        config.save_path = str(save_path)
+        if save_path is not None:
+            config.save_path = str(save_path)
         if show is not None:
             config.show = show
         if not config.title:
@@ -129,15 +139,34 @@ def save_fr_heatmap_png(
         if not config.ylabel:
             config.ylabel = ylabel
 
+    if config.save_path is None:
+        raise ValueError("save_path must be provided via config.save_path or as a keyword argument.")
+
     config.save_dpi = dpi
 
     M = np.asarray(M)
+    if M.ndim != 2:
+        raise ValueError(f"M must be 2D for heatmap display, got shape={M.shape}")
     fig, ax = plt.subplots(figsize=config.figsize)
-    im = ax.imshow(M, aspect="auto", origin="lower")
+    plot_kwargs = config.to_matplotlib_kwargs()
+    if cmap is not None and "cmap" not in plot_kwargs:
+        plot_kwargs["cmap"] = cmap
+    if interpolation is not None and "interpolation" not in plot_kwargs:
+        plot_kwargs["interpolation"] = interpolation
+    if origin is not None and "origin" not in plot_kwargs:
+        plot_kwargs["origin"] = origin
+    if aspect is not None and "aspect" not in plot_kwargs:
+        plot_kwargs["aspect"] = aspect
+    if kwargs:
+        plot_kwargs.update(kwargs)
+
+    im = ax.imshow(M, **plot_kwargs)
     ax.set_title(config.title)
     ax.set_xlabel(config.xlabel)
     ax.set_ylabel(config.ylabel)
-    fig.colorbar(im, ax=ax, label="Value")
+    if colorbar:
+        label = clabel if clabel is not None else config.clabel
+        fig.colorbar(im, ax=ax, label=label)
     fig.tight_layout()
     _ensure_parent_dir(config.save_path)
     finalize_figure(fig, config)
@@ -273,30 +302,34 @@ def compute_frm(
     return FRMResult(frm=frm, occupancy=occupancy, spike_sum=spike_sum, x_edges=x_edges, y_edges=y_edges)
 
 
-def save_frm_png(
+def plot_frm(
     frm: np.ndarray,
-    save_path: Union[str, "os.PathLike[str]"],
     *,
     title: str = "Firing Rate Map",
     dpi: int = 200,
-    show: bool = False,
+    show: bool | None = None,
     config: PlotConfig | None = None,
+    **kwargs,
 ) -> None:
     """
     Save FRM as PNG. Expects frm as 2D array (bins,bins).
     """
-    import matplotlib.pyplot as plt  # local import
+    from ...visualization import plot_firing_field_heatmap
+
+    save_path = kwargs.pop("save_path", None)
 
     if config is None:
+        show_val = False if show is None else show
         config = PlotConfig.for_static_plot(
             title=title,
             xlabel="X bin",
             ylabel="Y bin",
-            save_path=str(save_path),
-            show=show,
+            save_path=str(save_path) if save_path is not None else None,
+            show=show_val,
         )
     else:
-        config.save_path = str(save_path)
+        if save_path is not None:
+            config.save_path = str(save_path)
         if show is not None:
             config.show = show
         if not config.title:
@@ -306,15 +339,15 @@ def save_frm_png(
         if not config.ylabel:
             config.ylabel = "Y bin"
 
+    if config.save_path is None:
+        raise ValueError("save_path must be provided via config.save_path or as a keyword argument.")
+
     config.save_dpi = dpi
 
     frm = np.asarray(frm)
-    fig, ax = plt.subplots(figsize=config.figsize)
-    im = ax.imshow(frm.T, origin="lower", aspect="auto")
-    ax.set_title(config.title)
-    ax.set_xlabel(config.xlabel)
-    ax.set_ylabel(config.ylabel)
-    fig.colorbar(im, ax=ax, label="Rate")
-    fig.tight_layout()
-    _ensure_parent_dir(config.save_path)
-    finalize_figure(fig, config)
+    plot_firing_field_heatmap(
+        frm,
+        config=config,
+        origin="lower",
+        **kwargs,
+    )

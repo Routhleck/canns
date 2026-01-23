@@ -227,6 +227,71 @@ def plot_projection(
     return fig
 
 
+def plot_path_compare(
+    x: np.ndarray,
+    y: np.ndarray,
+    coords: np.ndarray,
+    config: PlotConfig | None = None,
+    *,
+    title: str = "Path Compare",
+    figsize: tuple[int, int] = (12, 5),
+    show: bool = True,
+    save_path: str | None = None,
+) -> tuple[plt.Figure, np.ndarray]:
+    """Plot physical path vs decoded coho-space path side-by-side."""
+    from .path import draw_base_parallelogram, skew_transform, snake_wrap_trail_in_parallelogram
+
+    x = np.asarray(x).ravel()
+    y = np.asarray(y).ravel()
+    coords = np.asarray(coords)
+
+    if coords.ndim != 2 or coords.shape[1] < 1:
+        raise ValueError(f"coords must be 2D with at least 1 column, got {coords.shape}")
+
+    config = _ensure_plot_config(
+        config,
+        PlotConfig.for_static_plot,
+        title=title,
+        figsize=figsize,
+        save_path=save_path,
+        show=show,
+    )
+
+    fig, axes = plt.subplots(1, 2, figsize=config.figsize)
+    if config.title:
+        fig.suptitle(config.title)
+
+    ax0 = axes[0]
+    ax0.set_title("Physical path (x,y)")
+    ax0.set_aspect("equal", "box")
+    ax0.axis("off")
+    ax0.plot(x, y, lw=0.9, alpha=0.8)
+
+    ax1 = axes[1]
+    ax1.set_title("Decoded coho path")
+    ax1.set_aspect("equal", "box")
+    ax1.axis("off")
+
+    if coords.shape[1] >= 2:
+        theta2 = coords[:, :2] % (2 * np.pi)
+        xy = skew_transform(theta2)
+        draw_base_parallelogram(ax1)
+        trail = snake_wrap_trail_in_parallelogram(
+            xy, np.array([2 * np.pi, 0.0]), np.array([np.pi, np.sqrt(3) * np.pi])
+        )
+        ax1.plot(trail[:, 0], trail[:, 1], lw=0.9, alpha=0.9)
+    else:
+        th = coords[:, 0] % (2 * np.pi)
+        ax1.plot(np.cos(th), np.sin(th), lw=0.9, alpha=0.9)
+        ax1.set_xlim(-1.2, 1.2)
+        ax1.set_ylim(-1.2, 1.2)
+
+    fig.tight_layout()
+    _ensure_parent_dir(config.save_path)
+    finalize_figure(fig, config)
+    return fig, axes
+
+
 
 def plot_cohomap(
     decoding_result: dict[str, Any],
