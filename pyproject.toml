@@ -48,6 +48,8 @@ dependencies = [
     "scipy>=1.9.0",
     "seaborn>=0.13.2",
     "imageio[ffmpeg]>=2.37.0",
+    "textual>=7.3.0",
+    "climage>=0.2.2",
 ]
 
 
@@ -95,6 +97,7 @@ tpu = [
 [project.scripts]
 # Add script entry points here:
 canns = "canns:master"
+canns-tui = "canns.pipeline.asa:main"
 
 
 # ---- Build system ----

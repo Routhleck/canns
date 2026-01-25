@@ -27,7 +27,7 @@ CANNs is a Python library built on top of brainpy with performance‑critical mo
 - **Task-first API** – `canns.task.tracking` and `canns.task.open_loop_navigation` generate smooth tracking inputs, population coding stimuli, or import experimental trajectories.
 - **Rich analysis suite** – `canns.analyzer` covers energy landscapes, tuning curves, spike embeddings, UMAP/TDA helpers, and theta-sweep animations.
 - **Unified training** – `canns.trainer.HebbianTrainer` implements generic Hebbian learning and prediction, layered on the abstract `Trainer` base.
-- **Pipelines out of the box** – `canns.pipeline.ThetaSweepPipeline` orchestrates navigation tasks, direction/grid-cell networks, and visualisation in a single call.
+- **Pipeline workspace** – `canns.pipeline.ASAPipeline` provides an end-to-end ASA analysis workflow (TDA → decode → CohoMap/CohoSpace/FR/FRM) with a Textual TUI for interactive runs.
 - **Extensible foundations** – base classes (`BasicModel`, `Task`, `Trainer`, `Pipeline`) keep custom components consistent with the built-in ecosystem.
 
 ## Visual Gallery
@@ -77,6 +77,7 @@ pip install canns
 # Optional accelerators (Linux only)
 pip install canns[cuda12]
 pip install canns[tpu]
+
 ```
 
 ## Quick Start
@@ -112,7 +113,7 @@ us, inputs = bm.for_loop(
 )
 ```
 
-For an end-to-end theta sweep workflow, see `examples/pipeline/theta_sweep_from_external_data.py` or the `ThetaSweepPipeline` notebook in the docs.
+For the ASA pipeline, run the TUI via `python -m canns.pipeline.tui` and point it at your ASA `.npz` inputs.
 
 ## Documentation & Notebooks
 
