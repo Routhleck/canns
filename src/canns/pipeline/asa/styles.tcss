@@ -11,11 +11,11 @@
     height: 100%;
 }
 
-/* Left panel - responsive width for controls */
+/* Left panel - narrow action panel */
 #left-panel {
-    width: 35;  /* Reduced to make room for middle panel */
-    min-width: 30;
-    max-width: 40;
+    width: 22;
+    min-width: 20;
+    max-width: 26;
     height: 100%;  /* CRITICAL: Fill parent height */
     border-right: solid $primary;
     padding: 1;
@@ -37,12 +37,33 @@
     width: 100%;
 }
 
-/* Middle panel - file browser */
+/* Middle panel - parameters + file browser */
 #middle-panel {
-    width: 35;  /* Dedicated space for file tree */
+    layout: horizontal;
+    width: 0.5fr;
     min-width: 30;
     border-right: solid $primary;
+    padding: 0;
+}
+
+#params-panel {
+    width: 0.7fr;
     padding: 1;
+    border-right: solid $secondary;
+    height: 100%;
+}
+
+#params-header {
+    background: $boost;
+    padding: 1;
+    margin-bottom: 1;
+    text-style: bold;
+}
+
+#file-tree-panel {
+    width: 0.7fr;
+    padding: 1;
+    height: 100%;
 }
 
 #files-header {
@@ -53,19 +74,19 @@
 }
 
 #right-panel {
-    width: 1fr;
+    width: 1.5fr;
     padding: 1;
     height: 100%;
 }
 
 /* Results tabs take 75% of right panel height */
 #results-tabs {
-    height: 3fr;  /* 75% (3 out of 4 parts) */
+    height: 5fr;
 }
 
 /* Log viewer at bottom - 25% of right panel height */
 #log-viewer {
-    height: 1fr;  /* 25% (1 out of 4 parts) */
+    height: 1fr;
     border: solid $primary;
     padding: 1;
 }
@@ -118,6 +139,16 @@ Button {
     margin: 1 0;
 }
 
+#actions-bar {
+    width: 100%;
+    margin: 0 0 1 0;
+}
+
+#actions-bar Button {
+    width: 100%;
+    margin: 0 0 1 0;
+}
+
 #run-btn {
     width: 100%;
     margin-top: 2;
@@ -132,11 +163,21 @@ Button {
     margin-top: 1;
 }
 
-/* Image preview - compact for small terminals */
+/* Image preview - allow more space */
 ImagePreview {
-    height: 15;
+    height: 1fr;
+    min-height: 20;
     border: solid $accent;
     padding: 1;
+}
+
+#preview-path {
+    color: $text-muted;
+    margin-bottom: 1;
+}
+
+#preview-path-input {
+    margin-bottom: 1;
 }
 
 /* File tree - compact for small terminals, now full height */
@@ -164,7 +205,12 @@ TabbedContent {
 }
 
 TabPane {
-    padding: 2;
+    padding: 1;
+    height: 100%;
+}
+
+TabbedContent > ContentSwitcher {
+    height: 1fr;
 }
 
 /* Result status */

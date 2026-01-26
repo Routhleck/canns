@@ -7,49 +7,151 @@ from pathlib import Path
 from typing import Optional
 
 from textual.app import ComposeResult
-from textual.containers import Container, Vertical
+from rich.ansi import AnsiDecoder
+from rich.text import Text
+from textual.containers import Horizontal, Vertical, ScrollableContainer
 from textual.widgets import Button, Static, Input, Select, Label
 
 
-class ImagePreview(Container):
+class ImagePreview(Vertical):
     """Widget for previewing images in the terminal using climage."""
 
     DEFAULT_CSS = """
     ImagePreview {
-        height: 20;
+        height: auto;
+        min-height: 20;
         border: solid $accent;
         padding: 1;
+    }
+    #preview-content {
+        width: 100%;
+        height: auto;
+    }
+    #preview-scroll {
+        height: 1fr;
+    }
+    #preview-controls Button {
+        margin: 0 1 0 0;
+    }
+    #preview-arrows Button {
+        margin: 0 1 0 0;
+    }
+    #preview-controls, #preview-arrows {
+        height: auto;
     }
     """
 
     def __init__(self, image_path: Optional[Path] = None, **kwargs):
         super().__init__(**kwargs)
         self.image_path = image_path
+        self._zoom_step = 0
 
     def compose(self) -> ComposeResult:
         yield Label("Image Preview", id="preview-label")
-        yield Static("No image loaded", id="preview-content")
-        yield Button("Open Externally", id="preview-open-btn")
+        yield Static("Path: (none)", id="preview-path")
+        yield Input(value="", id="preview-path-input")
+        with Horizontal(id="preview-controls"):
+            yield Button("Load", id="preview-load-btn")
+            yield Button("Open", id="preview-open-btn")
+            yield Button("Zoom +", id="preview-zoom-in-btn")
+            yield Button("Zoom -", id="preview-zoom-out-btn")
+            yield Button("Fit", id="preview-zoom-fit-btn")
+        with Horizontal(id="preview-arrows"):
+            yield Button("←", id="preview-pan-left-btn")
+            yield Button("→", id="preview-pan-right-btn")
+            yield Button("↑", id="preview-pan-up-btn")
+            yield Button("↓", id="preview-pan-down-btn")
+        with ScrollableContainer(id="preview-scroll"):
+            yield Static("No image loaded", id="preview-content")
+
+    def on_button_pressed(self, event: Button.Pressed) -> None:
+        if event.button.id == "preview-load-btn":
+            raw = self.query_one("#preview-path-input", Input).value.strip()
+            if not raw:
+                self.update_image(None)
+                return
+            path = self._resolve_path(raw)
+            self.update_image(path)
+        elif event.button.id == "preview-zoom-in-btn":
+            self._zoom_step += 1
+            self.update_image(self.image_path)
+        elif event.button.id == "preview-zoom-out-btn":
+            self._zoom_step -= 1
+            self.update_image(self.image_path)
+        elif event.button.id == "preview-zoom-fit-btn":
+            self._zoom_step = 0
+            self.update_image(self.image_path)
+        elif event.button.id in {
+            "preview-pan-left-btn",
+            "preview-pan-right-btn",
+            "preview-pan-up-btn",
+            "preview-pan-down-btn",
+        }:
+            scroll = self.query_one("#preview-scroll", ScrollableContainer)
+            dx = 0
+            dy = 0
+            step = 5
+            if event.button.id == "preview-pan-left-btn":
+                dx = -step
+            elif event.button.id == "preview-pan-right-btn":
+                dx = step
+            elif event.button.id == "preview-pan-up-btn":
+                dy = -step
+            elif event.button.id == "preview-pan-down-btn":
+                dy = step
+            scroll.scroll_relative(x=dx, y=dy, animate=False)
+
+    def on_resize(self, event) -> None:
+        if self.image_path and self.image_path.exists():
+            self.update_image(self.image_path)
 
     def update_image(self, path: Optional[Path]):
         """Update the previewed image."""
         self.image_path = path
         content = self.query_one("#preview-content", Static)
+        path_label = self.query_one("#preview-path", Static)
+        path_input = self.query_one("#preview-path-input", Input)
 
         if path is None or not path.exists():
             content.update("No image loaded")
+            path_label.update("Path: (none)")
+            path_input.value = ""
             return
+        path_label.update(f"Path: {path}")
+        path_input.value = str(path)
 
         # Try to use climage for terminal preview
         try:
             import climage
 
-            img_output = climage.convert(str(path), width=60, is_unicode=True)
-            content.update(img_output)
+            scroll = self.query_one("#preview-scroll", ScrollableContainer)
+            base_width = max(20, scroll.size.width - 4)
+            base_height = max(8, scroll.size.height - 2)
+            scale = max(0.4, 1 + (self._zoom_step * 0.1))
+            width = max(20, int(base_width * scale))
+            height = max(8, int(base_height * scale))
+            try:
+                img_output = climage.convert(str(path), width=width, height=height, is_unicode=True)
+            except TypeError:
+                img_output = climage.convert(str(path), width=width, is_unicode=True)
+            decoder = AnsiDecoder()
+            chunks = list(decoder.decode(img_output))
+            content.update(Text("\n").join(chunks) if chunks else "")
         except ImportError:
             content.update(f"Image: {path.name}\n(Install climage for preview)")
         except Exception as e:
             content.update(f"Error loading image: {e}")
+
+    def _resolve_path(self, raw: str) -> Path:
+        path = Path(raw).expanduser()
+        if path.is_absolute():
+            return path
+        app = getattr(self, "app", None)
+        if app is not None:
+            state = getattr(app, "state", None)
+            if state is not None and hasattr(state, "workdir"):
+                return Path(state.workdir) / path
+        return Path.cwd() / path
 
 
 class ParamGroup(Vertical):
@@ -100,6 +202,8 @@ class LogViewer(Vertical):
 
         content = self.query_one("#log-content", Static)
         content.update("\n".join(self.log_lines))
+        # Auto-scroll to latest entry
+        self.scroll_end(animate=False, immediate=True)
 
     def clear(self):
         """Clear all log messages."""

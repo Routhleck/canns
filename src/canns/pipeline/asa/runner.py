@@ -45,6 +45,7 @@ class PipelineRunner:
         self._aligned_pos: Optional[Dict[str, np.ndarray]] = None
         self._input_hash: Optional[str] = None
         self._embed_hash: Optional[str] = None
+        self._mpl_ready: bool = False
 
     def has_preprocessed_data(self) -> bool:
         """Check if preprocessing has been completed."""
@@ -82,8 +83,26 @@ class PipelineRunner:
         payload = json.dumps(self._json_safe(obj), sort_keys=True, ensure_ascii=True).encode("utf-8")
         return self._hash_bytes(payload)
 
+    def _ensure_matplotlib_backend(self) -> None:
+        """Force a non-interactive Matplotlib backend for worker threads."""
+        if self._mpl_ready:
+            return
+        try:
+            import os
+            os.environ.setdefault("MPLBACKEND", "Agg")
+            import matplotlib
+            try:
+                matplotlib.use("Agg", force=True)
+            except TypeError:
+                matplotlib.use("Agg")
+        except Exception:
+            pass
+        self._mpl_ready = True
     def _cache_dir(self, state: WorkflowState) -> Path:
-        return state.workdir / ".asa_cache"
+        return self._results_dir(state) / ".asa_cache"
+
+    def _results_dir(self, state: WorkflowState) -> Path:
+        return state.workdir / "Results"
 
     def _stage_cache_path(self, stage_dir: Path) -> Path:
         return stage_dir / "cache.json"
@@ -311,6 +330,8 @@ class PipelineRunner:
             if self._input_hash is None:
                 self._input_hash = self._compute_input_hash(state)
 
+            self._ensure_matplotlib_backend()
+
             # Stage 3: Analysis (mode-dependent)
             log_callback(f"Running {state.analysis_mode} analysis...")
             progress_callback(40)
@@ -404,7 +425,7 @@ class PipelineRunner:
         from canns.analyzer.data.asa.tda import _plot_barcode, _plot_barcode_with_shuffle
 
         # Create output directory
-        out_dir = state.workdir / "TDA"
+        out_dir = self._results_dir(state) / "TDA"
         out_dir.mkdir(parents=True, exist_ok=True)
 
         # Get parameters
@@ -429,6 +450,11 @@ class PipelineRunner:
 
         if self._embed_data is None:
             raise ProcessingError("No preprocessed data available. Run preprocessing first.")
+        if not isinstance(self._embed_data, np.ndarray) or self._embed_data.ndim != 2:
+            raise ProcessingError(
+                "TDA requires a dense spike matrix (T,N). "
+                "Please choose 'Embed Spike Trains' in preprocessing or provide a dense spike matrix in the .npz."
+            )
 
         persistence_path = out_dir / "persistence.npz"
         barcode_path = out_dir / "barcode.png"
@@ -440,8 +466,16 @@ class PipelineRunner:
             log_callback("♻️ Using cached TDA results.")
             return {"persistence": persistence_path, "barcode": barcode_path}
 
+        embed_data = self._embed_data
+        if params.get("standardize", False):
+            try:
+                from sklearn.preprocessing import StandardScaler
+                embed_data = StandardScaler().fit_transform(embed_data)
+            except Exception as e:
+                raise ProcessingError(f"StandardScaler failed: {e}") from e
+
         result = tda_vis(
-            embed_data=self._embed_data,
+            embed_data=embed_data,
             config=config,
         )
 
@@ -478,16 +512,20 @@ class PipelineRunner:
         log_callback,
     ) -> Dict[str, Any]:
         """Load cached decoding or run decode_circular_coordinates."""
-        from canns.analyzer.data.asa import decode_circular_coordinates
+        from canns.analyzer.data.asa import decode_circular_coordinates, decode_circular_coordinates_multi
 
-        decode_dir = state.workdir / "CohoMap"
+        decode_dir = self._results_dir(state) / "CohoMap"
         decode_dir.mkdir(parents=True, exist_ok=True)
         decode_path = decode_dir / "decoding.npz"
 
         params = state.analysis_params
+        decode_version = str(params.get("decode_version", "v2"))
+        num_circ = int(params.get("num_circ", 2))
         decode_params = {
             "real_ground": params.get("real_ground", True),
             "real_of": params.get("real_of", True),
+            "decode_version": decode_version,
+            "num_circ": num_circ,
         }
         persistence_hash = self._hash_file(persistence_path)
         decode_hash = self._hash_obj({"persistence_hash": persistence_hash, "params": decode_params})
@@ -499,13 +537,26 @@ class PipelineRunner:
             return self._load_npz_dict(decode_path)
 
         log_callback("Decoding circular coordinates...")
-        decode_result = decode_circular_coordinates(
-            persistence_result=self._load_npz_dict(persistence_path),
-            spike_data=asa_data,
-            real_ground=decode_params["real_ground"],
-            real_of=decode_params["real_of"],
-            save_path=str(decode_path),
-        )
+        persistence_result = self._load_npz_dict(persistence_path)
+        if decode_version == "v0":
+            decode_result = decode_circular_coordinates(
+                persistence_result=persistence_result,
+                spike_data=asa_data,
+                real_ground=decode_params["real_ground"],
+                real_of=decode_params["real_of"],
+                save_path=str(decode_path),
+            )
+        else:
+            if self._embed_data is None:
+                raise ProcessingError("No preprocessed data available for decode v2.")
+            spike_data = dict(asa_data)
+            spike_data["spike"] = self._embed_data
+            decode_result = decode_circular_coordinates_multi(
+                persistence_result=persistence_result,
+                spike_data=spike_data,
+                save_path=str(decode_path),
+                num_circ=num_circ,
+            )
 
         meta["decode_hash"] = decode_hash
         meta["persistence_hash"] = persistence_hash
@@ -520,21 +571,25 @@ class PipelineRunner:
         from canns.analyzer.data.asa import plot_cohomap_multi
         from canns.analyzer.visualization import PlotConfigs
 
-        tda_dir = state.workdir / "TDA"
+        tda_dir = self._results_dir(state) / "TDA"
         persistence_path = tda_dir / "persistence.npz"
         if not persistence_path.exists():
             raise ProcessingError("TDA results not found. Run TDA analysis first.")
 
-        out_dir = state.workdir / "CohoMap"
+        out_dir = self._results_dir(state) / "CohoMap"
         out_dir.mkdir(parents=True, exist_ok=True)
 
         decode_result = self._load_or_run_decode(asa_data, persistence_path, state, log_callback)
+
+        params = state.analysis_params
+        subsample = int(params.get("cohomap_subsample", 10))
 
         cohomap_path = out_dir / "cohomap.png"
         stage_hash = self._hash_obj(
             {
                 "decode_hash": self._load_cache_meta(self._stage_cache_path(out_dir)).get("decode_hash"),
                 "plot": "cohomap",
+                "subsample": subsample,
             }
         )
         if self._stage_cache_hit(out_dir, stage_hash, [cohomap_path]):
@@ -548,6 +603,7 @@ class PipelineRunner:
             decoding_result=decode_result,
             position_data={"x": pos["x"], "y": pos["y"]},
             config=config,
+            subsample=subsample,
         )
 
         self._write_cache_meta(
@@ -564,14 +620,11 @@ class PipelineRunner:
         self, asa_data: Dict[str, Any], state: WorkflowState, log_callback
     ) -> Dict[str, Path]:
         """Run path comparison visualization."""
-        from canns.analyzer.data.asa import (
-            align_coords_to_position,
-            apply_angle_scale,
-            plot_path_compare,
-        )
+        from canns.analyzer.data.asa import align_coords_to_position, apply_angle_scale, plot_path_compare
+        from canns.analyzer.data.asa.path import find_coords_matrix, find_times_box, resolve_time_slice
         from canns.analyzer.visualization import PlotConfigs
 
-        tda_dir = state.workdir / "TDA"
+        tda_dir = self._results_dir(state) / "TDA"
         persistence_path = tda_dir / "persistence.npz"
         if not persistence_path.exists():
             raise ProcessingError("TDA results not found. Run TDA analysis first.")
@@ -579,41 +632,105 @@ class PipelineRunner:
         decode_result = self._load_or_run_decode(asa_data, persistence_path, state, log_callback)
 
         # Create output directory
-        out_dir = state.workdir / "PathCompare"
+        out_dir = self._results_dir(state) / "PathCompare"
         out_dir.mkdir(parents=True, exist_ok=True)
 
         params = state.analysis_params
         angle_scale = params.get("angle_scale", "rad")
+        dim_mode = params.get("dim_mode", "2d")
+        dim = int(params.get("dim", 1))
+        dim1 = int(params.get("dim1", 1))
+        dim2 = int(params.get("dim2", 2))
+        use_box = bool(params.get("use_box", False))
+        interp_full = bool(params.get("interp_full", True))
+        coords_key = params.get("coords_key")
+        times_key = params.get("times_key")
+        slice_mode = params.get("slice_mode", "time")
+        tmin = params.get("tmin")
+        tmax = params.get("tmax")
+        imin = params.get("imin")
+        imax = params.get("imax")
+        stride = int(params.get("stride", 1))
 
-        coords = np.asarray(decode_result.get("coords"))
-        if coords.ndim != 2:
-            raise ProcessingError(f"decode_result['coords'] must be 2D, got {coords.shape}")
+        coords_raw, _ = find_coords_matrix(
+            decode_result,
+            coords_key=coords_key,
+            prefer_box_fallback=use_box,
+        )
+
+        if dim_mode == "1d":
+            idx = max(0, dim - 1)
+            if idx >= coords_raw.shape[1]:
+                raise ProcessingError(f"dim out of range for coords shape {coords_raw.shape}")
+            coords2 = coords_raw[:, [idx]]
+        else:
+            idx1 = max(0, dim1 - 1)
+            idx2 = max(0, dim2 - 1)
+            if idx1 >= coords_raw.shape[1] or idx2 >= coords_raw.shape[1]:
+                raise ProcessingError(f"dim1/dim2 out of range for coords shape {coords_raw.shape}")
+            coords2 = coords_raw[:, [idx1, idx2]]
 
         pos = self._aligned_pos if self._aligned_pos is not None else asa_data
         t_full = np.asarray(pos["t"]).ravel()
         x_full = np.asarray(pos["x"]).ravel()
         y_full = np.asarray(pos["y"]).ravel()
 
+        if use_box:
+            if times_key:
+                times_box = decode_result.get(times_key)
+            else:
+                times_box, _ = find_times_box(decode_result)
+        else:
+            times_box = None
+
         log_callback("Aligning decoded coordinates to position...")
         t_use, x_use, y_use, coords_use, _ = align_coords_to_position(
             t_full=t_full,
             x_full=x_full,
             y_full=y_full,
-            coords2=coords,
-            use_box=True,
-            times_box=decode_result.get("times_box", None),
-            interp_to_full=True,
+            coords2=coords2,
+            use_box=use_box,
+            times_box=times_box,
+            interp_to_full=interp_full,
         )
         scale = str(angle_scale) if str(angle_scale) in {"rad", "deg", "unit", "auto"} else "rad"
         coords_use = apply_angle_scale(coords_use, scale)
 
+        if slice_mode == "index":
+            i0, i1 = resolve_time_slice(t_use, None, None, imin, imax)
+        else:
+            i0, i1 = resolve_time_slice(t_use, tmin, tmax, None, None)
+
+        stride = max(1, stride)
+        idx = slice(i0, i1, stride)
+        t_use = t_use[idx]
+        x_use = x_use[idx]
+        y_use = y_use[idx]
+        coords_use = coords_use[idx]
+
         out_path = out_dir / "path_compare.png"
-        decode_meta = self._load_cache_meta(self._stage_cache_path(state.workdir / "CohoMap"))
+        decode_meta = self._load_cache_meta(self._stage_cache_path(self._results_dir(state) / "CohoMap"))
         stage_hash = self._hash_obj(
             {
                 "persistence": self._hash_file(persistence_path),
                 "decode_hash": decode_meta.get("decode_hash"),
-                "params": {"angle_scale": scale},
+                "params": {
+                    "angle_scale": scale,
+                    "dim_mode": dim_mode,
+                    "dim": dim,
+                    "dim1": dim1,
+                    "dim2": dim2,
+                    "use_box": use_box,
+                    "interp_full": interp_full,
+                    "coords_key": coords_key,
+                    "times_key": times_key,
+                    "slice_mode": slice_mode,
+                    "tmin": tmin,
+                    "tmax": tmax,
+                    "imin": imin,
+                    "imax": imax,
+                    "stride": stride,
+                },
             }
         )
         if self._stage_cache_hit(out_dir, stage_hash, [out_path]):
@@ -636,16 +753,20 @@ class PipelineRunner:
             plot_cohospace_neuron,
             plot_cohospace_population,
         )
+        from canns.analyzer.data.asa.cohospace import (
+            plot_cohospace_neuron_skewed,
+            plot_cohospace_population_skewed,
+        )
         from canns.analyzer.visualization import PlotConfigs
 
-        tda_dir = state.workdir / "TDA"
+        tda_dir = self._results_dir(state) / "TDA"
         persistence_path = tda_dir / "persistence.npz"
         if not persistence_path.exists():
             raise ProcessingError("TDA results not found. Run TDA analysis first.")
 
         decode_result = self._load_or_run_decode(asa_data, persistence_path, state, log_callback)
 
-        out_dir = state.workdir / "CohoSpace"
+        out_dir = self._results_dir(state) / "CohoSpace"
         out_dir.mkdir(parents=True, exist_ok=True)
 
         params = state.analysis_params
@@ -653,12 +774,43 @@ class PipelineRunner:
 
         coords = np.asarray(decode_result.get("coords"))
         coordsbox = np.asarray(decode_result.get("coordsbox"))
-        if coords.ndim != 2 or coords.shape[1] < 2:
-            raise ProcessingError("decode_result['coords'] must be 2D with >=2 columns.")
+        if coords.ndim != 2 or coords.shape[1] < 1:
+            raise ProcessingError("decode_result['coords'] must be 2D.")
 
-        activity = self._embed_data if self._embed_data is not None else np.asarray(asa_data.get("spike"))
+        dim_mode = str(params.get("dim_mode", "2d"))
+        dim = int(params.get("dim", 1))
+        dim1 = int(params.get("dim1", 1))
+        dim2 = int(params.get("dim2", 2))
+        mode = str(params.get("mode", "fr"))
+        top_percent = float(params.get("top_percent", 5.0))
+        view = str(params.get("view", "both"))
+        subsample = int(params.get("subsample", 2))
+        unfold = str(params.get("unfold", "square"))
+        skew_show_grid = bool(params.get("skew_show_grid", True))
+        skew_tiles = int(params.get("skew_tiles", 0))
 
-        decode_meta = self._load_cache_meta(self._stage_cache_path(state.workdir / "CohoMap"))
+        def pick_coords(arr: np.ndarray) -> np.ndarray:
+            if dim_mode == "1d":
+                idx = max(0, dim - 1)
+                if idx >= arr.shape[1]:
+                    raise ProcessingError(f"dim out of range for coords shape {arr.shape}")
+                one = arr[:, [idx]]
+                return np.hstack([one, np.zeros_like(one)])
+            idx1 = max(0, dim1 - 1)
+            idx2 = max(0, dim2 - 1)
+            if idx1 >= arr.shape[1] or idx2 >= arr.shape[1]:
+                raise ProcessingError(f"dim1/dim2 out of range for coords shape {arr.shape}")
+            return arr[:, [idx1, idx2]]
+
+        coords2 = pick_coords(coords)
+        coordsbox2 = pick_coords(coordsbox) if coordsbox.ndim == 2 else coords2
+
+        if mode == "spike":
+            activity = np.asarray(asa_data.get("spike"))
+        else:
+            activity = self._embed_data if self._embed_data is not None else np.asarray(asa_data.get("spike"))
+
+        decode_meta = self._load_cache_meta(self._stage_cache_path(self._results_dir(state) / "CohoMap"))
         stage_hash = self._hash_obj(
             {
                 "persistence": self._hash_file(persistence_path),
@@ -667,55 +819,84 @@ class PipelineRunner:
             }
         )
         meta_path = self._stage_cache_path(out_dir)
-        required = [out_dir / "cohospace_trajectory.png", out_dir / "cohospace_population.png"]
+        required = [out_dir / "cohospace_trajectory.png"]
+        view = str(params.get("view", "both"))
         neuron_id = params.get("neuron_id")
-        if neuron_id is not None:
+        if view in {"both", "population"}:
+            required.append(out_dir / "cohospace_population.png")
+        if neuron_id is not None and view in {"both", "single"}:
             required.append(out_dir / f"cohospace_neuron_{neuron_id}.png")
 
         if self._stage_cache_hit(out_dir, stage_hash, required):
             log_callback("♻️ Using cached CohoSpace plots.")
-            artifacts = {
-                "trajectory": out_dir / "cohospace_trajectory.png",
-            }
-            if neuron_id is not None:
+            artifacts = {"trajectory": out_dir / "cohospace_trajectory.png"}
+            if neuron_id is not None and view in {"both", "single"}:
                 artifacts["neuron"] = out_dir / f"cohospace_neuron_{neuron_id}.png"
-            artifacts["population"] = out_dir / "cohospace_population.png"
+            if view in {"both", "population"}:
+                artifacts["population"] = out_dir / "cohospace_population.png"
             return artifacts
 
         log_callback("Plotting cohomology space trajectory...")
         traj_path = out_dir / "cohospace_trajectory.png"
         traj_cfg = PlotConfigs.cohospace_trajectory(show=False, save_path=str(traj_path))
-        plot_cohospace_trajectory(coords=coords[:, :2], times=None, subsample=2, config=traj_cfg)
+        plot_cohospace_trajectory(coords=coords2, times=None, subsample=subsample, config=traj_cfg)
         artifacts["trajectory"] = traj_path
 
         neuron_id = params.get("neuron_id", None)
-        if neuron_id is not None:
+        if neuron_id is not None and view in {"both", "single"}:
             log_callback(f"Plotting neuron {neuron_id}...")
             neuron_path = out_dir / f"cohospace_neuron_{neuron_id}.png"
-            neuron_cfg = PlotConfigs.cohospace_neuron(show=False, save_path=str(neuron_path))
-            plot_cohospace_neuron(
-                coords=coordsbox[:, :2],
-                activity=activity,
-                neuron_id=int(neuron_id),
-                mode=params.get("mode", "fr"),
-                top_percent=float(params.get("top_percent", 5.0)),
-                config=neuron_cfg,
-            )
+            if unfold == "skew":
+                plot_cohospace_neuron_skewed(
+                    coords=coordsbox2,
+                    activity=activity,
+                    neuron_id=int(neuron_id),
+                    mode=mode,
+                    top_percent=top_percent,
+                    save_path=str(neuron_path),
+                    show=False,
+                    show_grid=skew_show_grid,
+                    n_tiles=skew_tiles,
+                )
+            else:
+                neuron_cfg = PlotConfigs.cohospace_neuron(show=False, save_path=str(neuron_path))
+                plot_cohospace_neuron(
+                    coords=coordsbox2,
+                    activity=activity,
+                    neuron_id=int(neuron_id),
+                    mode=mode,
+                    top_percent=top_percent,
+                    config=neuron_cfg,
+                )
             artifacts["neuron"] = neuron_path
 
-        log_callback("Plotting population activity...")
-        pop_path = out_dir / "cohospace_population.png"
-        pop_cfg = PlotConfigs.cohospace_population(show=False, save_path=str(pop_path))
-        neuron_ids = list(range(activity.shape[1]))
-        plot_cohospace_population(
-            coords=coords[:, :2],
-            activity=activity,
-            neuron_ids=neuron_ids,
-            mode=params.get("mode", "fr"),
-            top_percent=float(params.get("top_percent", 5.0)),
-            config=pop_cfg,
-        )
-        artifacts["population"] = pop_path
+        if view in {"both", "population"}:
+            log_callback("Plotting population activity...")
+            pop_path = out_dir / "cohospace_population.png"
+            neuron_ids = list(range(activity.shape[1]))
+            if unfold == "skew":
+                plot_cohospace_population_skewed(
+                    coords=coords2,
+                    activity=activity,
+                    neuron_ids=neuron_ids,
+                    mode=mode,
+                    top_percent=top_percent,
+                    save_path=str(pop_path),
+                    show=False,
+                    show_grid=skew_show_grid,
+                    n_tiles=skew_tiles,
+                )
+            else:
+                pop_cfg = PlotConfigs.cohospace_population(show=False, save_path=str(pop_path))
+                plot_cohospace_population(
+                    coords=coords2,
+                    activity=activity,
+                    neuron_ids=neuron_ids,
+                    mode=mode,
+                    top_percent=top_percent,
+                    config=pop_cfg,
+                )
+            artifacts["population"] = pop_path
 
         self._write_cache_meta(meta_path, {"hash": stage_hash})
         return artifacts
@@ -727,16 +908,22 @@ class PipelineRunner:
         from canns.analyzer.data.asa import compute_fr_heatmap_matrix, save_fr_heatmap_png
         from canns.analyzer.visualization import PlotConfigs
 
-        out_dir = state.workdir / "FR"
+        out_dir = self._results_dir(state) / "FR"
         out_dir.mkdir(parents=True, exist_ok=True)
 
         params = state.analysis_params
         neuron_range = params.get("neuron_range", None)
         time_range = params.get("time_range", None)
         normalize = params.get("normalize", "zscore_per_neuron")
+        mode = params.get("mode", "fr")
 
-        if self._embed_data is None:
-            raise ProcessingError("No preprocessed data available. Run preprocessing first.")
+        if mode == "spike":
+            spike_data = asa_data.get("spike")
+        else:
+            spike_data = self._embed_data
+
+        if spike_data is None:
+            raise ProcessingError("No spike data available for FR.")
 
         out_path = out_dir / "fr_heatmap.png"
         stage_hash = self._hash_obj(
@@ -751,7 +938,7 @@ class PipelineRunner:
 
         log_callback("Computing firing rate heatmap...")
         fr_matrix = compute_fr_heatmap_matrix(
-            self._embed_data,
+            spike_data,
             neuron_range=neuron_range,
             time_range=time_range,
             normalize=normalize,
@@ -770,16 +957,20 @@ class PipelineRunner:
         from canns.analyzer.data.asa import compute_frm, plot_frm
         from canns.analyzer.visualization import PlotConfigs
 
-        out_dir = state.workdir / "FRM"
+        out_dir = self._results_dir(state) / "FRM"
         out_dir.mkdir(parents=True, exist_ok=True)
 
         params = state.analysis_params
         neuron_id = int(params.get("neuron_id", 0))
         bins = int(params.get("bin_size", 50))
+        min_occupancy = int(params.get("min_occupancy", 1))
+        smoothing = bool(params.get("smoothing", False))
         smooth_sigma = float(params.get("smooth_sigma", 2.0))
+        mode = str(params.get("mode", "fr"))
 
-        if self._embed_data is None:
-            raise ProcessingError("No preprocessed data available. Run preprocessing first.")
+        spike_data = self._embed_data if mode != "spike" else asa_data.get("spike")
+        if spike_data is None:
+            raise ProcessingError("No spike data available for FRM.")
 
         pos = self._aligned_pos if self._aligned_pos is not None else asa_data
         x = np.asarray(pos.get("x"))
@@ -801,13 +992,13 @@ class PipelineRunner:
 
         log_callback(f"Computing firing rate map for neuron {neuron_id}...")
         frm_result = compute_frm(
-            self._embed_data,
+            spike_data,
             x,
             y,
             neuron_id=neuron_id,
             bins=max(1, bins),
-            min_occupancy=1,
-            smoothing=True,
+            min_occupancy=min_occupancy,
+            smoothing=smoothing,
             sigma=smooth_sigma,
             nan_for_empty=True,
         )
@@ -825,7 +1016,7 @@ class PipelineRunner:
         from canns.analyzer.metrics.spatial_metrics import compute_grid_score
 
         # Create output directory
-        out_dir = state.workdir / "GridScore"
+        out_dir = self._results_dir(state) / "GridScore"
         out_dir.mkdir(parents=True, exist_ok=True)
 
         # Get parameters

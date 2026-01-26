@@ -74,158 +74,266 @@ class ASAApp(App):
                 # Page indicator
                 yield Label("Page: Preprocess", id="page-indicator")
 
-                # Scrollable area for parameter groups only
-                with VerticalScroll(id="controls-scroll"):
-                    # Preprocess controls - single param group
-                    with Vertical(id="preprocess-controls"):
-                        with ParamGroup("Input & Preprocess"):
-                            # Input section
-                            yield Label("Input Mode:")
-                            yield Select(
-                                [("ASA File", "asa"), ("Neuron + Traj", "neuron_traj")],
-                                value="asa",
-                                id="input-mode-select",
-                            )
-
-                            yield Label("Preset:")
-                            yield Select(
-                                [("Grid", "grid"), ("HD", "hd"), ("None", "none")],
-                                value="grid",
-                                id="preset-select",
-                            )
-
-                            # Preprocess section
-                            yield Label("Method:")
-                            yield Select(
-                                [("None", "none"), ("Embed Spike Trains", "embed_spike_trains")],
-                                value="none",
-                                id="preprocess-method-select",
-                            )
-
-                            # Preprocessing parameters (enabled when method is embed_spike_trains)
-                            with Vertical(id="emb-params"):
-                                yield Label("dt:", id="emb-dt-label")
-                                yield Input(value="1000", id="emb-dt", disabled=True)
-
-                                yield Label("sigma:", id="emb-sigma-label")
-                                yield Input(value="5000", id="emb-sigma", disabled=True)
-
-                                yield Checkbox("smooth", id="emb-smooth", value=True, disabled=True)
-                                yield Checkbox("speed_filter", id="emb-speed-filter", value=True, disabled=True)
-
-                                yield Label("min_speed:", id="emb-min-speed-label")
-                                yield Input(value="2.5", id="emb-min-speed", disabled=True)
-
-                    # Analysis controls (initially hidden)
-                    with Vertical(id="analysis-controls", classes="hidden"):
-                        preset_params = get_preset_params(self.state.preset)
-                        tda_defaults = preset_params.get("tda", {})
-                        grid_defaults = preset_params.get("gridscore", {})
-
-                        with ParamGroup("Analysis Mode"):
-                            yield Label("Mode:")
-                            yield Select(
-                                [
-                                    ("TDA", "tda"),
-                                    ("CohoMap", "cohomap"),
-                                    ("PathCompare", "pathcompare"),
-                                    ("CohoSpace", "cohospace"),
-                                    ("FR", "fr"),
-                                    ("FRM", "frm"),
-                                    ("GridScore", "gridscore"),
-                                ],
-                                value=self.state.analysis_mode,
-                                id="analysis-mode-select",
-                            )
-
-                        with ParamGroup("TDA Parameters", id="analysis-params-tda"):
-                            yield Label("dim:")
-                            yield Input(value=str(tda_defaults.get("dim", 6)), id="tda-dim")
-                            yield Label("num_times:")
-                            yield Input(value=str(tda_defaults.get("num_times", 5)), id="tda-num-times")
-                            yield Label("active_times:")
-                            yield Input(value=str(tda_defaults.get("active_times", 15000)), id="tda-active-times")
-                            yield Label("k:")
-                            yield Input(value=str(tda_defaults.get("k", 1000)), id="tda-k")
-                            yield Label("n_points:")
-                            yield Input(value=str(tda_defaults.get("n_points", 1200)), id="tda-n-points")
-                            yield Label("metric:")
-                            yield Select(
-                                [
-                                    ("cosine", "cosine"),
-                                    ("euclidean", "euclidean"),
-                                    ("correlation", "correlation"),
-                                ],
-                                value=str(tda_defaults.get("metric", "cosine")),
-                                id="tda-metric",
-                            )
-                            yield Label("nbs:")
-                            yield Input(value=str(tda_defaults.get("nbs", 800)), id="tda-nbs")
-                            yield Label("maxdim:")
-                            yield Input(value=str(tda_defaults.get("maxdim", 1)), id="tda-maxdim")
-                            yield Label("coeff:")
-                            yield Input(value=str(tda_defaults.get("coeff", 47)), id="tda-coeff")
-                            yield Checkbox("do_shuffle", id="tda-do-shuffle", value=tda_defaults.get("do_shuffle", False))
-                            yield Label("num_shuffles:")
-                            yield Input(value=str(tda_defaults.get("num_shuffles", 1000)), id="tda-num-shuffles")
-
-                        with ParamGroup("CohoMap Parameters", id="analysis-params-cohomap", classes="hidden"):
-                            yield Checkbox("real_ground", id="cohomap-real-ground", value=True)
-                            yield Checkbox("real_of", id="cohomap-real-of", value=True)
-
-                        with ParamGroup("PathCompare Parameters", id="analysis-params-pathcompare", classes="hidden"):
-                            yield Label("theta_scale (rad/deg/unit/auto):")
-                            yield Input(value="rad", id="pathcompare-angle-scale")
-
-                        with ParamGroup("CohoSpace Parameters", id="analysis-params-cohospace", classes="hidden"):
-                            yield Label("neuron_id (optional):")
-                            yield Input(value="", id="cohospace-neuron-id")
-
-                        with ParamGroup("FR Parameters", id="analysis-params-fr", classes="hidden"):
-                            yield Label("neuron_range (start,end):")
-                            yield Input(value="", id="fr-neuron-range")
-                            yield Label("time_range (start,end):")
-                            yield Input(value="", id="fr-time-range")
-                            yield Label("normalize:")
-                            yield Select(
-                                [
-                                    ("zscore_per_neuron", "zscore_per_neuron"),
-                                    ("minmax_per_neuron", "minmax_per_neuron"),
-                                    ("none", "none"),
-                                ],
-                                value="zscore_per_neuron",
-                                id="fr-normalize",
-                            )
-
-                        with ParamGroup("FRM Parameters", id="analysis-params-frm", classes="hidden"):
-                            yield Label("neuron_id:")
-                            yield Input(value="0", id="frm-neuron-id")
-                            yield Label("bins:")
-                            yield Input(value="50", id="frm-bins")
-                            yield Label("smooth_sigma:")
-                            yield Input(value="2.0", id="frm-smooth-sigma")
-
-                        with ParamGroup("GridScore Parameters", id="analysis-params-gridscore", classes="hidden"):
-                            yield Label("annulus_inner:")
-                            yield Input(value=str(grid_defaults.get("annulus_inner", 0.3)), id="gridscore-annulus-inner")
-                            yield Label("annulus_outer:")
-                            yield Input(value=str(grid_defaults.get("annulus_outer", 0.7)), id="gridscore-annulus-outer")
-                            yield Label("bin_size:")
-                            yield Input(value=str(grid_defaults.get("bin_size", 2.5)), id="gridscore-bin-size")
-                            yield Label("smooth_sigma:")
-                            yield Input(value=str(grid_defaults.get("smooth_sigma", 2.0)), id="gridscore-smooth-sigma")
-
                 # Action buttons and progress (OUTSIDE scroll area)
-                yield Button("Continue →", variant="primary", id="continue-btn")
-                yield Button("← Back", id="back-btn", classes="hidden")
-                yield Button("Run Analysis", variant="primary", id="run-analysis-btn", classes="hidden")
+                with Vertical(id="actions-bar"):
+                    yield Button("Continue →", variant="primary", id="continue-btn")
+                    yield Button("← Back", variant="primary", id="back-btn", classes="hidden")
+                    yield Button("Run Analysis", variant="primary", id="run-analysis-btn", classes="hidden")
+                    yield Button("Stop", variant="error", id="stop-btn", classes="hidden", disabled=True)
                 yield ProgressBar(id="progress-bar")
                 yield Static("Status: Idle", id="run-status")
 
-            # Middle panel (file browser)
-            with Vertical(id="middle-panel"):
-                yield Label("Files in Workdir", id="files-header")
-                yield DirectoryTree(self.state.workdir, id="file-tree")
+            # Middle panel (parameters + file browser)
+            with Horizontal(id="middle-panel"):
+                with Vertical(id="params-panel"):
+                    yield Label("Parameters", id="params-header")
+                    with VerticalScroll(id="controls-scroll"):
+                        # Preprocess controls - single param group
+                        with Vertical(id="preprocess-controls"):
+                            with ParamGroup("Input & Preprocess"):
+                                # Input section
+                                yield Label("Input Mode:")
+                                yield Select(
+                                    [("ASA File", "asa"), ("Neuron + Traj", "neuron_traj")],
+                                    value="asa",
+                                    id="input-mode-select",
+                                )
+
+                                yield Label("Preset:")
+                                yield Select(
+                                    [("Grid", "grid"), ("HD", "hd"), ("None", "none")],
+                                    value="grid",
+                                    id="preset-select",
+                                )
+
+                                # Preprocess section
+                                yield Label("Method:")
+                                yield Select(
+                                    [("None", "none"), ("Embed Spike Trains", "embed_spike_trains")],
+                                    value="none",
+                                    id="preprocess-method-select",
+                                )
+
+                                # Preprocessing parameters (enabled when method is embed_spike_trains)
+                                with Vertical(id="emb-params"):
+                                    yield Label("dt:", id="emb-dt-label")
+                                    yield Input(value="1000", id="emb-dt", disabled=True)
+
+                                    yield Label("sigma:", id="emb-sigma-label")
+                                    yield Input(value="5000", id="emb-sigma", disabled=True)
+
+                                    yield Checkbox("smooth", id="emb-smooth", value=True, disabled=True)
+                                    yield Checkbox("speed_filter", id="emb-speed-filter", value=True, disabled=True)
+
+                                    yield Label("min_speed:", id="emb-min-speed-label")
+                                    yield Input(value="2.5", id="emb-min-speed", disabled=True)
+
+                        # Analysis controls (initially hidden)
+                        with Vertical(id="analysis-controls", classes="hidden"):
+                            preset_params = get_preset_params(self.state.preset)
+                            tda_defaults = preset_params.get("tda", {})
+                            grid_defaults = preset_params.get("gridscore", {})
+
+                            with ParamGroup("Analysis Mode"):
+                                yield Label("Mode:")
+                                yield Select(
+                                    [
+                                        ("TDA", "tda"),
+                                        ("CohoMap", "cohomap"),
+                                        ("PathCompare", "pathcompare"),
+                                        ("CohoSpace", "cohospace"),
+                                        ("FR", "fr"),
+                                        ("FRM", "frm"),
+                                        ("GridScore", "gridscore"),
+                                    ],
+                                    value=self.state.analysis_mode,
+                                    id="analysis-mode-select",
+                                )
+
+                            with ParamGroup("TDA Parameters", id="analysis-params-tda"):
+                                yield Label("dim:")
+                                yield Input(value=str(tda_defaults.get("dim", 6)), id="tda-dim")
+                                yield Label("num_times:")
+                                yield Input(value=str(tda_defaults.get("num_times", 5)), id="tda-num-times")
+                                yield Label("active_times:")
+                                yield Input(value=str(tda_defaults.get("active_times", 15000)), id="tda-active-times")
+                                yield Label("k:")
+                                yield Input(value=str(tda_defaults.get("k", 1000)), id="tda-k")
+                                yield Label("n_points:")
+                                yield Input(value=str(tda_defaults.get("n_points", 1200)), id="tda-n-points")
+                                yield Label("metric:")
+                                yield Select(
+                                    [
+                                        ("cosine", "cosine"),
+                                        ("euclidean", "euclidean"),
+                                        ("correlation", "correlation"),
+                                    ],
+                                    value=str(tda_defaults.get("metric", "cosine")),
+                                    id="tda-metric",
+                                )
+                                yield Label("nbs:")
+                                yield Input(value=str(tda_defaults.get("nbs", 800)), id="tda-nbs")
+                                yield Label("maxdim:")
+                                yield Input(value=str(tda_defaults.get("maxdim", 1)), id="tda-maxdim")
+                                yield Label("coeff:")
+                                yield Input(value=str(tda_defaults.get("coeff", 47)), id="tda-coeff")
+                                yield Checkbox("do_shuffle", id="tda-do-shuffle", value=tda_defaults.get("do_shuffle", False))
+                                yield Label("num_shuffles:")
+                                yield Input(value=str(tda_defaults.get("num_shuffles", 1000)), id="tda-num-shuffles")
+                                yield Checkbox("standardize (StandardScaler)", id="tda-standardize", value=True)
+
+                            with ParamGroup("Decode / CohoMap", id="analysis-params-decode", classes="hidden"):
+                                yield Label("decode_version:")
+                                yield Select(
+                                    [
+                                        ("v2 (multi)", "v2"),
+                                        ("v0 (legacy)", "v0"),
+                                    ],
+                                    value="v2",
+                                    id="decode-version",
+                                )
+                                yield Label("num_circ:")
+                                yield Input(value="2", id="decode-num-circ")
+                                yield Label("cohomap_subsample:")
+                                yield Input(value="10", id="cohomap-subsample")
+                                yield Checkbox("real_ground (v0)", id="decode-real-ground", value=True)
+                                yield Checkbox("real_of (v0)", id="decode-real-of", value=True)
+
+                            with ParamGroup("PathCompare Parameters", id="analysis-params-pathcompare", classes="hidden"):
+                                yield Checkbox("use_box (coordsbox/times_box)", id="pc-use-box", value=False)
+                                yield Checkbox("interp_to_full (use_box)", id="pc-interp-full", value=True)
+                                yield Label("dim_mode:")
+                                yield Select(
+                                    [("2d", "2d"), ("1d", "1d")],
+                                    value="2d",
+                                    id="pc-dim-mode",
+                                )
+                                yield Label("dim (1d):")
+                                yield Input(value="1", id="pc-dim")
+                                yield Label("dim1 (2d):")
+                                yield Input(value="1", id="pc-dim1")
+                                yield Label("dim2 (2d):")
+                                yield Input(value="2", id="pc-dim2")
+                                yield Label("coords_key (optional):")
+                                yield Input(value="", id="pc-coords-key")
+                                yield Label("times_box_key (optional):")
+                                yield Input(value="", id="pc-times-key")
+                                yield Label("slice_mode:")
+                                yield Select(
+                                    [("time", "time"), ("index", "index")],
+                                    value="time",
+                                    id="pc-slice-mode",
+                                )
+                                yield Label("tmin (sec, -1=auto):")
+                                yield Input(value="-1", id="pc-tmin")
+                                yield Label("tmax (sec, -1=auto):")
+                                yield Input(value="-1", id="pc-tmax")
+                                yield Label("imin (-1=auto):")
+                                yield Input(value="-1", id="pc-imin")
+                                yield Label("imax (-1=auto):")
+                                yield Input(value="-1", id="pc-imax")
+                                yield Label("stride:")
+                                yield Input(value="1", id="pc-stride")
+                                yield Label("theta_scale (rad/deg/unit/auto):")
+                                yield Input(value="rad", id="pathcompare-angle-scale")
+
+                            with ParamGroup("CohoSpace Parameters", id="analysis-params-cohospace", classes="hidden"):
+                                yield Label("dim_mode:")
+                                yield Select(
+                                    [("2d", "2d"), ("1d", "1d")],
+                                    value="2d",
+                                    id="coho-dim-mode",
+                                )
+                                yield Label("dim (1d):")
+                                yield Input(value="1", id="coho-dim")
+                                yield Label("dim1 (2d):")
+                                yield Input(value="1", id="coho-dim1")
+                                yield Label("dim2 (2d):")
+                                yield Input(value="2", id="coho-dim2")
+                                yield Label("mode (fr/spike):")
+                                yield Select(
+                                    [("fr", "fr"), ("spike", "spike")],
+                                    value="fr",
+                                    id="coho-mode",
+                                )
+                                yield Label("top_percent (fr):")
+                                yield Input(value="5.0", id="coho-top-percent")
+                                yield Label("view:")
+                                yield Select(
+                                    [("both", "both"), ("single", "single"), ("population", "population")],
+                                    value="both",
+                                    id="coho-view",
+                                )
+                                yield Label("neuron_id (optional):")
+                                yield Input(value="", id="cohospace-neuron-id")
+                                yield Label("subsample (trajectory):")
+                                yield Input(value="2", id="coho-subsample")
+                                yield Label("unfold:")
+                                yield Select(
+                                    [("square", "square"), ("skew", "skew")],
+                                    value="square",
+                                    id="coho-unfold",
+                                )
+                                yield Checkbox("skew_show_grid", id="coho-skew-show-grid", value=True)
+                                yield Label("skew_tiles:")
+                                yield Input(value="0", id="coho-skew-tiles")
+
+                            with ParamGroup("FR Parameters", id="analysis-params-fr", classes="hidden"):
+                                yield Label("neuron_start:")
+                                yield Input(value="", id="fr-neuron-start")
+                                yield Label("neuron_end:")
+                                yield Input(value="", id="fr-neuron-end")
+                                yield Label("time_start:")
+                                yield Input(value="", id="fr-time-start")
+                                yield Label("time_end:")
+                                yield Input(value="", id="fr-time-end")
+                                yield Label("mode (fr/spike):")
+                                yield Select(
+                                    [("fr", "fr"), ("spike", "spike")],
+                                    value="fr",
+                                    id="fr-mode",
+                                )
+                                yield Label("normalize:")
+                                yield Select(
+                                    [
+                                        ("zscore_per_neuron", "zscore_per_neuron"),
+                                        ("minmax_per_neuron", "minmax_per_neuron"),
+                                        ("none", "none"),
+                                    ],
+                                    value="none",
+                                    id="fr-normalize",
+                                )
+
+                            with ParamGroup("FRM Parameters", id="analysis-params-frm", classes="hidden"):
+                                yield Label("neuron_id:")
+                                yield Input(value="0", id="frm-neuron-id")
+                                yield Label("bins:")
+                                yield Input(value="50", id="frm-bins")
+                                yield Label("min_occupancy:")
+                                yield Input(value="1", id="frm-min-occupancy")
+                                yield Checkbox("smoothing", id="frm-smoothing", value=False)
+                                yield Label("smooth_sigma:")
+                                yield Input(value="2.0", id="frm-smooth-sigma")
+                                yield Label("mode (fr/spike):")
+                                yield Select(
+                                    [("fr", "fr"), ("spike", "spike")],
+                                    value="fr",
+                                    id="frm-mode",
+                                )
+
+                            with ParamGroup("GridScore Parameters", id="analysis-params-gridscore", classes="hidden"):
+                                yield Label("annulus_inner:")
+                                yield Input(value=str(grid_defaults.get("annulus_inner", 0.3)), id="gridscore-annulus-inner")
+                                yield Label("annulus_outer:")
+                                yield Input(value=str(grid_defaults.get("annulus_outer", 0.7)), id="gridscore-annulus-outer")
+                                yield Label("bin_size:")
+                                yield Input(value=str(grid_defaults.get("bin_size", 2.5)), id="gridscore-bin-size")
+                                yield Label("smooth_sigma:")
+                                yield Input(value=str(grid_defaults.get("smooth_sigma", 2.0)), id="gridscore-smooth-sigma")
+
+                with Vertical(id="file-tree-panel"):
+                    yield Label("Files in Workdir", id="files-header")
+                    yield DirectoryTree(self.state.workdir, id="file-tree")
 
             # Right panel (results + log at bottom)
             with Vertical(id="right-panel"):
@@ -254,6 +362,9 @@ class ASAApp(App):
         self.check_terminal_size()
         self.apply_preset_params()
         self.update_analysis_params_visibility()
+        self.update_decode_controls()
+        self.update_pathcompare_controls()
+        self.update_cohospace_controls()
 
     def check_terminal_size(self) -> None:
         """Check terminal size and show warning if too small."""
@@ -263,21 +374,17 @@ class ASAApp(App):
 
         # Adjust layout based on terminal size
         left_panel = self.query_one("#left-panel")
-        middle_panel = self.query_one("#middle-panel")
 
         if width < self.RECOMMENDED_WIDTH:
             if width < self.MIN_WIDTH:
                 # Very small terminal
-                left_panel.styles.width = 30
-                middle_panel.styles.width = 30
+                left_panel.styles.width = 20
             else:
                 # Small terminal
-                left_panel.styles.width = 32
-                middle_panel.styles.width = 32
+                left_panel.styles.width = 22
         else:
             # Normal/large terminal
-            left_panel.styles.width = 35
-            middle_panel.styles.width = 35
+            left_panel.styles.width = 22
 
         # Show warning if terminal is too small (only once)
         if not self._size_warning_shown and (width < self.MIN_WIDTH or height < self.MIN_HEIGHT):
@@ -317,6 +424,8 @@ class ASAApp(App):
             self.action_back_to_preprocess()
         elif event.button.id == "run-analysis-btn":
             self.action_run_analysis()
+        elif event.button.id == "stop-btn":
+            self.action_stop()
 
     def on_select_changed(self, event: Select.Changed) -> None:
         """Handle select changes."""
@@ -337,11 +446,19 @@ class ASAApp(App):
         elif event.select.id == "analysis-mode-select":
             self.state.analysis_mode = str(event.value)
             self.update_analysis_params_visibility()
+        elif event.select.id == "decode-version":
+            self.update_decode_controls()
+        elif event.select.id == "pc-dim-mode" or event.select.id == "pc-slice-mode":
+            self.update_pathcompare_controls()
+        elif event.select.id == "coho-dim-mode" or event.select.id == "coho-unfold":
+            self.update_cohospace_controls()
 
     def on_checkbox_changed(self, event: Checkbox.Changed) -> None:
         """Handle checkbox changes."""
         if event.checkbox.id == "tda-do-shuffle":
             self.query_one("#tda-num-shuffles", Input).disabled = not event.value
+        elif event.checkbox.id == "pc-use-box":
+            self.update_pathcompare_controls()
 
     def on_directory_tree_file_selected(self, event: DirectoryTree.FileSelected) -> None:
         """Handle file selection from tree."""
@@ -350,6 +467,12 @@ class ASAApp(App):
         if self.state.input_mode == "asa" and selected_path.suffix == ".npz":
             self.state.asa_file = relative_path(self.state, selected_path)
             self.log_message(f"Selected ASA file: {self.state.asa_file}")
+            return
+
+        if selected_path.suffix.lower() in {".png", ".jpg", ".jpeg", ".gif", ".bmp"}:
+            preview = self.query_one("#result-preview", ImagePreview)
+            preview.update_image(selected_path)
+            self.log_message(f"Previewing image: {selected_path}")
 
     def action_continue_to_analysis(self) -> None:
         """Continue from preprocessing to analysis page."""
@@ -409,6 +532,8 @@ class ASAApp(App):
         self.query_one("#continue-btn").remove_class("hidden")
         self.query_one("#back-btn").add_class("hidden")
         self.query_one("#run-analysis-btn").add_class("hidden")
+        self.query_one("#stop-btn").add_class("hidden")
+        self.query_one("#stop-btn", Button).disabled = True
 
         self.log_message("Returned to preprocessing page")
 
@@ -430,6 +555,8 @@ class ASAApp(App):
 
         self.log_message(f"Starting {self.state.analysis_mode} analysis...")
         self.set_run_status(f"Status: Running {self.state.analysis_mode}...", "running")
+        self.query_one("#run-analysis-btn", Button).disabled = True
+        self.query_one("#stop-btn", Button).disabled = False
 
         # Run analysis in worker
         self.current_worker = self.run_worker(
@@ -449,10 +576,33 @@ class ASAApp(App):
         else:
             self.action_run_analysis()
 
+    def action_stop(self) -> None:
+        """Request cancellation of the running worker."""
+        if not self.current_worker or self.current_worker.is_finished:
+            self.log_message("No running task to stop.")
+            return
+        self.current_worker.cancel()
+        self.set_run_status("Status: Cancel requested.", "error")
+        self.log_message("Stop requested. Waiting for worker to exit...")
+        self.query_one("#stop-btn", Button).disabled = True
+
     def log_message(self, message: str) -> None:
         """Add log message."""
         log_viewer = self.query_one("#log-viewer", LogViewer)
         log_viewer.add_log(message)
+        self.append_log_file(message)
+
+    def _log_file_path(self) -> Path:
+        return self.state.workdir / "Results" / "asa_tui.log"
+
+    def append_log_file(self, message: str) -> None:
+        """Append log message to file for easy copying."""
+        try:
+            path = self._log_file_path()
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.open("a", encoding="utf-8").write(f"{message}\n")
+        except Exception:
+            pass
 
     def update_progress(self, percent: int) -> None:
         """Update progress bar."""
@@ -489,35 +639,74 @@ class ASAApp(App):
 
     def update_analysis_params_visibility(self) -> None:
         """Show params for the selected analysis mode."""
-        modes = [
-            "tda",
-            "cohomap",
-            "pathcompare",
-            "cohospace",
-            "fr",
-            "frm",
-            "gridscore",
-        ]
-        for mode in modes:
-            group = self.query_one(f"#analysis-params-{mode}")
-            if mode == self.state.analysis_mode:
+        mode = self.state.analysis_mode
+
+        groups = {
+            "analysis-params-tda": mode == "tda",
+            "analysis-params-decode": mode in {"cohomap", "pathcompare", "cohospace"},
+            "analysis-params-pathcompare": mode == "pathcompare",
+            "analysis-params-cohospace": mode == "cohospace",
+            "analysis-params-fr": mode == "fr",
+            "analysis-params-frm": mode == "frm",
+            "analysis-params-gridscore": mode == "gridscore",
+        }
+
+        for group_id, should_show in groups.items():
+            group = self.query_one(f"#{group_id}")
+            if should_show:
                 group.remove_class("hidden")
             else:
                 group.add_class("hidden")
 
-    def _parse_range(self, raw: str) -> tuple[int | None, int | None] | None:
-        """Parse a 'start,end' or 'start:end' range string."""
+    def update_decode_controls(self) -> None:
+        """Enable/disable decode controls based on decode version."""
+        version = str(self.query_one("#decode-version", Select).value)
+        is_v0 = version == "v0"
+        self.query_one("#decode-real-ground", Checkbox).disabled = not is_v0
+        self.query_one("#decode-real-of", Checkbox).disabled = not is_v0
+
+    def update_pathcompare_controls(self) -> None:
+        """Enable/disable PathCompare controls based on mode."""
+        dim_mode = str(self.query_one("#pc-dim-mode", Select).value)
+        is_1d = dim_mode == "1d"
+        self.query_one("#pc-dim", Input).disabled = not is_1d
+        self.query_one("#pc-dim1", Input).disabled = is_1d
+        self.query_one("#pc-dim2", Input).disabled = is_1d
+
+        slice_mode = str(self.query_one("#pc-slice-mode", Select).value)
+        is_time = slice_mode == "time"
+        self.query_one("#pc-tmin", Input).disabled = not is_time
+        self.query_one("#pc-tmax", Input).disabled = not is_time
+        self.query_one("#pc-imin", Input).disabled = is_time
+        self.query_one("#pc-imax", Input).disabled = is_time
+
+        use_box = self.query_one("#pc-use-box", Checkbox).value
+        self.query_one("#pc-interp-full", Checkbox).disabled = not use_box
+
+    def update_cohospace_controls(self) -> None:
+        """Enable/disable CohoSpace controls based on mode."""
+        dim_mode = str(self.query_one("#coho-dim-mode", Select).value)
+        is_1d = dim_mode == "1d"
+        self.query_one("#coho-dim", Input).disabled = not is_1d
+        self.query_one("#coho-dim1", Input).disabled = is_1d
+        self.query_one("#coho-dim2", Input).disabled = is_1d
+
+        unfold = str(self.query_one("#coho-unfold", Select).value)
+        is_skew = unfold == "skew"
+        self.query_one("#coho-skew-show-grid", Checkbox).disabled = not is_skew
+        self.query_one("#coho-skew-tiles", Input).disabled = not is_skew
+
+    def _parse_optional_number(self, raw: str, cast) -> int | float | None:
         text = raw.strip()
-        if not text:
+        if text == "" or text == "-1":
             return None
-        parts = [p.strip() for p in text.replace(":", ",").split(",")]
-        if len(parts) != 2:
-            raise ValueError("range must be 'start,end' or 'start:end'")
+        return cast(text)
 
-        def parse_part(value: str) -> int | None:
-            return None if value == "" else int(value)
+    def _parse_optional_int(self, raw: str) -> int | None:
+        return self._parse_optional_number(raw, int)
 
-        return (parse_part(parts[0]), parse_part(parts[1]))
+    def _parse_optional_float(self, raw: str) -> float | None:
+        return self._parse_optional_number(raw, float)
 
     def collect_analysis_params(self) -> None:
         """Collect analysis parameters from UI into state."""
@@ -536,24 +725,69 @@ class ASAApp(App):
             params["coeff"] = int(self.query_one("#tda-coeff", Input).value)
             params["do_shuffle"] = self.query_one("#tda-do-shuffle", Checkbox).value
             params["num_shuffles"] = int(self.query_one("#tda-num-shuffles", Input).value)
+            params["standardize"] = self.query_one("#tda-standardize", Checkbox).value
         elif mode == "cohomap":
-            params["real_ground"] = self.query_one("#cohomap-real-ground", Checkbox).value
-            params["real_of"] = self.query_one("#cohomap-real-of", Checkbox).value
+            params["decode_version"] = str(self.query_one("#decode-version", Select).value)
+            params["num_circ"] = int(self.query_one("#decode-num-circ", Input).value)
+            params["cohomap_subsample"] = int(self.query_one("#cohomap-subsample", Input).value)
+            params["real_ground"] = self.query_one("#decode-real-ground", Checkbox).value
+            params["real_of"] = self.query_one("#decode-real-of", Checkbox).value
         elif mode == "pathcompare":
+            params["decode_version"] = str(self.query_one("#decode-version", Select).value)
+            params["num_circ"] = int(self.query_one("#decode-num-circ", Input).value)
+            params["real_ground"] = self.query_one("#decode-real-ground", Checkbox).value
+            params["real_of"] = self.query_one("#decode-real-of", Checkbox).value
+            params["use_box"] = self.query_one("#pc-use-box", Checkbox).value
+            params["interp_full"] = self.query_one("#pc-interp-full", Checkbox).value
+            params["dim_mode"] = str(self.query_one("#pc-dim-mode", Select).value)
+            params["dim"] = int(self.query_one("#pc-dim", Input).value)
+            params["dim1"] = int(self.query_one("#pc-dim1", Input).value)
+            params["dim2"] = int(self.query_one("#pc-dim2", Input).value)
+            params["coords_key"] = self.query_one("#pc-coords-key", Input).value.strip() or None
+            params["times_key"] = self.query_one("#pc-times-key", Input).value.strip() or None
+            params["slice_mode"] = str(self.query_one("#pc-slice-mode", Select).value)
+            params["tmin"] = self._parse_optional_float(self.query_one("#pc-tmin", Input).value)
+            params["tmax"] = self._parse_optional_float(self.query_one("#pc-tmax", Input).value)
+            params["imin"] = self._parse_optional_int(self.query_one("#pc-imin", Input).value)
+            params["imax"] = self._parse_optional_int(self.query_one("#pc-imax", Input).value)
+            params["stride"] = int(self.query_one("#pc-stride", Input).value)
             params["angle_scale"] = self.query_one("#pathcompare-angle-scale", Input).value.strip() or "rad"
         elif mode == "cohospace":
+            params["decode_version"] = str(self.query_one("#decode-version", Select).value)
+            params["num_circ"] = int(self.query_one("#decode-num-circ", Input).value)
+            params["real_ground"] = self.query_one("#decode-real-ground", Checkbox).value
+            params["real_of"] = self.query_one("#decode-real-of", Checkbox).value
+            params["dim_mode"] = str(self.query_one("#coho-dim-mode", Select).value)
+            params["dim"] = int(self.query_one("#coho-dim", Input).value)
+            params["dim1"] = int(self.query_one("#coho-dim1", Input).value)
+            params["dim2"] = int(self.query_one("#coho-dim2", Input).value)
+            params["mode"] = str(self.query_one("#coho-mode", Select).value)
+            params["top_percent"] = float(self.query_one("#coho-top-percent", Input).value)
+            params["view"] = str(self.query_one("#coho-view", Select).value)
             neuron_id_raw = self.query_one("#cohospace-neuron-id", Input).value.strip()
             if neuron_id_raw:
                 params["neuron_id"] = int(neuron_id_raw)
+            params["subsample"] = int(self.query_one("#coho-subsample", Input).value)
+            params["unfold"] = str(self.query_one("#coho-unfold", Select).value)
+            params["skew_show_grid"] = self.query_one("#coho-skew-show-grid", Checkbox).value
+            params["skew_tiles"] = int(self.query_one("#coho-skew-tiles", Input).value)
         elif mode == "fr":
-            params["neuron_range"] = self._parse_range(self.query_one("#fr-neuron-range", Input).value)
-            params["time_range"] = self._parse_range(self.query_one("#fr-time-range", Input).value)
+            n_start = self._parse_optional_int(self.query_one("#fr-neuron-start", Input).value)
+            n_end = self._parse_optional_int(self.query_one("#fr-neuron-end", Input).value)
+            t_start = self._parse_optional_int(self.query_one("#fr-time-start", Input).value)
+            t_end = self._parse_optional_int(self.query_one("#fr-time-end", Input).value)
+            params["neuron_range"] = None if n_start is None and n_end is None else (n_start, n_end)
+            params["time_range"] = None if t_start is None and t_end is None else (t_start, t_end)
+            params["mode"] = str(self.query_one("#fr-mode", Select).value)
             normalize = str(self.query_one("#fr-normalize", Select).value)
             params["normalize"] = None if normalize == "none" else normalize
         elif mode == "frm":
             params["neuron_id"] = int(self.query_one("#frm-neuron-id", Input).value)
             params["bin_size"] = int(self.query_one("#frm-bins", Input).value)
+            params["min_occupancy"] = int(self.query_one("#frm-min-occupancy", Input).value)
+            params["smoothing"] = self.query_one("#frm-smoothing", Checkbox).value
             params["smooth_sigma"] = float(self.query_one("#frm-smooth-sigma", Input).value)
+            params["mode"] = str(self.query_one("#frm-mode", Select).value)
         elif mode == "gridscore":
             params["annulus_inner"] = float(self.query_one("#gridscore-annulus-inner", Input).value)
             params["annulus_outer"] = float(self.query_one("#gridscore-annulus-outer", Input).value)
@@ -575,6 +809,7 @@ class ASAApp(App):
         if event.worker.name == "preprocessing_worker" and event.worker.is_finished:
             result = event.worker.result
             self.query_one("#continue-btn", Button).disabled = False
+            self.query_one("#stop-btn", Button).disabled = True
 
             if result.success:
                 self.log_message(result.summary)
@@ -589,6 +824,8 @@ class ASAApp(App):
                 self.query_one("#continue-btn").add_class("hidden")
                 self.query_one("#back-btn").remove_class("hidden")
                 self.query_one("#run-analysis-btn").remove_class("hidden")
+                self.query_one("#stop-btn").remove_class("hidden")
+                self.query_one("#run-analysis-btn", Button).disabled = False
 
                 self.log_message("Preprocessing complete. Ready for analysis.")
             else:
@@ -597,6 +834,8 @@ class ASAApp(App):
 
         elif event.worker.name == "analysis_worker" and event.worker.is_finished:
             result = event.worker.result
+            self.query_one("#run-analysis-btn", Button).disabled = False
+            self.query_one("#stop-btn", Button).disabled = True
 
             if result.success:
                 self.log_message(result.summary)
