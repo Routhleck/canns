@@ -1,0 +1,123 @@
+/* Gallery TUI Styles */
+
+.hidden {
+    display: none;
+}
+
+#main-container {
+    layout: horizontal;
+    height: 1fr;
+}
+
+#left-panel {
+    width: 24;
+    min-width: 22;
+    max-width: 28;
+    height: 100%;
+    border-right: solid $primary;
+    padding: 1;
+}
+
+#middle-panel {
+    layout: vertical;
+    width: 1fr;
+    min-width: 30;
+    height: 100%;
+    border-right: solid $primary;
+    overflow: hidden;
+}
+
+#params-panel {
+    layout: vertical;
+    height: 100%;
+    width: 100%;
+    overflow: hidden;
+}
+
+#right-panel {
+    width: 2fr;
+    min-width: 32;
+    height: 100%;
+    padding: 1;
+}
+
+#params-header {
+    background: $boost;
+    padding: 1;
+    text-style: bold;
+    dock: top;
+    height: 3;
+}
+
+#params-scroll {
+    height: 1fr;
+    width: 100%;
+    overflow-y: scroll;
+    scrollbar-size-vertical: 1;
+    padding: 0 1 2 1;
+}
+
+#params-cann1d,
+#params-cann2d,
+#params-gridcell {
+    height: auto;
+    width: 100%;
+    overflow: auto;
+}
+
+ParamGroup {
+    border: round $secondary;
+    padding: 1;
+    margin: 1 0;
+    height: auto;
+    width: 100%;
+}
+
+.param-group-title {
+    text-style: bold;
+    color: $accent;
+    dock: top;
+}
+
+#workdir-label {
+    background: $boost;
+    padding: 1;
+    margin-bottom: 1;
+}
+
+Button {
+    margin: 1 0;
+}
+
+#progress-bar {
+    margin: 1 0;
+}
+
+#run-status {
+    margin-top: 1;
+}
+
+ImagePreview {
+    height: 3fr;
+    min-height: 20;
+    border: solid $accent;
+    padding: 1;
+}
+
+#log-viewer {
+    height: 1fr;
+    border: solid $primary;
+    padding: 1;
+}
+
+.running {
+    background: $warning;
+}
+
+.success {
+    background: $success;
+}
+
+.error {
+    background: $error;
+}
