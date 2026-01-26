@@ -5,6 +5,34 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.13.1] - 2026-01-26
+
+### Added
+- Comprehensive ASA pipeline documentation with Chinese tutorials (PR #85)
+- New CANN1D bump fitting tutorial (`docs/zh/examples/02_data_analysis/02_cann1d_bump_fit.ipynb`) (PR #85)
+- New ASA pipeline tutorial (`docs/zh/examples/02_data_analysis/01_asa_pipeline.ipynb`) (PR #85)
+- New example script `fly_roi_bump_fit.py` for Fly ROI bump analysis (PR #85)
+- Static images for ASA documentation (barcode, cohomap, cohospace, FRM, spike train visualizations) (PR #86)
+
+### Changed
+- Refactored `cann1d.py` to `fly_roi.py` with modernized API (PR #85)
+  - Renamed function `cann1d_bump_fits` to `roi_bump_fits`
+  - Updated to use `CANN1DPlotConfig` for configuration
+- Updated data analysis documentation structure and formatting (PR #86)
+- Improved ASA module documentation with clearer examples and output descriptions (PR #86)
+- Reformatted imports and function signatures in ASA modules for better readability (PR #85)
+
+### Removed
+- Deprecated legacy CANN1D analysis module (`src/canns/analyzer/data/legacy/cann1d.py`) (PR #85, #86)
+- Deprecated legacy CANN2D analysis module (`src/canns/analyzer/data/legacy/cann2d.py`) (PR #86)
+- Legacy experimental analysis script `experimental_cann1d_analysis.py` (PR #85)
+- Legacy data analysis documentation from auto-generated API reference (PR #86)
+- Obsolete theta sweep pipeline documentation (PR #85)
+
+### Fixed
+- Updated test file `test_experimental_data_cann1d.py` to use new `fly_roi` module (PR #85)
+- Clarified `save_path` behavior in decode documentation (PR #85)
+
 ## [0.13.0] - 2026-01-26
 
 ### Added
@@ -384,6 +412,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Basic structure template
 - Core application structure
 
+[0.13.1]: https://github.com/routhleck/canns/compare/v0.13.0...v0.13.1
 [0.13.0]: https://github.com/routhleck/canns/compare/v0.12.7...v0.13.0
 [0.12.7]: https://github.com/routhleck/canns/compare/v0.12.6...v0.12.7
 [0.12.6]: https://github.com/routhleck/canns/compare/v0.12.5...v0.12.6
