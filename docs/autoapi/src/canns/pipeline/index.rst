@@ -5,11 +5,7 @@ src.canns.pipeline
 
 .. autoapi-nested-parse::
 
-   CANNs Pipeline Module
-
-   High-level pipelines for common analysis workflows, designed to make CANN models
-   accessible to experimental researchers without requiring detailed knowledge of
-   the underlying implementations.
+   CANNs pipeline entrypoints.
 
 
 
@@ -29,7 +25,6 @@ Classes
 .. autoapisummary::
 
    src.canns.pipeline.ASAApp
-   src.canns.pipeline.Pipeline
 
 
 Functions
@@ -301,68 +296,6 @@ Package Contents
 
 
    .. py:attribute:: state
-
-
-.. py:class:: Pipeline
-
-   Bases: :py:obj:`abc.ABC`
-
-
-   Abstract base class for CANNs pipelines.
-
-   Pipelines orchestrate multi-step workflows (data preparation, model execution,
-   visualization, etc.). This base class standardizes how we manage results and
-   output directories so derived pipelines can focus on domain-specific logic.
-
-
-   .. py:method:: get_results()
-
-      Return stored results or raise if the pipeline has not been executed.
-
-
-
-   .. py:method:: has_results()
-
-      Check whether the pipeline has already produced results.
-
-
-
-   .. py:method:: prepare_output_dir(output_dir, *, create = True)
-
-      Validate and optionally create the output directory for derived pipelines.
-
-
-
-   .. py:method:: reset()
-
-      Reset stored state so the pipeline can be executed again cleanly.
-
-
-
-   .. py:method:: run(*args, **kwargs)
-      :abstractmethod:
-
-
-      Execute the pipeline and return a mapping of generated artifacts.
-
-
-
-   .. py:method:: set_results(results)
-
-      Store pipeline results and return them for convenient chaining.
-
-
-
-   .. py:attribute:: output_dir
-      :type:  pathlib.Path | None
-      :value: None
-
-
-
-   .. py:attribute:: results
-      :type:  dict[str, Any] | None
-      :value: None
-
 
 
 .. py:function:: asa_main()
