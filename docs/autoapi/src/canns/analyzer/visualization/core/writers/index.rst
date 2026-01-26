@@ -175,29 +175,20 @@ Module Contents
 
 .. py:function:: get_matplotlib_writer(save_path, fps = 10, **kwargs)
 
-   Create appropriate matplotlib animation writer based on file extension.
+   Create a Matplotlib animation writer based on file extension.
 
-   This function automatically selects the correct writer:
-   - .mp4 → FFMpegWriter (H.264 codec, high quality, fast encoding)
-   - .gif → PillowWriter (universal compatibility)
-   - others → FFMpegWriter (default)
+   :param save_path: Output file path (extension determines format).
+   :param fps: Frames per second.
+   :param \*\*kwargs: Additional arguments passed to the writer.
 
-   :param save_path: Output file path (extension determines format)
-   :param fps: Frames per second
-   :param \*\*kwargs: Additional arguments passed to the writer
-                      For FFMpegWriter: codec, bitrate, extra_args
-                      For PillowWriter: codec (ignored)
+   :returns: Matplotlib animation writer instance.
 
-   :returns: Matplotlib animation writer instance
+   .. rubric:: Examples
 
-   .. rubric:: Example
-
-   >>> from matplotlib import animation
-   >>> writer = get_matplotlib_writer('output.mp4', fps=20)
-   >>> ani.save('output.mp4', writer=writer)
-
-   >>> # With custom codec
-   >>> writer = get_matplotlib_writer('output.mp4', fps=30, bitrate=8000)
+   >>> from canns.analyzer.visualization.core.writers import get_matplotlib_writer
+   >>> writer = get_matplotlib_writer("output.gif", fps=5)
+   >>> print(writer is not None)
+   True
 
 
 .. py:function:: get_recommended_format(use_case = 'web')

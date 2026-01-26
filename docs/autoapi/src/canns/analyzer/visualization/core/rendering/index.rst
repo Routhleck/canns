@@ -34,6 +34,7 @@ Functions
 .. autoapisummary::
 
    src.canns.analyzer.visualization.core.rendering.estimate_parallel_speedup
+   src.canns.analyzer.visualization.core.rendering.render_animation_parallel
    src.canns.analyzer.visualization.core.rendering.should_use_parallel
 
 
@@ -81,6 +82,47 @@ Module Contents
    :param num_workers: Number of parallel workers
 
    :returns: Estimated speedup factor
+
+
+.. py:function:: render_animation_parallel(render_frame_func, frame_data, num_frames, save_path, fps = 10, num_workers = None, show_progress = True, file_format = None)
+
+   Universal parallel animation renderer for analyzer animations.
+
+   :param render_frame_func: Callable that renders a single frame:
+                             ``func(frame_idx, frame_data) -> np.ndarray (H, W, 3 or 4)``.
+   :param frame_data: Data needed by ``render_frame_func`` (passed to workers).
+   :param num_frames: Total number of frames to render.
+   :param save_path: Output file path (extension determines format).
+   :param fps: Frames per second.
+   :param num_workers: Number of parallel workers (None = auto-detect).
+   :param show_progress: Whether to show progress bar.
+   :param file_format: Override file format detection ('gif', 'mp4', etc.).
+
+   :returns: None (saves animation to file).
+
+   .. rubric:: Examples
+
+   >>> import numpy as np
+   >>> import tempfile
+   >>> from pathlib import Path
+   >>> from canns.analyzer.visualization.core.rendering import render_animation_parallel
+   >>> from canns.analyzer.visualization.core import rendering
+   >>>
+   >>> def render_frame(idx, data):
+   ...     frame = data[idx]
+   ...     return frame  # (H, W, 3)
+   >>>
+   >>> frames = [np.zeros((10, 10, 3), dtype=np.uint8) for _ in range(2)]
+   >>> # Save a tiny animation if imageio is available
+   >>> if rendering.IMAGEIO_AVAILABLE:
+   ...     with tempfile.TemporaryDirectory() as tmpdir:
+   ...         save_path = Path(tmpdir) / "demo.gif"
+   ...         render_animation_parallel(
+   ...             render_frame, frames, num_frames=2, save_path=str(save_path), fps=2
+   ...         )
+   ...         print("saved")
+   ... else:
+   ...     print("imageio not available")
 
 
 .. py:function:: should_use_parallel(nframes, estimated_frame_time, threshold_seconds = 30.0)

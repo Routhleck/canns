@@ -51,6 +51,7 @@ Functions
    src.canns.analyzer.visualization.energy_landscape_1d_static
    src.canns.analyzer.visualization.energy_landscape_2d_animation
    src.canns.analyzer.visualization.energy_landscape_2d_static
+   src.canns.analyzer.visualization.finalize_figure
    src.canns.analyzer.visualization.get_recommended_format
    src.canns.analyzer.visualization.is_jupyter_environment
    src.canns.analyzer.visualization.plot_autocorrelation
@@ -107,14 +108,13 @@ Package Contents
 
    .. rubric:: Example
 
-   >>> # High-quality animation (default)
-   >>> config = AnimationConfig(fps=30, quality='high')
+   >>> from canns.analyzer.visualization import AnimationConfig
    >>>
-   >>> # Fast draft mode for quick iteration
-   >>> draft_config = AnimationConfig(quality='draft')  # Auto: 15 FPS, 0.5x resolution
-   >>>
-   >>> # Force parallel rendering
-   >>> parallel_config = AnimationConfig(use_parallel=True, num_workers=8)
+   >>> # Dummy input representing total frames
+   >>> total_frames = 120
+   >>> config = AnimationConfig(fps=30, quality="high")
+   >>> print(config.fps, total_frames)
+   30 120
 
 
    .. py:method:: __post_init__()
@@ -393,13 +393,20 @@ Package Contents
 
 .. py:class:: PlotConfig
 
-   Unified configuration class for all plotting helpers in ``canns.analyzer``.
+   Unified configuration class for plotting helpers in ``canns.analyzer``.
 
-   This mirrors the behaviour of the previous ``visualize`` module so that
-   reorganising the files does not affect the public API. The attributes map
-   directly to keyword arguments exposed by the high-level plotting functions,
-   allowing users to keep existing configuration objects unchanged after the
-   reorganisation.
+   .. rubric:: Examples
+
+   >>> import numpy as np
+   >>> from canns.analyzer.visualization import PlotConfig, energy_landscape_1d_static
+   >>>
+   >>> # Dummy input (matches test-style energy_landscape usage)
+   >>> x = np.linspace(0, 1, 5)
+   >>> data_sets = {"u": (x, np.sin(x))}
+   >>> config = PlotConfig(title="Demo", show=False)
+   >>> fig, ax = energy_landscape_1d_static(data_sets, config=config)
+   >>> print(fig is not None)
+   True
 
 
    .. py:method:: __post_init__()
@@ -424,6 +431,12 @@ Package Contents
    .. py:method:: to_matplotlib_kwargs()
 
       Materialize matplotlib keyword arguments from the config.
+
+
+
+   .. py:method:: to_savefig_kwargs()
+
+      Return keyword arguments for ``matplotlib.pyplot.savefig``.
 
 
 
@@ -463,14 +476,62 @@ Package Contents
 
 
 
+   .. py:attribute:: rasterized
+      :type:  bool | None
+      :value: None
+
+
+
+   .. py:attribute:: render_backend
+      :type:  str | None
+      :value: None
+
+
+
+   .. py:attribute:: render_start_method
+      :type:  str | None
+      :value: None
+
+
+
+   .. py:attribute:: render_workers
+      :type:  int | None
+      :value: None
+
+
+
    .. py:attribute:: repeat
       :type:  bool
       :value: True
 
 
 
+   .. py:attribute:: save_bbox_inches
+      :type:  str | None
+      :value: 'tight'
+
+
+
+   .. py:attribute:: save_dpi
+      :type:  int
+      :value: 300
+
+
+
+   .. py:attribute:: save_format
+      :type:  str | None
+      :value: None
+
+
+
    .. py:attribute:: save_path
       :type:  str | None
+      :value: None
+
+
+
+   .. py:attribute:: savefig_kwargs
+      :type:  dict[str, Any] | None
       :value: None
 
 
@@ -505,6 +566,12 @@ Package Contents
 
 
 
+   .. py:attribute:: verbose
+      :type:  bool
+      :value: False
+
+
+
    .. py:attribute:: xlabel
       :type:  str
       :value: ''
@@ -521,11 +588,40 @@ Package Contents
 
    Collection of commonly used plot configurations.
 
-   These helpers mirror the presets that existed in ``canns.analyzer.visualize``
-   so that callers relying on them continue to receive the exact same defaults.
+   .. rubric:: Examples
+
+   >>> import numpy as np
+   >>> from canns.analyzer.visualization import PlotConfigs, energy_landscape_1d_static
+   >>>
+   >>> x = np.linspace(0, 1, 5)
+   >>> data_sets = {"u": (x, np.sin(x))}
+   >>> config = PlotConfigs.energy_landscape_1d_static(show=False)
+   >>> fig, ax = energy_landscape_1d_static(data_sets, config=config)
+   >>> print(fig is not None)
+   True
 
 
    .. py:method:: average_firing_rate_plot(mode = 'per_neuron', **kwargs)
+      :staticmethod:
+
+
+
+   .. py:method:: cohomap(**kwargs)
+      :staticmethod:
+
+
+
+   .. py:method:: cohospace_neuron(**kwargs)
+      :staticmethod:
+
+
+
+   .. py:method:: cohospace_population(**kwargs)
+      :staticmethod:
+
+
+
+   .. py:method:: cohospace_trajectory(**kwargs)
       :staticmethod:
 
 
@@ -595,6 +691,16 @@ Package Contents
       ...     title="Grid Cell Firing Field",
       ...     save_path="ratemap.png"
       ... )
+
+
+
+   .. py:method:: fr_heatmap(**kwargs)
+      :staticmethod:
+
+
+
+   .. py:method:: frm(**kwargs)
+      :staticmethod:
 
 
 
@@ -698,6 +804,11 @@ Package Contents
 
 
 
+   .. py:method:: path_compare(**kwargs)
+      :staticmethod:
+
+
+
    .. py:method:: population_activity_heatmap(**kwargs)
       :staticmethod:
 
@@ -782,8 +893,19 @@ Package Contents
    :param show: Whether to display the plot interactively.
    :param \*\*kwargs: Additional keyword arguments forwarded to Matplotlib.
 
+   .. rubric:: Examples
 
-.. py:function:: create_grid_cell_tracking_animation(position, activity, rate_map, config = None, *, time_steps_per_second = None, fps = 20, title = 'Grid Cell Tracking', figsize = (15, 5), env_size = 1.0, dt = 1.0, repeat = True, save_path = None, show = True, show_progress_bar = True, **kwargs)
+   >>> import numpy as np
+   >>> from canns.analyzer.visualization import average_firing_rate_plot, PlotConfigs
+   >>>
+   >>> spike_train = np.random.randint(0, 2, size=(10, 4))
+   >>> config = PlotConfigs.average_firing_rate_plot(mode="population", show=False)
+   >>> fig, ax = average_firing_rate_plot(spike_train, dt=0.1, config=config)
+   >>> print(fig is not None)
+   True
+
+
+.. py:function:: create_grid_cell_tracking_animation(position, activity, rate_map, config = None, *, time_steps_per_second = None, fps = 20, title = 'Grid Cell Tracking', figsize = (15, 5), env_size = 1.0, dt = 1.0, repeat = True, save_path = None, show = True, show_progress_bar = True, render_backend = 'auto', output_dpi = 150, render_workers = None, render_start_method = None, **kwargs)
 
    Create 3-panel animation showing grid cell tracking behavior.
 
@@ -821,6 +943,14 @@ Package Contents
    :type show: bool
    :param show_progress_bar: Whether to show progress bar during save. Defaults to True.
    :type show_progress_bar: bool
+   :param render_backend: Rendering backend ('imageio', 'matplotlib', or 'auto')
+   :type render_backend: str | None
+   :param output_dpi: DPI for rendered frames (affects file size and quality)
+   :type output_dpi: int
+   :param render_workers: Number of parallel workers (None = auto-detect)
+   :type render_workers: int | None
+   :param render_start_method: Multiprocessing start method ('fork', 'spawn', or None)
+   :type render_start_method: str | None
    :param \*\*kwargs: Additional keyword arguments.
 
    :returns: Animation object, or None if displayed in Jupyter.
@@ -828,18 +958,29 @@ Package Contents
 
    .. rubric:: Example
 
-   >>> from canns.analyzer.visualization import create_grid_cell_tracking_animation, PlotConfigs
-   >>> # Create animation
+   >>> import numpy as np
+   >>> from canns.analyzer.visualization import (
+   ...     create_grid_cell_tracking_animation,
+   ...     PlotConfigs,
+   ... )
+   >>>
+   >>> position = np.array([[0.0, 0.0], [0.1, 0.1], [0.2, 0.2]])
+   >>> activity = np.array([0.0, 0.5, 1.0])
+   >>> rate_map = np.random.rand(5, 5)
    >>> config = PlotConfigs.grid_cell_tracking_animation(
-   ...     time_steps_per_second=1000,  # dt=1.0ms
-   ...     fps=20,
-   ...     save_path="tracking.gif"
+   ...     time_steps_per_second=10,
+   ...     fps=2,
+   ...     show=False,
    ... )
    >>> anim = create_grid_cell_tracking_animation(
-   ...     position, activity, rate_map,
+   ...     position,
+   ...     activity,
+   ...     rate_map,
    ...     config=config,
-   ...     env_size=3.0
+   ...     env_size=1.0,
    ... )
+   >>> print(anim is not None)
+   True
 
 
 .. py:function:: create_optimized_writer(save_path, fps = 10, encoding_speed = 'balanced', **kwargs)
@@ -874,88 +1015,161 @@ Package Contents
 
 .. py:function:: create_theta_sweep_grid_cell_animation(position_data, direction_data, dc_activity_data, gc_activity_data, gc_network, env_size, mapping_ratio, dt = 0.001, config = None, n_step = 10, fps = 10, figsize = (12, 3), save_path = None, show = True, show_progress_bar = True, render_backend = 'auto', output_dpi = 150, render_workers = None, render_start_method = None, **kwargs)
 
-   Create comprehensive theta sweep animation with 4 panels (optimized for speed):
-   1. Animal trajectory
-   2. Direction cell polar plot
-   3. Grid cell activity on manifold
-   4. Grid cell activity in real space
+   Create a theta sweep animation with four panels.
 
-   :param position_data: Animal position data (time, 2)
-   :param direction_data: Direction data (time,)
-   :param dc_activity_data: Direction cell activity (time, neurons)
-   :param gc_activity_data: Grid cell activity (time, neurons)
-   :param gc_network: GridCellNetwork instance for coordinate transformations
-   :param env_size: Environment size
-   :param mapping_ratio: Mapping ratio for grid cells
-   :param dt: Time step size
-   :param config: PlotConfig object for unified configuration
-   :param n_step: Subsample every n_step frames for animation
-   :param render_backend: Rendering backend. Use 'matplotlib', 'imageio', or 'auto'/'None' for auto-detect.
-   :param output_dpi: Target DPI when rendering frames with non-interactive backends
-   :param render_workers: Worker processes for imageio backend. ``None`` auto-selects, 0 disables.
-   :param render_start_method: Multiprocessing start method ('fork', 'spawn', 'forkserver') or None for auto
-   :param \*\*kwargs: Additional parameters for backward compatibility
+   Panels:
+       1) Animal trajectory
+       2) Direction cell polar plot
+       3) Grid cell activity on manifold
+       4) Grid cell activity in real space
 
-   :returns: Matplotlib animation object for interactive backend, otherwise None
+   :param position_data: Animal position data ``(time, 2)``.
+   :param direction_data: Direction data ``(time,)``.
+   :param dc_activity_data: Direction cell activity ``(time, neurons)``.
+   :param gc_activity_data: Grid cell activity ``(time, neurons)``.
+   :param gc_network: GridCellNetwork instance for coordinate transforms.
+   :param env_size: Environment size.
+   :param mapping_ratio: Mapping ratio for grid cells.
+   :param dt: Time step size.
+   :param config: PlotConfig object for unified configuration.
+   :param n_step: Subsample every n_step frames for animation.
+   :param render_backend: Rendering backend. Use 'matplotlib', 'imageio', or 'auto'.
+   :param output_dpi: Target DPI for non-interactive rendering.
+   :param render_workers: Worker processes for imageio backend.
+   :param render_start_method: Multiprocessing start method ('fork', 'spawn', or None).
+   :param \*\*kwargs: Additional parameters for backward compatibility.
+
+   :returns: Animation object (None if displayed inline).
    :rtype: FuncAnimation | None
 
+   .. rubric:: Examples
 
-.. py:function:: create_theta_sweep_place_cell_animation(position_data, pc_activity_data, pc_network, navigation_task, dt = 0.001, config = None, n_step = 10, fps = 10, figsize = (12, 4), save_path = None, show = True, show_progress_bar = True, **kwargs)
+   This is a minimal structural example using synthetic data to demonstrate
+   the API. For realistic usage, run a GridCellNetwork simulation to obtain
+   actual activity data.
 
-   Create theta sweep animation for place cell network with 2 panels:
-   1. Environment trajectory with place cell bump overlay
-   2. Population activity heatmap over time
+   >>> import numpy as np
+   >>> import brainpy.math as bm
+   >>> from canns.models.basic.theta_sweep_model import GridCellNetwork
+   >>> from canns.analyzer.visualization import PlotConfig
+   >>>
+   >>> # Minimal example with synthetic data (for structure demonstration)
+   >>> bm.set_dt(1.0)
+   >>> gc_network = GridCellNetwork(num_dc=4, num_gc_x=4, mapping_ratio=1.0)
+   >>> T = 5
+   >>> # NOTE: In real usage, obtain these from actual model simulation
+   >>> position_data = np.random.rand(T, 2)
+   >>> direction_data = np.linspace(-np.pi, np.pi, T)
+   >>> dc_activity_data = np.random.rand(T, gc_network.num_dc)
+   >>> gc_activity_data = np.random.rand(T, gc_network.num)
+   >>>
+   >>> config = PlotConfig(show=False)
+   >>> anim = create_theta_sweep_grid_cell_animation(
+   ...     position_data,
+   ...     direction_data,
+   ...     dc_activity_data,
+   ...     gc_activity_data,
+   ...     gc_network,
+   ...     env_size=1.0,
+   ...     mapping_ratio=1.0,
+   ...     config=config,
+   ...     n_step=1,
+   ...     fps=2,
+   ... )
+   >>> print(anim is not None)
+   True
 
-   :param position_data: Animal position data (time, 2)
-   :param pc_activity_data: Place cell activity (time, num_cells)
-   :param pc_network: PlaceCellNetwork instance
-   :param navigation_task: BaseNavigationTask instance for environment visualization
-   :param dt: Time step size
-   :param config: PlotConfig object for unified configuration
-   :param n_step: Subsample every n_step frames for animation
-   :param fps: Frames per second for animation
-   :param figsize: Figure size (width, height)
-   :param save_path: Path to save animation (GIF or MP4)
-   :param show: Whether to display animation
-   :param show_progress_bar: Whether to show progress bar during saving
-   :param \*\*kwargs: Additional parameters (cmap, alpha, etc.)
 
-   :returns: Matplotlib animation object
+.. py:function:: create_theta_sweep_place_cell_animation(position_data, pc_activity_data, pc_network, navigation_task, dt = 0.001, config = None, n_step = 10, fps = 10, figsize = (12, 4), save_path = None, show = True, show_progress_bar = True, render_backend = 'auto', output_dpi = 150, render_workers = None, render_start_method = None, **kwargs)
+
+   Create theta sweep animation for a place cell network.
+
+   :param position_data: Animal position data ``(time, 2)``.
+   :param pc_activity_data: Place cell activity ``(time, num_cells)``.
+   :param pc_network: PlaceCellNetwork-like object with ``geodesic_result``.
+   :param navigation_task: BaseNavigationTask-like object with ``env``.
+   :param dt: Time step size.
+   :param config: PlotConfig object for unified configuration.
+   :param n_step: Subsample every n_step frames for animation.
+   :param fps: Frames per second for animation.
+   :param figsize: Figure size (width, height).
+   :param save_path: Path to save animation (GIF or MP4).
+   :param show: Whether to display animation.
+   :param show_progress_bar: Whether to show progress bar during saving.
+   :param render_backend: Rendering backend ('imageio', 'matplotlib', or 'auto').
+   :param output_dpi: DPI for rendered frames (affects file size and quality).
+   :param render_workers: Number of parallel workers (None = auto-detect).
+   :param render_start_method: Multiprocessing start method ('fork', 'spawn', or None).
+   :param \*\*kwargs: Additional parameters (cmap, alpha, etc.).
+
+   :returns: Matplotlib animation object.
    :rtype: FuncAnimation
+
+   .. rubric:: Examples
+
+   This example demonstrates the basic structure. For complete usage, see the
+   documentation or example scripts.
+
+   >>> import numpy as np
+   >>> from canns.analyzer.visualization import PlotConfig
+   >>>
+   >>> # Prepare your data from simulation
+   >>> position_data = np.array([[0.1, 0.1], [0.2, 0.2], [0.3, 0.3]])
+   >>> pc_activity_data = np.random.rand(3, 4)  # (time, num_cells)
+   >>>
+   >>> # Assuming you have pc_network and navigation_task from your model
+   >>> # anim = create_theta_sweep_place_cell_animation(
+   >>> #     position_data,
+   >>> #     pc_activity_data,
+   >>> #     pc_network,  # Your PlaceCellNetwork instance
+   >>> #     navigation_task,  # Your BaseNavigationTask instance
+   >>> #     config=PlotConfig(show=False),
+   >>> #     n_step=1,
+   >>> #     fps=10,
+   >>> # )  # doctest: +SKIP
 
 
 .. py:function:: display_animation_in_jupyter(animation, format = 'html5')
 
-   Display a matplotlib animation in Jupyter notebook.
+   Display a matplotlib animation in a Jupyter notebook.
 
-   Performance comparison (100 frames):
-       - html5 (default): 1.3s, 134 KB - Fast encoding, small size, smooth playback
-       - jshtml: 2.6s, 4837 KB - Slower, 36x larger, but works without FFmpeg
+   :param animation: ``matplotlib.animation.FuncAnimation`` instance.
+   :param format: Display format - ``"html5"`` (default) or ``"jshtml"``.
 
-   :param animation: matplotlib.animation.FuncAnimation object
-   :param format: Display format - 'html5' (default, MP4 video) or 'jshtml' (JS animation)
+   :returns: ``IPython.display.HTML`` object if successful, otherwise ``None``.
 
-   :returns: IPython.display.HTML object if successful, None otherwise
+   .. rubric:: Examples
 
-   .. note::
+   >>> import numpy as np
+   >>> from matplotlib import pyplot as plt
+   >>> from matplotlib.animation import FuncAnimation
+   >>> from canns.analyzer.visualization.core.jupyter_utils import (
+   ...     display_animation_in_jupyter,
+   ...     is_jupyter_environment,
+   ... )
+   >>>
+   >>> x = np.linspace(0, 2 * np.pi, 50)
+   >>> fig, ax = plt.subplots()
+   >>> (line,) = ax.plot([], [])
+   >>>
+   >>> def update(i):
+   ...     line.set_data(x[: i + 1], np.sin(x[: i + 1]))
+   ...     return (line,)
+   >>>
+   >>> anim = FuncAnimation(fig, update, frames=5, interval=50, blit=True)
+   >>> if is_jupyter_environment():
+   ...     _ = display_animation_in_jupyter(anim, format="jshtml")
+   ... print(anim is not None)
+   True
 
-      'html5' format requires FFmpeg to be installed. If FFmpeg is not available,
-      it will automatically fall back to 'jshtml'.
 
-
-.. py:function:: energy_landscape_1d_animation(data_sets, time_steps_per_second = None, config = None, *, fps = 30, title = 'Evolving 1D Energy Landscape', xlabel = 'Collective Variable / State', ylabel = 'Energy', figsize = (10, 6), grid = False, repeat = True, save_path = None, show = True, show_progress_bar = True, **kwargs)
+.. py:function:: energy_landscape_1d_animation(data_sets, time_steps_per_second = None, config = None, *, fps = 30, title = 'Evolving 1D Energy Landscape', xlabel = 'Collective Variable / State', ylabel = 'Energy', figsize = (10, 6), grid = False, repeat = True, save_path = None, show = True, show_progress_bar = True, render_backend = 'auto', output_dpi = 150, render_workers = None, render_start_method = None, **kwargs)
 
    Create an animation of an evolving 1D energy landscape.
 
-   The docstring intentionally preserves the guidance from the previous
-   implementation so existing callers can rely on the same parameter
-   explanations.
-
-   :param data_sets: Dictionary whose keys are legend labels and values are
-                     ``(x_data, y_data)`` tuples where ``y_data`` is shaped as
-                     ``(time, state)``.
-   :param time_steps_per_second: Number of simulation time steps per second of
-                                 wall-clock time (e.g., ``1/dt``).
+   :param data_sets: Mapping ``label -> (x, y_series)``, where ``y_series`` is
+                     shaped ``(timesteps, npoints)``.
+   :param time_steps_per_second: Simulation steps per second (e.g., ``1/dt``).
    :param config: Optional :class:`PlotConfig` with shared styling overrides.
    :param fps: Frames per second to render in the resulting animation.
    :param title: Title used when ``config`` is not provided.
@@ -967,23 +1181,38 @@ Package Contents
    :param save_path: Optional path to persist the animation (``.gif`` / ``.mp4``).
    :param show: Whether to display the animation interactively.
    :param show_progress_bar: Whether to show a ``tqdm`` progress bar when saving.
+   :param render_backend: Rendering backend ('imageio', 'matplotlib', or 'auto')
+   :param output_dpi: DPI for rendered frames (affects file size and quality)
+   :param render_workers: Number of parallel workers (None = auto-detect)
+   :param render_start_method: Multiprocessing start method ('fork', 'spawn', or None)
    :param \*\*kwargs: Further keyword arguments passed through to ``ax.plot``.
 
    :returns: The constructed animation.
    :rtype: ``matplotlib.animation.FuncAnimation``
 
+   .. rubric:: Examples
+
+   >>> import numpy as np
+   >>> from canns.analyzer.visualization import energy_landscape_1d_animation, PlotConfigs
+   >>>
+   >>> x = np.linspace(0, 1, 5)
+   >>> y_series = np.stack([np.sin(x), np.cos(x)], axis=0)
+   >>> data_sets = {"u": (x, y_series), "Iext": (x, y_series)}
+   >>> config = PlotConfigs.energy_landscape_1d_animation(
+   ...     time_steps_per_second=10,
+   ...     fps=2,
+   ...     show=False,
+   ... )
+   >>> anim = energy_landscape_1d_animation(data_sets, config=config)
+   >>> print(anim is not None)
+   True
+
 
 .. py:function:: energy_landscape_1d_static(data_sets, config = None, *, title = '1D Energy Landscape', xlabel = 'Collective Variable / State', ylabel = 'Energy', show_legend = True, figsize = (10, 6), grid = False, save_path = None, show = True, **kwargs)
 
-   Plot a 1D static energy landscape using Matplotlib.
+   Plot a 1D static energy landscape.
 
-   This mirrors the long-form description from the pre-reorganisation module so
-   existing documentation references stay accurate. The function accepts a
-   dictionary of datasets, plotting each curve on the same set of axes while
-   honouring the ``PlotConfig`` defaults callers relied on previously.
-
-   :param data_sets: Mapping of series labels to ``(x, y)`` tuples representing
-                     the energy curve to draw.
+   :param data_sets: Mapping ``label -> (x, y)`` where ``x`` and ``y`` are 1D arrays.
    :param config: Optional :class:`PlotConfig` carrying shared styling.
    :param title: Plot title when no config override is supplied.
    :param xlabel: X-axis label when no config override is supplied.
@@ -998,13 +1227,22 @@ Package Contents
    :returns: The created figure and axes handles.
    :rtype: Tuple[plt.Figure, plt.Axes]
 
+   .. rubric:: Examples
 
-.. py:function:: energy_landscape_2d_animation(zs_data, config = None, *, time_steps_per_second = None, fps = 30, title = 'Evolving 2D Landscape', xlabel = 'X-Index', ylabel = 'Y-Index', clabel = 'Value', figsize = (8, 7), grid = False, repeat = True, save_path = None, show = True, show_progress_bar = True, **kwargs)
+   >>> import numpy as np
+   >>> from canns.analyzer.visualization import energy_landscape_1d_static, PlotConfigs
+   >>>
+   >>> x = np.linspace(0, 1, 5)
+   >>> data_sets = {"u": (x, np.sin(x)), "Iext": (x, np.cos(x))}
+   >>> config = PlotConfigs.energy_landscape_1d_static(show=False)
+   >>> fig, ax = energy_landscape_1d_static(data_sets, config=config)
+   >>> print(fig is not None)
+   True
+
+
+.. py:function:: energy_landscape_2d_animation(zs_data, config = None, *, time_steps_per_second = None, fps = 30, title = 'Evolving 2D Landscape', xlabel = 'X-Index', ylabel = 'Y-Index', clabel = 'Value', figsize = (8, 7), grid = False, repeat = True, save_path = None, show = True, show_progress_bar = True, render_backend = 'auto', output_dpi = 150, render_workers = None, render_start_method = None, **kwargs)
 
    Create an animation of an evolving 2D landscape.
-
-   The long-form description mirrors the previous implementation to maintain
-   backwards-compatible documentation for downstream users.
 
    :param zs_data: Array of shape ``(timesteps, dim_y, dim_x)`` describing the
                    landscape at each simulation step.
@@ -1022,10 +1260,29 @@ Package Contents
    :param save_path: Optional output path (``.gif`` / ``.mp4``).
    :param show: Whether to display the animation interactively.
    :param show_progress_bar: Whether to render a ``tqdm`` progress bar during save.
+   :param render_backend: Rendering backend ('imageio', 'matplotlib', or 'auto')
+   :param output_dpi: DPI for rendered frames (affects file size and quality)
+   :param render_workers: Number of parallel workers (None = auto-detect)
+   :param render_start_method: Multiprocessing start method ('fork', 'spawn', or None)
    :param \*\*kwargs: Additional keyword arguments forwarded to ``ax.imshow``.
 
    :returns: The constructed animation.
    :rtype: ``matplotlib.animation.FuncAnimation``
+
+   .. rubric:: Examples
+
+   >>> import numpy as np
+   >>> from canns.analyzer.visualization import energy_landscape_2d_animation, PlotConfigs
+   >>>
+   >>> zs = np.random.rand(3, 4, 4)
+   >>> config = PlotConfigs.energy_landscape_2d_animation(
+   ...     time_steps_per_second=10,
+   ...     fps=2,
+   ...     show=False,
+   ... )
+   >>> anim = energy_landscape_2d_animation(zs, config=config)
+   >>> print(anim is not None)
+   True
 
 
 .. py:function:: energy_landscape_2d_static(z_data, config = None, *, title = '2D Static Landscape', xlabel = 'X-Index', ylabel = 'Y-Index', clabel = 'Value', figsize = (8, 7), grid = False, save_path = None, show = True, **kwargs)
@@ -1047,6 +1304,44 @@ Package Contents
    :returns: The Matplotlib figure and axes objects.
    :rtype: Tuple[plt.Figure, plt.Axes]
 
+   .. rubric:: Examples
+
+   >>> import numpy as np
+   >>> from canns.analyzer.visualization import energy_landscape_2d_static, PlotConfigs
+   >>>
+   >>> z = np.random.rand(4, 4)
+   >>> config = PlotConfigs.energy_landscape_2d_static(show=False)
+   >>> fig, ax = energy_landscape_2d_static(z, config=config)
+   >>> print(fig is not None)
+   True
+
+
+.. py:function:: finalize_figure(fig, config, *, rasterize_artists = None, savefig_kwargs = None, always_close = False)
+
+   Centralized save/show/close helper for plot functions.
+
+   :param fig: Matplotlib Figure to finalize.
+   :param config: PlotConfig carrying show/save options.
+   :param rasterize_artists: Optional list of artists to rasterize before saving.
+   :param savefig_kwargs: Extra kwargs merged into ``savefig`` (wins over config).
+   :param always_close: If True, close the figure even when ``config.show`` is True.
+
+   .. rubric:: Examples
+
+   >>> import numpy as np
+   >>> from matplotlib import pyplot as plt
+   >>> from canns.analyzer.visualization import PlotConfig
+   >>> from canns.analyzer.visualization.core.config import finalize_figure
+   >>>
+   >>> x = np.linspace(0, 1, 5)
+   >>> y = np.sin(x)
+   >>> fig, ax = plt.subplots()
+   >>> _ = ax.plot(x, y)
+   >>> config = PlotConfig(title="Finalize Demo", show=False)
+   >>> finalized = finalize_figure(fig, config)
+   >>> print(finalized is not None)
+   True
+
 
 .. py:function:: get_recommended_format(use_case = 'web')
 
@@ -1066,8 +1361,14 @@ Package Contents
 
    Detect if code is running in a Jupyter notebook environment.
 
-   :returns: True if running in Jupyter/IPython notebook, False otherwise.
+   :returns: True if running in a Jupyter notebook, False otherwise.
    :rtype: bool
+
+   .. rubric:: Examples
+
+   >>> from canns.analyzer.visualization.core.jupyter_utils import is_jupyter_environment
+   >>> print(is_jupyter_environment() in {True, False})
+   True
 
 
 .. py:function:: plot_autocorrelation(autocorr, config = None, *, title = 'Spatial Autocorrelation', xlabel = 'X Lag (bins)', ylabel = 'Y Lag (bins)', figsize = (6, 6), save_path = None, show = True, **kwargs)
@@ -1103,14 +1404,16 @@ Package Contents
 
    .. rubric:: Example
 
+   >>> import numpy as np
    >>> from canns.analyzer.metrics.spatial_metrics import compute_spatial_autocorrelation
    >>> from canns.analyzer.visualization import plot_autocorrelation, PlotConfigs
+   >>>
+   >>> rate_map = np.random.rand(10, 10)
    >>> autocorr = compute_spatial_autocorrelation(rate_map)
-   >>> # Modern approach
-   >>> config = PlotConfigs.grid_autocorrelation(save_path='autocorr.png')
+   >>> config = PlotConfigs.grid_autocorrelation(show=False)
    >>> fig, ax = plot_autocorrelation(autocorr, config=config)
-   >>> # Legacy approach
-   >>> fig, ax = plot_autocorrelation(autocorr, cmap='RdBu_r', save_path='autocorr.png')
+   >>> print(fig is not None)
+   True
 
    .. rubric:: References
 
@@ -1118,7 +1421,7 @@ Package Contents
    and velocity in entorhinal cortex. Science, 312(5774), 758-762.
 
 
-.. py:function:: plot_firing_field_heatmap(heatmap, config = None, figsize = (5, 5), cmap = 'jet', interpolation = 'nearest', origin = 'lower', show = True, save_path = None, **kwargs)
+.. py:function:: plot_firing_field_heatmap(heatmap, config = None, title = None, xlabel = None, ylabel = None, figsize = (5, 5), cmap = 'jet', interpolation = 'nearest', origin = 'lower', show = True, save_path = None, **kwargs)
 
    Plot a single spatial firing field heatmap.
 
@@ -1132,6 +1435,12 @@ Package Contents
    :param config: Unified configuration object. If None,
                   uses backward compatibility parameters.
    :type config: PlotConfig | None
+   :param title: Plot title. If None, no title is displayed.
+   :type title: str | None
+   :param xlabel: X-axis label. If None, no label is displayed.
+   :type xlabel: str | None
+   :param ylabel: Y-axis label. If None, no label is displayed.
+   :type ylabel: str | None
    :param figsize: Figure size (width, height) in inches.
                    Defaults to (5, 5).
    :type figsize: tuple[int, int]
@@ -1153,29 +1462,41 @@ Package Contents
 
    .. rubric:: Example
 
-   >>> from canns.analyzer.metrics.spatial_metrics import compute_firing_field
+   >>> import numpy as np
    >>> from canns.analyzer.visualization import plot_firing_field_heatmap, PlotConfig
-   >>> # Compute firing field
-   >>> heatmaps = compute_firing_field(activity, positions, 5.0, 5.0, 50, 50)
-   >>> # Plot single neuron with PlotConfig
-   >>> config = PlotConfig(figsize=(6, 6), save_path='neuron_0.png', show=False)
-   >>> fig, ax = plot_firing_field_heatmap(heatmaps[0], config=config)
-   >>> # Plot with legacy parameters
-   >>> fig, ax = plot_firing_field_heatmap(heatmaps[1], cmap='viridis', save_path='neuron_1.png')
+   >>>
+   >>> # Dummy input heatmap (M x K)
+   >>> heatmap = np.random.rand(6, 6)
+   >>> config = PlotConfig(title="Neuron 0", show=False)
+   >>> fig, ax = plot_firing_field_heatmap(heatmap, config=config)
+   >>> print(fig is not None)
+   True
 
 
 .. py:function:: plot_grid_cell_manifold(value_grid_twisted, grid_cell_activity, config = None, ax = None, title = 'Grid Cell Activity on Manifold', figsize = (8, 6), cmap = 'jet', show = True, save_path = None, **kwargs)
 
    Plot grid cell activity on the twisted torus manifold.
 
-   :param value_grid_twisted: Coordinates on twisted manifold
-   :param grid_cell_activity: 2D array of grid cell activities
-   :param config: PlotConfig object for unified configuration
-   :param ax: Optional axis to draw on instead of creating a new figure
-   :param \*\*kwargs: Additional parameters for backward compatibility
+   :param value_grid_twisted: Coordinates on the twisted manifold ``(N, 2)``.
+   :param grid_cell_activity: 2D array of grid cell activities.
+   :param config: PlotConfig object for unified configuration.
+   :param ax: Optional axis to draw on instead of creating a new figure.
+   :param \*\*kwargs: Additional parameters for backward compatibility.
 
-   :returns: (figure, axis) objects
+   :returns: ``(figure, axis)`` objects.
    :rtype: tuple
+
+   .. rubric:: Examples
+
+   >>> import numpy as np
+   >>> from canns.analyzer.visualization import plot_grid_cell_manifold, PlotConfig
+   >>>
+   >>> value_grid_twisted = np.random.rand(9, 2)
+   >>> grid_cell_activity = np.random.rand(3, 3)
+   >>> config = PlotConfig(show=False)
+   >>> fig, ax = plot_grid_cell_manifold(value_grid_twisted, grid_cell_activity, config=config)
+   >>> print(fig is not None)
+   True
 
 
 .. py:function:: plot_grid_score(rotated_corrs, grid_score, config = None, *, title = 'Grid Score Analysis', xlabel = 'Rotation Angle (°)', ylabel = 'Correlation', figsize = (8, 5), grid = True, save_path = None, show = True, **kwargs)
@@ -1214,12 +1535,15 @@ Package Contents
 
    .. rubric:: Example
 
+   >>> import numpy as np
    >>> from canns.analyzer.metrics.spatial_metrics import compute_grid_score
    >>> from canns.analyzer.visualization import plot_grid_score
+   >>>
+   >>> autocorr = np.random.rand(10, 10)
    >>> grid_score, rotated_corrs = compute_grid_score(autocorr)
-   >>> fig, ax = plot_grid_score(rotated_corrs, grid_score)
-   >>> print(f"Grid score: {grid_score:.3f}")
-   Grid score: 0.456
+   >>> fig, ax = plot_grid_score(rotated_corrs, grid_score, show=False)
+   >>> print(isinstance(grid_score, float))
+   True
 
 
 .. py:function:: plot_grid_spacing_analysis(autocorr, spacing_bins, bin_size = None, config = None, *, title = 'Grid Spacing Analysis', xlabel = 'Distance (bins)', ylabel = 'Autocorrelation', figsize = (8, 5), grid = True, save_path = None, show = True, **kwargs)
@@ -1260,28 +1584,53 @@ Package Contents
 
    .. rubric:: Example
 
+   >>> import numpy as np
    >>> from canns.analyzer.metrics.spatial_metrics import find_grid_spacing
    >>> from canns.analyzer.visualization import plot_grid_spacing_analysis
-   >>> spacing_bins, spacing_m = find_grid_spacing(autocorr, bin_size=0.06)
-   >>> fig, ax = plot_grid_spacing_analysis(autocorr, spacing_bins, bin_size=0.06)
-   >>> print(f"Spacing: {spacing_m:.3f}m")
+   >>>
+   >>> autocorr = np.random.rand(12, 12)
+   >>> spacing_bins, spacing_m = find_grid_spacing(autocorr, bin_size=0.05)
+   >>> fig, ax = plot_grid_spacing_analysis(
+   ...     autocorr,
+   ...     spacing_bins,
+   ...     bin_size=0.05,
+   ...     show=False,
+   ... )
+   >>> print(spacing_m is not None)
+   True
 
 
 .. py:function:: plot_population_activity_with_theta(time_steps, theta_phase, net_activity, direction, config = None, add_lines = True, atol = 0.01, title = 'Population Activity with Theta', xlabel = 'Time (s)', ylabel = 'Direction (°)', figsize = (12, 4), cmap = 'jet', show = True, save_path = None, **kwargs)
 
-   Plot neural population activity with theta oscillation markers and direction trace.
+   Plot neural population activity with theta phase markers.
 
-   :param time_steps: Array of time points
-   :param theta_phase: Array of theta phase values [-π, π]
-   :param net_activity: 2D array of network activity (time, neurons)
-   :param direction: Array of direction values
-   :param config: PlotConfig object for unified configuration
-   :param add_lines: Whether to add vertical lines at theta phase zeros
-   :param atol: Tolerance for detecting theta phase zeros
-   :param \*\*kwargs: Additional parameters for backward compatibility
+   :param time_steps: Array of time points.
+   :param theta_phase: Theta phase values in ``[-pi, pi]``.
+   :param net_activity: 2D array of network activity ``(time, neurons)``.
+   :param direction: Direction values (radians) over time.
+   :param config: PlotConfig object for unified configuration.
+   :param add_lines: Whether to add vertical lines at theta phase zeros.
+   :param atol: Tolerance for detecting theta phase zeros.
+   :param \*\*kwargs: Additional parameters for backward compatibility.
 
-   :returns: (figure, axis) objects
+   :returns: ``(figure, axis)`` objects.
    :rtype: tuple
+
+   .. rubric:: Examples
+
+   >>> import numpy as np
+   >>> from canns.analyzer.visualization import plot_population_activity_with_theta, PlotConfig
+   >>>
+   >>> time_steps = np.linspace(0, 1, 5)
+   >>> theta_phase = np.linspace(-np.pi, np.pi, 5)
+   >>> net_activity = np.random.rand(5, 4)
+   >>> direction = np.linspace(-np.pi, np.pi, 5)
+   >>> config = PlotConfig(show=False)
+   >>> fig, ax = plot_population_activity_with_theta(
+   ...     time_steps, theta_phase, net_activity, direction, config=config
+   ... )
+   >>> print(fig is not None)
+   True
 
 
 .. py:function:: population_activity_heatmap(activity_data, dt, config = None, *, title = 'Population Activity', xlabel = 'Time (s)', ylabel = 'Neuron Index', figsize = (10, 6), cmap = 'viridis', save_path = None, show = True, **kwargs)
@@ -1311,18 +1660,17 @@ Package Contents
    .. rubric:: Example
 
    >>> import numpy as np
-   >>> from canns.analyzer.visualization.spike_plots import population_activity_heatmap
-   >>> # Simulate some activity data
-   >>> activity = np.random.rand(1000, 100)  # 1000 timesteps, 100 neurons
-   >>> fig, ax = population_activity_heatmap(activity, dt=0.001)
+   >>> from canns.analyzer.visualization import population_activity_heatmap, PlotConfig
+   >>> activity = np.random.rand(10, 5)
+   >>> config = PlotConfig(show=False)
+   >>> fig, ax = population_activity_heatmap(activity, dt=0.1, config=config)
+   >>> print(fig is not None)
+   True
 
 
 .. py:function:: raster_plot(spike_train, config = None, *, mode = 'block', title = 'Raster Plot', xlabel = 'Time Step', ylabel = 'Neuron Index', figsize = (12, 6), color = 'black', save_path = None, show = True, **kwargs)
 
    Generate a raster plot from a spike train matrix.
-
-   The explanatory text mirrors the former ``visualize`` module so callers see
-   the same guidance after the reorganisation.
 
    :param spike_train: Boolean/integer array of shape ``(timesteps, neurons)``.
    :param config: Optional :class:`PlotConfig` with shared styling options.
@@ -1336,13 +1684,22 @@ Package Contents
    :param show: Whether to display the plot interactively.
    :param \*\*kwargs: Additional keyword arguments passed through to Matplotlib.
 
+   .. rubric:: Examples
+
+   >>> import numpy as np
+   >>> from canns.analyzer.visualization import raster_plot, PlotConfigs
+   >>>
+   >>> spike_train = np.zeros((5, 3), dtype=int)
+   >>> spike_train[::2, 0] = 1
+   >>> config = PlotConfigs.raster_plot(show=False)
+   >>> fig, ax = raster_plot(spike_train, config=config)
+   >>> print(fig is not None)
+   True
+
 
 .. py:function:: tuning_curve(stimulus, firing_rates, neuron_indices, config = None, *, pref_stim = None, num_bins = 50, title = 'Tuning Curve', xlabel = 'Stimulus Value', ylabel = 'Average Firing Rate', figsize = (10, 6), save_path = None, show = True, **kwargs)
 
    Plot the tuning curve for one or more neurons.
-
-   The wording mirrors the original ``visualize`` module to avoid API drift and
-   to keep existing references valid.
 
    :param stimulus: 1D array with the stimulus value at each time step.
    :param firing_rates: 2D array of firing rates shaped ``(timesteps, neurons)``.
@@ -1357,6 +1714,18 @@ Package Contents
    :param save_path: Optional location where the figure should be stored.
    :param show: Whether to display the plot interactively.
    :param \*\*kwargs: Additional keyword arguments passed through to ``ax.plot``.
+
+   .. rubric:: Examples
+
+   >>> import numpy as np
+   >>> from canns.analyzer.visualization import tuning_curve, PlotConfigs
+   >>>
+   >>> stimulus = np.linspace(0, 1, 10)
+   >>> firing_rates = np.random.rand(10, 3)
+   >>> config = PlotConfigs.tuning_curve(num_bins=5, pref_stim=np.array([0.2, 0.5, 0.8]), show=False)
+   >>> fig, ax = tuning_curve(stimulus, firing_rates, neuron_indices=[0, 1], config=config)
+   >>> print(fig is not None)
+   True
 
 
 .. py:function:: warn_double_rendering(nframes, save_path, *, stacklevel = 2)

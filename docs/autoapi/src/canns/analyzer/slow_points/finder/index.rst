@@ -24,12 +24,40 @@ Module Contents
 
    Find and analyze fixed points in RNN dynamics.
 
-   This class implements an optimization-based approach to finding fixed points
-   in recurrent neural networks. It uses gradient descent to minimize the
-   objective q = 0.5 * ||x - F(x, u)||^2, where F is the RNN transition function.
+   The finder minimizes ``q = 0.5 * ||x - F(x, u)||^2`` using gradient-based
+   optimization, where ``F`` is the RNN transition function.
 
-   The implementation is compatible with BrainPy RNN models and uses JAX for
-   automatic differentiation and optimization.
+   .. rubric:: Examples
+
+   >>> import numpy as np
+   >>> import jax
+   >>> import jax.numpy as jnp
+   >>> import brainpy as bp
+   >>> import brainpy.math as bm
+   >>> from canns.analyzer.slow_points import FixedPointFinder
+   >>>
+   >>> class SimpleRNN(bp.DynamicalSystem):
+   ...     def __init__(self, n_inputs, n_hidden):
+   ...         super().__init__()
+   ...         key = jax.random.PRNGKey(0)
+   ...         k1, k2 = jax.random.split(key)
+   ...         self.w_ih = bm.Variable(jax.random.normal(k1, (n_inputs, n_hidden)) * 0.1)
+   ...         self.w_hh = bm.Variable(jax.random.normal(k2, (n_hidden, n_hidden)) * 0.1)
+   ...         self.b_h = bm.Variable(jnp.zeros(n_hidden))
+   ...
+   ...     def __call__(self, inputs, hidden):
+   ...         inputs_t = inputs[:, 0, :]
+   ...         h_next = jnp.tanh(inputs_t @ self.w_ih.value + hidden @ self.w_hh.value + self.b_h.value)
+   ...         return h_next[:, None, :], h_next
+   >>>
+   >>> rnn = SimpleRNN(n_inputs=2, n_hidden=4)
+   >>> state_traj = np.zeros((2, 5, 4), dtype=np.float32)  # dummy trajectory
+   >>> inputs = np.zeros((1, 2), dtype=np.float32)         # constant input
+   >>>
+   >>> finder = FixedPointFinder(rnn, max_iters=50, tol_q=1e-6, verbose=False)
+   >>> unique_fps, all_fps = finder.find_fixed_points(state_traj, inputs, n_inits=4)
+   >>> print(unique_fps.n >= 0)
+   True
 
    Initialize the FixedPointFinder.
 

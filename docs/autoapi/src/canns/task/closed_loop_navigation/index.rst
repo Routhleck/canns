@@ -22,10 +22,32 @@ Module Contents
    Bases: :py:obj:`src.canns.task.navigation_base.BaseNavigationTask`
 
 
-   Closed-loop navigation task that incorporates real-time feedback from a controller.
+   Closed-loop navigation task driven by external control.
 
-   In this task, the agent's movement is controlled step-by-step by external commands
-   rather than following a pre-generated trajectory.
+   The agent moves step-by-step using commands supplied at runtime rather than
+   following a pre-generated trajectory.
+
+   Workflow:
+       Setup -> Create a task and define environment boundaries.
+       Execute -> Call ``step_by_pos`` for each new position.
+       Result -> Use geodesic tools or agent history for analysis.
+
+   .. rubric:: Examples
+
+   >>> from canns.task.closed_loop_navigation import ClosedLoopNavigationTask
+   >>>
+   >>> task = ClosedLoopNavigationTask(
+   ...     boundary=[[0.0, 0.0], [1.0, 0.0], [1.0, 1.0], [0.0, 1.0]],
+   ...     dt=0.1,
+   ... )
+   >>> task.step_by_pos((0.2, 0.2))
+   >>> task.set_grid_resolution(0.5, 0.5)
+   >>> grid = task.build_movement_cost_grid()
+   >>> result = task.compute_geodesic_distance_matrix()
+   >>> grid.costs.ndim
+   2
+   >>> result.distances.shape[0] == result.distances.shape[1]
+   True
 
 
    .. py:method:: get_data()
@@ -48,8 +70,21 @@ Module Contents
 
    Closed-loop navigation task in a T-maze environment.
 
-   This subclass configures the environment with a T-maze boundary, which is useful
-   for studying decision-making and spatial navigation in a controlled setting.
+   Workflow:
+       Setup -> Create a T-maze task.
+       Execute -> Step the agent position.
+       Result -> Build movement-cost grids or geodesic distances.
+
+   .. rubric:: Examples
+
+   >>> from canns.task.closed_loop_navigation import TMazeClosedLoopNavigationTask
+   >>>
+   >>> task = TMazeClosedLoopNavigationTask(dt=0.1)
+   >>> task.step_by_pos(task.start_pos)
+   >>> task.set_grid_resolution(0.5, 0.5)
+   >>> grid = task.build_movement_cost_grid()
+   >>> grid.costs.ndim
+   2
 
    Initialize T-maze closed-loop navigation task.
 
@@ -67,11 +102,23 @@ Module Contents
    Bases: :py:obj:`TMazeClosedLoopNavigationTask`
 
 
-   Closed-loop navigation task in a T-maze environment with recesses at stem-arm junctions.
+   Closed-loop navigation task in a T-maze with recesses at the junction.
 
-   This variant adds small rectangular indentations at the T-junction, creating
-   additional spatial features that may be useful for studying spatial navigation
-   and decision-making.
+   Workflow:
+       Setup -> Create the recess T-maze task.
+       Execute -> Step the agent position.
+       Result -> Access environment-derived grids for analysis.
+
+   .. rubric:: Examples
+
+   >>> from canns.task.closed_loop_navigation import TMazeRecessClosedLoopNavigationTask
+   >>>
+   >>> task = TMazeRecessClosedLoopNavigationTask(dt=0.1)
+   >>> task.step_by_pos(task.start_pos)
+   >>> task.set_grid_resolution(0.5, 0.5)
+   >>> grid = task.build_movement_cost_grid()
+   >>> grid.costs.ndim
+   2
 
    Initialize T-maze with recesses closed-loop navigation task.
 

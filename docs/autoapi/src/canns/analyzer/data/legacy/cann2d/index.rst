@@ -1,7 +1,7 @@
-src.canns.analyzer.data.cann2d
-==============================
+src.canns.analyzer.data.legacy.cann2d
+=====================================
 
-.. py:module:: src.canns.analyzer.data.cann2d
+.. py:module:: src.canns.analyzer.data.legacy.cann2d
 
 
 Attributes
@@ -9,8 +9,8 @@ Attributes
 
 .. autoapisummary::
 
-   src.canns.analyzer.data.cann2d.HAS_NUMBA
-   src.canns.analyzer.data.cann2d.data
+   src.canns.analyzer.data.legacy.cann2d.HAS_NUMBA
+   src.canns.analyzer.data.legacy.cann2d.data
 
 
 Exceptions
@@ -18,9 +18,9 @@ Exceptions
 
 .. autoapisummary::
 
-   src.canns.analyzer.data.cann2d.CANN2DError
-   src.canns.analyzer.data.cann2d.DataLoadError
-   src.canns.analyzer.data.cann2d.ProcessingError
+   src.canns.analyzer.data.legacy.cann2d.CANN2DError
+   src.canns.analyzer.data.legacy.cann2d.DataLoadError
+   src.canns.analyzer.data.legacy.cann2d.ProcessingError
 
 
 Classes
@@ -28,10 +28,10 @@ Classes
 
 .. autoapisummary::
 
-   src.canns.analyzer.data.cann2d.CANN2DPlotConfig
-   src.canns.analyzer.data.cann2d.Constants
-   src.canns.analyzer.data.cann2d.SpikeEmbeddingConfig
-   src.canns.analyzer.data.cann2d.TDAConfig
+   src.canns.analyzer.data.legacy.cann2d.CANN2DPlotConfig
+   src.canns.analyzer.data.legacy.cann2d.Constants
+   src.canns.analyzer.data.legacy.cann2d.SpikeEmbeddingConfig
+   src.canns.analyzer.data.legacy.cann2d.TDAConfig
 
 
 Functions
@@ -39,13 +39,13 @@ Functions
 
 .. autoapisummary::
 
-   src.canns.analyzer.data.cann2d.decode_circular_coordinates
-   src.canns.analyzer.data.cann2d.embed_spike_trains
-   src.canns.analyzer.data.cann2d.plot_2d_bump_on_manifold
-   src.canns.analyzer.data.cann2d.plot_3d_bump_on_torus
-   src.canns.analyzer.data.cann2d.plot_cohomap
-   src.canns.analyzer.data.cann2d.plot_projection
-   src.canns.analyzer.data.cann2d.tda_vis
+   src.canns.analyzer.data.legacy.cann2d.decode_circular_coordinates
+   src.canns.analyzer.data.legacy.cann2d.embed_spike_trains
+   src.canns.analyzer.data.legacy.cann2d.plot_2d_bump_on_manifold
+   src.canns.analyzer.data.legacy.cann2d.plot_3d_bump_on_torus
+   src.canns.analyzer.data.legacy.cann2d.plot_cohomap
+   src.canns.analyzer.data.legacy.cann2d.plot_projection
+   src.canns.analyzer.data.legacy.cann2d.tda_vis
 
 
 Module Contents

@@ -38,6 +38,17 @@ Module Contents
    :param show: Whether to display the plot interactively.
    :param \*\*kwargs: Additional keyword arguments forwarded to Matplotlib.
 
+   .. rubric:: Examples
+
+   >>> import numpy as np
+   >>> from canns.analyzer.visualization import average_firing_rate_plot, PlotConfigs
+   >>>
+   >>> spike_train = np.random.randint(0, 2, size=(10, 4))
+   >>> config = PlotConfigs.average_firing_rate_plot(mode="population", show=False)
+   >>> fig, ax = average_firing_rate_plot(spike_train, dt=0.1, config=config)
+   >>> print(fig is not None)
+   True
+
 
 .. py:function:: population_activity_heatmap(activity_data, dt, config = None, *, title = 'Population Activity', xlabel = 'Time (s)', ylabel = 'Neuron Index', figsize = (10, 6), cmap = 'viridis', save_path = None, show = True, **kwargs)
 
@@ -66,18 +77,17 @@ Module Contents
    .. rubric:: Example
 
    >>> import numpy as np
-   >>> from canns.analyzer.visualization.spike_plots import population_activity_heatmap
-   >>> # Simulate some activity data
-   >>> activity = np.random.rand(1000, 100)  # 1000 timesteps, 100 neurons
-   >>> fig, ax = population_activity_heatmap(activity, dt=0.001)
+   >>> from canns.analyzer.visualization import population_activity_heatmap, PlotConfig
+   >>> activity = np.random.rand(10, 5)
+   >>> config = PlotConfig(show=False)
+   >>> fig, ax = population_activity_heatmap(activity, dt=0.1, config=config)
+   >>> print(fig is not None)
+   True
 
 
 .. py:function:: raster_plot(spike_train, config = None, *, mode = 'block', title = 'Raster Plot', xlabel = 'Time Step', ylabel = 'Neuron Index', figsize = (12, 6), color = 'black', save_path = None, show = True, **kwargs)
 
    Generate a raster plot from a spike train matrix.
-
-   The explanatory text mirrors the former ``visualize`` module so callers see
-   the same guidance after the reorganisation.
 
    :param spike_train: Boolean/integer array of shape ``(timesteps, neurons)``.
    :param config: Optional :class:`PlotConfig` with shared styling options.
@@ -90,5 +100,17 @@ Module Contents
    :param save_path: Optional path used to persist the plot.
    :param show: Whether to display the plot interactively.
    :param \*\*kwargs: Additional keyword arguments passed through to Matplotlib.
+
+   .. rubric:: Examples
+
+   >>> import numpy as np
+   >>> from canns.analyzer.visualization import raster_plot, PlotConfigs
+   >>>
+   >>> spike_train = np.zeros((5, 3), dtype=int)
+   >>> spike_train[::2, 0] = 1
+   >>> config = PlotConfigs.raster_plot(show=False)
+   >>> fig, ax = raster_plot(spike_train, config=config)
+   >>> print(fig is not None)
+   True
 
 

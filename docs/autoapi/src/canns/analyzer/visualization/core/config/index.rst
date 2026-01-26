@@ -19,6 +19,14 @@ Classes
    src.canns.analyzer.visualization.core.config.PlotConfigs
 
 
+Functions
+---------
+
+.. autoapisummary::
+
+   src.canns.analyzer.visualization.core.config.finalize_figure
+
+
 Module Contents
 ---------------
 
@@ -60,14 +68,13 @@ Module Contents
 
    .. rubric:: Example
 
-   >>> # High-quality animation (default)
-   >>> config = AnimationConfig(fps=30, quality='high')
+   >>> from canns.analyzer.visualization import AnimationConfig
    >>>
-   >>> # Fast draft mode for quick iteration
-   >>> draft_config = AnimationConfig(quality='draft')  # Auto: 15 FPS, 0.5x resolution
-   >>>
-   >>> # Force parallel rendering
-   >>> parallel_config = AnimationConfig(use_parallel=True, num_workers=8)
+   >>> # Dummy input representing total frames
+   >>> total_frames = 120
+   >>> config = AnimationConfig(fps=30, quality="high")
+   >>> print(config.fps, total_frames)
+   30 120
 
 
    .. py:method:: __post_init__()
@@ -120,13 +127,20 @@ Module Contents
 
 .. py:class:: PlotConfig
 
-   Unified configuration class for all plotting helpers in ``canns.analyzer``.
+   Unified configuration class for plotting helpers in ``canns.analyzer``.
 
-   This mirrors the behaviour of the previous ``visualize`` module so that
-   reorganising the files does not affect the public API. The attributes map
-   directly to keyword arguments exposed by the high-level plotting functions,
-   allowing users to keep existing configuration objects unchanged after the
-   reorganisation.
+   .. rubric:: Examples
+
+   >>> import numpy as np
+   >>> from canns.analyzer.visualization import PlotConfig, energy_landscape_1d_static
+   >>>
+   >>> # Dummy input (matches test-style energy_landscape usage)
+   >>> x = np.linspace(0, 1, 5)
+   >>> data_sets = {"u": (x, np.sin(x))}
+   >>> config = PlotConfig(title="Demo", show=False)
+   >>> fig, ax = energy_landscape_1d_static(data_sets, config=config)
+   >>> print(fig is not None)
+   True
 
 
    .. py:method:: __post_init__()
@@ -151,6 +165,12 @@ Module Contents
    .. py:method:: to_matplotlib_kwargs()
 
       Materialize matplotlib keyword arguments from the config.
+
+
+
+   .. py:method:: to_savefig_kwargs()
+
+      Return keyword arguments for ``matplotlib.pyplot.savefig``.
 
 
 
@@ -190,14 +210,62 @@ Module Contents
 
 
 
+   .. py:attribute:: rasterized
+      :type:  bool | None
+      :value: None
+
+
+
+   .. py:attribute:: render_backend
+      :type:  str | None
+      :value: None
+
+
+
+   .. py:attribute:: render_start_method
+      :type:  str | None
+      :value: None
+
+
+
+   .. py:attribute:: render_workers
+      :type:  int | None
+      :value: None
+
+
+
    .. py:attribute:: repeat
       :type:  bool
       :value: True
 
 
 
+   .. py:attribute:: save_bbox_inches
+      :type:  str | None
+      :value: 'tight'
+
+
+
+   .. py:attribute:: save_dpi
+      :type:  int
+      :value: 300
+
+
+
+   .. py:attribute:: save_format
+      :type:  str | None
+      :value: None
+
+
+
    .. py:attribute:: save_path
       :type:  str | None
+      :value: None
+
+
+
+   .. py:attribute:: savefig_kwargs
+      :type:  dict[str, Any] | None
       :value: None
 
 
@@ -232,6 +300,12 @@ Module Contents
 
 
 
+   .. py:attribute:: verbose
+      :type:  bool
+      :value: False
+
+
+
    .. py:attribute:: xlabel
       :type:  str
       :value: ''
@@ -248,11 +322,40 @@ Module Contents
 
    Collection of commonly used plot configurations.
 
-   These helpers mirror the presets that existed in ``canns.analyzer.visualize``
-   so that callers relying on them continue to receive the exact same defaults.
+   .. rubric:: Examples
+
+   >>> import numpy as np
+   >>> from canns.analyzer.visualization import PlotConfigs, energy_landscape_1d_static
+   >>>
+   >>> x = np.linspace(0, 1, 5)
+   >>> data_sets = {"u": (x, np.sin(x))}
+   >>> config = PlotConfigs.energy_landscape_1d_static(show=False)
+   >>> fig, ax = energy_landscape_1d_static(data_sets, config=config)
+   >>> print(fig is not None)
+   True
 
 
    .. py:method:: average_firing_rate_plot(mode = 'per_neuron', **kwargs)
+      :staticmethod:
+
+
+
+   .. py:method:: cohomap(**kwargs)
+      :staticmethod:
+
+
+
+   .. py:method:: cohospace_neuron(**kwargs)
+      :staticmethod:
+
+
+
+   .. py:method:: cohospace_population(**kwargs)
+      :staticmethod:
+
+
+
+   .. py:method:: cohospace_trajectory(**kwargs)
       :staticmethod:
 
 
@@ -322,6 +425,16 @@ Module Contents
       ...     title="Grid Cell Firing Field",
       ...     save_path="ratemap.png"
       ... )
+
+
+
+   .. py:method:: fr_heatmap(**kwargs)
+      :staticmethod:
+
+
+
+   .. py:method:: frm(**kwargs)
+      :staticmethod:
 
 
 
@@ -425,6 +538,11 @@ Module Contents
 
 
 
+   .. py:method:: path_compare(**kwargs)
+      :staticmethod:
+
+
+
    .. py:method:: population_activity_heatmap(**kwargs)
       :staticmethod:
 
@@ -491,5 +609,32 @@ Module Contents
    .. py:method:: tuning_curve(num_bins = 50, pref_stim = None, **kwargs)
       :staticmethod:
 
+
+
+.. py:function:: finalize_figure(fig, config, *, rasterize_artists = None, savefig_kwargs = None, always_close = False)
+
+   Centralized save/show/close helper for plot functions.
+
+   :param fig: Matplotlib Figure to finalize.
+   :param config: PlotConfig carrying show/save options.
+   :param rasterize_artists: Optional list of artists to rasterize before saving.
+   :param savefig_kwargs: Extra kwargs merged into ``savefig`` (wins over config).
+   :param always_close: If True, close the figure even when ``config.show`` is True.
+
+   .. rubric:: Examples
+
+   >>> import numpy as np
+   >>> from matplotlib import pyplot as plt
+   >>> from canns.analyzer.visualization import PlotConfig
+   >>> from canns.analyzer.visualization.core.config import finalize_figure
+   >>>
+   >>> x = np.linspace(0, 1, 5)
+   >>> y = np.sin(x)
+   >>> fig, ax = plt.subplots()
+   >>> _ = ax.plot(x, y)
+   >>> config = PlotConfig(title="Finalize Demo", show=False)
+   >>> finalized = finalize_figure(fig, config)
+   >>> print(finalized is not None)
+   True
 
 

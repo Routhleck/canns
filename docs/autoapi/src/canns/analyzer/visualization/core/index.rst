@@ -25,6 +25,7 @@ Submodules
    :maxdepth: 1
 
    /autoapi/src/canns/analyzer/visualization/core/animation/index
+   /autoapi/src/canns/analyzer/visualization/core/backend/index
    /autoapi/src/canns/analyzer/visualization/core/config/index
    /autoapi/src/canns/analyzer/visualization/core/jupyter_utils/index
    /autoapi/src/canns/analyzer/visualization/core/rendering/index
@@ -36,7 +37,9 @@ Classes
 
 .. autoapisummary::
 
+   src.canns.analyzer.visualization.core.AnimationBackend
    src.canns.analyzer.visualization.core.AnimationConfig
+   src.canns.analyzer.visualization.core.BackendSelection
    src.canns.analyzer.visualization.core.OptimizedAnimationBase
    src.canns.analyzer.visualization.core.OptimizedAnimationWriter
    src.canns.analyzer.visualization.core.ParallelAnimationRenderer
@@ -51,15 +54,45 @@ Functions
 
    src.canns.analyzer.visualization.core.create_optimized_writer
    src.canns.analyzer.visualization.core.display_animation_in_jupyter
+   src.canns.analyzer.visualization.core.emit_backend_warnings
+   src.canns.analyzer.visualization.core.finalize_figure
+   src.canns.analyzer.visualization.core.get_imageio_writer_kwargs
    src.canns.analyzer.visualization.core.get_matplotlib_writer
+   src.canns.analyzer.visualization.core.get_multiprocessing_context
+   src.canns.analyzer.visualization.core.get_optimal_worker_count
    src.canns.analyzer.visualization.core.get_recommended_format
    src.canns.analyzer.visualization.core.is_jupyter_environment
+   src.canns.analyzer.visualization.core.render_animation_parallel
+   src.canns.analyzer.visualization.core.select_animation_backend
    src.canns.analyzer.visualization.core.warn_double_rendering
    src.canns.analyzer.visualization.core.warn_gif_format
 
 
 Package Contents
 ----------------
+
+.. py:class:: AnimationBackend(*args, **kwds)
+
+   Bases: :py:obj:`enum.Enum`
+
+
+   Available animation rendering backends.
+
+
+   .. py:attribute:: AUTO
+      :value: 'auto'
+
+
+
+   .. py:attribute:: IMAGEIO
+      :value: 'imageio'
+
+
+
+   .. py:attribute:: MATPLOTLIB
+      :value: 'matplotlib'
+
+
 
 .. py:class:: AnimationConfig
 
@@ -99,14 +132,13 @@ Package Contents
 
    .. rubric:: Example
 
-   >>> # High-quality animation (default)
-   >>> config = AnimationConfig(fps=30, quality='high')
+   >>> from canns.analyzer.visualization import AnimationConfig
    >>>
-   >>> # Fast draft mode for quick iteration
-   >>> draft_config = AnimationConfig(quality='draft')  # Auto: 15 FPS, 0.5x resolution
-   >>>
-   >>> # Force parallel rendering
-   >>> parallel_config = AnimationConfig(use_parallel=True, num_workers=8)
+   >>> # Dummy input representing total frames
+   >>> total_frames = 120
+   >>> config = AnimationConfig(fps=30, quality="high")
+   >>> print(config.fps, total_frames)
+   30 120
 
 
    .. py:method:: __post_init__()
@@ -155,6 +187,35 @@ Package Contents
       :type:  bool
       :value: False
 
+
+
+.. py:class:: BackendSelection
+
+   Result of backend selection process.
+
+
+   .. py:attribute:: backend
+      :type:  Literal['imageio', 'matplotlib']
+
+      The selected backend.
+
+
+   .. py:attribute:: reason
+      :type:  str
+
+      Why this backend was selected.
+
+
+   .. py:attribute:: supports_parallel
+      :type:  bool
+
+      Whether this backend supports parallel rendering.
+
+
+   .. py:attribute:: warnings
+      :type:  list[str]
+
+      Any warnings or suggestions for the user.
 
 
 .. py:class:: OptimizedAnimationBase(fig, ax, config = None)
@@ -385,13 +446,20 @@ Package Contents
 
 .. py:class:: PlotConfig
 
-   Unified configuration class for all plotting helpers in ``canns.analyzer``.
+   Unified configuration class for plotting helpers in ``canns.analyzer``.
 
-   This mirrors the behaviour of the previous ``visualize`` module so that
-   reorganising the files does not affect the public API. The attributes map
-   directly to keyword arguments exposed by the high-level plotting functions,
-   allowing users to keep existing configuration objects unchanged after the
-   reorganisation.
+   .. rubric:: Examples
+
+   >>> import numpy as np
+   >>> from canns.analyzer.visualization import PlotConfig, energy_landscape_1d_static
+   >>>
+   >>> # Dummy input (matches test-style energy_landscape usage)
+   >>> x = np.linspace(0, 1, 5)
+   >>> data_sets = {"u": (x, np.sin(x))}
+   >>> config = PlotConfig(title="Demo", show=False)
+   >>> fig, ax = energy_landscape_1d_static(data_sets, config=config)
+   >>> print(fig is not None)
+   True
 
 
    .. py:method:: __post_init__()
@@ -416,6 +484,12 @@ Package Contents
    .. py:method:: to_matplotlib_kwargs()
 
       Materialize matplotlib keyword arguments from the config.
+
+
+
+   .. py:method:: to_savefig_kwargs()
+
+      Return keyword arguments for ``matplotlib.pyplot.savefig``.
 
 
 
@@ -455,14 +529,62 @@ Package Contents
 
 
 
+   .. py:attribute:: rasterized
+      :type:  bool | None
+      :value: None
+
+
+
+   .. py:attribute:: render_backend
+      :type:  str | None
+      :value: None
+
+
+
+   .. py:attribute:: render_start_method
+      :type:  str | None
+      :value: None
+
+
+
+   .. py:attribute:: render_workers
+      :type:  int | None
+      :value: None
+
+
+
    .. py:attribute:: repeat
       :type:  bool
       :value: True
 
 
 
+   .. py:attribute:: save_bbox_inches
+      :type:  str | None
+      :value: 'tight'
+
+
+
+   .. py:attribute:: save_dpi
+      :type:  int
+      :value: 300
+
+
+
+   .. py:attribute:: save_format
+      :type:  str | None
+      :value: None
+
+
+
    .. py:attribute:: save_path
       :type:  str | None
+      :value: None
+
+
+
+   .. py:attribute:: savefig_kwargs
+      :type:  dict[str, Any] | None
       :value: None
 
 
@@ -497,6 +619,12 @@ Package Contents
 
 
 
+   .. py:attribute:: verbose
+      :type:  bool
+      :value: False
+
+
+
    .. py:attribute:: xlabel
       :type:  str
       :value: ''
@@ -513,11 +641,40 @@ Package Contents
 
    Collection of commonly used plot configurations.
 
-   These helpers mirror the presets that existed in ``canns.analyzer.visualize``
-   so that callers relying on them continue to receive the exact same defaults.
+   .. rubric:: Examples
+
+   >>> import numpy as np
+   >>> from canns.analyzer.visualization import PlotConfigs, energy_landscape_1d_static
+   >>>
+   >>> x = np.linspace(0, 1, 5)
+   >>> data_sets = {"u": (x, np.sin(x))}
+   >>> config = PlotConfigs.energy_landscape_1d_static(show=False)
+   >>> fig, ax = energy_landscape_1d_static(data_sets, config=config)
+   >>> print(fig is not None)
+   True
 
 
    .. py:method:: average_firing_rate_plot(mode = 'per_neuron', **kwargs)
+      :staticmethod:
+
+
+
+   .. py:method:: cohomap(**kwargs)
+      :staticmethod:
+
+
+
+   .. py:method:: cohospace_neuron(**kwargs)
+      :staticmethod:
+
+
+
+   .. py:method:: cohospace_population(**kwargs)
+      :staticmethod:
+
+
+
+   .. py:method:: cohospace_trajectory(**kwargs)
       :staticmethod:
 
 
@@ -587,6 +744,16 @@ Package Contents
       ...     title="Grid Cell Firing Field",
       ...     save_path="ratemap.png"
       ... )
+
+
+
+   .. py:method:: fr_heatmap(**kwargs)
+      :staticmethod:
+
+
+
+   .. py:method:: frm(**kwargs)
+      :staticmethod:
 
 
 
@@ -690,6 +857,11 @@ Package Contents
 
 
 
+   .. py:method:: path_compare(**kwargs)
+      :staticmethod:
+
+
+
    .. py:method:: population_activity_heatmap(**kwargs)
       :staticmethod:
 
@@ -790,48 +962,117 @@ Package Contents
 
 .. py:function:: display_animation_in_jupyter(animation, format = 'html5')
 
-   Display a matplotlib animation in Jupyter notebook.
+   Display a matplotlib animation in a Jupyter notebook.
 
-   Performance comparison (100 frames):
-       - html5 (default): 1.3s, 134 KB - Fast encoding, small size, smooth playback
-       - jshtml: 2.6s, 4837 KB - Slower, 36x larger, but works without FFmpeg
+   :param animation: ``matplotlib.animation.FuncAnimation`` instance.
+   :param format: Display format - ``"html5"`` (default) or ``"jshtml"``.
 
-   :param animation: matplotlib.animation.FuncAnimation object
-   :param format: Display format - 'html5' (default, MP4 video) or 'jshtml' (JS animation)
+   :returns: ``IPython.display.HTML`` object if successful, otherwise ``None``.
 
-   :returns: IPython.display.HTML object if successful, None otherwise
+   .. rubric:: Examples
 
-   .. note::
+   >>> import numpy as np
+   >>> from matplotlib import pyplot as plt
+   >>> from matplotlib.animation import FuncAnimation
+   >>> from canns.analyzer.visualization.core.jupyter_utils import (
+   ...     display_animation_in_jupyter,
+   ...     is_jupyter_environment,
+   ... )
+   >>>
+   >>> x = np.linspace(0, 2 * np.pi, 50)
+   >>> fig, ax = plt.subplots()
+   >>> (line,) = ax.plot([], [])
+   >>>
+   >>> def update(i):
+   ...     line.set_data(x[: i + 1], np.sin(x[: i + 1]))
+   ...     return (line,)
+   >>>
+   >>> anim = FuncAnimation(fig, update, frames=5, interval=50, blit=True)
+   >>> if is_jupyter_environment():
+   ...     _ = display_animation_in_jupyter(anim, format="jshtml")
+   ... print(anim is not None)
+   True
 
-      'html5' format requires FFmpeg to be installed. If FFmpeg is not available,
-      it will automatically fall back to 'jshtml'.
+
+.. py:function:: emit_backend_warnings(warnings_list, stacklevel = 2)
+
+   Emit all backend selection warnings.
+
+
+.. py:function:: finalize_figure(fig, config, *, rasterize_artists = None, savefig_kwargs = None, always_close = False)
+
+   Centralized save/show/close helper for plot functions.
+
+   :param fig: Matplotlib Figure to finalize.
+   :param config: PlotConfig carrying show/save options.
+   :param rasterize_artists: Optional list of artists to rasterize before saving.
+   :param savefig_kwargs: Extra kwargs merged into ``savefig`` (wins over config).
+   :param always_close: If True, close the figure even when ``config.show`` is True.
+
+   .. rubric:: Examples
+
+   >>> import numpy as np
+   >>> from matplotlib import pyplot as plt
+   >>> from canns.analyzer.visualization import PlotConfig
+   >>> from canns.analyzer.visualization.core.config import finalize_figure
+   >>>
+   >>> x = np.linspace(0, 1, 5)
+   >>> y = np.sin(x)
+   >>> fig, ax = plt.subplots()
+   >>> _ = ax.plot(x, y)
+   >>> config = PlotConfig(title="Finalize Demo", show=False)
+   >>> finalized = finalize_figure(fig, config)
+   >>> print(finalized is not None)
+   True
+
+
+.. py:function:: get_imageio_writer_kwargs(save_path, fps)
+
+   Get appropriate kwargs for imageio.get_writer() based on file format.
+
+   :param save_path: Output file path
+   :param fps: Frames per second
+
+   :returns: Tuple of (writer_kwargs, mode) where mode is for get_writer()
+
+   .. rubric:: Example
+
+   >>> kwargs, mode = get_imageio_writer_kwargs("output.gif", 10)
+   >>> writer = imageio.get_writer("output.gif", mode=mode, **kwargs)
 
 
 .. py:function:: get_matplotlib_writer(save_path, fps = 10, **kwargs)
 
-   Create appropriate matplotlib animation writer based on file extension.
+   Create a Matplotlib animation writer based on file extension.
 
-   This function automatically selects the correct writer:
-   - .mp4 → FFMpegWriter (H.264 codec, high quality, fast encoding)
-   - .gif → PillowWriter (universal compatibility)
-   - others → FFMpegWriter (default)
+   :param save_path: Output file path (extension determines format).
+   :param fps: Frames per second.
+   :param \*\*kwargs: Additional arguments passed to the writer.
 
-   :param save_path: Output file path (extension determines format)
-   :param fps: Frames per second
-   :param \*\*kwargs: Additional arguments passed to the writer
-                      For FFMpegWriter: codec, bitrate, extra_args
-                      For PillowWriter: codec (ignored)
+   :returns: Matplotlib animation writer instance.
 
-   :returns: Matplotlib animation writer instance
+   .. rubric:: Examples
 
-   .. rubric:: Example
+   >>> from canns.analyzer.visualization.core.writers import get_matplotlib_writer
+   >>> writer = get_matplotlib_writer("output.gif", fps=5)
+   >>> print(writer is not None)
+   True
 
-   >>> from matplotlib import animation
-   >>> writer = get_matplotlib_writer('output.mp4', fps=20)
-   >>> ani.save('output.mp4', writer=writer)
 
-   >>> # With custom codec
-   >>> writer = get_matplotlib_writer('output.mp4', fps=30, bitrate=8000)
+.. py:function:: get_multiprocessing_context(prefer_fork = False)
+
+   Get appropriate multiprocessing context for this platform.
+
+   :param prefer_fork: Whether to prefer 'fork' over 'spawn' (Linux only)
+
+   :returns: Tuple of (multiprocessing context, method name) or (None, None) if unavailable
+
+
+.. py:function:: get_optimal_worker_count()
+
+   Get optimal number of parallel workers for this system.
+
+   :returns: Number of workers (cpu_count - 1, minimum 1)
 
 
 .. py:function:: get_recommended_format(use_case = 'web')
@@ -852,8 +1093,73 @@ Package Contents
 
    Detect if code is running in a Jupyter notebook environment.
 
-   :returns: True if running in Jupyter/IPython notebook, False otherwise.
+   :returns: True if running in a Jupyter notebook, False otherwise.
    :rtype: bool
+
+   .. rubric:: Examples
+
+   >>> from canns.analyzer.visualization.core.jupyter_utils import is_jupyter_environment
+   >>> print(is_jupyter_environment() in {True, False})
+   True
+
+
+.. py:function:: render_animation_parallel(render_frame_func, frame_data, num_frames, save_path, fps = 10, num_workers = None, show_progress = True, file_format = None)
+
+   Universal parallel animation renderer for analyzer animations.
+
+   :param render_frame_func: Callable that renders a single frame:
+                             ``func(frame_idx, frame_data) -> np.ndarray (H, W, 3 or 4)``.
+   :param frame_data: Data needed by ``render_frame_func`` (passed to workers).
+   :param num_frames: Total number of frames to render.
+   :param save_path: Output file path (extension determines format).
+   :param fps: Frames per second.
+   :param num_workers: Number of parallel workers (None = auto-detect).
+   :param show_progress: Whether to show progress bar.
+   :param file_format: Override file format detection ('gif', 'mp4', etc.).
+
+   :returns: None (saves animation to file).
+
+   .. rubric:: Examples
+
+   >>> import numpy as np
+   >>> import tempfile
+   >>> from pathlib import Path
+   >>> from canns.analyzer.visualization.core.rendering import render_animation_parallel
+   >>> from canns.analyzer.visualization.core import rendering
+   >>>
+   >>> def render_frame(idx, data):
+   ...     frame = data[idx]
+   ...     return frame  # (H, W, 3)
+   >>>
+   >>> frames = [np.zeros((10, 10, 3), dtype=np.uint8) for _ in range(2)]
+   >>> # Save a tiny animation if imageio is available
+   >>> if rendering.IMAGEIO_AVAILABLE:
+   ...     with tempfile.TemporaryDirectory() as tmpdir:
+   ...         save_path = Path(tmpdir) / "demo.gif"
+   ...         render_animation_parallel(
+   ...             render_frame, frames, num_frames=2, save_path=str(save_path), fps=2
+   ...         )
+   ...         print("saved")
+   ... else:
+   ...     print("imageio not available")
+
+
+.. py:function:: select_animation_backend(save_path, requested_backend = None, check_imageio_plugins = True)
+
+   Select the optimal animation rendering backend.
+
+   :param save_path: Output file path (determines format).
+   :param requested_backend: Backend preference ('imageio', 'matplotlib', 'auto', or None).
+   :param check_imageio_plugins: Whether to verify imageio can write the format.
+
+   :returns: BackendSelection with backend choice and metadata.
+
+   .. rubric:: Examples
+
+   >>> from canns.analyzer.visualization.core.backend import select_animation_backend
+   >>> selection = select_animation_backend("output.mp4")
+   >>> print(selection.backend in {"imageio", "matplotlib"})
+   True
 
 
 .. py:function:: warn_double_rendering(nframes, save_path, *, stacklevel = 2)

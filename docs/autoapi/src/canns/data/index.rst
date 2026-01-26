@@ -7,8 +7,13 @@ src.canns.data
 
    Data utilities for CANNs.
 
-   This module provides dataset management, loading, and downloading utilities.
-   It consolidates data-related functionality previously scattered across the codebase.
+   This namespace provides dataset registry, download helpers, and convenience
+   loaders for common CANNs datasets.
+
+   .. rubric:: Examples
+
+   >>> from canns import data
+   >>> print(list(data.DATASETS))
 
 
 

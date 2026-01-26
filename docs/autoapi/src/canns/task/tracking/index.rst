@@ -26,8 +26,34 @@ Module Contents
 
 
    Population coding task for 1D continuous attractor networks.
-   In this task, a stimulus is presented for a specific duration, preceded and followed by
-   periods of no stimulation, to test the network's ability to form and maintain a memory bump.
+
+   A stimulus is presented for a specific duration, preceded and followed by
+   periods of no stimulation.
+
+   Workflow:
+       Setup -> Create a 1D CANN and the task.
+       Execute -> Call ``get_data()``.
+       Result -> Use ``task.data`` as the input sequence.
+
+   .. rubric:: Examples
+
+   >>> import brainpy.math as bm
+   >>> from canns.models.basic import CANN1D
+   >>> from canns.task.tracking import PopulationCoding1D
+   >>>
+   >>> bm.set_dt(0.1)
+   >>> model = CANN1D(num=64)
+   >>> task = PopulationCoding1D(
+   ...     cann_instance=model,
+   ...     before_duration=1.0,
+   ...     after_duration=1.0,
+   ...     Iext=0.0,
+   ...     duration=2.0,
+   ...     time_step=bm.get_dt(),
+   ... )
+   >>> task.get_data()
+   >>> task.data.shape[0] == task.total_steps
+   True
 
    Initializes the Population Coding task.
 
@@ -57,8 +83,33 @@ Module Contents
 
 
    Population coding task for 2D continuous attractor networks.
-   In this task, a stimulus is presented for a specific duration, preceded and followed by
-   periods of no stimulation, to test the network's ability to form and maintain a memory bump.
+
+   A 2D stimulus is presented for a duration with pre- and post-silence.
+
+   Workflow:
+       Setup -> Create a 2D CANN and the task.
+       Execute -> Call ``get_data()``.
+       Result -> Use ``task.data`` as the input sequence.
+
+   .. rubric:: Examples
+
+   >>> import brainpy.math as bm
+   >>> from canns.models.basic import CANN2D
+   >>> from canns.task.tracking import PopulationCoding2D
+   >>>
+   >>> bm.set_dt(0.1)
+   >>> model = CANN2D(length=8)
+   >>> task = PopulationCoding2D(
+   ...     cann_instance=model,
+   ...     before_duration=1.0,
+   ...     after_duration=1.0,
+   ...     Iext=(0.0, 0.0),
+   ...     duration=1.0,
+   ...     time_step=bm.get_dt(),
+   ... )
+   >>> task.get_data()
+   >>> task.data.shape[1:] == model.shape
+   True
 
    Initializes the Population Coding task.
 
@@ -88,8 +139,31 @@ Module Contents
 
 
    Smooth tracking task for 1D continuous attractor networks.
-   This task provides an external input that moves smoothly over time, testing the network's
-   ability to track a continuously changing stimulus.
+
+   The external input moves smoothly between key positions.
+
+   Workflow:
+       Setup -> Create a 1D CANN and the task.
+       Execute -> Call ``get_data()``.
+       Result -> ``task.data`` contains the smoothly varying stimulus.
+
+   .. rubric:: Examples
+
+   >>> import brainpy.math as bm
+   >>> from canns.models.basic import CANN1D
+   >>> from canns.task.tracking import SmoothTracking1D
+   >>>
+   >>> bm.set_dt(0.1)
+   >>> model = CANN1D(num=64)
+   >>> task = SmoothTracking1D(
+   ...     cann_instance=model,
+   ...     Iext=(0.0, 1.0, 0.5),
+   ...     duration=(0.5, 0.5),
+   ...     time_step=bm.get_dt(),
+   ... )
+   >>> task.get_data()
+   >>> task.data.shape[0] == task.total_steps
+   True
 
    Initializes the Smooth Tracking task.
 
@@ -109,8 +183,31 @@ Module Contents
 
 
    Smooth tracking task for 2D continuous attractor networks.
-   This task provides an external input that moves smoothly over time, testing the network's
-   ability to track a continuously changing stimulus.
+
+   The external 2D input moves smoothly between key positions.
+
+   Workflow:
+       Setup -> Create a 2D CANN and the task.
+       Execute -> Call ``get_data()``.
+       Result -> ``task.data`` contains smoothly varying 2D inputs.
+
+   .. rubric:: Examples
+
+   >>> import brainpy.math as bm
+   >>> from canns.models.basic import CANN2D
+   >>> from canns.task.tracking import SmoothTracking2D
+   >>>
+   >>> bm.set_dt(0.1)
+   >>> model = CANN2D(length=8)
+   >>> task = SmoothTracking2D(
+   ...     cann_instance=model,
+   ...     Iext=((0.0, 0.0), (1.0, 1.0), (0.5, 0.5)),
+   ...     duration=(0.5, 0.5),
+   ...     time_step=bm.get_dt(),
+   ... )
+   >>> task.get_data()
+   >>> task.data.shape[1:] == model.shape
+   True
 
    Initializes the Smooth Tracking task.
 
@@ -130,8 +227,32 @@ Module Contents
 
 
    Template matching task for 1D continuous attractor networks.
-   This task presents a stimulus with added noise to test the network's ability to
-   denoise the input and settle on the correct underlying pattern (template).
+
+   A fixed stimulus template is presented with noise at each step, testing
+   the network's denoising dynamics.
+
+   Workflow:
+       Setup -> Create a 1D CANN and the task.
+       Execute -> Call ``get_data()``.
+       Result -> Use ``task.data`` as the noisy input sequence.
+
+   .. rubric:: Examples
+
+   >>> import brainpy.math as bm
+   >>> from canns.models.basic import CANN1D
+   >>> from canns.task.tracking import TemplateMatching1D
+   >>>
+   >>> bm.set_dt(0.1)
+   >>> model = CANN1D(num=64)
+   >>> task = TemplateMatching1D(
+   ...     cann_instance=model,
+   ...     Iext=0.0,
+   ...     duration=1.0,
+   ...     time_step=bm.get_dt(),
+   ... )
+   >>> task.get_data()
+   >>> task.data.shape[1] == model.shape[0]
+   True
 
    Initializes the Template Matching task.
 
@@ -151,8 +272,31 @@ Module Contents
 
 
    Template matching task for 2D continuous attractor networks.
-   This task presents a stimulus with added noise to test the network's ability to
-   denoise the input and settle on the correct underlying pattern (template).
+
+   A 2D template is presented with noise at each step.
+
+   Workflow:
+       Setup -> Create a 2D CANN and the task.
+       Execute -> Call ``get_data()``.
+       Result -> ``task.data`` contains noisy 2D inputs.
+
+   .. rubric:: Examples
+
+   >>> import brainpy.math as bm
+   >>> from canns.models.basic import CANN2D
+   >>> from canns.task.tracking import TemplateMatching2D
+   >>>
+   >>> bm.set_dt(0.1)
+   >>> model = CANN2D(length=8)
+   >>> task = TemplateMatching2D(
+   ...     cann_instance=model,
+   ...     Iext=(0.0, 0.0),
+   ...     duration=1.0,
+   ...     time_step=bm.get_dt(),
+   ... )
+   >>> task.get_data()
+   >>> task.data.shape[1:] == model.shape
+   True
 
    Initializes the Template Matching task.
 

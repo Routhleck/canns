@@ -23,28 +23,49 @@ Module Contents
 
 .. py:function:: display_animation_in_jupyter(animation, format = 'html5')
 
-   Display a matplotlib animation in Jupyter notebook.
+   Display a matplotlib animation in a Jupyter notebook.
 
-   Performance comparison (100 frames):
-       - html5 (default): 1.3s, 134 KB - Fast encoding, small size, smooth playback
-       - jshtml: 2.6s, 4837 KB - Slower, 36x larger, but works without FFmpeg
+   :param animation: ``matplotlib.animation.FuncAnimation`` instance.
+   :param format: Display format - ``"html5"`` (default) or ``"jshtml"``.
 
-   :param animation: matplotlib.animation.FuncAnimation object
-   :param format: Display format - 'html5' (default, MP4 video) or 'jshtml' (JS animation)
+   :returns: ``IPython.display.HTML`` object if successful, otherwise ``None``.
 
-   :returns: IPython.display.HTML object if successful, None otherwise
+   .. rubric:: Examples
 
-   .. note::
-
-      'html5' format requires FFmpeg to be installed. If FFmpeg is not available,
-      it will automatically fall back to 'jshtml'.
+   >>> import numpy as np
+   >>> from matplotlib import pyplot as plt
+   >>> from matplotlib.animation import FuncAnimation
+   >>> from canns.analyzer.visualization.core.jupyter_utils import (
+   ...     display_animation_in_jupyter,
+   ...     is_jupyter_environment,
+   ... )
+   >>>
+   >>> x = np.linspace(0, 2 * np.pi, 50)
+   >>> fig, ax = plt.subplots()
+   >>> (line,) = ax.plot([], [])
+   >>>
+   >>> def update(i):
+   ...     line.set_data(x[: i + 1], np.sin(x[: i + 1]))
+   ...     return (line,)
+   >>>
+   >>> anim = FuncAnimation(fig, update, frames=5, interval=50, blit=True)
+   >>> if is_jupyter_environment():
+   ...     _ = display_animation_in_jupyter(anim, format="jshtml")
+   ... print(anim is not None)
+   True
 
 
 .. py:function:: is_jupyter_environment()
 
    Detect if code is running in a Jupyter notebook environment.
 
-   :returns: True if running in Jupyter/IPython notebook, False otherwise.
+   :returns: True if running in a Jupyter notebook, False otherwise.
    :rtype: bool
+
+   .. rubric:: Examples
+
+   >>> from canns.analyzer.visualization.core.jupyter_utils import is_jupyter_environment
+   >>> print(is_jupyter_environment() in {True, False})
+   True
 
 

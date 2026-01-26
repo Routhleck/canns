@@ -29,7 +29,7 @@ Functions
 Module Contents
 ---------------
 
-.. py:function:: create_grid_cell_tracking_animation(position, activity, rate_map, config = None, *, time_steps_per_second = None, fps = 20, title = 'Grid Cell Tracking', figsize = (15, 5), env_size = 1.0, dt = 1.0, repeat = True, save_path = None, show = True, show_progress_bar = True, **kwargs)
+.. py:function:: create_grid_cell_tracking_animation(position, activity, rate_map, config = None, *, time_steps_per_second = None, fps = 20, title = 'Grid Cell Tracking', figsize = (15, 5), env_size = 1.0, dt = 1.0, repeat = True, save_path = None, show = True, show_progress_bar = True, render_backend = 'auto', output_dpi = 150, render_workers = None, render_start_method = None, **kwargs)
 
    Create 3-panel animation showing grid cell tracking behavior.
 
@@ -67,6 +67,14 @@ Module Contents
    :type show: bool
    :param show_progress_bar: Whether to show progress bar during save. Defaults to True.
    :type show_progress_bar: bool
+   :param render_backend: Rendering backend ('imageio', 'matplotlib', or 'auto')
+   :type render_backend: str | None
+   :param output_dpi: DPI for rendered frames (affects file size and quality)
+   :type output_dpi: int
+   :param render_workers: Number of parallel workers (None = auto-detect)
+   :type render_workers: int | None
+   :param render_start_method: Multiprocessing start method ('fork', 'spawn', or None)
+   :type render_start_method: str | None
    :param \*\*kwargs: Additional keyword arguments.
 
    :returns: Animation object, or None if displayed in Jupyter.
@@ -74,18 +82,29 @@ Module Contents
 
    .. rubric:: Example
 
-   >>> from canns.analyzer.visualization import create_grid_cell_tracking_animation, PlotConfigs
-   >>> # Create animation
+   >>> import numpy as np
+   >>> from canns.analyzer.visualization import (
+   ...     create_grid_cell_tracking_animation,
+   ...     PlotConfigs,
+   ... )
+   >>>
+   >>> position = np.array([[0.0, 0.0], [0.1, 0.1], [0.2, 0.2]])
+   >>> activity = np.array([0.0, 0.5, 1.0])
+   >>> rate_map = np.random.rand(5, 5)
    >>> config = PlotConfigs.grid_cell_tracking_animation(
-   ...     time_steps_per_second=1000,  # dt=1.0ms
-   ...     fps=20,
-   ...     save_path="tracking.gif"
+   ...     time_steps_per_second=10,
+   ...     fps=2,
+   ...     show=False,
    ... )
    >>> anim = create_grid_cell_tracking_animation(
-   ...     position, activity, rate_map,
+   ...     position,
+   ...     activity,
+   ...     rate_map,
    ...     config=config,
-   ...     env_size=3.0
+   ...     env_size=1.0,
    ... )
+   >>> print(anim is not None)
+   True
 
 
 .. py:function:: plot_autocorrelation(autocorr, config = None, *, title = 'Spatial Autocorrelation', xlabel = 'X Lag (bins)', ylabel = 'Y Lag (bins)', figsize = (6, 6), save_path = None, show = True, **kwargs)
@@ -121,14 +140,16 @@ Module Contents
 
    .. rubric:: Example
 
+   >>> import numpy as np
    >>> from canns.analyzer.metrics.spatial_metrics import compute_spatial_autocorrelation
    >>> from canns.analyzer.visualization import plot_autocorrelation, PlotConfigs
+   >>>
+   >>> rate_map = np.random.rand(10, 10)
    >>> autocorr = compute_spatial_autocorrelation(rate_map)
-   >>> # Modern approach
-   >>> config = PlotConfigs.grid_autocorrelation(save_path='autocorr.png')
+   >>> config = PlotConfigs.grid_autocorrelation(show=False)
    >>> fig, ax = plot_autocorrelation(autocorr, config=config)
-   >>> # Legacy approach
-   >>> fig, ax = plot_autocorrelation(autocorr, cmap='RdBu_r', save_path='autocorr.png')
+   >>> print(fig is not None)
+   True
 
    .. rubric:: References
 
@@ -136,7 +157,7 @@ Module Contents
    and velocity in entorhinal cortex. Science, 312(5774), 758-762.
 
 
-.. py:function:: plot_firing_field_heatmap(heatmap, config = None, figsize = (5, 5), cmap = 'jet', interpolation = 'nearest', origin = 'lower', show = True, save_path = None, **kwargs)
+.. py:function:: plot_firing_field_heatmap(heatmap, config = None, title = None, xlabel = None, ylabel = None, figsize = (5, 5), cmap = 'jet', interpolation = 'nearest', origin = 'lower', show = True, save_path = None, **kwargs)
 
    Plot a single spatial firing field heatmap.
 
@@ -150,6 +171,12 @@ Module Contents
    :param config: Unified configuration object. If None,
                   uses backward compatibility parameters.
    :type config: PlotConfig | None
+   :param title: Plot title. If None, no title is displayed.
+   :type title: str | None
+   :param xlabel: X-axis label. If None, no label is displayed.
+   :type xlabel: str | None
+   :param ylabel: Y-axis label. If None, no label is displayed.
+   :type ylabel: str | None
    :param figsize: Figure size (width, height) in inches.
                    Defaults to (5, 5).
    :type figsize: tuple[int, int]
@@ -171,15 +198,15 @@ Module Contents
 
    .. rubric:: Example
 
-   >>> from canns.analyzer.metrics.spatial_metrics import compute_firing_field
+   >>> import numpy as np
    >>> from canns.analyzer.visualization import plot_firing_field_heatmap, PlotConfig
-   >>> # Compute firing field
-   >>> heatmaps = compute_firing_field(activity, positions, 5.0, 5.0, 50, 50)
-   >>> # Plot single neuron with PlotConfig
-   >>> config = PlotConfig(figsize=(6, 6), save_path='neuron_0.png', show=False)
-   >>> fig, ax = plot_firing_field_heatmap(heatmaps[0], config=config)
-   >>> # Plot with legacy parameters
-   >>> fig, ax = plot_firing_field_heatmap(heatmaps[1], cmap='viridis', save_path='neuron_1.png')
+   >>>
+   >>> # Dummy input heatmap (M x K)
+   >>> heatmap = np.random.rand(6, 6)
+   >>> config = PlotConfig(title="Neuron 0", show=False)
+   >>> fig, ax = plot_firing_field_heatmap(heatmap, config=config)
+   >>> print(fig is not None)
+   True
 
 
 .. py:function:: plot_grid_score(rotated_corrs, grid_score, config = None, *, title = 'Grid Score Analysis', xlabel = 'Rotation Angle (°)', ylabel = 'Correlation', figsize = (8, 5), grid = True, save_path = None, show = True, **kwargs)
@@ -218,12 +245,15 @@ Module Contents
 
    .. rubric:: Example
 
+   >>> import numpy as np
    >>> from canns.analyzer.metrics.spatial_metrics import compute_grid_score
    >>> from canns.analyzer.visualization import plot_grid_score
+   >>>
+   >>> autocorr = np.random.rand(10, 10)
    >>> grid_score, rotated_corrs = compute_grid_score(autocorr)
-   >>> fig, ax = plot_grid_score(rotated_corrs, grid_score)
-   >>> print(f"Grid score: {grid_score:.3f}")
-   Grid score: 0.456
+   >>> fig, ax = plot_grid_score(rotated_corrs, grid_score, show=False)
+   >>> print(isinstance(grid_score, float))
+   True
 
 
 .. py:function:: plot_grid_spacing_analysis(autocorr, spacing_bins, bin_size = None, config = None, *, title = 'Grid Spacing Analysis', xlabel = 'Distance (bins)', ylabel = 'Autocorrelation', figsize = (8, 5), grid = True, save_path = None, show = True, **kwargs)
@@ -264,10 +294,19 @@ Module Contents
 
    .. rubric:: Example
 
+   >>> import numpy as np
    >>> from canns.analyzer.metrics.spatial_metrics import find_grid_spacing
    >>> from canns.analyzer.visualization import plot_grid_spacing_analysis
-   >>> spacing_bins, spacing_m = find_grid_spacing(autocorr, bin_size=0.06)
-   >>> fig, ax = plot_grid_spacing_analysis(autocorr, spacing_bins, bin_size=0.06)
-   >>> print(f"Spacing: {spacing_m:.3f}m")
+   >>>
+   >>> autocorr = np.random.rand(12, 12)
+   >>> spacing_bins, spacing_m = find_grid_spacing(autocorr, bin_size=0.05)
+   >>> fig, ax = plot_grid_spacing_analysis(
+   ...     autocorr,
+   ...     spacing_bins,
+   ...     bin_size=0.05,
+   ...     show=False,
+   ... )
+   >>> print(spacing_m is not None)
+   True
 
 

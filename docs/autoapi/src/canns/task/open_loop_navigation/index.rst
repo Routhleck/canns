@@ -37,23 +37,39 @@ Module Contents
 
    Abstract base class for action policies that control agent movement.
 
-   Action policies compute parameters for agent.update() at each simulation step,
-   enabling reusable, testable, and composable control strategies.
+   Action policies compute parameters for ``agent.update()`` at each simulation
+   step, enabling reusable and testable control strategies.
 
-   .. rubric:: Example
+   Workflow:
+       Setup -> Implement ``compute_action``.
+       Execute -> Pass the policy into a task and call ``get_data()``.
+       Result -> Task data is generated using the policy-controlled actions.
 
-   ```python
-   class ConstantDriftPolicy(ActionPolicy):
-       def __init__(self, drift_direction):
-           self.drift = np.array(drift_direction)
+   .. rubric:: Examples
 
-       def compute_action(self, step_idx, agent):
-           return {'drift_velocity': self.drift}
-
-   task = CustomOpenLoopNavigationTask(
-       duration=100, action_policy=ConstantDriftPolicy([0.1, 0.0])
-   )
-   ```
+   >>> import numpy as np
+   >>> import brainpy.math as bm
+   >>> from canns.task.open_loop_navigation import ActionPolicy, CustomOpenLoopNavigationTask
+   >>>
+   >>> class ConstantDriftPolicy(ActionPolicy):
+   ...     def __init__(self, drift_direction):
+   ...         self.drift = np.array(drift_direction, dtype=float)
+   ...
+   ...     def compute_action(self, step_idx, agent):
+   ...         return {"drift_velocity": self.drift, "drift_to_random_strength_ratio": 10.0}
+   >>>
+   >>> bm.set_dt(0.1)
+   >>> task = CustomOpenLoopNavigationTask(
+   ...     duration=0.5,
+   ...     width=1.0,
+   ...     height=1.0,
+   ...     dt=bm.get_dt(),
+   ...     action_policy=ConstantDriftPolicy([0.1, 0.0]),
+   ...     progress_bar=False,
+   ... )
+   >>> task.get_data()
+   >>> task.data.position.shape[1]
+   2
 
 
    .. py:method:: compute_action(step_idx, agent)
@@ -81,28 +97,37 @@ Module Contents
    Bases: :py:obj:`OpenLoopNavigationTask`
 
 
-   Template class for policy-based open-loop navigation tasks.
+   Open-loop navigation task driven by a custom action policy.
 
-   This class enables custom action policies by accepting an ActionPolicy object
-   that controls agent movement at each simulation step.
+   Provide an ``ActionPolicy`` to control how the agent moves at each step.
 
-   :param action_policy: ActionPolicy instance controlling agent movement
-   :param \*\*kwargs: All other arguments passed to OpenLoopNavigationTask
+   Workflow:
+       Setup -> Implement a policy and create the task.
+       Execute -> Call ``get_data()``.
+       Result -> Trajectory data reflects the policy-driven actions.
 
-   .. rubric:: Example
+   .. rubric:: Examples
 
-   ```python
-   # Define custom policy
-   class MyPolicy(ActionPolicy):
-       def compute_action(self, step_idx, agent):
-           return {'drift_velocity': np.array([0.1, 0.0])}
-
-   # Use it
-   task = CustomOpenLoopNavigationTask(
-       duration=100, action_policy=MyPolicy()
-   )
-   task.get_data()
-   ```
+   >>> import numpy as np
+   >>> import brainpy.math as bm
+   >>> from canns.task.open_loop_navigation import ActionPolicy, CustomOpenLoopNavigationTask
+   >>>
+   >>> class MyPolicy(ActionPolicy):
+   ...     def compute_action(self, step_idx, agent):
+   ...         return {"drift_velocity": np.array([0.05, 0.0])}
+   >>>
+   >>> bm.set_dt(0.1)
+   >>> task = CustomOpenLoopNavigationTask(
+   ...     duration=0.5,
+   ...     width=1.0,
+   ...     height=1.0,
+   ...     dt=bm.get_dt(),
+   ...     action_policy=MyPolicy(),
+   ...     progress_bar=False,
+   ... )
+   >>> task.get_data()
+   >>> task.data.velocity.shape[1]
+   2
 
 
    .. py:attribute:: action_policy
@@ -112,14 +137,32 @@ Module Contents
 
 .. py:class:: OpenLoopNavigationData
 
-   Container for the inputs recorded during the open-loop navigation task.
-   It contains the position, velocity, speed, movement direction, head direction,
-   and rotational velocity of the agent.
+   Container for open-loop navigation trajectories and derived signals.
 
-   Additional fields for theta sweep analysis:
-   - ang_velocity: Angular velocity calculated using unwrap method
-   - linear_speed_gains: Normalized linear speed gains [0,1]
-   - ang_speed_gains: Normalized angular speed gains [-1,1]
+   It stores position, velocity, speed, movement direction, head direction,
+   and rotational velocity. Optional fields are added for theta sweep analysis.
+
+   Workflow:
+       Setup -> Create an ``OpenLoopNavigationTask``.
+       Execute -> Call ``get_data()``.
+       Result -> Access trajectories from ``task.data``.
+
+   .. rubric:: Examples
+
+   >>> import brainpy.math as bm
+   >>> from canns.task.open_loop_navigation import OpenLoopNavigationTask
+   >>>
+   >>> bm.set_dt(0.1)
+   >>> task = OpenLoopNavigationTask(
+   ...     duration=1.0,
+   ...     width=1.0,
+   ...     height=1.0,
+   ...     dt=bm.get_dt(),
+   ...     progress_bar=False,
+   ... )
+   >>> task.get_data()
+   >>> task.data.position.shape[1]
+   2
 
 
    .. py:attribute:: ang_speed_gains
@@ -164,13 +207,38 @@ Module Contents
       :type:  numpy.ndarray
 
 
-.. py:class:: OpenLoopNavigationTask(duration=20.0, start_pos=(2.5, 2.5), initial_head_direction=None, progress_bar=True, width=5, height=5, dimensionality='2D', boundary_conditions='solid', scale=None, dx=0.01, grid_dx = None, grid_dy = None, boundary=None, walls=None, holes=None, objects=None, dt=None, speed_mean=0.04, speed_std=0.016, speed_coherence_time=0.7, rotational_velocity_coherence_time=0.08, rotational_velocity_std=120 * np.pi / 180, head_direction_smoothing_timescale=0.15, thigmotaxis=0.5, wall_repel_distance=0.1, wall_repel_strength=1.0)
+.. py:class:: OpenLoopNavigationTask(duration=20.0, start_pos=(2.5, 2.5), initial_head_direction=None, progress_bar=True, width=5, height=5, dimensionality='2D', boundary_conditions='solid', scale=None, dx=0.01, grid_dx = None, grid_dy = None, boundary=None, walls=None, holes=None, objects=None, dt=None, speed_mean=0.04, speed_std=0.016, speed_coherence_time=0.7, rotational_velocity_coherence_time=0.08, rotational_velocity_std=120 * np.pi / 180, head_direction_smoothing_timescale=0.15, thigmotaxis=0.5, wall_repel_distance=0.1, wall_repel_strength=1.0, rng_seed = None)
 
    Bases: :py:obj:`src.canns.task.navigation_base.BaseNavigationTask`
 
 
-   Open-loop spatial navigation task that synthesises trajectories without
-   incorporating real-time feedback from a controller.
+   Open-loop navigation task that synthesizes trajectories.
+
+   The trajectory is generated without real-time feedback control. This is
+   useful for producing reproducible paths for model evaluation.
+
+   Workflow:
+       Setup -> Instantiate the task with environment and motion settings.
+       Execute -> Call ``get_data()`` to generate a trajectory.
+       Result -> Read ``task.data`` for positions, velocities, and speed.
+
+   .. rubric:: Examples
+
+   >>> import brainpy.math as bm
+   >>> from canns.task.open_loop_navigation import OpenLoopNavigationTask
+   >>>
+   >>> bm.set_dt(0.1)
+   >>> task = OpenLoopNavigationTask(
+   ...     duration=1.0,
+   ...     width=1.0,
+   ...     height=1.0,
+   ...     start_pos=(0.5, 0.5),
+   ...     dt=bm.get_dt(),
+   ...     progress_bar=False,
+   ... )
+   >>> task.get_data()
+   >>> task.data.position.shape[0] == task.total_steps
+   True
 
 
    .. py:method:: calculate_theta_sweep_data()
@@ -278,46 +346,33 @@ Module Contents
    Bases: :py:obj:`CustomOpenLoopNavigationTask`
 
 
-   Preset task for cyclic dual-mode state-aware raster scan exploration.
+   Preset open-loop task for cyclic dual-mode raster scan exploration.
 
-   Systematically explores the environment using cyclic mode switching:
-   1. Horizontal phase: Left-right sweeps moving downward
-      → Switches to Vertical when reaching bottom
-   2. Vertical phase: Up-down sweeps moving rightward
-      → Switches back to Horizontal when reaching right edge
-   3. Cycles continuously: H → V → H → V → ...
+   The task alternates between horizontal and vertical sweep phases to cover
+   the environment while avoiding walls.
 
-   This cyclic dual-mode strategy achieves superior coverage by combining
-   orthogonal scanning patterns and continuously adapting to avoid walls.
+   Workflow:
+       Setup -> Instantiate the task with scan parameters.
+       Execute -> Call ``get_data()``.
+       Result -> Access the generated trajectory in ``task.data``.
 
-   Performance (200s, 1.0m x 1.0m):
-       - Cyclic dual-mode: ~75-80% coverage (continuous cycling)
-       - Single horizontal: 54.1% coverage (29 rows)
-       - +20-30% improvement over random walk
+   .. rubric:: Examples
 
-   :param duration: Simulation duration in seconds
-   :param width: Environment width (default: 1.0)
-   :param height: Environment height (default: 1.0)
-   :param step_size: Scan density - smaller = denser scanning (default: 0.03)
-   :param margin: Wall detection margin (default: 0.05)
-   :param speed: Movement speed in m/s (default: 0.15)
-   :param drift_strength: Drift control strength (default: 15.0)
-   :param \*\*kwargs: Additional arguments passed to OpenLoopNavigationTask
-
-   .. rubric:: Example
-
-   ```python
-   # High coverage dual-mode exploration
-   task = RasterScanNavigationTask(
-       duration=200,
-       width=1.0,
-       height=1.0,
-       step_size=0.03,  # Dense scanning in both directions
-       speed=0.15  # Movement speed
-   )
-   task.get_data()
-   task.show_trajectory_analysis()
-   ```
+   >>> import brainpy.math as bm
+   >>> from canns.task.open_loop_navigation import RasterScanNavigationTask
+   >>>
+   >>> bm.set_dt(0.1)
+   >>> task = RasterScanNavigationTask(
+   ...     duration=0.5,
+   ...     width=1.0,
+   ...     height=1.0,
+   ...     step_size=0.05,
+   ...     dt=bm.get_dt(),
+   ...     progress_bar=False,
+   ... )
+   >>> task.get_data()
+   >>> task.data.position.shape[1]
+   2
 
 
 .. py:class:: StateAwareRasterScanPolicy(width, height, margin = 0.05, step_size = 0.03, speed = 0.15, drift_strength = 15.0)
@@ -327,43 +382,37 @@ Module Contents
 
    State-aware raster scan policy with cyclic dual-mode exploration.
 
-   Scanning strategy (循环扫描):
-   1. Horizontal mode: Left-right sweeps moving downward
-      → When reaching bottom: switch to Vertical mode
-   2. Vertical mode: Up-down sweeps moving rightward
-      → When reaching right edge: switch back to Horizontal mode
-   3. Cycles continuously: H → V → H → V → ... (避免撞墙)
+   Scanning strategy:
+       1) Horizontal mode: left-right sweeps moving downward
+       2) Vertical mode: up-down sweeps moving rightward
+       3) Cycles continuously to avoid walls and improve coverage
 
-   This cyclic dual-mode approach achieves comprehensive coverage by combining
-   orthogonal scanning patterns and avoiding wall collisions.
+   Workflow:
+       Setup -> Instantiate the policy with environment size.
+       Execute -> Use it in ``CustomOpenLoopNavigationTask.get_data()``.
+       Result -> The trajectory follows a raster-scan pattern.
 
-   Tested performance (200s, 1.0m x 1.0m environment):
-       - Cyclic dual-mode: ~75-80%+ coverage (continuous cycling)
-       - Single horizontal: 54.1% coverage (29 rows)
+   .. rubric:: Examples
 
-   :param width: Environment width in meters
-   :param height: Environment height in meters
-   :param margin: Distance from wall to trigger turn (default: 0.05)
-   :param step_size: Movement per turn in perpendicular direction (default: 0.03)
-   :param speed: Movement speed (default: 0.15)
-   :param drift_strength: Drift-to-random ratio for agent.update() (default: 15.0)
-
-   .. rubric:: Example
-
-   ```python
-   policy = StateAwareRasterScanPolicy(
-       width=1.0, height=1.0,
-       step_size=0.03,  # Dense scanning for high coverage
-       drift_strength=15.0
-   )
-   task = CustomOpenLoopNavigationTask(
-       duration=200,
-       action_policy=policy,
-       width=1.0,
-       height=1.0,
-       start_pos=(0.05, 0.95)  # Start at top-left
-   )
-   ```
+   >>> import brainpy.math as bm
+   >>> from canns.task.open_loop_navigation import (
+   ...     StateAwareRasterScanPolicy,
+   ...     CustomOpenLoopNavigationTask,
+   ... )
+   >>>
+   >>> bm.set_dt(0.1)
+   >>> policy = StateAwareRasterScanPolicy(width=1.0, height=1.0)
+   >>> task = CustomOpenLoopNavigationTask(
+   ...     duration=0.5,
+   ...     width=1.0,
+   ...     height=1.0,
+   ...     dt=bm.get_dt(),
+   ...     action_policy=policy,
+   ...     progress_bar=False,
+   ... )
+   >>> task.get_data()
+   >>> task.data.position.shape[1]
+   2
 
 
    .. py:method:: compute_action(step_idx, agent)
@@ -430,8 +479,23 @@ Module Contents
 
    Open-loop navigation task in a T-maze environment.
 
-   This subclass configures the environment with a T-maze boundary, which is useful
-   for studying decision-making and spatial navigation in a controlled setting.
+   The environment boundary is configured to a classic T-maze layout.
+
+   Workflow:
+       Setup -> Instantiate the task with maze geometry.
+       Execute -> Call ``get_data()``.
+       Result -> Use ``task.data.position`` as the trajectory.
+
+   .. rubric:: Examples
+
+   >>> import brainpy.math as bm
+   >>> from canns.task.open_loop_navigation import TMazeOpenLoopNavigationTask
+   >>>
+   >>> bm.set_dt(0.1)
+   >>> task = TMazeOpenLoopNavigationTask(duration=0.5, dt=bm.get_dt(), progress_bar=False)
+   >>> task.get_data()
+   >>> task.data.position.shape[1]
+   2
 
    Initialize T-maze open-loop navigation task.
 
@@ -450,11 +514,26 @@ Module Contents
    Bases: :py:obj:`TMazeOpenLoopNavigationTask`
 
 
-   Open-loop navigation task in a T-maze environment with recesses at stem-arm junctions.
+   Open-loop navigation task in a T-maze with recesses at the junction.
 
-   This variant adds small rectangular indentations at the T-junction, creating
-   additional spatial features that may be useful for studying spatial navigation
-   and decision-making.
+   Recesses add small indentations near the stem-arm junctions, providing
+   extra spatial structure.
+
+   Workflow:
+       Setup -> Instantiate the task with recess geometry.
+       Execute -> Call ``get_data()``.
+       Result -> Use ``task.data`` for downstream modeling.
+
+   .. rubric:: Examples
+
+   >>> import brainpy.math as bm
+   >>> from canns.task.open_loop_navigation import TMazeRecessOpenLoopNavigationTask
+   >>>
+   >>> bm.set_dt(0.1)
+   >>> task = TMazeRecessOpenLoopNavigationTask(duration=0.5, dt=bm.get_dt(), progress_bar=False)
+   >>> task.get_data()
+   >>> task.data.position.shape[1]
+   2
 
    Initialize T-maze with recesses open-loop navigation task.
 
@@ -471,4 +550,23 @@ Module Contents
 
 
 .. py:function:: map2pi(a)
+
+   Wrap angles to the range [-pi, pi].
+
+   Workflow:
+       Setup -> Provide angles (scalar or array-like).
+       Execute -> Call ``map2pi``.
+       Result -> Angles wrapped into [-pi, pi].
+
+   .. rubric:: Examples
+
+   >>> import numpy as np
+   >>> import brainpy.math as bm
+   >>> from canns.task.open_loop_navigation import map2pi
+   >>>
+   >>> angles = bm.array([3.5, -4.0])
+   >>> wrapped = map2pi(angles)
+   >>> bool(((wrapped >= -np.pi) & (wrapped <= np.pi)).all())
+   True
+
 
