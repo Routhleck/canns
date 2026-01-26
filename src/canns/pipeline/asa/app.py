@@ -37,6 +37,7 @@ class ASAApp(App):
     """Main TUI application for ASA analysis."""
 
     CSS_PATH = "styles.tcss"
+    TITLE = "Attractor Structure Analyzer (ASA)"
 
     # Terminal size requirements
     MIN_WIDTH = 100
@@ -975,6 +976,7 @@ class ASAApp(App):
             "barcode",
             "cohomap",
             "path_compare",
+            "trajectory",
             "cohospace_trajectory",
             "fr_heatmap",
             "frm",

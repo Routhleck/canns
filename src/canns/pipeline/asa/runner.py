@@ -1091,19 +1091,5 @@ class PipelineRunner:
     ) -> dict[str, Path]:
         """Run grid score analysis."""
 
-        # Create output directory
-        out_dir = self._results_dir(state) / "GridScore"
-        out_dir.mkdir(parents=True, exist_ok=True)
-
-        # Parameters are unused until gridscore implementation is added.
-
-        # Compute grid scores for all neurons
-        log_callback("Computing grid scores...")
-        # TODO: Implement batch grid score computation
-        # This would require iterating over neurons and computing individual scores
-
-        # Placeholder result
-        scores_path = out_dir / "gridscore.npz"
-        dist_path = out_dir / "gridscore_distribution.png"
-
-        return {"scores": scores_path, "distribution": dist_path}
+        log_callback("GridScore analysis is not implemented in the TUI yet.")
+        raise ProcessingError("GridScore analysis is not implemented yet.")

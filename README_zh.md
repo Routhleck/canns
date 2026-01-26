@@ -28,7 +28,7 @@ CANNs 是一个构建于 brainpy 之上的 Python 库，并通过专门的 Rust 
 - **任务优先 API** – `canns.task.tracking` 与 `canns.task.open_loop_navigation` 可生成平滑跟踪输入、群体编码刺激，或导入实验轨迹。
 - **丰富分析套件** – `canns.analyzer` 覆盖能量景观、调谐曲线、脉冲嵌入、UMAP/TDA 辅助工具，以及 theta 扫描动画。
 - **统一训练框架** – `canns.trainer.HebbianTrainer` 实现通用的 Hebb 学习与预测，基于抽象 `Trainer` 基类。
-- **流水线工作台** – `canns.pipeline.ASAPipeline` 提供 ASA 端到端分析（TDA → 解码 → CohoMap/CohoSpace/FR/FRM），并支持 Textual TUI 交互运行。
+- **流水线工作台** – ASA TUI（Attractor Structure Analyzer）提供端到端分析（TDA → 解码 → CohoMap/CohoSpace/FR/FRM），并支持 Textual TUI 交互运行。
 - **可扩展基础** – 基类（`BasicModel`, `Task`, `Trainer`, `Pipeline`）让自定义组件与内置生态保持一致。
 
 ## 可视化展示
@@ -112,7 +112,7 @@ us, inputs = bm.for_loop(
 )
 ```
 
-若需 ASA pipeline，可运行 `python -m canns.pipeline.tui`，并选择你的 ASA `.npz` 数据。
+若需 ASA pipeline，可运行 `python -m canns.pipeline.asa`（或 `canns-tui` 入口），并选择你的 ASA `.npz` 数据。
 
 ## 文档与示例笔记本
 

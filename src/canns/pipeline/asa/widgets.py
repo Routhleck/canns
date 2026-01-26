@@ -4,6 +4,9 @@ This module provides reusable UI components for the ASA analysis interface.
 """
 
 from pathlib import Path
+import os
+import subprocess
+import sys
 
 from rich.ansi import AnsiDecoder
 from rich.text import Text
@@ -71,6 +74,25 @@ class ImagePreview(Vertical):
                 return
             path = self._resolve_path(raw)
             self.update_image(path)
+        elif event.button.id == "preview-open-btn":
+            path = self.image_path
+            raw = self.query_one("#preview-path-input", Input).value.strip()
+            if raw:
+                path = self._resolve_path(raw)
+            if path is None or not path.exists():
+                content = self.query_one("#preview-content", Static)
+                content.update("No image to open")
+                return
+            try:
+                if sys.platform == "darwin":
+                    subprocess.Popen(["open", str(path)])
+                elif sys.platform.startswith("win"):
+                    os.startfile(str(path))
+                else:
+                    subprocess.Popen(["xdg-open", str(path)])
+            except Exception as e:
+                content = self.query_one("#preview-content", Static)
+                content.update(f"Open failed: {e}")
         elif event.button.id == "preview-zoom-in-btn":
             self._zoom_step += 1
             self.update_image(self.image_path)
