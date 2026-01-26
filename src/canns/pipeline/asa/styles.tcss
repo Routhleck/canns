@@ -1,0 +1,221 @@
+/* ASA TUI Styles */
+
+/* Hidden class */
+.hidden {
+    display: none;
+}
+
+/* Main layout - three columns */
+#main-container {
+    layout: horizontal;
+    height: 100%;
+}
+
+/* Left panel - narrow action panel */
+#left-panel {
+    width: 22;
+    min-width: 20;
+    max-width: 26;
+    height: 100%;  /* CRITICAL: Fill parent height */
+    border-right: solid $primary;
+    padding: 1;
+}
+
+/* Scrollable controls area - fill remaining height to enable scrolling */
+#controls-scroll {
+    height: 1fr;
+    overflow-y: auto;
+    scrollbar-size-vertical: 1;
+    min-width: 100%;
+    padding-bottom: 2;
+}
+
+/* Child containers expand naturally to allow scrolling */
+#preprocess-controls,
+#analysis-controls {
+    height: auto !important;
+    width: 100%;
+}
+
+/* Middle panel - parameters + file browser */
+#middle-panel {
+    layout: horizontal;
+    width: 0.5fr;
+    min-width: 30;
+    border-right: solid $primary;
+    padding: 0;
+}
+
+#params-panel {
+    width: 0.7fr;
+    padding: 1;
+    border-right: solid $secondary;
+    height: 100%;
+}
+
+#params-header {
+    background: $boost;
+    padding: 1;
+    margin-bottom: 1;
+    text-style: bold;
+}
+
+#file-tree-panel {
+    width: 0.7fr;
+    padding: 1;
+    height: 100%;
+}
+
+#files-header {
+    background: $boost;
+    padding: 1;
+    margin-bottom: 1;
+    text-style: bold;
+}
+
+#right-panel {
+    width: 1.5fr;
+    padding: 1;
+    height: 100%;
+}
+
+/* Results tabs take 75% of right panel height */
+#results-tabs {
+    height: 5fr;
+}
+
+/* Log viewer at bottom - 25% of right panel height */
+#log-viewer {
+    height: 1fr;
+    border: solid $primary;
+    padding: 1;
+}
+
+/* Workdir label */
+#workdir-label {
+    background: $boost;
+    padding: 1;
+    margin-bottom: 1;
+}
+
+/* Parameter groups */
+ParamGroup {
+    border: round $secondary;
+    padding: 1;
+    padding-bottom: 1;
+    margin: 1 0;
+    height: auto;
+    width: 100%;
+    min-height: 10;
+}
+
+.param-group-title {
+    text-style: bold;
+    color: $accent;
+    dock: top;
+}
+
+/* Embedding parameters container */
+#emb-params {
+    margin-top: 1;
+    margin-bottom: 1;
+    height: auto !important;
+}
+
+#emb-params Label {
+    margin-top: 1;
+}
+
+#emb-params Input {
+    margin-bottom: 1;
+}
+
+#emb-params Checkbox {
+    margin: 1 0;  /* Changed from 0.5 to 1 */
+}
+
+/* Buttons */
+Button {
+    margin: 1 0;
+}
+
+#actions-bar {
+    width: 100%;
+    margin: 0 0 1 0;
+}
+
+#actions-bar Button {
+    width: 100%;
+    margin: 0 0 1 0;
+}
+
+#run-btn {
+    width: 100%;
+    margin-top: 2;
+}
+
+/* Progress bar */
+#progress-bar {
+    margin: 1 0;
+}
+
+#run-status {
+    margin-top: 1;
+}
+
+/* Image preview - allow more space */
+ImagePreview {
+    height: 1fr;
+    min-height: 20;
+    border: solid $accent;
+    padding: 1;
+}
+
+#preview-path {
+    color: $text-muted;
+    margin-bottom: 1;
+}
+
+#preview-path-input {
+    margin-bottom: 1;
+}
+
+/* File tree - compact for small terminals, now full height */
+#file-tree {
+    height: 1fr;  /* Fill available space */
+    border: solid $secondary;
+}
+
+/* Status indicators */
+.running {
+    background: $warning;
+}
+
+.success {
+    background: $success;
+}
+
+.error {
+    background: $error;
+}
+
+/* Tab content */
+TabbedContent {
+    height: 1fr;
+}
+
+TabPane {
+    padding: 1;
+    height: 100%;
+}
+
+TabbedContent > ContentSwitcher {
+    height: 1fr;
+}
+
+/* Result status */
+#result-status {
+    margin-top: 2;
+    padding: 1;
+    border: solid $primary;
+}
