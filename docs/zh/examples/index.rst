@@ -19,7 +19,7 @@
      - 在一维 CANN 中运行振荡跟踪，并利用绘图工具生成能量景观动画。
    * - ``examples/cann/cann2d_tracking.py``
      - 演示二维 CANN 的平滑跟踪，并通过配置式绘图导出能量景观动画。
-   * - ``examples/experimental_cann1d_analysis.py``
+   * - ``examples/experimental_data_analysis/fly_roi_bump_fit.py``
      - 载入 ROI 活动，调用实验数据分析器拟合 1D bump，并导出逐帧 GIF。
    * - ``examples/experimental_cann2d_analysis.py``
      - 对二维实验数据执行 spike embedding、UMAP 和 TDA 分析，并生成环面可视化。

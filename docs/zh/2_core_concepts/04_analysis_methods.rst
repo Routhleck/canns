@@ -13,7 +13,8 @@
 - **data/** - 实验数据分析与 ASA pipeline
 
   - ``asa/`` - embed/TDA/解码/CohoMap/CohoSpace/PathCompare/FR/FRM
-  - ``legacy/`` - 早期 CANN1D/2D 数据分析器（兼容旧工作流）
+  - ``asa/fly_roi.py`` - ROI 1D bump 拟合与动画（Fly ROI）
+  - ``legacy/`` - 早期 CANN2D 数据分析器（兼容旧工作流）
 
 - **metrics/** - 计算分析（无 matplotlib 依赖）
 
@@ -81,6 +82,8 @@ ASA pipeline 面向实验神经记录，核心输入为 ``spike/x/y/t``。典型
      - ``compute_fr_heatmap_matrix`` / ``save_fr_heatmap_png`` / ``compute_frm`` / ``plot_frm``
    * - **路径对齐**
      - ``align_coords_to_position`` / ``apply_angle_scale``
+   * - **ROI 1D bump**
+     - ``roi_bump_fits`` / ``create_1d_bump_animation`` / ``CANN1DPlotConfig``
 
 可视化与模型输出分析
 ===========================

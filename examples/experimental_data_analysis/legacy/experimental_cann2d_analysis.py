@@ -2,8 +2,7 @@
 """
 CANN 2D Analysis
 
-This example demonstrates how to use the bump_fits and create_1d_bump_animation functions
-from the experimental data analyzer to analyze 1D CANN bumps.
+This example demonstrates how to use the CANN 2D analysis utilities.
 """
 
 from canns.analyzer.data import (

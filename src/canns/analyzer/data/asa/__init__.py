@@ -25,6 +25,12 @@ from .fr import (
     plot_frm,
     save_fr_heatmap_png,
 )
+from .fly_roi import (
+    BumpFitsConfig,
+    CANN1DPlotConfig,
+    create_1d_bump_animation,
+    roi_bump_fits,
+)
 
 # Path utilities
 from .path import align_coords_to_position, apply_angle_scale
@@ -60,6 +66,10 @@ __all__ = [
     "plot_cohomap_multi",
     "plot_3d_bump_on_torus",
     "plot_2d_bump_on_manifold",
+    "BumpFitsConfig",
+    "CANN1DPlotConfig",
+    "create_1d_bump_animation",
+    "roi_bump_fits",
     "compute_fr_heatmap_matrix",
     "save_fr_heatmap_png",
     "FRMResult",
