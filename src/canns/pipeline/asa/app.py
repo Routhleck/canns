@@ -116,6 +116,9 @@ class ASAApp(App):
 
                                 # Preprocessing parameters (enabled when method is embed_spike_trains)
                                 with Vertical(id="emb-params"):
+                                    yield Label("res:", id="emb-res-label")
+                                    yield Input(value="100000", id="emb-res", disabled=True)
+
                                     yield Label("dt:", id="emb-dt-label")
                                     yield Input(value="1000", id="emb-dt", disabled=True)
 
@@ -123,7 +126,7 @@ class ASAApp(App):
                                     yield Input(value="5000", id="emb-sigma", disabled=True)
 
                                     yield Checkbox("smooth", id="emb-smooth", value=True, disabled=True)
-                                    yield Checkbox("speed_filter", id="emb-speed-filter", value=True, disabled=True)
+                                    yield Checkbox("speed_filter", id="emb-speed-filter", value=False, disabled=True)
 
                                     yield Label("min_speed:", id="emb-min-speed-label")
                                     yield Input(value="2.5", id="emb-min-speed", disabled=True)
@@ -200,7 +203,7 @@ class ASAApp(App):
                                 yield Checkbox("real_of (v0)", id="decode-real-of", value=True)
 
                             with ParamGroup("PathCompare Parameters", id="analysis-params-pathcompare", classes="hidden"):
-                                yield Checkbox("use_box (coordsbox/times_box)", id="pc-use-box", value=False)
+                                yield Checkbox("use_box (coordsbox/times_box)", id="pc-use-box", value=True)
                                 yield Checkbox("interp_to_full (use_box)", id="pc-interp-full", value=True)
                                 yield Label("dim_mode:")
                                 yield Select(
@@ -338,7 +341,7 @@ class ASAApp(App):
             # Right panel (results + log at bottom)
             with Vertical(id="right-panel"):
                 with TabbedContent(id="results-tabs"):
-                    with TabPane("Setup"):
+                    with TabPane("Setup", id="setup-tab"):
                         yield Static(
                             "1. Select working directory (Ctrl-W)\n"
                             "2. Choose input mode and files\n"
@@ -347,7 +350,7 @@ class ASAApp(App):
                             id="setup-content"
                         )
 
-                    with TabPane("Results"):
+                    with TabPane("Results", id="results-tab"):
                         yield ImagePreview(id="result-preview")
                         yield Static("No results yet. Complete preprocessing and run analysis.", id="result-status")
 
@@ -403,11 +406,13 @@ class ASAApp(App):
         """Handle workdir selection."""
         if path:
             self.state.workdir = path
+            self.runner.reset_input()
             self.update_workdir_label()
 
             # Update file tree in middle panel
             tree = self.query_one("#file-tree", DirectoryTree)
             tree.path = path
+            tree.reload()
 
     def update_workdir_label(self) -> None:
         """Update the workdir label."""
@@ -431,6 +436,7 @@ class ASAApp(App):
         """Handle select changes."""
         if event.select.id == "input-mode-select":
             self.state.input_mode = str(event.value)
+            self.runner.reset_input()
         elif event.select.id == "preset-select":
             self.state.preset = str(event.value)
             self.apply_preset_params()
@@ -443,6 +449,7 @@ class ASAApp(App):
             self.query_one("#emb-smooth", Checkbox).disabled = not is_embed
             self.query_one("#emb-speed-filter", Checkbox).disabled = not is_embed
             self.query_one("#emb-min-speed", Input).disabled = not is_embed
+            self.query_one("#emb-res", Input).disabled = not is_embed
         elif event.select.id == "analysis-mode-select":
             self.state.analysis_mode = str(event.value)
             self.update_analysis_params_visibility()
@@ -466,6 +473,7 @@ class ASAApp(App):
 
         if self.state.input_mode == "asa" and selected_path.suffix == ".npz":
             self.state.asa_file = relative_path(self.state, selected_path)
+            self.runner.reset_input()
             self.log_message(f"Selected ASA file: {self.state.asa_file}")
             return
 
@@ -489,6 +497,7 @@ class ASAApp(App):
         # Collect preprocessing parameters
         if self.state.preprocess_method == "embed_spike_trains":
             try:
+                res_val = int(self.query_one("#emb-res", Input).value)
                 dt_val = int(self.query_one("#emb-dt", Input).value)
                 sigma_val = int(self.query_one("#emb-sigma", Input).value)
                 smooth_val = self.query_one("#emb-smooth", Checkbox).value
@@ -496,6 +505,7 @@ class ASAApp(App):
                 min_speed_val = float(self.query_one("#emb-min-speed", Input).value)
 
                 self.state.preprocess_params = {
+                    "res": res_val,
                     "dt": dt_val,
                     "sigma": sigma_val,
                     "smooth": smooth_val,
@@ -593,7 +603,10 @@ class ASAApp(App):
         self.append_log_file(message)
 
     def _log_file_path(self) -> Path:
-        return self.state.workdir / "Results" / "asa_tui.log"
+        try:
+            return self.runner.results_dir(self.state) / "asa_tui.log"
+        except Exception:
+            return self.state.workdir / "Results" / "asa_tui.log"
 
     def append_log_file(self, message: str) -> None:
         """Append log message to file for easy copying."""
@@ -828,6 +841,8 @@ class ASAApp(App):
                 self.query_one("#run-analysis-btn", Button).disabled = False
 
                 self.log_message("Preprocessing complete. Ready for analysis.")
+                tree = self.query_one("#file-tree", DirectoryTree)
+                tree.reload()
             else:
                 self.set_run_status("Status: Preprocessing failed.", "error")
                 self.push_screen(ErrorScreen("Preprocessing Error", result.error or "Unknown error"))
@@ -842,13 +857,18 @@ class ASAApp(App):
                 self.set_run_status("Status: Analysis complete.", "success")
                 self.log_message(f"Artifacts: {list(result.artifacts.keys())}")
 
-                # Update results tab
-                if "barcode" in result.artifacts:
+                # Update results tab + preview
+                tabs = self.query_one("#results-tabs", TabbedContent)
+                tabs.active = "results-tab"
+                preview_path = self._select_result_image(result.artifacts)
+                if preview_path is not None:
                     preview = self.query_one("#result-preview", ImagePreview)
-                    preview.update_image(result.artifacts["barcode"])
+                    preview.update_image(preview_path)
 
                 status = self.query_one("#result-status", Static)
                 status.update(f"Analysis completed: {result.summary}")
+                tree = self.query_one("#file-tree", DirectoryTree)
+                tree.reload()
             else:
                 self.set_run_status("Status: Analysis failed.", "error")
                 self.push_screen(ErrorScreen("Analysis Error", result.error or "Unknown error"))
@@ -856,6 +876,28 @@ class ASAApp(App):
     def action_refresh(self) -> None:
         """Refresh the UI."""
         self.update_workdir_label()
+        tree = self.query_one("#file-tree", DirectoryTree)
+        tree.reload()
+
+    def _select_result_image(self, artifacts: dict[str, Path]) -> Path | None:
+        """Pick a result image to preview, preferring known keys."""
+        priority_keys = [
+            "barcode",
+            "cohomap",
+            "path_compare",
+            "cohospace_trajectory",
+            "fr_heatmap",
+            "frm",
+            "distribution",
+        ]
+        for key in priority_keys:
+            path = artifacts.get(key)
+            if path and path.exists() and path.suffix.lower() in {".png", ".jpg", ".jpeg"}:
+                return path
+        for path in artifacts.values():
+            if path and path.exists() and path.suffix.lower() in {".png", ".jpg", ".jpeg"}:
+                return path
+        return None
 
     def action_help(self) -> None:
         """Show help screen."""

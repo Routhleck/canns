@@ -51,6 +51,14 @@ class PipelineRunner:
         """Check if preprocessing has been completed."""
         return self._embed_data is not None
 
+    def reset_input(self) -> None:
+        """Clear cached input/preprocessing state when input files change."""
+        self._asa_data = None
+        self._embed_data = None
+        self._aligned_pos = None
+        self._input_hash = None
+        self._embed_hash = None
+
     def _json_safe(self, obj: Any) -> Any:
         """Convert objects to JSON-serializable structures."""
         if isinstance(obj, Path):
@@ -102,7 +110,33 @@ class PipelineRunner:
         return self._results_dir(state) / ".asa_cache"
 
     def _results_dir(self, state: WorkflowState) -> Path:
-        return state.workdir / "Results"
+        base = state.workdir / "Results"
+        dataset_id = self._dataset_id(state)
+        return base / dataset_id
+
+    def results_dir(self, state: WorkflowState) -> Path:
+        """Public accessor for results directory."""
+        return self._results_dir(state)
+
+    def _dataset_id(self, state: WorkflowState) -> str:
+        """Create a stable dataset id based on input filename and md5 prefix."""
+        try:
+            input_hash = self._input_hash or self._compute_input_hash(state)
+        except Exception:
+            input_hash = "unknown"
+        prefix = input_hash[:8]
+
+        if state.input_mode == "asa":
+            path = resolve_path(state, state.asa_file)
+            stem = path.stem if path is not None else "asa"
+            return f"{stem}_{prefix}"
+        if state.input_mode == "neuron_traj":
+            neuron_path = resolve_path(state, state.neuron_file)
+            traj_path = resolve_path(state, state.traj_file)
+            neuron_stem = neuron_path.stem if neuron_path is not None else "neuron"
+            traj_stem = traj_path.stem if traj_path is not None else "traj"
+            return f"{neuron_stem}_{traj_stem}_{prefix}"
+        return f"{state.input_mode}_{prefix}"
 
     def _stage_cache_path(self, stage_dir: Path) -> Path:
         return stage_dir / "cache.json"
@@ -187,13 +221,24 @@ class PipelineRunner:
             if state.preprocess_method == "embed_spike_trains":
                 from canns.analyzer.data.asa import embed_spike_trains, SpikeEmbeddingConfig
 
-                # Get preprocessing parameters from state or use defaults
+                # Get preprocessing parameters from state or use config defaults
                 params = state.preprocess_params if state.preprocess_params else {}
+                base_config = SpikeEmbeddingConfig()
+                effective_params = {
+                    "res": base_config.res,
+                    "dt": base_config.dt,
+                    "sigma": base_config.sigma,
+                    "smooth": base_config.smooth,
+                    "speed_filter": base_config.speed_filter,
+                    "min_speed": base_config.min_speed,
+                }
+                effective_params.update(params)
+
                 self._embed_hash = self._hash_obj(
                     {
                         "input_hash": self._input_hash,
                         "method": state.preprocess_method,
-                        "params": params,
+                        "params": effective_params,
                     }
                 )
                 cache_dir = self._cache_dir(state)
@@ -220,14 +265,7 @@ class PipelineRunner:
                         elapsed_time=elapsed,
                     )
 
-                config = SpikeEmbeddingConfig(
-                    res=params.get("res", 100),
-                    dt=params.get("dt", 0.02),
-                    sigma=params.get("sigma", 0.1),
-                    smooth=params.get("smooth", True),
-                    speed_filter=params.get("speed_filter", True),
-                    min_speed=params.get("min_speed", 2.5),
-                )
+                config = SpikeEmbeddingConfig(**effective_params)
 
                 log_callback("Running embed_spike_trains...")
                 progress_callback(50)
@@ -257,7 +295,7 @@ class PipelineRunner:
                         {
                             "hash": self._embed_hash,
                             "input_hash": self._input_hash,
-                            "params": params,
+                            "params": effective_params,
                         },
                     )
                 except Exception as e:
@@ -403,14 +441,17 @@ class PipelineRunner:
             from canns.analyzer.data.asa import embed_spike_trains, SpikeEmbeddingConfig
 
             params = state.preprocess_params
-            config = SpikeEmbeddingConfig(
-                res=params.get("res", 100),
-                dt=params.get("dt", 0.02),
-                sigma=params.get("sigma", 0.1),
-                smooth=params.get("smooth", True),
-                speed_filter=params.get("speed_filter", True),
-                min_speed=params.get("min_speed", 2.5),
-            )
+            base_config = SpikeEmbeddingConfig()
+            effective_params = {
+                "res": base_config.res,
+                "dt": base_config.dt,
+                "sigma": base_config.sigma,
+                "smooth": base_config.smooth,
+                "speed_filter": base_config.speed_filter,
+                "min_speed": base_config.min_speed,
+            }
+            effective_params.update(params)
+            config = SpikeEmbeddingConfig(**effective_params)
 
             spike_main = embed_spike_trains(asa_data, config)
             asa_data["spike_main"] = spike_main

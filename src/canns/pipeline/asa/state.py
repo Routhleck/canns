@@ -140,7 +140,7 @@ def get_preset_params(preset: str) -> Dict[str, Any]:
                 "method": "embed_spike_trains",
                 "dt": 0.02,
                 "sigma": 0.1,
-                "speed_filter": True,
+                "speed_filter": False,
                 "min_speed": 2.5,
             },
             "tda": {
@@ -169,7 +169,7 @@ def get_preset_params(preset: str) -> Dict[str, Any]:
                 "method": "embed_spike_trains",
                 "dt": 0.02,
                 "sigma": 0.1,
-                "speed_filter": True,
+                "speed_filter": False,
                 "min_speed": 2.5,
             },
             "tda": {
