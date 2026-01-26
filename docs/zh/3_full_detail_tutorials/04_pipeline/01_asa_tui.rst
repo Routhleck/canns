@@ -1,4 +1,4 @@
-ASA TUI 端到端分析教程
+教程1：ASA TUI 端到端分析教程
 =====================
 
 本教程介绍 ASA TUI（Attractor Structure Analyzer）如何将 ASA pipeline 的数据预处理、
@@ -35,6 +35,10 @@ TDA、解码与可视化整合为交互式终端工作流。你将学会用界�
    python -m canns.pipeline.asa
    # 或
    canns-tui
+
+.. note::
+   ``canns-tui`` 现在是统一入口，启动后先选择 **ASA** 或 **Model Gallery**。
+   若只想直接进入 ASA，可使用 ``python -m canns.pipeline.asa``。
 
 启动后若出现尺寸警告，请调大终端窗口或缩小字体。
 

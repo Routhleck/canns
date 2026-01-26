@@ -23,6 +23,7 @@ Attributes
    src.canns.data.datasets.HAS_DOWNLOAD_DEPS
    src.canns.data.datasets.HAS_NUMPY
    src.canns.data.datasets.HUGGINGFACE_REPO
+   src.canns.data.datasets.LEFT_RIGHT_DATASET_DIR
 
 
 Functions
@@ -37,6 +38,8 @@ Functions
    src.canns.data.datasets.get_data_dir
    src.canns.data.datasets.get_dataset_path
    src.canns.data.datasets.get_huggingface_upload_guide
+   src.canns.data.datasets.get_left_right_data_session
+   src.canns.data.datasets.get_left_right_npz
    src.canns.data.datasets.list_datasets
    src.canns.data.datasets.load
    src.canns.data.datasets.load_file
@@ -98,6 +101,39 @@ Module Contents
 
    :returns: Upload guide text.
    :rtype: str
+
+
+.. py:function:: get_left_right_data_session(session_id, auto_download = True, force = False)
+
+   Download and return files for a Left_Right_data_of session.
+
+   :param session_id: Session folder name, e.g. "24365_2".
+   :type session_id: str
+   :param auto_download: Whether to download missing files automatically.
+   :type auto_download: bool
+   :param force: Whether to force re-download of existing files.
+   :type force: bool
+
+   :returns: Mapping with keys: "manifest", "full_file", "module_files".
+   :rtype: dict or None
+
+
+.. py:function:: get_left_right_npz(session_id, filename, auto_download = True, force = False)
+
+   Download and return a specific Left_Right_data_of NPZ file.
+
+   :param session_id: Session folder name, e.g. "26034_3".
+   :type session_id: str
+   :param filename: File name inside the session folder, e.g.
+                    "26034_3_ASA_mec_gridModule02_n104_cm.npz".
+   :type filename: str
+   :param auto_download: Whether to download the file if missing.
+   :type auto_download: bool
+   :param force: Whether to force re-download of existing files.
+   :type force: bool
+
+   :returns: Path to the requested file if available, None otherwise.
+   :rtype: Path or None
 
 
 .. py:function:: list_datasets()
@@ -173,5 +209,9 @@ Module Contents
 
 .. py:data:: HUGGINGFACE_REPO
    :value: 'canns-team/data-analysis-datasets'
+
+
+.. py:data:: LEFT_RIGHT_DATASET_DIR
+   :value: 'Left_Right_data_of'
 
 

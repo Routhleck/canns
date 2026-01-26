@@ -46,9 +46,12 @@ Functions
    src.canns.data.get_data_dir
    src.canns.data.get_dataset_path
    src.canns.data.get_huggingface_upload_guide
+   src.canns.data.get_left_right_data_session
+   src.canns.data.get_left_right_npz
    src.canns.data.list_datasets
    src.canns.data.load
    src.canns.data.load_grid_data
+   src.canns.data.load_left_right_npz
    src.canns.data.load_roi_data
    src.canns.data.quick_setup
 
@@ -93,6 +96,39 @@ Package Contents
 
    :returns: Upload guide text.
    :rtype: str
+
+
+.. py:function:: get_left_right_data_session(session_id, auto_download = True, force = False)
+
+   Download and return files for a Left_Right_data_of session.
+
+   :param session_id: Session folder name, e.g. "24365_2".
+   :type session_id: str
+   :param auto_download: Whether to download missing files automatically.
+   :type auto_download: bool
+   :param force: Whether to force re-download of existing files.
+   :type force: bool
+
+   :returns: Mapping with keys: "manifest", "full_file", "module_files".
+   :rtype: dict or None
+
+
+.. py:function:: get_left_right_npz(session_id, filename, auto_download = True, force = False)
+
+   Download and return a specific Left_Right_data_of NPZ file.
+
+   :param session_id: Session folder name, e.g. "26034_3".
+   :type session_id: str
+   :param filename: File name inside the session folder, e.g.
+                    "26034_3_ASA_mec_gridModule02_n104_cm.npz".
+   :type filename: str
+   :param auto_download: Whether to download the file if missing.
+   :type auto_download: bool
+   :param force: Whether to force re-download of existing files.
+   :type force: bool
+
+   :returns: Path to the requested file if available, None otherwise.
+   :rtype: Path or None
 
 
 .. py:function:: list_datasets()
@@ -155,6 +191,23 @@ Package Contents
    >>>
    >>> # Load specific default dataset
    >>> grid_data = load_grid_data(dataset_key='grid_2')
+
+
+.. py:function:: load_left_right_npz(session_id, filename, auto_download = True, force = False)
+
+   Load a Left_Right_data_of NPZ file.
+
+   :param session_id: Session folder name, e.g. "26034_3".
+   :type session_id: str
+   :param filename: File name inside the session folder.
+   :type filename: str
+   :param auto_download: Whether to download the file if missing.
+   :type auto_download: bool
+   :param force: Whether to force re-download of existing files.
+   :type force: bool
+
+   :returns: Dictionary of npz arrays if successful, None otherwise.
+   :rtype: dict or None
 
 
 .. py:function:: load_roi_data(source = None)

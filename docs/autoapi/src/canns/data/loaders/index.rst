@@ -20,6 +20,7 @@ Functions
 
    src.canns.data.loaders.get_data_summary
    src.canns.data.loaders.load_grid_data
+   src.canns.data.loaders.load_left_right_npz
    src.canns.data.loaders.load_roi_data
    src.canns.data.loaders.preprocess_spike_data
    src.canns.data.loaders.validate_grid_data
@@ -66,6 +67,23 @@ Module Contents
    >>>
    >>> # Load specific default dataset
    >>> grid_data = load_grid_data(dataset_key='grid_2')
+
+
+.. py:function:: load_left_right_npz(session_id, filename, auto_download = True, force = False)
+
+   Load a Left_Right_data_of NPZ file.
+
+   :param session_id: Session folder name, e.g. "26034_3".
+   :type session_id: str
+   :param filename: File name inside the session folder.
+   :type filename: str
+   :param auto_download: Whether to download the file if missing.
+   :type auto_download: bool
+   :param force: Whether to force re-download of existing files.
+   :type force: bool
+
+   :returns: Dictionary of npz arrays if successful, None otherwise.
+   :rtype: dict or None
 
 
 .. py:function:: load_roi_data(source = None)

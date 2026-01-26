@@ -1,24 +1,22 @@
-src.canns.pipeline.gallery
-==========================
+src.canns.pipeline.gallery.app
+==============================
 
-.. py:module:: src.canns.pipeline.gallery
+.. py:module:: src.canns.pipeline.gallery.app
 
 .. autoapi-nested-parse::
 
-   Model gallery TUI.
+   Model gallery TUI for quick CANN visualizations.
 
 
 
-Submodules
+Attributes
 ----------
 
-.. toctree::
-   :maxdepth: 1
+.. autoapisummary::
 
-   /autoapi/src/canns/pipeline/gallery/__main__/index
-   /autoapi/src/canns/pipeline/gallery/app/index
-   /autoapi/src/canns/pipeline/gallery/runner/index
-   /autoapi/src/canns/pipeline/gallery/state/index
+   src.canns.pipeline.gallery.app.CANN1D_DEFAULTS
+   src.canns.pipeline.gallery.app.CANN2D_DEFAULTS
+   src.canns.pipeline.gallery.app.GRID_DEFAULTS
 
 
 Classes
@@ -26,19 +24,11 @@ Classes
 
 .. autoapisummary::
 
-   src.canns.pipeline.gallery.GalleryApp
+   src.canns.pipeline.gallery.app.GalleryApp
 
 
-Functions
----------
-
-.. autoapisummary::
-
-   src.canns.pipeline.gallery.main
-
-
-Package Contents
-----------------
+Module Contents
+---------------
 
 .. py:class:: GalleryApp
 
@@ -168,8 +158,9 @@ Package Contents
    .. py:attribute:: state
 
 
-.. py:function:: main()
+.. py:data:: CANN1D_DEFAULTS
 
-   Entry point for the model gallery TUI.
+.. py:data:: CANN2D_DEFAULTS
 
+.. py:data:: GRID_DEFAULTS
 
