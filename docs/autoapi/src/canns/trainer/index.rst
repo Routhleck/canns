@@ -7,9 +7,14 @@ src.canns.trainer
 
    Training utilities for CANNs models.
 
-   The module exposes the abstract ``Trainer`` base class and concrete implementations
-   of classic brain-inspired learning algorithms: ``HebbianTrainer``, ``AntiHebbianTrainer``,
-   ``OjaTrainer``, ``BCMTrainer``, ``SangerTrainer``, and ``STDPTrainer``.
+   This namespace exposes the abstract ``Trainer`` base class and concrete
+   implementations of classic brain-inspired learning algorithms such as
+   ``HebbianTrainer`` and ``OjaTrainer``.
+
+   .. rubric:: Examples
+
+   >>> from canns import trainer
+   >>> print(trainer.Trainer)
 
 
 

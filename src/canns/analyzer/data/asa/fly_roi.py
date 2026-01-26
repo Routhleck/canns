@@ -4,7 +4,7 @@ from dataclasses import dataclass
 
 import numpy as np
 from matplotlib import pyplot as plt
-from matplotlib.animation import FuncAnimation, PillowWriter
+from matplotlib.animation import FuncAnimation
 from scipy.optimize import linear_sum_assignment
 from scipy.special import i0
 from tqdm import tqdm
@@ -67,22 +67,6 @@ class BumpFitsConfig:
 
 
 @dataclass
-class AnimationConfig:
-    """Configuration for 1D CANN bump animation."""
-
-    show: bool = False
-    max_height_value: float = 0.5
-    max_width_range: int = 40
-    npoints: int = 300
-    nframes: int | None = None
-    fps: int = 5
-    bump_selection: str = "strongest"
-    show_progress_bar: bool = True
-    repeat: bool = False
-    title: str = "1D CANN Bump Animation"
-
-
-@dataclass
 class CANN1DPlotConfig(PlotConfig):
     """Specialized PlotConfig for CANN1D visualizations."""
 
@@ -141,9 +125,9 @@ class AnimationError(CANN1DError):
     pass
 
 
-def bump_fits(data, config: BumpFitsConfig | None = None, save_path=None, **kwargs):
+def roi_bump_fits(data, config: BumpFitsConfig | None = None, save_path=None, **kwargs):
     """
-    Fit CANN1D bumps to data using MCMC optimization.
+    Fit CANN1D bumps to ROI data using MCMC optimization.
 
     Parameters:
         data : numpy.ndarray
@@ -318,10 +302,10 @@ def create_1d_bump_animation(
     Parameters:
         fits_data : numpy.ndarray
             Shape (n_fits, 4) array with columns [time, position, amplitude, kappa]
-        config : AnimationConfig, optional
+        config : CANN1DPlotConfig, optional
             Configuration object with all animation parameters
         save_path : str, optional
-            Output path for the generated GIF
+            Output path for the generated animation (e.g. .gif or .mp4)
         **kwargs : backward compatibility parameters
 
     Returns:
@@ -336,6 +320,8 @@ def create_1d_bump_animation(
     for key, value in kwargs.items():
         if hasattr(config, key):
             setattr(config, key, value)
+    if save_path is not None:
+        config.save_path = save_path
 
     try:
         # ==== Smoothing functions ====
@@ -520,7 +506,10 @@ def create_1d_bump_animation(
             fig, update, frames=nframes, init_func=init, blit=use_blitting, repeat=config.repeat
         )
 
-        # Save animation with progress tracking
+        ani = None
+        progress_bar_enabled = getattr(config, "show_progress_bar", True)
+
+        # Save animation with unified backend selection
         if config.save_path:
             # Warn if both saving and showing (causes double rendering)
             if config.show and nframes > 50:
@@ -528,31 +517,95 @@ def create_1d_bump_animation(
 
                 warn_double_rendering(nframes, config.save_path, stacklevel=2)
 
-            if config.show_progress_bar:
-                pbar = tqdm(total=nframes, desc=f"Saving animation to {config.save_path}")
+            from ...visualization.core import (
+                emit_backend_warnings,
+                get_imageio_writer_kwargs,
+                get_matplotlib_writer,
+                select_animation_backend,
+            )
 
-                def progress_callback(current_frame, total_frames):
-                    pbar.update(1)
+            backend_selection = select_animation_backend(
+                save_path=config.save_path,
+                requested_backend=getattr(config, "render_backend", None),
+                check_imageio_plugins=True,
+            )
+            emit_backend_warnings(backend_selection.warnings, stacklevel=2)
+            backend = backend_selection.backend
 
+            if backend == "imageio":
                 try:
-                    ani.save(
-                        config.save_path,
-                        writer=PillowWriter(fps=config.fps),
-                        progress_callback=progress_callback,
-                    )
-                    pbar.close()
-                    print(f"\nAnimation successfully saved to: {config.save_path}")
-                except Exception as e:
-                    pbar.close()
-                    print(f"\nError saving animation: {e}")
-                    raise
-            else:
-                try:
-                    ani.save(config.save_path, writer=PillowWriter(fps=config.fps))
+                    import imageio
+
+                    writer_kwargs, mode = get_imageio_writer_kwargs(config.save_path, config.fps)
+                    with imageio.get_writer(config.save_path, mode=mode, **writer_kwargs) as writer:
+                        frames_iter = range(nframes)
+                        if progress_bar_enabled:
+                            frames_iter = tqdm(
+                                frames_iter,
+                                desc=f"Rendering {config.save_path}",
+                            )
+
+                        init()
+                        for frame_idx in frames_iter:
+                            update(frame_idx)
+                            fig.canvas.draw()
+                            frame = np.asarray(fig.canvas.buffer_rgba())
+                            if frame.shape[-1] == 4:
+                                frame = frame[:, :, :3]
+                            writer.append_data(frame)
+
                     print(f"Animation saved to: {config.save_path}")
                 except Exception as e:
-                    print(f"Error saving animation: {e}")
-                    raise
+                    import warnings
+
+                    warnings.warn(
+                        f"imageio rendering failed: {e}. Falling back to matplotlib.",
+                        RuntimeWarning,
+                        stacklevel=2,
+                    )
+                    backend = "matplotlib"
+
+            if backend == "matplotlib":
+                ani = FuncAnimation(
+                    fig,
+                    update,
+                    frames=nframes,
+                    init_func=init,
+                    blit=use_blitting,
+                    repeat=config.repeat,
+                )
+
+                writer = get_matplotlib_writer(config.save_path, fps=config.fps)
+
+                if progress_bar_enabled:
+                    pbar = tqdm(total=nframes, desc=f"Saving to {config.save_path}")
+
+                    def progress_callback(current_frame, total_frames):
+                        pbar.update(1)
+
+                    try:
+                        ani.save(
+                            config.save_path,
+                            writer=writer,
+                            progress_callback=progress_callback,
+                        )
+                        print(f"Animation saved to: {config.save_path}")
+                    finally:
+                        pbar.close()
+                else:
+                    ani.save(config.save_path, writer=writer)
+                    print(f"Animation saved to: {config.save_path}")
+
+        # Create animation object for showing (if not already created)
+        if config.show and ani is None:
+            ani = FuncAnimation(
+                fig,
+                update,
+                frames=nframes,
+                init_func=init,
+                blit=use_blitting,
+                repeat=config.repeat,
+            )
 
         if config.show:
             # Automatically detect Jupyter and display as HTML/JS
@@ -1043,7 +1096,7 @@ def _mcmc(
 
 if __name__ == "__main__":
     data = load_roi_data()
-    bumps, fits, nbump, centrbump = bump_fits(
+    bumps, fits, nbump, centrbump = roi_bump_fits(
         data, n_steps=5000, n_roi=16, save_path=os.path.join(os.getcwd(), "test.npz")
     )
 

@@ -25,21 +25,23 @@ Module Contents
    Bases: :py:obj:`src.canns.models.brain_inspired._base.BrainInspiredModel`
 
 
-   Generic linear feedforward layer supporting multiple brain-inspired learning rules.
+   Generic linear feedforward layer for brain-inspired learning rules.
 
-   This model provides a simple linear transformation with optional sliding threshold
-   for BCM-style plasticity. It can be used with various trainers:
-   - OjaTrainer: Normalized Hebbian learning for PCA
-   - BCMTrainer: Sliding threshold plasticity (requires use_bcm_threshold=True)
-   - HebbianTrainer: Standard Hebbian learning
-
-   Computation:
+   It computes a simple linear transform:
        y = W @ x
 
-   where W is the weight matrix, x is the input, and y is the output.
+   You can pair it with trainers like ``OjaTrainer``, ``BCMTrainer``, or
+   ``HebbianTrainer``.
 
-   For BCM learning, an optional sliding threshold θ tracks output activity:
-       θ ← θ + (1/τ) * (y² - θ)
+   .. rubric:: Examples
+
+   >>> import jax.numpy as jnp
+   >>> from canns.models.brain_inspired import LinearLayer
+   >>>
+   >>> layer = LinearLayer(input_size=3, output_size=2)
+   >>> y = layer.forward(jnp.array([1.0, 0.5, -1.0], dtype=jnp.float32))
+   >>> y.shape
+   (2,)
 
    .. rubric:: References
 
@@ -57,11 +59,11 @@ Module Contents
 
    .. py:method:: forward(x)
 
-      Forward pass through the layer.
+      Compute the layer output for one input vector.
 
-      :param x: Input vector of shape (input_size,)
+      :param x: Input vector of shape ``(input_size,)``.
 
-      :returns: Output vector of shape (output_size,)
+      :returns: Output vector of shape ``(output_size,)``.
 
 
 

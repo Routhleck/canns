@@ -20,17 +20,26 @@ Module Contents
    Bases: :py:obj:`src.canns.models.brain_inspired._base.BrainInspiredModel`
 
 
-   Amari-Hopfield Network implementation supporting both discrete and continuous dynamics.
+   Amari-Hopfield network with discrete or continuous dynamics.
 
-   This class implements Hopfield networks with flexible activation functions,
-   supporting both discrete binary states and continuous dynamics. The network
-   performs pattern completion through energy minimization using asynchronous
-   or synchronous updates.
+   The model performs pattern completion by iteratively updating the state
+   vector ``s`` to reduce energy:
+       E = -0.5 * sum_ij W_ij * s_i * s_j
 
-   The network energy function:
-   E = -0.5 * Σ_ij W_ij * s_i * s_j
+   .. rubric:: Examples
 
-   Where s_i can be discrete {-1, +1} or continuous depending on activation function.
+   >>> import jax.numpy as jnp
+   >>> from canns.models.brain_inspired import AmariHopfieldNetwork
+   >>>
+   >>> model = AmariHopfieldNetwork(num_neurons=3, activation="sign")
+   >>> pattern = jnp.array([1.0, -1.0, 1.0], dtype=jnp.float32)
+   >>> weights = jnp.outer(pattern, pattern)
+   >>> weights = weights - jnp.diag(jnp.diag(weights))  # zero diagonal
+   >>> model.W.value = weights
+   >>> model.s.value = jnp.array([1.0, 1.0, -1.0], dtype=jnp.float32)
+   >>> model.update(None)
+   >>> model.s.value.shape
+   (3,)
 
    Reference:
        Amari, S. (1977). Neural theory of association and concept-formation.
@@ -74,6 +83,10 @@ Module Contents
    .. py:method:: update(e_old)
 
       Update network state for one time step.
+
+      :param e_old: Unused placeholder for trainer compatibility.
+
+      :returns: None
 
 
 

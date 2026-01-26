@@ -22,7 +22,7 @@ Classes
 Module Contents
 ---------------
 
-.. py:class:: BaseNavigationTask(start_pos=(2.5, 2.5), width=5, height=5, dimensionality='2D', boundary_conditions='solid', scale=None, dx=0.01, grid_dx = None, grid_dy = None, boundary=None, walls=None, holes=None, objects=None, dt=None, speed_mean=0.04, speed_std=0.016, speed_coherence_time=0.7, rotational_velocity_coherence_time=0.08, rotational_velocity_std=120 * np.pi / 180, head_direction_smoothing_timescale=0.15, initial_head_direction = None, thigmotaxis=0.5, wall_repel_distance=0.1, wall_repel_strength=1.0, data_class=None)
+.. py:class:: BaseNavigationTask(start_pos=(2.5, 2.5), width=5, height=5, dimensionality='2D', boundary_conditions='solid', scale=None, dx=0.01, grid_dx = None, grid_dy = None, boundary=None, walls=None, holes=None, objects=None, dt=None, speed_mean=0.04, speed_std=0.016, speed_coherence_time=0.7, rotational_velocity_coherence_time=0.08, rotational_velocity_std=120 * np.pi / 180, head_direction_smoothing_timescale=0.15, initial_head_direction = None, thigmotaxis=0.5, wall_repel_distance=0.1, wall_repel_strength=1.0, rng_seed = None, data_class=None)
 
    Bases: :py:obj:`src.canns.task._base.Task`
 
@@ -32,6 +32,14 @@ Module Contents
    This class provides common functionality for both open-loop and closed-loop
    navigation tasks, including environment setup, agent initialization, and
    geodesic distance computation on discretized grids.
+
+   Initializes the Task instance.
+
+   :param data_class: A dataclass type for structured data.
+                      If provided, the task will use this
+                      class to structure the loaded or
+                      generated data.
+   :type data_class: type, optional
 
 
    .. py:method:: build_movement_cost_grid(*, refresh = False)
@@ -149,8 +157,6 @@ Module Contents
 
 
    .. py:attribute:: dt
-      :value: None
-
 
 
    .. py:attribute:: dx
@@ -199,6 +205,11 @@ Module Contents
 
 
    .. py:attribute:: objects
+
+
+   .. py:attribute:: rng_seed
+      :value: None
+
 
 
    .. py:attribute:: rotational_velocity_coherence_time

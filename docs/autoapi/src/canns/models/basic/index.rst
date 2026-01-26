@@ -38,9 +38,22 @@ Package Contents
    Bases: :py:obj:`BaseCANN1D`
 
 
-   A standard 1D Continuous Attractor Neural Network (CANN) model.
-   This model implements the core dynamics where a localized "bump" of activity
-   can be sustained and moved by external inputs.
+   Standard 1D Continuous Attractor Neural Network (CANN) model.
+
+   This model sustains a localized "bump" of activity that can be driven by
+   external input.
+
+   .. rubric:: Examples
+
+   >>> import brainpy.math as bm
+   >>> from canns.models.basic import CANN1D
+   >>>
+   >>> bm.set_dt(0.1)
+   >>> model = CANN1D(num=64)
+   >>> stimulus = model.get_stimulus_by_pos(0.0)
+   >>> model.update(stimulus)
+   >>> model.r.value.shape
+   (64,)
 
    Reference:
        Wu, S., Hamaguchi, K., & Amari, S. I. (2008). Dynamics and computation of continuous attractors.
@@ -53,10 +66,12 @@ Package Contents
 
    .. py:method:: update(inp)
 
-      The main update function, defining the dynamics of the network for one time step.
+      Advance the network by one time step.
 
-      :param inp: The external input for the current time step.
+      :param inp: External input vector of shape ``(num,)``.
       :type inp: Array
+
+      :returns: None
 
 
 
@@ -74,9 +89,22 @@ Package Contents
    Bases: :py:obj:`BaseCANN1D`
 
 
-   A 1D CANN model that incorporates Spike-Frequency Adaptation (SFA).
-   SFA is a slow negative feedback mechanism that causes neurons to fire less
-   over time for a sustained input, which can induce anticipative tracking behavior.
+   1D CANN model with spike-frequency adaptation (SFA).
+
+   SFA adds a slow negative feedback term that can create anticipative tracking
+   under sustained inputs.
+
+   .. rubric:: Examples
+
+   >>> import brainpy.math as bm
+   >>> from canns.models.basic import CANN1D_SFA
+   >>>
+   >>> bm.set_dt(0.1)
+   >>> model = CANN1D_SFA(num=64)
+   >>> stimulus = model.get_stimulus_by_pos(0.0)
+   >>> model.update(stimulus)
+   >>> model.r.value.shape
+   (64,)
 
    Reference:
        Mi, Y., Fung, C. C., Wong, K. Y., & Wu, S. (2014). Spike frequency adaptation
@@ -94,11 +122,12 @@ Package Contents
 
    .. py:method:: update(inp)
 
-      The main update function for the SFA model. It includes dynamics for both
-      the membrane potential and the adaptation variable.
+      Advance the network by one time step with adaptation.
 
-      :param inp: The external input for the current time step.
+      :param inp: External input vector of shape ``(num,)``.
       :type inp: Array
+
+      :returns: None
 
 
 
@@ -129,9 +158,19 @@ Package Contents
    Bases: :py:obj:`BaseCANN2D`
 
 
-   A 2D Continuous Attractor Neural Network (CANN) model.
-   This model extends the base CANN2D class to include specific dynamics
-   and properties for a 2D neural network.
+   2D Continuous Attractor Neural Network (CANN) model.
+
+   .. rubric:: Examples
+
+   >>> import brainpy.math as bm
+   >>> from canns.models.basic import CANN2D
+   >>>
+   >>> bm.set_dt(0.1)
+   >>> model = CANN2D(length=16)
+   >>> stimulus = model.get_stimulus_by_pos([0.0, 0.0])
+   >>> model.update(stimulus)
+   >>> model.r.value.shape
+   (16, 16)
 
    Reference:
        Wu, S., Hamaguchi, K., & Amari, S. I. (2008). Dynamics and computation of continuous attractors.
@@ -144,10 +183,12 @@ Package Contents
 
    .. py:method:: update(inp)
 
-      The main update function, defining the dynamics of the network for one time step.
+      Advance the network by one time step.
 
-      :param inp: The external input to the network, which can be a stimulus or other driving force.
+      :param inp: External input grid of shape ``(length, length)``.
       :type inp: Array
+
+      :returns: None
 
 
 
@@ -165,20 +206,31 @@ Package Contents
    Bases: :py:obj:`BaseCANN2D`
 
 
-   A 2D Continuous Attractor Neural Network (CANN) model with a specific
-   implementation of the Synaptic Firing Activity (SFA) dynamics.
-   This model extends the base CANN2D class to include SFA-specific dynamics.
+   2D CANN model with spike-frequency adaptation (SFA) dynamics.
+
+   .. rubric:: Examples
+
+   >>> import brainpy.math as bm
+   >>> from canns.models.basic import CANN2D_SFA
+   >>>
+   >>> bm.set_dt(0.1)
+   >>> model = CANN2D_SFA(length=16)
+   >>> stimulus = model.get_stimulus_by_pos([0.0, 0.0])
+   >>> model.update(stimulus)
+   >>> model.r.value.shape
+   (16, 16)
 
    Initializes the 2D CANN model with SFA dynamics.
 
 
    .. py:method:: update(inp)
 
-      The main update function for the SFA model. It includes dynamics for both
-      the membrane potential and the adaptation variable.
+      Advance the network by one time step with adaptation.
 
-      :param inp: The external input for the current time step.
+      :param inp: External input grid of shape ``(length, length)``.
       :type inp: Array
+
+      :returns: None
 
 
 
@@ -316,18 +368,19 @@ Package Contents
    .. rubric:: Example
 
    >>> import brainpy.math as bm
-   >>> from canns.models.basic import GridCell2D
+   >>> from canns.models.basic import GridCell2DPosition
    >>>
    >>> bm.set_dt(1.0)
-   >>> model = GridCell2D(length=30, mapping_ratio=1.5)
+   >>> model = GridCell2DPosition(length=16, mapping_ratio=1.5)
    >>>
-   >>> # Update with 2D position
-   >>> position = [0.5, 0.3]
+   >>> # Update with a 2D position
+   >>> position = bm.array([0.5, 0.3])
    >>> model.update(position)
    >>>
    >>> # Access decoded position
    >>> decoded_pos = model.center_position.value
-   >>> print(f"Decoded position: {decoded_pos}")
+   >>> decoded_pos.shape
+   (2,)
 
    .. rubric:: References
 
@@ -622,11 +675,11 @@ Package Contents
    >>> bm.set_dt(5e-4)  # Small timestep for accurate integration
    >>> model = GridCell2DVelocity(length=40)
    >>>
-   >>> # Healing process (critical!)
-   >>> model.heal_network()
+   >>> # Healing process (recommended before simulation)
+   >>> model.heal_network(num_healing_steps=50, dt_healing=1e-3)
    >>>
    >>> # Update with 2D velocity
-   >>> velocity = [0.1, 0.05]  # [vx, vy] in m/s
+   >>> velocity = bm.array([0.1, 0.05])  # [vx, vy]
    >>> model.update(velocity)
 
    .. rubric:: References
@@ -864,11 +917,21 @@ Package Contents
 
    A full hierarchical network composed of multiple grid modules.
 
-   This class creates and manages a collection of `HierarchicalPathIntegrationModel`
-   modules, each with a different grid spacing. By combining the outputs of these
-   modules, the network can represent position unambiguously over a large area.
-   The final output is a population of place cells whose activities are used to
-   decode the animal's estimated position.
+   Each module is a `HierarchicalPathIntegrationModel` with a different grid
+   spacing. The module outputs are combined to decode a single 2D position.
+
+   .. rubric:: Examples
+
+   >>> import brainpy.math as bm
+   >>> from canns.models.basic import HierarchicalNetwork
+   >>>
+   >>> bm.set_dt(0.1)
+   >>> model = HierarchicalNetwork(num_module=1, num_place=3)
+   >>> velocity = bm.array([0.0, 0.0])
+   >>> position = bm.array([0.0, 0.0])
+   >>> model.update(velocity=velocity, loc=position, loc_input_stre=0.0)
+   >>> model.decoded_pos.value.shape
+   (2,)
 
    .. attribute:: num_module
 
@@ -979,6 +1042,18 @@ Package Contents
 
 
    .. py:method:: update(velocity, loc, loc_input_stre=0.0)
+
+      Advance the full network by one time step.
+
+      :param velocity: 2D velocity vector, shape ``(2,)``.
+      :type velocity: Array
+      :param loc: 2D position vector, shape ``(2,)``.
+      :type loc: Array
+      :param loc_input_stre: Strength of optional location-based input.
+      :type loc_input_stre: float
+
+      :returns: None
+
 
 
    .. py:attribute:: MEC_model_list

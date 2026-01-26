@@ -24,19 +24,24 @@ Module Contents
 
    Analyzer for Hopfield associative memory networks.
 
-   Provides diagnostic and analysis tools for Hopfield networks including:
-   - Pattern storage capacity estimation
-   - Energy landscape analysis
-   - Overlap metrics for pattern retrieval
-   - Recall quality diagnostics
+   Provides diagnostics such as pattern overlap, energy, and recall quality.
 
-   The Hopfield network stores patterns as attractors in an energy landscape.
-   Energy function:
-       E = -0.5 * s^T W s
+   .. rubric:: Examples
 
-   Reference:
-       Hopfield, J. J. (1982). Neural networks and physical systems with
-       emergent collective computational abilities. PNAS, 79(8), 2554-2558.
+   >>> import jax.numpy as jnp
+   >>> from canns.models.brain_inspired import AmariHopfieldNetwork
+   >>> from canns.analyzer.model_specific.hopfield import HopfieldAnalyzer
+   >>>
+   >>> # Dummy inputs (patterns) based on analyzer tests
+   >>> patterns = [
+   ...     jnp.array([1.0, -1.0, 1.0]),
+   ...     jnp.array([-1.0, 1.0, -1.0]),
+   ... ]
+   >>> model = AmariHopfieldNetwork(num_neurons=3)
+   >>> analyzer = HopfieldAnalyzer(model, stored_patterns=patterns)
+   >>> diagnostics = analyzer.analyze_recall(patterns[0], patterns[0])
+   >>> print(sorted(diagnostics.keys()))
+   ['best_match_idx', 'best_match_overlap', 'input_output_overlap', 'output_energy']
 
    Initialize Hopfield analyzer.
 
@@ -142,7 +147,5 @@ Module Contents
 
 
    .. py:attribute:: stored_patterns
-      :value: None
-
 
 

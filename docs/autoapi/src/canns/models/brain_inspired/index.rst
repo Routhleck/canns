@@ -44,17 +44,26 @@ Package Contents
    Bases: :py:obj:`src.canns.models.brain_inspired._base.BrainInspiredModel`
 
 
-   Amari-Hopfield Network implementation supporting both discrete and continuous dynamics.
+   Amari-Hopfield network with discrete or continuous dynamics.
 
-   This class implements Hopfield networks with flexible activation functions,
-   supporting both discrete binary states and continuous dynamics. The network
-   performs pattern completion through energy minimization using asynchronous
-   or synchronous updates.
+   The model performs pattern completion by iteratively updating the state
+   vector ``s`` to reduce energy:
+       E = -0.5 * sum_ij W_ij * s_i * s_j
 
-   The network energy function:
-   E = -0.5 * Σ_ij W_ij * s_i * s_j
+   .. rubric:: Examples
 
-   Where s_i can be discrete {-1, +1} or continuous depending on activation function.
+   >>> import jax.numpy as jnp
+   >>> from canns.models.brain_inspired import AmariHopfieldNetwork
+   >>>
+   >>> model = AmariHopfieldNetwork(num_neurons=3, activation="sign")
+   >>> pattern = jnp.array([1.0, -1.0, 1.0], dtype=jnp.float32)
+   >>> weights = jnp.outer(pattern, pattern)
+   >>> weights = weights - jnp.diag(jnp.diag(weights))  # zero diagonal
+   >>> model.W.value = weights
+   >>> model.s.value = jnp.array([1.0, 1.0, -1.0], dtype=jnp.float32)
+   >>> model.update(None)
+   >>> model.s.value.shape
+   (3,)
 
    Reference:
        Amari, S. (1977). Neural theory of association and concept-formation.
@@ -98,6 +107,10 @@ Package Contents
    .. py:method:: update(e_old)
 
       Update network state for one time step.
+
+      :param e_old: Unused placeholder for trainer compatibility.
+
+      :returns: None
 
 
 
@@ -244,21 +257,23 @@ Package Contents
    Bases: :py:obj:`src.canns.models.brain_inspired._base.BrainInspiredModel`
 
 
-   Generic linear feedforward layer supporting multiple brain-inspired learning rules.
+   Generic linear feedforward layer for brain-inspired learning rules.
 
-   This model provides a simple linear transformation with optional sliding threshold
-   for BCM-style plasticity. It can be used with various trainers:
-   - OjaTrainer: Normalized Hebbian learning for PCA
-   - BCMTrainer: Sliding threshold plasticity (requires use_bcm_threshold=True)
-   - HebbianTrainer: Standard Hebbian learning
-
-   Computation:
+   It computes a simple linear transform:
        y = W @ x
 
-   where W is the weight matrix, x is the input, and y is the output.
+   You can pair it with trainers like ``OjaTrainer``, ``BCMTrainer``, or
+   ``HebbianTrainer``.
 
-   For BCM learning, an optional sliding threshold θ tracks output activity:
-       θ ← θ + (1/τ) * (y² - θ)
+   .. rubric:: Examples
+
+   >>> import jax.numpy as jnp
+   >>> from canns.models.brain_inspired import LinearLayer
+   >>>
+   >>> layer = LinearLayer(input_size=3, output_size=2)
+   >>> y = layer.forward(jnp.array([1.0, 0.5, -1.0], dtype=jnp.float32))
+   >>> y.shape
+   (2,)
 
    .. rubric:: References
 
@@ -276,11 +291,11 @@ Package Contents
 
    .. py:method:: forward(x)
 
-      Forward pass through the layer.
+      Compute the layer output for one input vector.
 
-      :param x: Input vector of shape (input_size,)
+      :param x: Input vector of shape ``(input_size,)``.
 
-      :returns: Output vector of shape (output_size,)
+      :returns: Output vector of shape ``(output_size,)``.
 
 
 
@@ -362,18 +377,32 @@ Package Contents
 
    Simple Leaky Integrate-and-Fire (LIF) spiking neuron layer.
 
-   This model provides a minimal spiking neuron implementation for demonstrating
-   spike-timing-dependent plasticity (STDP). It features:
-   - Leaky integration of input currents
-   - Threshold-based spike generation
-   - Reset mechanism after spiking
-   - Exponential spike traces for STDP learning
+   It supports STDP-style training by maintaining pre/post spike traces.
 
    Dynamics:
        v[t+1] = leak * v[t] + W @ x[t]
        spike = 1 if v >= threshold else 0
        v = v_reset if spike else v
        trace = decay * trace + spike
+
+   .. rubric:: Notes
+
+   - x[t] denotes the input current at time t. It can take arbitrary continuous
+     values; binary {0, 1} spike trains are a special case of such inputs.
+   - The layer does not internally binarize x; thresholding only applies to the
+     membrane potential to generate output spikes.
+
+   .. rubric:: Examples
+
+   >>> import jax.numpy as jnp
+   >>> from canns.models.brain_inspired import SpikingLayer
+   >>>
+   >>> layer = SpikingLayer(input_size=3, output_size=2, threshold=0.5)
+   >>> # Continuous input currents (binary spikes {0,1} are a special case)
+   >>> x = jnp.array([0.2, 0.5, 1.3], dtype=jnp.float32)
+   >>> spikes = layer.forward(x)
+   >>> spikes.shape
+   (2,)
 
    .. rubric:: References
 
@@ -394,11 +423,12 @@ Package Contents
 
    .. py:method:: forward(x)
 
-      Forward pass through the spiking layer.
+      Compute spikes for one time step.
 
-      :param x: Input spikes of shape (input_size,) with binary values (0 or 1)
+      :param x: Input currents of shape ``(input_size,)``. Can be continuous-valued
+                (e.g., synaptic currents) or binary spikes {0, 1} as a special case.
 
-      :returns: Output spikes of shape (output_size,) with binary values (0 or 1)
+      :returns: Output spikes of shape ``(output_size,)`` with values 0 or 1.
 
 
 

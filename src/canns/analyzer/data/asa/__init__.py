@@ -18,6 +18,12 @@ from .config import (
 )
 from .decode import decode_circular_coordinates, decode_circular_coordinates_multi
 from .embedding import embed_spike_trains
+from .fly_roi import (
+    BumpFitsConfig,
+    CANN1DPlotConfig,
+    create_1d_bump_animation,
+    roi_bump_fits,
+)
 from .fr import (
     FRMResult,
     compute_fr_heatmap_matrix,
@@ -60,6 +66,10 @@ __all__ = [
     "plot_cohomap_multi",
     "plot_3d_bump_on_torus",
     "plot_2d_bump_on_manifold",
+    "BumpFitsConfig",
+    "CANN1DPlotConfig",
+    "create_1d_bump_animation",
+    "roi_bump_fits",
     "compute_fr_heatmap_matrix",
     "save_fr_heatmap_png",
     "FRMResult",

@@ -114,31 +114,26 @@ Module Contents
 
    .. rubric:: Example
 
-   >>> from canns.models.basic import GridCell2DVelocity
    >>> import brainpy.math as bm
+   >>> from canns.models.basic import GridCell2DVelocity
+   >>> from canns.analyzer.metrics.systematic_ratemap import compute_systematic_ratemap
    >>>
-   >>> # Setup
+   >>> # Dummy model (small for quick runs)
    >>> bm.set_dt(5e-4)
-   >>> model = GridCell2DVelocity(length=40, alpha=0.1, lambda_net=17.0)
+   >>> model = GridCell2DVelocity(length=10, alpha=0.1, lambda_net=17.0)
+   >>> model.heal_network(num_healing_steps=50, dt_healing=1e-4)
    >>>
-   >>> # CRITICAL: Heal network first to establish stable attractor
-   >>> model.heal_network(num_healing_steps=5000)
-   >>>
-   >>> # Compute systematic rate map
    >>> ratemap = compute_systematic_ratemap(
    ...     model,
-   ...     box_width=2.2,
-   ...     box_height=2.2,
-   ...     resolution=30,
+   ...     box_width=1.0,
+   ...     box_height=1.0,
+   ...     resolution=5,
    ...     speed=0.3,
-   ...     num_batches=5,
+   ...     num_batches=1,
+   ...     verbose=False,
    ... )
-   >>>
-   >>> # Verify shape and coverage
-   >>> ratemap.shape
-   (30, 30, 1600)
-   >>> np.sum(np.isnan(ratemap))  # Should be 0 (100% coverage)
-   0
+   >>> print(ratemap.shape)
+   (5, 5, 100)
 
    .. rubric:: Notes
 

@@ -19,7 +19,8 @@ Submodules
 .. toctree::
    :maxdepth: 1
 
-   /autoapi/src/canns/pipeline/theta_sweep/index
+   /autoapi/src/canns/pipeline/asa/index
+   /autoapi/src/canns/pipeline/gallery/index
 
 
 Classes
@@ -27,8 +28,8 @@ Classes
 
 .. autoapisummary::
 
+   src.canns.pipeline.ASAApp
    src.canns.pipeline.Pipeline
-   src.canns.pipeline.ThetaSweepPipeline
 
 
 Functions
@@ -36,12 +37,271 @@ Functions
 
 .. autoapisummary::
 
-   src.canns.pipeline.batch_process_trajectories
-   src.canns.pipeline.load_trajectory_from_csv
+   src.canns.pipeline.asa_main
 
 
 Package Contents
 ----------------
+
+.. py:class:: ASAApp
+
+   Bases: :py:obj:`textual.app.App`
+
+
+   Main TUI application for ASA analysis.
+
+   Create an instance of an app.
+
+   :param driver_class: Driver class or `None` to auto-detect.
+                        This will be used by some Textual tools.
+   :param css_path: Path to CSS or `None` to use the `CSS_PATH` class variable.
+                    To load multiple CSS files, pass a list of strings or paths which
+                    will be loaded in order.
+   :param watch_css: Reload CSS if the files changed. This is set automatically if
+                     you are using `textual run` with the `dev` switch.
+   :param ansi_color: Allow ANSI colors if `True`, or convert ANSI colors to RGB if `False`.
+
+   :raises CssPathError: When the supplied CSS path(s) are an unexpected type.
+
+
+   .. py:method:: action_back_to_preprocess()
+
+      Go back to preprocessing page.
+
+
+
+   .. py:method:: action_change_workdir()
+
+      Change working directory.
+
+
+
+   .. py:method:: action_continue_to_analysis()
+
+      Continue from preprocessing to analysis page.
+
+
+
+   .. py:method:: action_help()
+
+      Show help screen.
+
+
+
+   .. py:method:: action_quit()
+
+      Quit the application.
+
+
+
+   .. py:method:: action_refresh()
+
+      Refresh the UI.
+
+
+
+   .. py:method:: action_run_action()
+
+      Run current page action (Continue or Run Analysis).
+
+
+
+   .. py:method:: action_run_analysis()
+
+      Run analysis on preprocessed data.
+
+
+
+   .. py:method:: action_stop()
+
+      Request cancellation of the running worker.
+
+
+
+   .. py:method:: append_log_file(message)
+
+      Append log message to file for easy copying.
+
+
+
+   .. py:method:: apply_preset_params()
+
+      Apply preset defaults to analysis inputs.
+
+
+
+   .. py:method:: check_terminal_size()
+
+      Check terminal size and show warning if too small.
+
+
+
+   .. py:method:: collect_analysis_params()
+
+      Collect analysis parameters from UI into state.
+
+
+
+   .. py:method:: compose()
+
+      Compose the main UI layout.
+
+
+
+   .. py:method:: log_message(message)
+
+      Add log message.
+
+
+
+   .. py:method:: on_button_pressed(event)
+
+      Handle button presses.
+
+
+
+   .. py:method:: on_checkbox_changed(event)
+
+      Handle checkbox changes.
+
+
+
+   .. py:method:: on_directory_tree_file_selected(event)
+
+      Handle file selection from tree.
+
+
+
+   .. py:method:: on_mount()
+
+      Handle app mount event.
+
+
+
+   .. py:method:: on_resize(event)
+
+      Handle terminal resize events.
+
+
+
+   .. py:method:: on_select_changed(event)
+
+      Handle select changes.
+
+
+
+   .. py:method:: on_workdir_selected(path)
+
+      Handle workdir selection.
+
+
+
+   .. py:method:: on_worker_state_changed(event)
+
+      Handle worker state changes.
+
+
+
+   .. py:method:: set_run_status(message, status_class = None)
+
+      Update run status label and styling.
+
+
+
+   .. py:method:: update_analysis_params_visibility()
+
+      Show params for the selected analysis mode.
+
+
+
+   .. py:method:: update_cohospace_controls()
+
+      Enable/disable CohoSpace controls based on mode.
+
+
+
+   .. py:method:: update_decode_controls()
+
+      Enable/disable decode controls based on decode version.
+
+
+
+   .. py:method:: update_pathcompare_controls()
+
+      Enable/disable PathCompare controls based on mode.
+
+
+
+   .. py:method:: update_progress(percent)
+
+      Update progress bar.
+
+
+
+   .. py:method:: update_workdir_label()
+
+      Update the workdir label.
+
+
+
+   .. py:attribute:: BINDINGS
+
+      The default key bindings.
+
+
+   .. py:attribute:: CSS_PATH
+      :value: 'styles.tcss'
+
+
+      File paths to load CSS from.
+
+
+   .. py:attribute:: MIN_HEIGHT
+      :value: 30
+
+
+
+   .. py:attribute:: MIN_WIDTH
+      :value: 100
+
+
+
+   .. py:attribute:: RECOMMENDED_HEIGHT
+      :value: 40
+
+
+
+   .. py:attribute:: RECOMMENDED_WIDTH
+      :value: 120
+
+
+
+   .. py:attribute:: TITLE
+      :value: 'Attractor Structure Analyzer (ASA)'
+
+
+      A class variable to set the *default* title for the application.
+
+      To update the title while the app is running, you can set the [title][textual.app.App.title] attribute.
+      See also [the `Screen.TITLE` attribute][textual.screen.Screen.TITLE].
+
+
+   .. py:attribute:: current_page
+      :value: 'preprocess'
+
+
+
+   .. py:attribute:: current_worker
+      :type:  textual.worker.Worker
+      :value: None
+
+
+
+   .. py:attribute:: runner
+
+
+   .. py:attribute:: state
+
 
 .. py:class:: Pipeline
 
@@ -105,122 +365,8 @@ Package Contents
 
 
 
-.. py:class:: ThetaSweepPipeline(trajectory_data, times = None, env_size = 2.0, dt = 0.001, direction_cell_params = None, grid_cell_params = None, theta_params = None, spatial_nav_params = None)
+.. py:function:: asa_main()
 
-   Bases: :py:obj:`src.canns.pipeline._base.Pipeline`
-
-
-   High-level pipeline for theta sweep analysis of external trajectory data.
-
-   This pipeline abstracts the complex workflow of running CANN theta sweep models
-   on experimental trajectory data, making it accessible to researchers who want
-   to analyze neural responses without diving into implementation details.
-
-   .. rubric:: Example
-
-   ```python
-   # Simple usage - just provide trajectory data
-   pipeline = ThetaSweepPipeline(
-       trajectory_data=positions,  # shape: (n_steps, 2)
-       times=times                 # shape: (n_steps,)
-   )
-
-   results = pipeline.run(output_dir="my_results/")
-   print(f"Animation saved to: {results['animation_path']}")
-   ```
-
-   Initialize the theta sweep pipeline.
-
-   :param trajectory_data: Position coordinates with shape (n_steps, 2) for 2D trajectories
-   :param times: Optional time array with shape (n_steps,). If None, uniform time steps will be used
-   :param env_size: Environment size (assumes square environment)
-   :param dt: Simulation time step
-   :param direction_cell_params: Parameters for DirectionCellNetwork. If None, uses defaults
-   :param grid_cell_params: Parameters for GridCellNetwork. If None, uses defaults
-   :param theta_params: Parameters for theta modulation. If None, uses defaults
-   :param spatial_nav_params: Additional parameters for OpenLoopNavigationTask. If None, uses defaults
-
-
-   .. py:method:: run(output_dir = 'theta_sweep_results', save_animation = True, save_plots = True, show_plots = False, animation_fps = 10, animation_dpi = 120, verbose = True)
-
-      Run the complete theta sweep pipeline.
-
-      :param output_dir: Directory to save output files
-      :param save_animation: Whether to save the theta sweep animation
-      :param save_plots: Whether to save analysis plots
-      :param show_plots: Whether to display plots interactively
-      :param animation_fps: Frame rate for animation
-      :param animation_dpi: DPI for animation output
-      :param verbose: Whether to print progress messages
-
-      :returns: Dictionary containing paths to generated files and analysis data
-
-
-
-   .. py:attribute:: direction_cell_params
-
-
-   .. py:attribute:: direction_network
-      :value: None
-
-
-
-   .. py:attribute:: dt
-      :value: 0.001
-
-
-
-   .. py:attribute:: env_size
-      :value: 2.0
-
-
-
-   .. py:attribute:: grid_cell_params
-
-
-   .. py:attribute:: grid_network
-      :value: None
-
-
-
-   .. py:attribute:: spatial_nav_params
-
-
-   .. py:attribute:: spatial_nav_task
-      :value: None
-
-
-
-   .. py:attribute:: theta_params
-
-
-   .. py:attribute:: times
-
-
-   .. py:attribute:: trajectory_data
-
-
-.. py:function:: batch_process_trajectories(trajectory_list, output_base_dir = 'batch_results', **kwargs)
-
-   Process multiple trajectories in batch.
-
-   :param trajectory_list: List of (trajectory_data, times) tuples or trajectory_data arrays
-   :param output_base_dir: Base directory for batch results
-   :param \*\*kwargs: Additional parameters passed to ThetaSweepPipeline
-
-   :returns: Dictionary mapping trajectory indices to results
-
-
-.. py:function:: load_trajectory_from_csv(filepath, x_col = 'x', y_col = 'y', time_col = 'time', **kwargs)
-
-   Load trajectory data from CSV file and run theta sweep analysis.
-
-   :param filepath: Path to CSV file
-   :param x_col: Column name for x coordinates
-   :param y_col: Column name for y coordinates
-   :param time_col: Column name for time data (optional)
-   :param \*\*kwargs: Additional parameters passed to ThetaSweepPipeline
-
-   :returns: Dictionary containing analysis results and file paths
+   Entry point for canns-tui command.
 
 

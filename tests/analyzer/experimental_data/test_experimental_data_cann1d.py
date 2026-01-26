@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Test cases for canns.analyzer.experimental_data.cann1d module functions.
+Test cases for canns.analyzer.data.asa.fly_roi module functions.
 
 These tests provide basic verification of the CANN1D bump fitting and animation functions.
 """
@@ -10,7 +10,12 @@ import pytest
 
 pytest.skip("deprecated", allow_module_level=True)
 
-from canns.analyzer.data.cann1d import bump_fits, create_1d_bump_animation, CANN1DPlotConfig, BumpFitsConfig
+from canns.analyzer.data.asa import (
+    BumpFitsConfig,
+    CANN1DPlotConfig,
+    create_1d_bump_animation,
+    roi_bump_fits,
+)
 
 
 def create_mock_roi_data(n_roi=16, n_steps=1000):
@@ -39,7 +44,7 @@ def create_mock_roi_data(n_roi=16, n_steps=1000):
     return roi_data
 
 
-def test_bump_fits_config():
+def test_roi_bump_fits_config():
     """Test BumpFitsConfig creation and defaults."""
     config = BumpFitsConfig()
     assert config.n_steps == 20000
@@ -56,7 +61,7 @@ def test_bump_fits_config():
     print("BumpFitsConfig created successfully with default values")
 
 
-def test_bump_fits_basic():
+def test_roi_bump_fits_basic():
     """Test basic bump fitting functionality."""
     # Create test data
     roi_data = create_mock_roi_data(n_roi=8, n_steps=100)
@@ -69,7 +74,7 @@ def test_bump_fits_basic():
     )
     
     try:
-        result = bump_fits(roi_data, config=config, save_path=None)
+        result = roi_bump_fits(roi_data, config=config, save_path=None)
         
         assert isinstance(result, dict)
         assert 'positions' in result
@@ -90,7 +95,7 @@ def test_bump_fits_basic():
         print(f"Bump fitting test failed: {e}")
 
 
-def test_bump_fits_with_real_data_structure():
+def test_roi_bump_fits_with_real_data_structure():
     """Test bump fitting with data structure similar to real ROI data."""
     # Load actual test data if available, otherwise use mock data
     try:
@@ -115,7 +120,7 @@ def test_bump_fits_with_real_data_structure():
     )
     
     try:
-        result = bump_fits(roi_subset, config=config, save_path=None)
+        result = roi_bump_fits(roi_subset, config=config, save_path=None)
         assert isinstance(result, dict)
         assert all(key in result for key in ['positions', 'kappas', 'amplis', 'n_bumps'])
         print("Bump fitting with real data structure successful")
@@ -217,7 +222,7 @@ def test_create_1d_bump_animation_with_saving():
         print(f"Animation saving test failed: {e}")
 
 
-def test_bump_fits_error_handling():
+def test_roi_bump_fits_error_handling():
     """Test error handling in bump fitting."""
     # Test with invalid data shapes
     try:
@@ -226,7 +231,7 @@ def test_bump_fits_error_handling():
         config = BumpFitsConfig(n_steps=10, n_roi=8)
         
         with pytest.raises(Exception):
-            bump_fits(invalid_data, config=config)
+            roi_bump_fits(invalid_data, config=config)
         print("Error handling for invalid data shape works correctly")
         
     except Exception as e:
@@ -235,7 +240,7 @@ def test_bump_fits_error_handling():
 
 def test_numba_availability():
     """Test whether numba optimization is available."""
-    from canns.analyzer.data.cann1d import HAS_NUMBA
+    from canns.analyzer.data.asa.fly_roi import HAS_NUMBA
     
     if HAS_NUMBA:
         print("Numba optimization available - tests will run faster")
@@ -249,12 +254,12 @@ def test_numba_availability():
 if __name__ == "__main__":
     print("Running CANN1D module tests...\n")
     
-    test_bump_fits_config()
+    test_roi_bump_fits_config()
     test_numba_availability()
-    test_bump_fits_basic()
-    test_bump_fits_with_real_data_structure()
+    test_roi_bump_fits_basic()
+    test_roi_bump_fits_with_real_data_structure()
     test_create_1d_bump_animation()
     test_create_1d_bump_animation_with_saving()
-    test_bump_fits_error_handling()
+    test_roi_bump_fits_error_handling()
     
     print("\nAll CANN1D tests completed!")

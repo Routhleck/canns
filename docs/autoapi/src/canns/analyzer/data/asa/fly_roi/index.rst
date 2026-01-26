@@ -1,7 +1,7 @@
-src.canns.analyzer.data.cann1d
-==============================
+src.canns.analyzer.data.asa.fly_roi
+===================================
 
-.. py:module:: src.canns.analyzer.data.cann1d
+.. py:module:: src.canns.analyzer.data.asa.fly_roi
 
 
 Attributes
@@ -9,8 +9,8 @@ Attributes
 
 .. autoapisummary::
 
-   src.canns.analyzer.data.cann1d.HAS_NUMBA
-   src.canns.analyzer.data.cann1d.data
+   src.canns.analyzer.data.asa.fly_roi.HAS_NUMBA
+   src.canns.analyzer.data.asa.fly_roi.data
 
 
 Exceptions
@@ -18,9 +18,9 @@ Exceptions
 
 .. autoapisummary::
 
-   src.canns.analyzer.data.cann1d.AnimationError
-   src.canns.analyzer.data.cann1d.CANN1DError
-   src.canns.analyzer.data.cann1d.FittingError
+   src.canns.analyzer.data.asa.fly_roi.AnimationError
+   src.canns.analyzer.data.asa.fly_roi.CANN1DError
+   src.canns.analyzer.data.asa.fly_roi.FittingError
 
 
 Classes
@@ -28,11 +28,10 @@ Classes
 
 .. autoapisummary::
 
-   src.canns.analyzer.data.cann1d.AnimationConfig
-   src.canns.analyzer.data.cann1d.BumpFitsConfig
-   src.canns.analyzer.data.cann1d.CANN1DPlotConfig
-   src.canns.analyzer.data.cann1d.Constants
-   src.canns.analyzer.data.cann1d.SiteBump
+   src.canns.analyzer.data.asa.fly_roi.BumpFitsConfig
+   src.canns.analyzer.data.asa.fly_roi.CANN1DPlotConfig
+   src.canns.analyzer.data.asa.fly_roi.Constants
+   src.canns.analyzer.data.asa.fly_roi.SiteBump
 
 
 Functions
@@ -40,8 +39,8 @@ Functions
 
 .. autoapisummary::
 
-   src.canns.analyzer.data.cann1d.bump_fits
-   src.canns.analyzer.data.cann1d.create_1d_bump_animation
+   src.canns.analyzer.data.asa.fly_roi.create_1d_bump_animation
+   src.canns.analyzer.data.asa.fly_roi.roi_bump_fits
 
 
 Module Contents
@@ -75,71 +74,6 @@ Module Contents
    Raised when bump fitting fails.
 
    Initialize self.  See help(type(self)) for accurate signature.
-
-
-.. py:class:: AnimationConfig
-
-   Configuration for 1D CANN bump animation.
-
-
-   .. py:attribute:: bump_selection
-      :type:  str
-      :value: 'strongest'
-
-
-
-   .. py:attribute:: fps
-      :type:  int
-      :value: 5
-
-
-
-   .. py:attribute:: max_height_value
-      :type:  float
-      :value: 0.5
-
-
-
-   .. py:attribute:: max_width_range
-      :type:  int
-      :value: 40
-
-
-
-   .. py:attribute:: nframes
-      :type:  int | None
-      :value: None
-
-
-
-   .. py:attribute:: npoints
-      :type:  int
-      :value: 300
-
-
-
-   .. py:attribute:: repeat
-      :type:  bool
-      :value: False
-
-
-
-   .. py:attribute:: show
-      :type:  bool
-      :value: False
-
-
-
-   .. py:attribute:: show_progress_bar
-      :type:  bool
-      :value: True
-
-
-
-   .. py:attribute:: title
-      :type:  str
-      :value: '1D CANN Bump Animation'
-
 
 
 .. py:class:: BumpFitsConfig
@@ -319,9 +253,27 @@ Module Contents
 
 
 
-.. py:function:: bump_fits(data, config = None, save_path=None, **kwargs)
+.. py:function:: create_1d_bump_animation(fits_data, config = None, save_path=None, **kwargs)
 
-   Fit CANN1D bumps to data using MCMC optimization.
+   Create 1D CANN bump animation using vectorized operations.
+
+   :param fits_data: numpy.ndarray
+                     Shape (n_fits, 4) array with columns [time, position, amplitude, kappa]
+   :param config: CANN1DPlotConfig, optional
+                  Configuration object with all animation parameters
+   :param save_path: str, optional
+                     Output path for the generated animation (e.g. .gif or .mp4)
+   :param \*\*kwargs: backward compatibility parameters
+
+   :returns:
+
+             matplotlib.animation.FuncAnimation
+                 The animation object
+
+
+.. py:function:: roi_bump_fits(data, config = None, save_path=None, **kwargs)
+
+   Fit CANN1D bumps to ROI data using MCMC optimization.
 
    :param data: numpy.ndarray
                 Input data for bump fitting
@@ -342,24 +294,6 @@ Module Contents
              centrbump_array : numpy.ndarray
                  Array of centered bump data
    :rtype: bumps
-
-
-.. py:function:: create_1d_bump_animation(fits_data, config = None, save_path=None, **kwargs)
-
-   Create 1D CANN bump animation using vectorized operations.
-
-   :param fits_data: numpy.ndarray
-                     Shape (n_fits, 4) array with columns [time, position, amplitude, kappa]
-   :param config: AnimationConfig, optional
-                  Configuration object with all animation parameters
-   :param save_path: str, optional
-                     Output path for the generated GIF
-   :param \*\*kwargs: backward compatibility parameters
-
-   :returns:
-
-             matplotlib.animation.FuncAnimation
-                 The animation object
 
 
 .. py:data:: HAS_NUMBA

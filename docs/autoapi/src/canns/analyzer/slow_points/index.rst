@@ -51,12 +51,40 @@ Package Contents
 
    Find and analyze fixed points in RNN dynamics.
 
-   This class implements an optimization-based approach to finding fixed points
-   in recurrent neural networks. It uses gradient descent to minimize the
-   objective q = 0.5 * ||x - F(x, u)||^2, where F is the RNN transition function.
+   The finder minimizes ``q = 0.5 * ||x - F(x, u)||^2`` using gradient-based
+   optimization, where ``F`` is the RNN transition function.
 
-   The implementation is compatible with BrainPy RNN models and uses JAX for
-   automatic differentiation and optimization.
+   .. rubric:: Examples
+
+   >>> import numpy as np
+   >>> import jax
+   >>> import jax.numpy as jnp
+   >>> import brainpy as bp
+   >>> import brainpy.math as bm
+   >>> from canns.analyzer.slow_points import FixedPointFinder
+   >>>
+   >>> class SimpleRNN(bp.DynamicalSystem):
+   ...     def __init__(self, n_inputs, n_hidden):
+   ...         super().__init__()
+   ...         key = jax.random.PRNGKey(0)
+   ...         k1, k2 = jax.random.split(key)
+   ...         self.w_ih = bm.Variable(jax.random.normal(k1, (n_inputs, n_hidden)) * 0.1)
+   ...         self.w_hh = bm.Variable(jax.random.normal(k2, (n_hidden, n_hidden)) * 0.1)
+   ...         self.b_h = bm.Variable(jnp.zeros(n_hidden))
+   ...
+   ...     def __call__(self, inputs, hidden):
+   ...         inputs_t = inputs[:, 0, :]
+   ...         h_next = jnp.tanh(inputs_t @ self.w_ih.value + hidden @ self.w_hh.value + self.b_h.value)
+   ...         return h_next[:, None, :], h_next
+   >>>
+   >>> rnn = SimpleRNN(n_inputs=2, n_hidden=4)
+   >>> state_traj = np.zeros((2, 5, 4), dtype=np.float32)  # dummy trajectory
+   >>> inputs = np.zeros((1, 2), dtype=np.float32)         # constant input
+   >>>
+   >>> finder = FixedPointFinder(rnn, max_iters=50, tol_q=1e-6, verbose=False)
+   >>> unique_fps, all_fps = finder.find_fixed_points(state_traj, inputs, n_inits=4)
+   >>> print(unique_fps.n >= 0)
+   True
 
    Initialize the FixedPointFinder.
 
@@ -194,6 +222,19 @@ Package Contents
 
    This class stores fixed points found by the FixedPointFinder algorithm,
    along with associated metadata like Jacobians, eigenvalues, and stability.
+
+   .. rubric:: Examples
+
+   >>> import numpy as np
+   >>> from canns.analyzer.slow_points import FixedPoints
+   >>>
+   >>> # Dummy fixed point batch (n=2, n_states=3)
+   >>> xstar = np.array([[0.0, 0.1, -0.1], [0.2, 0.0, -0.2]], dtype=np.float32)
+   >>> inputs = np.zeros((2, 1), dtype=np.float32)
+   >>> qstar = np.array([1e-6, 2e-6], dtype=np.float32)
+   >>> fps = FixedPoints(xstar=xstar, inputs=inputs, qstar=qstar)
+   >>> print(len(fps))
+   2
 
    .. attribute:: xstar
 
@@ -407,13 +448,23 @@ Package Contents
 
    .. rubric:: Example
 
-   >>> from canns.analyzer.slow_points import load_checkpoint
-   >>> if load_checkpoint(rnn, "my_model.msgpack"):
-   ...     print("Loaded successfully")
-   ... else:
-   ...     print("No checkpoint found")
-   Loaded checkpoint from: my_model.msgpack
-   Loaded successfully
+   >>> import tempfile
+   >>> import brainpy as bp
+   >>> import brainpy.math as bm
+   >>> from canns.analyzer.slow_points import save_checkpoint, load_checkpoint
+   >>>
+   >>> class DummyModel(bp.DynamicalSystem):
+   ...     def __init__(self):
+   ...         super().__init__()
+   ...         self.w = bm.Variable(bm.ones(1))
+   >>>
+   >>> model = DummyModel()
+   >>> with tempfile.TemporaryDirectory() as tmpdir:
+   ...     path = f"{tmpdir}/model.msgpack"
+   ...     save_checkpoint(model, path)
+   ...     ok = load_checkpoint(model, path)
+   ...     print(ok)
+   True
 
 
 .. py:function:: plot_fixed_points_2d(fixed_points, state_traj, config = None, plot_batch_idx = None, plot_start_time = 0)
@@ -430,14 +481,20 @@ Package Contents
 
    .. rubric:: Example
 
+   >>> import numpy as np
    >>> from canns.analyzer.slow_points import plot_fixed_points_2d, FixedPoints
    >>> from canns.analyzer.visualization import PlotConfig
-   >>> config = PlotConfig(
-   ...     title="Fixed Points Analysis",
-   ...     figsize=(10, 8),
-   ...     save_path="fps_2d.png"
+   >>>
+   >>> # Dummy inputs based on fixed-point tests
+   >>> state_traj = np.random.rand(4, 10, 3).astype(np.float32)
+   >>> fixed_points = FixedPoints(
+   ...     xstar=np.random.rand(2, 3).astype(np.float32),
+   ...     is_stable=np.array([True, False]),
    ... )
-   >>> fig = plot_fixed_points_2d(unique_fps, hiddens, config=config)
+   >>> config = PlotConfig(title="Fixed Points (2D)", show=False)
+   >>> fig = plot_fixed_points_2d(fixed_points, state_traj, config=config)
+   >>> print(fig is not None)
+   True
 
 
 .. py:function:: plot_fixed_points_3d(fixed_points, state_traj, config = None, plot_batch_idx = None, plot_start_time = 0)
@@ -454,14 +511,20 @@ Package Contents
 
    .. rubric:: Example
 
+   >>> import numpy as np
    >>> from canns.analyzer.slow_points import plot_fixed_points_3d, FixedPoints
    >>> from canns.analyzer.visualization import PlotConfig
-   >>> config = PlotConfig(
-   ...     title="Fixed Points 3D",
-   ...     figsize=(12, 10),
-   ...     save_path="fps_3d.png"
+   >>>
+   >>> # Dummy inputs based on fixed-point tests
+   >>> state_traj = np.random.rand(3, 8, 4).astype(np.float32)
+   >>> fixed_points = FixedPoints(
+   ...     xstar=np.random.rand(2, 4).astype(np.float32),
+   ...     is_stable=np.array([True, False]),
    ... )
-   >>> fig = plot_fixed_points_3d(unique_fps, hiddens, config=config)
+   >>> config = PlotConfig(title="Fixed Points (3D)", show=False)
+   >>> fig = plot_fixed_points_3d(fixed_points, state_traj, config=config)
+   >>> print(fig is not None)
+   True
 
 
 .. py:function:: save_checkpoint(model, filepath)
@@ -473,8 +536,21 @@ Package Contents
 
    .. rubric:: Example
 
+   >>> import tempfile
+   >>> import brainpy as bp
+   >>> import brainpy.math as bm
    >>> from canns.analyzer.slow_points import save_checkpoint
-   >>> save_checkpoint(rnn, "my_model.msgpack")
-   Saved checkpoint to: my_model.msgpack
+   >>>
+   >>> class DummyModel(bp.DynamicalSystem):
+   ...     def __init__(self):
+   ...         super().__init__()
+   ...         self.w = bm.Variable(bm.ones(1))
+   >>>
+   >>> model = DummyModel()
+   >>> with tempfile.TemporaryDirectory() as tmpdir:
+   ...     path = f"{tmpdir}/model.msgpack"
+   ...     save_checkpoint(model, path)
+   ...     print(path.endswith(".msgpack"))
+   True
 
 

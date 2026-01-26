@@ -3,6 +3,19 @@ src.canns.models
 
 .. py:module:: src.canns.models
 
+.. autoapi-nested-parse::
+
+   Model definitions for CANNs.
+
+   This namespace exposes common model families, such as basic CANNs and
+   brain-inspired variants.
+
+   .. rubric:: Examples
+
+   >>> from canns import models
+   >>> print(models.basic)
+
+
 
 Submodules
 ----------
