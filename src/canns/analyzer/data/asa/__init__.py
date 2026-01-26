@@ -18,18 +18,18 @@ from .config import (
 )
 from .decode import decode_circular_coordinates, decode_circular_coordinates_multi
 from .embedding import embed_spike_trains
+from .fly_roi import (
+    BumpFitsConfig,
+    CANN1DPlotConfig,
+    create_1d_bump_animation,
+    roi_bump_fits,
+)
 from .fr import (
     FRMResult,
     compute_fr_heatmap_matrix,
     compute_frm,
     plot_frm,
     save_fr_heatmap_png,
-)
-from .fly_roi import (
-    BumpFitsConfig,
-    CANN1DPlotConfig,
-    create_1d_bump_animation,
-    roi_bump_fits,
 )
 
 # Path utilities

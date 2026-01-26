@@ -125,9 +125,7 @@ class AnimationError(CANN1DError):
     pass
 
 
-def roi_bump_fits(
-    data, config: BumpFitsConfig | None = None, save_path=None, **kwargs
-):
+def roi_bump_fits(data, config: BumpFitsConfig | None = None, save_path=None, **kwargs):
     """
     Fit CANN1D bumps to ROI data using MCMC optimization.
 
@@ -538,9 +536,7 @@ def create_1d_bump_animation(
                 try:
                     import imageio
 
-                    writer_kwargs, mode = get_imageio_writer_kwargs(
-                        config.save_path, config.fps
-                    )
+                    writer_kwargs, mode = get_imageio_writer_kwargs(config.save_path, config.fps)
                     with imageio.get_writer(config.save_path, mode=mode, **writer_kwargs) as writer:
                         frames_iter = range(nframes)
                         if progress_bar_enabled:
