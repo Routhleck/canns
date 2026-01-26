@@ -40,7 +40,6 @@ This page contains auto-generated API reference documentation [#f1]_.
    /autoapi/src/canns/pipeline/asa/screens/index
    /autoapi/src/canns/task/navigation_base/index
    /autoapi/src/canns/analyzer/slow_points/index
-   /autoapi/src/canns/analyzer/data/legacy/index
    /autoapi/src/canns/analyzer/data/asa/fr/index
    /autoapi/src/canns/pipeline/asa/__main__/index
    /autoapi/src/canns/models/brain_inspired/index
@@ -59,7 +58,6 @@ This page contains auto-generated API reference documentation [#f1]_.
    /autoapi/src/canns/task/closed_loop_navigation/index
    /autoapi/src/canns/analyzer/visualization/core/index
    /autoapi/src/canns/analyzer/slow_points/finder/index
-   /autoapi/src/canns/analyzer/data/legacy/cann2d/index
    /autoapi/src/canns/analyzer/data/asa/embedding/index
    /autoapi/src/canns/analyzer/data/asa/cohospace/index
    /autoapi/src/canns/models/brain_inspired/linear/index

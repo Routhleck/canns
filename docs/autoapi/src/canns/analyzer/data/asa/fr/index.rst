@@ -157,7 +157,8 @@ Module Contents
    :param config: Plot configuration. Use ``config.save_path`` to specify output file.
    :type config: PlotConfig, optional
    :param \*\*kwargs: Additional ``imshow`` keyword arguments. ``save_path`` may be provided here
-                      as a fallback if not set in ``config``.
+                      as a fallback if not set in ``config``. If ``save_path`` is omitted, the
+                      figure is only displayed when ``show=True``.
    :type \*\*kwargs: Any
 
    .. rubric:: Examples
@@ -197,7 +198,8 @@ Module Contents
    :param config: Plot configuration. Use ``config.save_path`` to specify output file.
    :type config: PlotConfig, optional
    :param \*\*kwargs: Additional ``imshow`` keyword arguments. ``save_path`` may be provided here
-                      as a fallback if not set in ``config``.
+                      as a fallback if not set in ``config``. If ``save_path`` is omitted, the
+                      figure is only displayed when ``show=True``.
    :type \*\*kwargs: Any
 
    .. rubric:: Notes
