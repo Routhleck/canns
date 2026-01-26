@@ -8,6 +8,10 @@
 全结果合成图
 --------------------
 
+参见 :ref:`全结果合成图 <fig-gallery-full>`，后续将替换为真实输出。
+
+.. _fig-gallery-full:
+
 .. figure:: /_static/figure2_full.png
    :alt: figure2 全结果图
    :width: 90%
@@ -18,7 +22,7 @@
 --------
 
 - 在 TUI 中选择模型与分析模式并生成图像结果
-- 了解每个模型的 5 类标准可视化（对齐 ``figure2`` 子图）
+- 了解每个模型的 5 类标准可视化（对齐 :ref:`全结果合成图 <fig-gallery-full>` 的子图）
 - 掌握结果目录结构、文件命名与日志路径
 
 适用人群
@@ -131,9 +135,9 @@
 模型与分析一览
 --------------
 
-Gallery 的分析项与 ``canns-experiments/figure2`` 对齐：
+Gallery 的分析项与 ``canns-experiments/figure2`` 对齐（见 :ref:`全结果合成图 <fig-gallery-full>`）：
 
-**CANN1D** （A.1–A.5 / figure2 第一行）：
+**CANN1D** （A.1–A.5 / 对应 :ref:`全结果合成图 <fig-gallery-full>` 第一行）：
 
 - Connectivity Matrix
 - Energy Landscape
@@ -141,7 +145,7 @@ Gallery 的分析项与 ``canns-experiments/figure2`` 对齐：
 - Template Matching
 - Neural Manifold
 
-**CANN2D** （B.1–B.5 / figure2 第二行）：
+**CANN2D** （B.1–B.5 / 对应 :ref:`全结果合成图 <fig-gallery-full>` 第二行）：
 
 - Connectivity Matrix
 - Energy Landscape
@@ -149,7 +153,7 @@ Gallery 的分析项与 ``canns-experiments/figure2`` 对齐：
 - Trajectory Comparison
 - Neural Manifold
 
-**GridCell** （C.1–C.5 / figure2 第三行）：
+**GridCell** （C.1–C.5 / 对应 :ref:`全结果合成图 <fig-gallery-full>` 第三行）：
 
 - Connectivity Matrix
 - Energy Landscape
