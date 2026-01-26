@@ -4,9 +4,14 @@ Simple TDA example using the built-in grid dataset.
 """
 
 from canns.analyzer import data
-from canns.data.loaders import load_grid_data
+from canns.data.loaders import load_grid_data, load_left_right_npz
 
-grid_data = load_grid_data()
+grid_data = load_left_right_npz(
+      "26034_3",
+      "26034_3_ASA_mec_gridModule02_n104_cm.npz",
+)
+
+# grid_data = load_grid_data()
 
 spike_cfg = data.SpikeEmbeddingConfig(smooth=True, speed_filter=False, min_speed=2.5)
 spikes, *_ = data.embed_spike_trains(grid_data, config=spike_cfg)

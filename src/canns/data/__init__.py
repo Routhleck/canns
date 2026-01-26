@@ -16,11 +16,13 @@ from .datasets import (
     get_data_dir,
     get_dataset_path,
     get_huggingface_upload_guide,
+    get_left_right_data_session,
+    get_left_right_npz,
     list_datasets,
     load,
     quick_setup,
 )
-from .loaders import load_grid_data, load_roi_data
+from .loaders import load_grid_data, load_left_right_npz, load_roi_data
 
 __all__ = [
     # Dataset registry and management
@@ -31,6 +33,8 @@ __all__ = [
     "list_datasets",
     "download_dataset",
     "get_dataset_path",
+    "get_left_right_data_session",
+    "get_left_right_npz",
     "quick_setup",
     "get_huggingface_upload_guide",
     # Generic loading
@@ -38,4 +42,5 @@ __all__ = [
     # Specialized loaders
     "load_roi_data",
     "load_grid_data",
+    "load_left_right_npz",
 ]

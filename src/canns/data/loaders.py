@@ -211,6 +211,43 @@ def load_grid_data(
             return None
 
 
+def load_left_right_npz(
+    session_id: str, filename: str, auto_download: bool = True, force: bool = False
+) -> dict[str, Any] | None:
+    """
+    Load a Left_Right_data_of NPZ file.
+
+    Parameters
+    ----------
+    session_id : str
+        Session folder name, e.g. "26034_3".
+    filename : str
+        File name inside the session folder.
+    auto_download : bool
+        Whether to download the file if missing.
+    force : bool
+        Whether to force re-download of existing files.
+
+    Returns
+    -------
+    dict or None
+        Dictionary of npz arrays if successful, None otherwise.
+    """
+    try:
+        path = _datasets.get_left_right_npz(
+            session_id=session_id,
+            filename=filename,
+            auto_download=auto_download,
+            force=force,
+        )
+        if path is None:
+            return None
+        return dict(np.load(path, allow_pickle=True))
+    except Exception as e:
+        print(f"Failed to load Left-Right npz {session_id}/{filename}: {e}")
+        return None
+
+
 def validate_roi_data(data: np.ndarray) -> bool:
     """
     Validate ROI data format for 1D CANN analysis.

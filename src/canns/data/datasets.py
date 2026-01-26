@@ -38,6 +38,7 @@ DEFAULT_DATA_DIR = Path.home() / ".canns" / "data"
 # URLs for datasets on Hugging Face
 HUGGINGFACE_REPO = "canns-team/data-analysis-datasets"
 BASE_URL = f"https://huggingface.co/datasets/{HUGGINGFACE_REPO}/resolve/main/"
+LEFT_RIGHT_DATASET_DIR = "Left_Right_data_of"
 
 # Dataset registry with metadata
 DATASETS = {
@@ -67,6 +68,16 @@ DATASETS = {
         "usage": "2D CANN analysis, comparison studies",
         "sha256": None,
         "url": f"{BASE_URL}grid_2.npz",
+    },
+    "left_right_data_of": {
+        "filename": LEFT_RIGHT_DATASET_DIR,
+        "description": "ASA type data from Left-Right sweep paper",
+        "size_mb": 604.0,
+        "format": "directory",
+        "usage": "ASA analysis, left-right sweep sessions",
+        "sha256": None,
+        "url": f"{BASE_URL}{LEFT_RIGHT_DATASET_DIR}/",
+        "is_collection": True,
     },
 }
 
@@ -130,7 +141,10 @@ def list_datasets() -> None:
     print("=" * 60)
 
     for key, info in DATASETS.items():
-        status = "Available" if info["url"] else "Setup required"
+        if info.get("is_collection"):
+            status = "Collection (use session getter)"
+        else:
+            status = "Available" if info["url"] else "Setup required"
         print(f"\nDataset: {key}")
         print(f"  File: {info['filename']}")
         print(f"  Size: {info['size_mb']} MB")
@@ -161,6 +175,11 @@ def download_dataset(dataset_key: str, force: bool = False) -> Path | None:
         return None
 
     info = DATASETS[dataset_key]
+
+    if info.get("is_collection"):
+        print(f"{dataset_key} is a dataset collection.")
+        print("Use get_left_right_data_session(session_id) to download a session.")
+        return None
 
     if not info["url"]:
         print(f"{dataset_key} not yet available for download")
@@ -213,6 +232,10 @@ def get_dataset_path(dataset_key: str, auto_setup: bool = True) -> Path | None:
     if dataset_key not in DATASETS:
         print(f"Unknown dataset: {dataset_key}")
         return None
+    if DATASETS[dataset_key].get("is_collection"):
+        print(f"{dataset_key} is a dataset collection.")
+        print("Use get_left_right_data_session(session_id) to access session files.")
+        return None
 
     data_dir = get_data_dir()
     filepath = data_dir / DATASETS[dataset_key]["filename"]
@@ -234,6 +257,136 @@ def get_dataset_path(dataset_key: str, auto_setup: bool = True) -> Path | None:
     print(f"Dataset {dataset_key} not available")
     print("Try running setup_local_datasets() or download_dataset() manually")
     return None
+
+
+def get_left_right_data_session(
+    session_id: str, auto_download: bool = True, force: bool = False
+) -> dict[str, Path | list[Path] | None] | None:
+    """
+    Download and return files for a Left_Right_data_of session.
+
+    Parameters
+    ----------
+    session_id : str
+        Session folder name, e.g. "24365_2".
+    auto_download : bool
+        Whether to download missing files automatically.
+    force : bool
+        Whether to force re-download of existing files.
+
+    Returns
+    -------
+    dict or None
+        Mapping with keys: "manifest", "full_file", "module_files".
+    """
+    if not session_id:
+        raise ValueError("session_id must be non-empty")
+
+    session_dir = get_data_dir() / LEFT_RIGHT_DATASET_DIR / session_id
+    session_dir.mkdir(parents=True, exist_ok=True)
+
+    manifest_filename = f"{session_id}_ASA_manifest.json"
+    manifest_url = f"{BASE_URL}{LEFT_RIGHT_DATASET_DIR}/{session_id}/{manifest_filename}"
+    manifest_path = session_dir / manifest_filename
+
+    if auto_download and (force or not manifest_path.exists()):
+        if not download_file_with_progress(manifest_url, manifest_path):
+            print(f"Failed to download manifest for session {session_id}")
+            return None
+
+    if not manifest_path.exists():
+        print(f"Manifest not found for session {session_id}")
+        return None
+
+    import json
+
+    with open(manifest_path) as f:
+        manifest = json.load(f)
+
+    full_file = manifest.get("full_file")
+    module_files = manifest.get("module_files", [])
+    requested_files: list[str] = []
+
+    if isinstance(full_file, str):
+        requested_files.append(Path(full_file).name)
+
+    if isinstance(module_files, list):
+        for module_file in module_files:
+            if isinstance(module_file, str):
+                requested_files.append(Path(module_file).name)
+
+    # De-duplicate while preserving order
+    seen: set[str] = set()
+    unique_files: list[str] = []
+    for filename in requested_files:
+        if filename and filename not in seen:
+            seen.add(filename)
+            unique_files.append(filename)
+
+    for filename in unique_files:
+        file_path = session_dir / filename
+        if auto_download and (force or not file_path.exists()):
+            file_url = f"{BASE_URL}{LEFT_RIGHT_DATASET_DIR}/{session_id}/{filename}"
+            if not download_file_with_progress(file_url, file_path):
+                print(f"Failed to download {filename} for session {session_id}")
+                return None
+
+    return {
+        "manifest": manifest_path,
+        "full_file": session_dir / Path(full_file).name if isinstance(full_file, str) else None,
+        "module_files": [
+            session_dir / Path(module_file).name
+            for module_file in module_files
+            if isinstance(module_file, str)
+        ],
+    }
+
+
+def get_left_right_npz(
+    session_id: str, filename: str, auto_download: bool = True, force: bool = False
+) -> Path | None:
+    """
+    Download and return a specific Left_Right_data_of NPZ file.
+
+    Parameters
+    ----------
+    session_id : str
+        Session folder name, e.g. "26034_3".
+    filename : str
+        File name inside the session folder, e.g.
+        "26034_3_ASA_mec_gridModule02_n104_cm.npz".
+    auto_download : bool
+        Whether to download the file if missing.
+    force : bool
+        Whether to force re-download of existing files.
+
+    Returns
+    -------
+    Path or None
+        Path to the requested file if available, None otherwise.
+    """
+    if not session_id:
+        raise ValueError("session_id must be non-empty")
+    if not filename:
+        raise ValueError("filename must be non-empty")
+
+    safe_name = Path(filename).name
+    session_dir = get_data_dir() / LEFT_RIGHT_DATASET_DIR / session_id
+    session_dir.mkdir(parents=True, exist_ok=True)
+
+    file_path = session_dir / safe_name
+    if file_path.exists() and not force:
+        return file_path
+
+    if not auto_download:
+        return None
+
+    file_url = f"{BASE_URL}{LEFT_RIGHT_DATASET_DIR}/{session_id}/{safe_name}"
+    if not download_file_with_progress(file_url, file_path):
+        print(f"Failed to download {safe_name} for session {session_id}")
+        return None
+
+    return file_path
 
 
 def detect_file_type(filepath: Path) -> str:
