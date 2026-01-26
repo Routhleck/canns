@@ -10,9 +10,10 @@ from __future__ import annotations
 import hashlib
 import json
 import time
+from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Callable, Dict, Optional
+from typing import Any
 
 import numpy as np
 
@@ -24,14 +25,15 @@ class PipelineResult:
     """Result from pipeline execution."""
 
     success: bool
-    artifacts: Dict[str, Path]
+    artifacts: dict[str, Path]
     summary: str
-    error: Optional[str] = None
+    error: str | None = None
     elapsed_time: float = 0.0
 
 
 class ProcessingError(RuntimeError):
     """Raised when a pipeline stage fails."""
+
     pass
 
 
@@ -40,11 +42,11 @@ class PipelineRunner:
 
     def __init__(self):
         """Initialize pipeline runner."""
-        self._asa_data: Optional[Dict[str, Any]] = None
-        self._embed_data: Optional[np.ndarray] = None  # Preprocessed data
-        self._aligned_pos: Optional[Dict[str, np.ndarray]] = None
-        self._input_hash: Optional[str] = None
-        self._embed_hash: Optional[str] = None
+        self._asa_data: dict[str, Any] | None = None
+        self._embed_data: np.ndarray | None = None  # Preprocessed data
+        self._aligned_pos: dict[str, np.ndarray] | None = None
+        self._input_hash: str | None = None
+        self._embed_hash: str | None = None
         self._mpl_ready: bool = False
 
     def has_preprocessed_data(self) -> bool:
@@ -88,7 +90,9 @@ class PipelineRunner:
         return md5.hexdigest()
 
     def _hash_obj(self, obj: Any) -> str:
-        payload = json.dumps(self._json_safe(obj), sort_keys=True, ensure_ascii=True).encode("utf-8")
+        payload = json.dumps(self._json_safe(obj), sort_keys=True, ensure_ascii=True).encode(
+            "utf-8"
+        )
         return self._hash_bytes(payload)
 
     def _ensure_matplotlib_backend(self) -> None:
@@ -97,8 +101,10 @@ class PipelineRunner:
             return
         try:
             import os
+
             os.environ.setdefault("MPLBACKEND", "Agg")
             import matplotlib
+
             try:
                 matplotlib.use("Agg", force=True)
             except TypeError:
@@ -106,6 +112,7 @@ class PipelineRunner:
         except Exception:
             pass
         self._mpl_ready = True
+
     def _cache_dir(self, state: WorkflowState) -> Path:
         return self._results_dir(state) / ".asa_cache"
 
@@ -141,7 +148,7 @@ class PipelineRunner:
     def _stage_cache_path(self, stage_dir: Path) -> Path:
         return stage_dir / "cache.json"
 
-    def _load_cache_meta(self, path: Path) -> Dict[str, Any]:
+    def _load_cache_meta(self, path: Path) -> dict[str, Any]:
         if not path.exists():
             return {}
         try:
@@ -149,10 +156,14 @@ class PipelineRunner:
         except Exception:
             return {}
 
-    def _write_cache_meta(self, path: Path, payload: Dict[str, Any]) -> None:
-        path.write_text(json.dumps(self._json_safe(payload), ensure_ascii=True, indent=2), encoding="utf-8")
+    def _write_cache_meta(self, path: Path, payload: dict[str, Any]) -> None:
+        path.write_text(
+            json.dumps(self._json_safe(payload), ensure_ascii=True, indent=2), encoding="utf-8"
+        )
 
-    def _stage_cache_hit(self, stage_dir: Path, expected_hash: str, required_files: list[Path]) -> bool:
+    def _stage_cache_hit(
+        self, stage_dir: Path, expected_hash: str, required_files: list[Path]
+    ) -> bool:
         if not all(p.exists() for p in required_files):
             return False
         meta = self._load_cache_meta(self._stage_cache_path(stage_dir))
@@ -179,7 +190,7 @@ class PipelineRunner:
             )
         return self._hash_obj({"mode": state.input_mode})
 
-    def _load_npz_dict(self, path: Path) -> Dict[str, Any]:
+    def _load_npz_dict(self, path: Path) -> dict[str, Any]:
         """Load npz into a dict, handling wrapped dict entries."""
         data = np.load(path, allow_pickle=True)
         for key in ("persistence_result", "decode_result"):
@@ -219,7 +230,7 @@ class PipelineRunner:
             progress_callback(30)
 
             if state.preprocess_method == "embed_spike_trains":
-                from canns.analyzer.data.asa import embed_spike_trains, SpikeEmbeddingConfig
+                from canns.analyzer.data.asa import SpikeEmbeddingConfig, embed_spike_trains
 
                 # Get preprocessing parameters from state or use config defaults
                 params = state.preprocess_params if state.preprocess_params else {}
@@ -317,7 +328,9 @@ class PipelineRunner:
                     self._embed_data = spike
                     log_callback(f"Using spike matrix shape: {spike.shape}")
                 else:
-                    log_callback("Warning: spike data is not a dense matrix, some analyses may fail")
+                    log_callback(
+                        "Warning: spike data is not a dense matrix, some analyses may fail"
+                    )
                     self._embed_data = spike
 
             progress_callback(100)
@@ -413,7 +426,7 @@ class PipelineRunner:
                 elapsed_time=elapsed,
             )
 
-    def _load_data(self, state: WorkflowState) -> Dict[str, Any]:
+    def _load_data(self, state: WorkflowState) -> dict[str, Any]:
         """Load data based on input mode."""
         if state.input_mode == "asa":
             path = resolve_path(state, state.asa_file)
@@ -433,12 +446,10 @@ class PipelineRunner:
         else:
             raise ProcessingError(f"Unknown input mode: {state.input_mode}")
 
-    def _run_preprocess(
-        self, asa_data: Dict[str, Any], state: WorkflowState
-    ) -> Dict[str, Any]:
+    def _run_preprocess(self, asa_data: dict[str, Any], state: WorkflowState) -> dict[str, Any]:
         """Run preprocessing on ASA data."""
         if state.preprocess_method == "embed_spike_trains":
-            from canns.analyzer.data.asa import embed_spike_trains, SpikeEmbeddingConfig
+            from canns.analyzer.data.asa import SpikeEmbeddingConfig, embed_spike_trains
 
             params = state.preprocess_params
             base_config = SpikeEmbeddingConfig()
@@ -459,10 +470,10 @@ class PipelineRunner:
         return asa_data
 
     def _run_tda(
-        self, asa_data: Dict[str, Any], state: WorkflowState, log_callback
-    ) -> Dict[str, Path]:
+        self, asa_data: dict[str, Any], state: WorkflowState, log_callback
+    ) -> dict[str, Path]:
         """Run TDA analysis."""
-        from canns.analyzer.data.asa import tda_vis, TDAConfig
+        from canns.analyzer.data.asa import TDAConfig, tda_vis
         from canns.analyzer.data.asa.tda import _plot_barcode, _plot_barcode_with_shuffle
 
         # Create output directory
@@ -511,6 +522,7 @@ class PipelineRunner:
         if params.get("standardize", False):
             try:
                 from sklearn.preprocessing import StandardScaler
+
                 embed_data = StandardScaler().fit_transform(embed_data)
             except Exception as e:
                 raise ProcessingError(f"StandardScaler failed: {e}") from e
@@ -532,6 +544,7 @@ class PipelineRunner:
             fig.savefig(barcode_path, dpi=200, bbox_inches="tight")
             try:
                 import matplotlib.pyplot as plt
+
                 plt.close(fig)
             except Exception:
                 pass
@@ -547,13 +560,16 @@ class PipelineRunner:
 
     def _load_or_run_decode(
         self,
-        asa_data: Dict[str, Any],
+        asa_data: dict[str, Any],
         persistence_path: Path,
         state: WorkflowState,
         log_callback,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Load cached decoding or run decode_circular_coordinates."""
-        from canns.analyzer.data.asa import decode_circular_coordinates, decode_circular_coordinates_multi
+        from canns.analyzer.data.asa import (
+            decode_circular_coordinates,
+            decode_circular_coordinates_multi,
+        )
 
         decode_dir = self._results_dir(state) / "CohoMap"
         decode_dir.mkdir(parents=True, exist_ok=True)
@@ -569,7 +585,9 @@ class PipelineRunner:
             "num_circ": num_circ,
         }
         persistence_hash = self._hash_file(persistence_path)
-        decode_hash = self._hash_obj({"persistence_hash": persistence_hash, "params": decode_params})
+        decode_hash = self._hash_obj(
+            {"persistence_hash": persistence_hash, "params": decode_params}
+        )
 
         meta_path = self._stage_cache_path(decode_dir)
         meta = self._load_cache_meta(meta_path)
@@ -606,8 +624,8 @@ class PipelineRunner:
         return decode_result
 
     def _run_cohomap(
-        self, asa_data: Dict[str, Any], state: WorkflowState, log_callback
-    ) -> Dict[str, Path]:
+        self, asa_data: dict[str, Any], state: WorkflowState, log_callback
+    ) -> dict[str, Path]:
         """Run CohoMap analysis (TDA + decode + plotting)."""
         from canns.analyzer.data.asa import plot_cohomap_multi
         from canns.analyzer.visualization import PlotConfigs
@@ -628,7 +646,9 @@ class PipelineRunner:
         cohomap_path = out_dir / "cohomap.png"
         stage_hash = self._hash_obj(
             {
-                "decode_hash": self._load_cache_meta(self._stage_cache_path(out_dir)).get("decode_hash"),
+                "decode_hash": self._load_cache_meta(self._stage_cache_path(out_dir)).get(
+                    "decode_hash"
+                ),
                 "plot": "cohomap",
                 "subsample": subsample,
             }
@@ -658,11 +678,19 @@ class PipelineRunner:
         return {"decoding": out_dir / "decoding.npz", "cohomap": cohomap_path}
 
     def _run_pathcompare(
-        self, asa_data: Dict[str, Any], state: WorkflowState, log_callback
-    ) -> Dict[str, Path]:
+        self, asa_data: dict[str, Any], state: WorkflowState, log_callback
+    ) -> dict[str, Path]:
         """Run path comparison visualization."""
-        from canns.analyzer.data.asa import align_coords_to_position, apply_angle_scale, plot_path_compare
-        from canns.analyzer.data.asa.path import find_coords_matrix, find_times_box, resolve_time_slice
+        from canns.analyzer.data.asa import (
+            align_coords_to_position,
+            apply_angle_scale,
+            plot_path_compare,
+        )
+        from canns.analyzer.data.asa.path import (
+            find_coords_matrix,
+            find_times_box,
+            resolve_time_slice,
+        )
         from canns.analyzer.visualization import PlotConfigs
 
         tda_dir = self._results_dir(state) / "TDA"
@@ -750,7 +778,9 @@ class PipelineRunner:
         coords_use = coords_use[idx]
 
         out_path = out_dir / "path_compare.png"
-        decode_meta = self._load_cache_meta(self._stage_cache_path(self._results_dir(state) / "CohoMap"))
+        decode_meta = self._load_cache_meta(
+            self._stage_cache_path(self._results_dir(state) / "CohoMap")
+        )
         stage_hash = self._hash_obj(
             {
                 "persistence": self._hash_file(persistence_path),
@@ -786,13 +816,13 @@ class PipelineRunner:
         return {"path_compare": out_path}
 
     def _run_cohospace(
-        self, asa_data: Dict[str, Any], state: WorkflowState, log_callback
-    ) -> Dict[str, Path]:
+        self, asa_data: dict[str, Any], state: WorkflowState, log_callback
+    ) -> dict[str, Path]:
         """Run cohomology space visualization."""
         from canns.analyzer.data.asa import (
-            plot_cohospace_trajectory,
             plot_cohospace_neuron,
             plot_cohospace_population,
+            plot_cohospace_trajectory,
         )
         from canns.analyzer.data.asa.cohospace import (
             plot_cohospace_neuron_skewed,
@@ -811,7 +841,7 @@ class PipelineRunner:
         out_dir.mkdir(parents=True, exist_ok=True)
 
         params = state.analysis_params
-        artifacts: Dict[str, Path] = {}
+        artifacts: dict[str, Path] = {}
 
         coords = np.asarray(decode_result.get("coords"))
         coordsbox = np.asarray(decode_result.get("coordsbox"))
@@ -849,9 +879,15 @@ class PipelineRunner:
         if mode == "spike":
             activity = np.asarray(asa_data.get("spike"))
         else:
-            activity = self._embed_data if self._embed_data is not None else np.asarray(asa_data.get("spike"))
+            activity = (
+                self._embed_data
+                if self._embed_data is not None
+                else np.asarray(asa_data.get("spike"))
+            )
 
-        decode_meta = self._load_cache_meta(self._stage_cache_path(self._results_dir(state) / "CohoMap"))
+        decode_meta = self._load_cache_meta(
+            self._stage_cache_path(self._results_dir(state) / "CohoMap")
+        )
         stage_hash = self._hash_obj(
             {
                 "persistence": self._hash_file(persistence_path),
@@ -943,8 +979,8 @@ class PipelineRunner:
         return artifacts
 
     def _run_fr(
-        self, asa_data: Dict[str, Any], state: WorkflowState, log_callback
-    ) -> Dict[str, Path]:
+        self, asa_data: dict[str, Any], state: WorkflowState, log_callback
+    ) -> dict[str, Path]:
         """Run firing rate heatmap analysis."""
         from canns.analyzer.data.asa import compute_fr_heatmap_matrix, save_fr_heatmap_png
         from canns.analyzer.visualization import PlotConfigs
@@ -992,8 +1028,8 @@ class PipelineRunner:
         return {"fr_heatmap": out_path}
 
     def _run_frm(
-        self, asa_data: Dict[str, Any], state: WorkflowState, log_callback
-    ) -> Dict[str, Path]:
+        self, asa_data: dict[str, Any], state: WorkflowState, log_callback
+    ) -> dict[str, Path]:
         """Run single neuron firing rate map."""
         from canns.analyzer.data.asa import compute_frm, plot_frm
         from canns.analyzer.visualization import PlotConfigs
@@ -1051,21 +1087,15 @@ class PipelineRunner:
         return {"frm": out_path}
 
     def _run_gridscore(
-        self, asa_data: Dict[str, Any], state: WorkflowState, log_callback
-    ) -> Dict[str, Path]:
+        self, asa_data: dict[str, Any], state: WorkflowState, log_callback
+    ) -> dict[str, Path]:
         """Run grid score analysis."""
-        from canns.analyzer.metrics.spatial_metrics import compute_grid_score
 
         # Create output directory
         out_dir = self._results_dir(state) / "GridScore"
         out_dir.mkdir(parents=True, exist_ok=True)
 
-        # Get parameters
-        params = state.analysis_params
-        annulus_inner = params.get("annulus_inner", 0.3)
-        annulus_outer = params.get("annulus_outer", 0.7)
-        bin_size = params.get("bin_size", 2.5)
-        smooth_sigma = params.get("smooth_sigma", 2.0)
+        # Parameters are unused until gridscore implementation is added.
 
         # Compute grid scores for all neurons
         log_callback("Computing grid scores...")

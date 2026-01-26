@@ -8,30 +8,29 @@ following the original GUI's two-page structure:
 
 from pathlib import Path
 
-import numpy as np
 from textual.app import App, ComposeResult
 from textual.binding import Binding
-from textual.containers import Container, Horizontal, Vertical, VerticalScroll
+from textual.containers import Horizontal, Vertical, VerticalScroll
 from textual.widgets import (
     Button,
-    Header,
+    Checkbox,
+    DirectoryTree,
     Footer,
+    Header,
+    Input,
     Label,
+    ProgressBar,
     Select,
     Static,
     TabbedContent,
     TabPane,
-    DirectoryTree,
-    ProgressBar,
-    Input,
-    Checkbox,
 )
 from textual.worker import Worker
 
-from .state import WorkflowState, validate_files, get_preset_params, relative_path
 from .runner import PipelineRunner
-from .screens import WorkdirScreen, HelpScreen, ErrorScreen, TerminalSizeWarning
-from .widgets import ImagePreview, ParamGroup, LogViewer
+from .screens import ErrorScreen, HelpScreen, TerminalSizeWarning, WorkdirScreen
+from .state import WorkflowState, get_preset_params, relative_path, validate_files
+from .widgets import ImagePreview, LogViewer, ParamGroup
 
 
 class ASAApp(App):
@@ -78,8 +77,12 @@ class ASAApp(App):
                 with Vertical(id="actions-bar"):
                     yield Button("Continue →", variant="primary", id="continue-btn")
                     yield Button("← Back", variant="primary", id="back-btn", classes="hidden")
-                    yield Button("Run Analysis", variant="primary", id="run-analysis-btn", classes="hidden")
-                    yield Button("Stop", variant="error", id="stop-btn", classes="hidden", disabled=True)
+                    yield Button(
+                        "Run Analysis", variant="primary", id="run-analysis-btn", classes="hidden"
+                    )
+                    yield Button(
+                        "Stop", variant="error", id="stop-btn", classes="hidden", disabled=True
+                    )
                 yield ProgressBar(id="progress-bar")
                 yield Static("Status: Idle", id="run-status")
 
@@ -109,7 +112,10 @@ class ASAApp(App):
                                 # Preprocess section
                                 yield Label("Method:")
                                 yield Select(
-                                    [("None", "none"), ("Embed Spike Trains", "embed_spike_trains")],
+                                    [
+                                        ("None", "none"),
+                                        ("Embed Spike Trains", "embed_spike_trains"),
+                                    ],
                                     value="none",
                                     id="preprocess-method-select",
                                 )
@@ -125,8 +131,15 @@ class ASAApp(App):
                                     yield Label("sigma:", id="emb-sigma-label")
                                     yield Input(value="5000", id="emb-sigma", disabled=True)
 
-                                    yield Checkbox("smooth", id="emb-smooth", value=True, disabled=True)
-                                    yield Checkbox("speed_filter", id="emb-speed-filter", value=False, disabled=True)
+                                    yield Checkbox(
+                                        "smooth", id="emb-smooth", value=True, disabled=True
+                                    )
+                                    yield Checkbox(
+                                        "speed_filter",
+                                        id="emb-speed-filter",
+                                        value=False,
+                                        disabled=True,
+                                    )
 
                                     yield Label("min_speed:", id="emb-min-speed-label")
                                     yield Input(value="2.5", id="emb-min-speed", disabled=True)
@@ -157,13 +170,20 @@ class ASAApp(App):
                                 yield Label("dim:")
                                 yield Input(value=str(tda_defaults.get("dim", 6)), id="tda-dim")
                                 yield Label("num_times:")
-                                yield Input(value=str(tda_defaults.get("num_times", 5)), id="tda-num-times")
+                                yield Input(
+                                    value=str(tda_defaults.get("num_times", 5)), id="tda-num-times"
+                                )
                                 yield Label("active_times:")
-                                yield Input(value=str(tda_defaults.get("active_times", 15000)), id="tda-active-times")
+                                yield Input(
+                                    value=str(tda_defaults.get("active_times", 15000)),
+                                    id="tda-active-times",
+                                )
                                 yield Label("k:")
                                 yield Input(value=str(tda_defaults.get("k", 1000)), id="tda-k")
                                 yield Label("n_points:")
-                                yield Input(value=str(tda_defaults.get("n_points", 1200)), id="tda-n-points")
+                                yield Input(
+                                    value=str(tda_defaults.get("n_points", 1200)), id="tda-n-points"
+                                )
                                 yield Label("metric:")
                                 yield Select(
                                     [
@@ -177,15 +197,30 @@ class ASAApp(App):
                                 yield Label("nbs:")
                                 yield Input(value=str(tda_defaults.get("nbs", 800)), id="tda-nbs")
                                 yield Label("maxdim:")
-                                yield Input(value=str(tda_defaults.get("maxdim", 1)), id="tda-maxdim")
+                                yield Input(
+                                    value=str(tda_defaults.get("maxdim", 1)), id="tda-maxdim"
+                                )
                                 yield Label("coeff:")
-                                yield Input(value=str(tda_defaults.get("coeff", 47)), id="tda-coeff")
-                                yield Checkbox("do_shuffle", id="tda-do-shuffle", value=tda_defaults.get("do_shuffle", False))
+                                yield Input(
+                                    value=str(tda_defaults.get("coeff", 47)), id="tda-coeff"
+                                )
+                                yield Checkbox(
+                                    "do_shuffle",
+                                    id="tda-do-shuffle",
+                                    value=tda_defaults.get("do_shuffle", False),
+                                )
                                 yield Label("num_shuffles:")
-                                yield Input(value=str(tda_defaults.get("num_shuffles", 1000)), id="tda-num-shuffles")
-                                yield Checkbox("standardize (StandardScaler)", id="tda-standardize", value=True)
+                                yield Input(
+                                    value=str(tda_defaults.get("num_shuffles", 1000)),
+                                    id="tda-num-shuffles",
+                                )
+                                yield Checkbox(
+                                    "standardize (StandardScaler)", id="tda-standardize", value=True
+                                )
 
-                            with ParamGroup("Decode / CohoMap", id="analysis-params-decode", classes="hidden"):
+                            with ParamGroup(
+                                "Decode / CohoMap", id="analysis-params-decode", classes="hidden"
+                            ):
                                 yield Label("decode_version:")
                                 yield Select(
                                     [
@@ -199,12 +234,22 @@ class ASAApp(App):
                                 yield Input(value="2", id="decode-num-circ")
                                 yield Label("cohomap_subsample:")
                                 yield Input(value="10", id="cohomap-subsample")
-                                yield Checkbox("real_ground (v0)", id="decode-real-ground", value=True)
+                                yield Checkbox(
+                                    "real_ground (v0)", id="decode-real-ground", value=True
+                                )
                                 yield Checkbox("real_of (v0)", id="decode-real-of", value=True)
 
-                            with ParamGroup("PathCompare Parameters", id="analysis-params-pathcompare", classes="hidden"):
-                                yield Checkbox("use_box (coordsbox/times_box)", id="pc-use-box", value=True)
-                                yield Checkbox("interp_to_full (use_box)", id="pc-interp-full", value=True)
+                            with ParamGroup(
+                                "PathCompare Parameters",
+                                id="analysis-params-pathcompare",
+                                classes="hidden",
+                            ):
+                                yield Checkbox(
+                                    "use_box (coordsbox/times_box)", id="pc-use-box", value=True
+                                )
+                                yield Checkbox(
+                                    "interp_to_full (use_box)", id="pc-interp-full", value=True
+                                )
                                 yield Label("dim_mode:")
                                 yield Select(
                                     [("2d", "2d"), ("1d", "1d")],
@@ -240,7 +285,11 @@ class ASAApp(App):
                                 yield Label("theta_scale (rad/deg/unit/auto):")
                                 yield Input(value="rad", id="pathcompare-angle-scale")
 
-                            with ParamGroup("CohoSpace Parameters", id="analysis-params-cohospace", classes="hidden"):
+                            with ParamGroup(
+                                "CohoSpace Parameters",
+                                id="analysis-params-cohospace",
+                                classes="hidden",
+                            ):
                                 yield Label("dim_mode:")
                                 yield Select(
                                     [("2d", "2d"), ("1d", "1d")],
@@ -263,7 +312,11 @@ class ASAApp(App):
                                 yield Input(value="5.0", id="coho-top-percent")
                                 yield Label("view:")
                                 yield Select(
-                                    [("both", "both"), ("single", "single"), ("population", "population")],
+                                    [
+                                        ("both", "both"),
+                                        ("single", "single"),
+                                        ("population", "population"),
+                                    ],
                                     value="both",
                                     id="coho-view",
                                 )
@@ -277,11 +330,15 @@ class ASAApp(App):
                                     value="square",
                                     id="coho-unfold",
                                 )
-                                yield Checkbox("skew_show_grid", id="coho-skew-show-grid", value=True)
+                                yield Checkbox(
+                                    "skew_show_grid", id="coho-skew-show-grid", value=True
+                                )
                                 yield Label("skew_tiles:")
                                 yield Input(value="0", id="coho-skew-tiles")
 
-                            with ParamGroup("FR Parameters", id="analysis-params-fr", classes="hidden"):
+                            with ParamGroup(
+                                "FR Parameters", id="analysis-params-fr", classes="hidden"
+                            ):
                                 yield Label("neuron_start:")
                                 yield Input(value="", id="fr-neuron-start")
                                 yield Label("neuron_end:")
@@ -307,7 +364,9 @@ class ASAApp(App):
                                     id="fr-normalize",
                                 )
 
-                            with ParamGroup("FRM Parameters", id="analysis-params-frm", classes="hidden"):
+                            with ParamGroup(
+                                "FRM Parameters", id="analysis-params-frm", classes="hidden"
+                            ):
                                 yield Label("neuron_id:")
                                 yield Input(value="0", id="frm-neuron-id")
                                 yield Label("bins:")
@@ -324,15 +383,31 @@ class ASAApp(App):
                                     id="frm-mode",
                                 )
 
-                            with ParamGroup("GridScore Parameters", id="analysis-params-gridscore", classes="hidden"):
+                            with ParamGroup(
+                                "GridScore Parameters",
+                                id="analysis-params-gridscore",
+                                classes="hidden",
+                            ):
                                 yield Label("annulus_inner:")
-                                yield Input(value=str(grid_defaults.get("annulus_inner", 0.3)), id="gridscore-annulus-inner")
+                                yield Input(
+                                    value=str(grid_defaults.get("annulus_inner", 0.3)),
+                                    id="gridscore-annulus-inner",
+                                )
                                 yield Label("annulus_outer:")
-                                yield Input(value=str(grid_defaults.get("annulus_outer", 0.7)), id="gridscore-annulus-outer")
+                                yield Input(
+                                    value=str(grid_defaults.get("annulus_outer", 0.7)),
+                                    id="gridscore-annulus-outer",
+                                )
                                 yield Label("bin_size:")
-                                yield Input(value=str(grid_defaults.get("bin_size", 2.5)), id="gridscore-bin-size")
+                                yield Input(
+                                    value=str(grid_defaults.get("bin_size", 2.5)),
+                                    id="gridscore-bin-size",
+                                )
                                 yield Label("smooth_sigma:")
-                                yield Input(value=str(grid_defaults.get("smooth_sigma", 2.0)), id="gridscore-smooth-sigma")
+                                yield Input(
+                                    value=str(grid_defaults.get("smooth_sigma", 2.0)),
+                                    id="gridscore-smooth-sigma",
+                                )
 
                 with Vertical(id="file-tree-panel"):
                     yield Label("Files in Workdir", id="files-header")
@@ -347,12 +422,15 @@ class ASAApp(App):
                             "2. Choose input mode and files\n"
                             "3. Configure preprocessing\n"
                             "4. Click 'Continue' to proceed to analysis",
-                            id="setup-content"
+                            id="setup-content",
                         )
 
                     with TabPane("Results", id="results-tab"):
                         yield ImagePreview(id="result-preview")
-                        yield Static("No results yet. Complete preprocessing and run analysis.", id="result-status")
+                        yield Static(
+                            "No results yet. Complete preprocessing and run analysis.",
+                            id="result-status",
+                        )
 
                 # Log viewer at bottom (25% height)
                 yield LogViewer(id="log-viewer")
@@ -554,7 +632,9 @@ class ASAApp(App):
             return
 
         if not self.runner.has_preprocessed_data():
-            self.push_screen(ErrorScreen("Error", "No preprocessed data. Please complete preprocessing first."))
+            self.push_screen(
+                ErrorScreen("Error", "No preprocessed data. Please complete preprocessing first.")
+            )
             return
 
         try:
@@ -645,10 +725,16 @@ class ASAApp(App):
             ).value
 
         if grid:
-            self.query_one("#gridscore-annulus-inner", Input).value = str(grid.get("annulus_inner", 0.3))
-            self.query_one("#gridscore-annulus-outer", Input).value = str(grid.get("annulus_outer", 0.7))
+            self.query_one("#gridscore-annulus-inner", Input).value = str(
+                grid.get("annulus_inner", 0.3)
+            )
+            self.query_one("#gridscore-annulus-outer", Input).value = str(
+                grid.get("annulus_outer", 0.7)
+            )
             self.query_one("#gridscore-bin-size", Input).value = str(grid.get("bin_size", 2.5))
-            self.query_one("#gridscore-smooth-sigma", Input).value = str(grid.get("smooth_sigma", 2.0))
+            self.query_one("#gridscore-smooth-sigma", Input).value = str(
+                grid.get("smooth_sigma", 2.0)
+            )
 
     def update_analysis_params_visibility(self) -> None:
         """Show params for the selected analysis mode."""
@@ -764,7 +850,9 @@ class ASAApp(App):
             params["imin"] = self._parse_optional_int(self.query_one("#pc-imin", Input).value)
             params["imax"] = self._parse_optional_int(self.query_one("#pc-imax", Input).value)
             params["stride"] = int(self.query_one("#pc-stride", Input).value)
-            params["angle_scale"] = self.query_one("#pathcompare-angle-scale", Input).value.strip() or "rad"
+            params["angle_scale"] = (
+                self.query_one("#pathcompare-angle-scale", Input).value.strip() or "rad"
+            )
         elif mode == "cohospace":
             params["decode_version"] = str(self.query_one("#decode-version", Select).value)
             params["num_circ"] = int(self.query_one("#decode-num-circ", Input).value)
@@ -845,7 +933,9 @@ class ASAApp(App):
                 tree.reload()
             else:
                 self.set_run_status("Status: Preprocessing failed.", "error")
-                self.push_screen(ErrorScreen("Preprocessing Error", result.error or "Unknown error"))
+                self.push_screen(
+                    ErrorScreen("Preprocessing Error", result.error or "Unknown error")
+                )
 
         elif event.worker.name == "analysis_worker" and event.worker.is_finished:
             result = event.worker.result

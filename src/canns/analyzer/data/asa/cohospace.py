@@ -126,7 +126,7 @@ def plot_cohospace_trajectory(
     -------
     ax : matplotlib.axes.Axes
         The Axes containing the plot.
-    
+
     Examples
     --------
     >>> fig = plot_cohospace_trajectory(coords, subsample=2, show=False)  # doctest: +SKIP
@@ -235,7 +235,7 @@ def plot_cohospace_neuron(
     Returns
     -------
     ax : matplotlib.axes.Axes
-    
+
     Examples
     --------
     >>> plot_cohospace_neuron(coords, spikes, neuron_id=0, show=False)  # doctest: +SKIP
@@ -343,7 +343,7 @@ def plot_cohospace_population(
     Returns
     -------
     ax : matplotlib.axes.Axes
-    
+
     Examples
     --------
     >>> plot_cohospace_population(coords, spikes, neuron_ids=[0, 1, 2], show=False)  # doctest: +SKIP
@@ -448,7 +448,7 @@ def compute_cohoscore(
     -------
     scores : ndarray, shape (N,)
         CohoScore per neuron (NaN for neurons with too few points).
-    
+
     Examples
     --------
     >>> scores = compute_cohoscore(coords, spikes)  # doctest: +SKIP

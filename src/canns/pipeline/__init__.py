@@ -7,7 +7,8 @@ the underlying implementations.
 """
 
 from ._base import Pipeline
-from .asa import ASAApp, main as asa_main
+from .asa import ASAApp
+from .asa import main as asa_main
 
 __all__ = [
     "Pipeline",

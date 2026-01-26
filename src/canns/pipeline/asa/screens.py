@@ -6,9 +6,9 @@ This module provides modal overlays for directory selection, help, and error dis
 from pathlib import Path
 
 from textual.app import ComposeResult
-from textual.containers import Container, Vertical
+from textual.containers import Container
 from textual.screen import ModalScreen
-from textual.widgets import Button, DirectoryTree, Static, Label
+from textual.widgets import Button, DirectoryTree, Label, Static
 
 
 class WorkdirScreen(ModalScreen[Path]):
@@ -202,7 +202,7 @@ class TerminalSizeWarning(ModalScreen):
                 f"• Height: 30 rows (recommended 40+)\n\n"
                 f"Please resize terminal or reduce font size.\n"
                 f"Press Esc to continue (may not display properly)",
-                id="warning-message"
+                id="warning-message",
             )
             yield Button("Continue", variant="warning", id="continue-btn")
 

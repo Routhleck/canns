@@ -6,7 +6,7 @@ All file paths are stored relative to the working directory for portability.
 
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any
 
 
 @dataclass
@@ -21,23 +21,25 @@ class WorkflowState:
 
     # Input configuration
     input_mode: str = "asa"  # "asa" | "neuron_traj" | "batch"
-    preset: str = "grid"     # "grid" | "hd" | "none"
+    preset: str = "grid"  # "grid" | "hd" | "none"
 
     # File paths (relative to workdir)
-    asa_file: Optional[Path] = None
-    neuron_file: Optional[Path] = None
-    traj_file: Optional[Path] = None
+    asa_file: Path | None = None
+    neuron_file: Path | None = None
+    traj_file: Path | None = None
 
     # Preprocessing
     preprocess_method: str = "none"  # "none" | "embed_spike_trains"
-    preprocess_params: Dict[str, Any] = field(default_factory=dict)
+    preprocess_params: dict[str, Any] = field(default_factory=dict)
 
     # Analysis configuration
-    analysis_mode: str = "tda"  # "tda" | "cohomap" | "pathcompare" | "cohospace" | "fr" | "frm" | "gridscore"
-    analysis_params: Dict[str, Any] = field(default_factory=dict)
+    analysis_mode: str = (
+        "tda"  # "tda" | "cohomap" | "pathcompare" | "cohospace" | "fr" | "frm" | "gridscore"
+    )
+    analysis_params: dict[str, Any] = field(default_factory=dict)
 
     # Results
-    artifacts: Dict[str, Path] = field(default_factory=dict)
+    artifacts: dict[str, Path] = field(default_factory=dict)
 
     # Runtime state
     is_running: bool = False
@@ -61,7 +63,7 @@ def relative_path(state: WorkflowState, path: Path) -> Path:
         return path
 
 
-def resolve_path(state: WorkflowState, path: Optional[Path]) -> Optional[Path]:
+def resolve_path(state: WorkflowState, path: Path | None) -> Path | None:
     """Convert relative path to absolute path.
 
     Args:
@@ -100,8 +102,9 @@ def validate_files(state: WorkflowState) -> tuple[bool, str]:
         # Validate .npz structure
         try:
             import numpy as np
+
             data = np.load(asa_path, allow_pickle=True)
-            required_keys = ['spike', 't']
+            required_keys = ["spike", "t"]
             missing = [k for k in required_keys if k not in data.files]
             if missing:
                 return False, f"ASA file missing required keys: {missing}"
@@ -125,7 +128,7 @@ def validate_files(state: WorkflowState) -> tuple[bool, str]:
     return True, ""
 
 
-def get_preset_params(preset: str) -> Dict[str, Any]:
+def get_preset_params(preset: str) -> dict[str, Any]:
     """Load preset configurations for analysis.
 
     Args:
@@ -219,7 +222,7 @@ def check_cached_artifacts(state: WorkflowState, stage: str) -> bool:
     return all((stage_dir / f).exists() for f in required_files)
 
 
-def load_cached_result(state: WorkflowState, stage: str) -> Dict[str, Any]:
+def load_cached_result(state: WorkflowState, stage: str) -> dict[str, Any]:
     """Load cached results from previous run.
 
     Args:

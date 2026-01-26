@@ -226,6 +226,7 @@ class FRMResult:
     --------
     >>> res = FRMResult(frm=None, occupancy=None, spike_sum=None, x_edges=None, y_edges=None)  # doctest: +SKIP
     """
+
     frm: np.ndarray
     occupancy: np.ndarray
     spike_sum: np.ndarray

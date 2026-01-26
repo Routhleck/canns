@@ -4,13 +4,12 @@ This module provides reusable UI components for the ASA analysis interface.
 """
 
 from pathlib import Path
-from typing import Optional
 
-from textual.app import ComposeResult
 from rich.ansi import AnsiDecoder
 from rich.text import Text
-from textual.containers import Horizontal, Vertical, ScrollableContainer
-from textual.widgets import Button, Static, Input, Select, Label
+from textual.app import ComposeResult
+from textual.containers import Horizontal, ScrollableContainer, Vertical
+from textual.widgets import Button, Input, Label, Static
 
 
 class ImagePreview(Vertical):
@@ -41,7 +40,7 @@ class ImagePreview(Vertical):
     }
     """
 
-    def __init__(self, image_path: Optional[Path] = None, **kwargs):
+    def __init__(self, image_path: Path | None = None, **kwargs):
         super().__init__(**kwargs)
         self.image_path = image_path
         self._zoom_step = 0
@@ -105,7 +104,7 @@ class ImagePreview(Vertical):
         if self.image_path and self.image_path.exists():
             self.update_image(self.image_path)
 
-    def update_image(self, path: Optional[Path]):
+    def update_image(self, path: Path | None):
         """Update the previewed image."""
         self.image_path = path
         content = self.query_one("#preview-content", Static)
