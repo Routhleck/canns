@@ -5,6 +5,29 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.13.2] - 2026-01-26
+
+### Added
+- Model Gallery TUI with interactive terminal interface for browsing and running model examples (PR #88)
+- New gallery module with app, runner, and state management (`src/canns/pipeline/gallery/`)
+- CLI entry points: `python -m canns.pipeline.gallery` and `canns-gallery` command
+- Pipeline launcher module (`src/canns/pipeline/launcher.py`) for unified pipeline access
+- ASA TUI tutorial with comprehensive Chinese documentation (PR #87)
+- Model Gallery TUI tutorial (`docs/zh/3_full_detail_tutorials/04_pipeline/02_model_gallery_tui.rst`)
+- Left-Right dataset loading utilities: `get_left_right_data_session()`, `get_left_right_npz()`, `load_left_right_npz()`
+- New static images for ASA TUI and Gallery TUI documentation (7 PNG files)
+- Extensive API documentation for gallery modules and launcher
+
+### Changed
+- Updated pipeline documentation structure with new tutorial organization (PR #87)
+- Enhanced `src/canns/data/datasets.py` with Left-Right dataset support
+- Updated `pyproject.toml` with new entry points for gallery and launcher
+- Improved pipeline module exports in `__init__.py`
+
+### Removed
+- Deprecated base pipeline class (`src/canns/pipeline/_base.py`) and associated tests
+- Obsolete theta sweep pipeline notebook (`docs/zh/3_full_detail_tutorials/04_pipeline/01_theta_sweep_pipeline.ipynb`)
+
 ## [0.13.1] - 2026-01-26
 
 ### Added
@@ -412,6 +435,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Basic structure template
 - Core application structure
 
+[0.13.2]: https://github.com/routhleck/canns/compare/v0.13.1...v0.13.2
 [0.13.1]: https://github.com/routhleck/canns/compare/v0.13.0...v0.13.1
 [0.13.0]: https://github.com/routhleck/canns/compare/v0.12.7...v0.13.0
 [0.12.7]: https://github.com/routhleck/canns/compare/v0.12.6...v0.12.7
