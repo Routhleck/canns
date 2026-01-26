@@ -135,7 +135,8 @@ def save_fr_heatmap_png(
         Plot configuration. Use ``config.save_path`` to specify output file.
     **kwargs : Any
         Additional ``imshow`` keyword arguments. ``save_path`` may be provided here
-        as a fallback if not set in ``config``.
+        as a fallback if not set in ``config``. If ``save_path`` is omitted, the
+        figure is only displayed when ``show=True``.
 
     Notes
     -----
@@ -171,11 +172,6 @@ def save_fr_heatmap_png(
             config.xlabel = xlabel
         if not config.ylabel:
             config.ylabel = ylabel
-
-    if config.save_path is None:
-        raise ValueError(
-            "save_path must be provided via config.save_path or as a keyword argument."
-        )
 
     config.save_dpi = dpi
 
@@ -391,7 +387,8 @@ def plot_frm(
         Plot configuration. Use ``config.save_path`` to specify output file.
     **kwargs : Any
         Additional ``imshow`` keyword arguments. ``save_path`` may be provided here
-        as a fallback if not set in ``config``.
+        as a fallback if not set in ``config``. If ``save_path`` is omitted, the
+        figure is only displayed when ``show=True``.
 
     Examples
     --------
@@ -422,11 +419,6 @@ def plot_frm(
             config.xlabel = "X bin"
         if not config.ylabel:
             config.ylabel = "Y bin"
-
-    if config.save_path is None:
-        raise ValueError(
-            "save_path must be provided via config.save_path or as a keyword argument."
-        )
 
     config.save_dpi = dpi
 

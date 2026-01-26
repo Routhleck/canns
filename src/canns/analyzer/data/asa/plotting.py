@@ -295,8 +295,19 @@ def plot_path_compare(
     ax0 = axes[0]
     ax0.set_title("Physical path (x,y)")
     ax0.set_aspect("equal", "box")
-    ax0.axis("off")
     ax0.plot(x, y, lw=0.9, alpha=0.8)
+    # Keep a visible frame while hiding ticks for a clean path outline.
+    ax0.set_xticks([])
+    ax0.set_yticks([])
+    for spine in ax0.spines.values():
+        spine.set_visible(True)
+    # Add a small padding so the frame doesn't touch the path.
+    x_min, x_max = np.min(x), np.max(x)
+    y_min, y_max = np.min(y), np.max(y)
+    pad_x = (x_max - x_min) * 0.03 if x_max > x_min else 1.0
+    pad_y = (y_max - y_min) * 0.03 if y_max > y_min else 1.0
+    ax0.set_xlim(x_min - pad_x, x_max + pad_x)
+    ax0.set_ylim(y_min - pad_y, y_max + pad_y)
 
     ax1 = axes[1]
     ax1.set_title("Decoded coho path")
