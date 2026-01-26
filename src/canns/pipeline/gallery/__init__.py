@@ -1,7 +1,17 @@
-"""Gallery module for model demonstrations and examples.
+"""Model gallery TUI."""
 
-This module will contain interactive TUI demos for CANN models and other
-visualization examples in the future.
-"""
+import os
 
-__all__ = []
+__all__ = ["GalleryApp", "main"]
+
+
+def main() -> None:
+    """Entry point for the model gallery TUI."""
+    os.environ.setdefault("MPLBACKEND", "Agg")
+    from .app import GalleryApp
+
+    app = GalleryApp()
+    app.run()
+
+
+from .app import GalleryApp

@@ -32,10 +32,13 @@ This page contains auto-generated API reference documentation [#f1]_.
    /autoapi/src/canns/pipeline/gallery/index
    /autoapi/src/canns/pipeline/asa/app/index
    /autoapi/src/canns/analyzer/metrics/index
+   /autoapi/src/canns/pipeline/launcher/index
+   /autoapi/src/canns/pipeline/__main__/index
    /autoapi/src/canns/models/basic/cann/index
    /autoapi/src/canns/analyzer/data/asa/index
    /autoapi/src/canns/pipeline/asa/state/index
    /autoapi/src/canns/pipeline/asa/runner/index
+   /autoapi/src/canns/pipeline/gallery/app/index
    /autoapi/src/canns/pipeline/asa/widgets/index
    /autoapi/src/canns/pipeline/asa/screens/index
    /autoapi/src/canns/task/navigation_base/index
@@ -44,13 +47,16 @@ This page contains auto-generated API reference documentation [#f1]_.
    /autoapi/src/canns/pipeline/asa/__main__/index
    /autoapi/src/canns/models/brain_inspired/index
    /autoapi/src/canns/analyzer/data/asa/tda/index
+   /autoapi/src/canns/pipeline/gallery/state/index
    /autoapi/src/canns/models/basic/grid_cell/index
    /autoapi/src/canns/analyzer/visualization/index
    /autoapi/src/canns/analyzer/metrics/utils/index
    /autoapi/src/canns/analyzer/data/asa/path/index
+   /autoapi/src/canns/pipeline/gallery/runner/index
    /autoapi/src/canns/analyzer/model_specific/index
    /autoapi/src/canns/analyzer/data/asa/config/index
    /autoapi/src/canns/analyzer/data/asa/decode/index
+   /autoapi/src/canns/pipeline/gallery/__main__/index
    /autoapi/src/canns/task/open_loop_navigation/index
    /autoapi/src/canns/analyzer/data/asa/fly_roi/index
    /autoapi/src/canns/analyzer/data/asa/filters/index

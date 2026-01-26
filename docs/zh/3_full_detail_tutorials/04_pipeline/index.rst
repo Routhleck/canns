@@ -12,6 +12,7 @@
    :caption: 研究流水线
 
    01_asa_tui
+   02_model_gallery_tui
 
 概述
 ----
@@ -25,6 +26,12 @@
 - 支持 ASA ``.npz`` 与 Neuron + Trajectory 双输入模式
 - 内置 TDA / CohoMap / PathCompare / CohoSpace / FR / FRM / GridScore
 - 结果自动归档并提供日志与预览
+
+**教程2: Model Gallery TUI**
+
+- 对齐 ``canns-experiments/figure2`` 的 5×3 分析布局
+- CANN1D / CANN2D / GridCell 的典型可视化一键生成
+- 结果预览与输出目录统一管理
 
 谁应该使用流水线？
 ------------------
