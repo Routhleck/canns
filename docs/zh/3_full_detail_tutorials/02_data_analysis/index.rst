@@ -1,25 +1,43 @@
 场景2: 数据分析与神经解码
 ==========================
 
-关于分析神经网络动力学、识别不动点和理解循环计算的综合教程。
+关于实验神经数据分析、拓扑解码与 RNN 动力学的综合教程。
 
 .. note::
    **当前状态**
 
    - ✅ **已完成**: RNN不动点分析教程（FlipFlop任务）
-   - 🚧 **进行中**: 关于实验神经数据分析、空间解码和CANN数据分析的其他教程正在准备中，敬请期待！
+   - ✅ **已完成**: ASA pipeline 实验数据解码流程
+   - ✅ **已完成**: 1D CANN ROI bump 拟合教程
 
 教程列表
 --------
 
 .. toctree::
    :maxdepth: 1
+   :caption: 实验数据分析
+
+   01_asa_pipeline
+   02_cann1d_bump_fit
+
+.. toctree::
+   :maxdepth: 1
    :caption: RNN动力学分析
 
-   flipflop_tutorial
+   03_flipflop_tutorial
 
 教程概述
 --------
+
+**ASA pipeline 教程**
+
+覆盖从 ``spike/x/y/t`` 输入到 TDA、解码、CohoMap/CohoSpace/PathCompare
+与 FR/FRM 的完整流程，并对应到仓库内示例脚本。
+
+**1D CANN ROI bump 拟合教程**
+
+展示如何使用 ``roi_bump_fits`` 提取 bump 参数，并生成动画用于
+分析环形吸引子动态。
 
 **RNN不动点分析教程（FlipFlop任务）**
 

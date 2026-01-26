@@ -33,7 +33,7 @@ def decode_circular_coordinates(
     real_of : bool
         Whether the experiment is open-field (controls box coordinate handling).
     save_path : str, optional
-        Path to save decoding results. Defaults to ``Results/spikes_decoding.npz``.
+        Path to save decoding results. If ``None``, results are not saved.
 
     Returns
     -------
@@ -174,13 +174,12 @@ def decode_circular_coordinates(
         "centsinall": centsinall,
     }
 
-    # Save results
-    if save_path is None:
-        os.makedirs("Results", exist_ok=True)
-        save_path = "Results/spikes_decoding.npz"
-
-    os.makedirs(os.path.dirname(save_path), exist_ok=True)
-    np.savez_compressed(save_path, **results)
+    # Save results (only when requested)
+    if save_path is not None:
+        save_dir = os.path.dirname(save_path)
+        if save_dir:
+            os.makedirs(save_dir, exist_ok=True)
+        np.savez_compressed(save_path, **results)
 
     return results
 
@@ -264,13 +263,12 @@ def decode_circular_coordinates1(
         "centsinall": centsinall,
     }
 
-    # Save results
-    if save_path is None:
-        os.makedirs("Results", exist_ok=True)
-        save_path = "Results/spikes_decoding.npz"
-
-    os.makedirs(os.path.dirname(save_path), exist_ok=True)
-    np.savez_compressed(save_path, **results)
+    # Save results (only when requested)
+    if save_path is not None:
+        save_dir = os.path.dirname(save_path)
+        if save_dir:
+            os.makedirs(save_dir, exist_ok=True)
+        np.savez_compressed(save_path, **results)
 
     return results
 
@@ -291,7 +289,7 @@ def decode_circular_coordinates_multi(
     spike_data : dict
         Spike data dictionary containing ``'spike'``, ``'t'`` and optionally ``'x'``/``'y'``.
     save_path : str, optional
-        Path to save decoding results. Defaults to ``Results/spikes_decoding.npz``.
+        Path to save decoding results. If ``None``, results are not saved.
     num_circ : int
         Number of H1 cocycles/circular coordinates to decode.
 
@@ -383,11 +381,10 @@ def decode_circular_coordinates_multi(
         "centsinall": centsinall,
     }
 
-    if save_path is None:
-        os.makedirs("Results", exist_ok=True)
-        save_path = "Results/spikes_decoding.npz"
-
-        os.makedirs(os.path.dirname(save_path), exist_ok=True)
+    if save_path is not None:
+        save_dir = os.path.dirname(save_path)
+        if save_dir:
+            os.makedirs(save_dir, exist_ok=True)
         np.savez_compressed(save_path, **results)
     return results
 

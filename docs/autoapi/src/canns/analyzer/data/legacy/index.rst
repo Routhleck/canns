@@ -15,7 +15,6 @@ Submodules
 .. toctree::
    :maxdepth: 1
 
-   /autoapi/src/canns/analyzer/data/legacy/cann1d/index
    /autoapi/src/canns/analyzer/data/legacy/cann2d/index
 
 

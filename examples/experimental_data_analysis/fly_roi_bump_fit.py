@@ -46,5 +46,3 @@ create_1d_bump_animation(
     fits_data=fits,
     config=config
 )
-
-print("Animation saved as 'bump_analysis_demo.mp4'")

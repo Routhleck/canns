@@ -30,7 +30,7 @@ Module Contents
    :type real_ground: bool
    :param real_of: Whether the experiment is open-field (controls box coordinate handling).
    :type real_of: bool
-   :param save_path: Path to save decoding results. Defaults to ``Results/spikes_decoding.npz``.
+   :param save_path: Path to save decoding results. If ``None``, results are not saved.
    :type save_path: str, optional
 
    :returns: Dictionary containing:
@@ -63,7 +63,7 @@ Module Contents
    :type persistence_result: dict
    :param spike_data: Spike data dictionary containing ``'spike'``, ``'t'`` and optionally ``'x'``/``'y'``.
    :type spike_data: dict
-   :param save_path: Path to save decoding results. Defaults to ``Results/spikes_decoding.npz``.
+   :param save_path: Path to save decoding results. If ``None``, results are not saved.
    :type save_path: str, optional
    :param num_circ: Number of H1 cocycles/circular coordinates to decode.
    :type num_circ: int

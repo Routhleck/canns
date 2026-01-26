@@ -15,6 +15,7 @@ Submodules
    /autoapi/src/canns/analyzer/data/asa/decode/index
    /autoapi/src/canns/analyzer/data/asa/embedding/index
    /autoapi/src/canns/analyzer/data/asa/filters/index
+   /autoapi/src/canns/analyzer/data/asa/fly_roi/index
    /autoapi/src/canns/analyzer/data/asa/fr/index
    /autoapi/src/canns/analyzer/data/asa/path/index
    /autoapi/src/canns/analyzer/data/asa/plotting/index
@@ -36,6 +37,8 @@ Classes
 
 .. autoapisummary::
 
+   src.canns.analyzer.data.asa.BumpFitsConfig
+   src.canns.analyzer.data.asa.CANN1DPlotConfig
    src.canns.analyzer.data.asa.CANN2DPlotConfig
    src.canns.analyzer.data.asa.Constants
    src.canns.analyzer.data.asa.FRMResult
@@ -53,6 +56,7 @@ Functions
    src.canns.analyzer.data.asa.compute_cohoscore
    src.canns.analyzer.data.asa.compute_fr_heatmap_matrix
    src.canns.analyzer.data.asa.compute_frm
+   src.canns.analyzer.data.asa.create_1d_bump_animation
    src.canns.analyzer.data.asa.decode_circular_coordinates
    src.canns.analyzer.data.asa.decode_circular_coordinates_multi
    src.canns.analyzer.data.asa.embed_spike_trains
@@ -66,6 +70,7 @@ Functions
    src.canns.analyzer.data.asa.plot_frm
    src.canns.analyzer.data.asa.plot_path_compare
    src.canns.analyzer.data.asa.plot_projection
+   src.canns.analyzer.data.asa.roi_bump_fits
    src.canns.analyzer.data.asa.save_fr_heatmap_png
    src.canns.analyzer.data.asa.tda_vis
 
@@ -122,6 +127,123 @@ Package Contents
    ...     pass
 
    Initialize self.  See help(type(self)) for accurate signature.
+
+
+.. py:class:: BumpFitsConfig
+
+   Configuration for CANN1D bump fitting.
+
+
+   .. py:attribute:: ampli_min
+      :type:  float
+      :value: 2.0
+
+
+
+   .. py:attribute:: beta
+      :type:  float
+      :value: 5.0
+
+
+
+   .. py:attribute:: jc
+      :type:  float
+      :value: 1.8
+
+
+
+   .. py:attribute:: kappa_mean
+      :type:  float
+      :value: 2.5
+
+
+
+   .. py:attribute:: n_bump_max
+      :type:  int
+      :value: 4
+
+
+
+   .. py:attribute:: n_roi
+      :type:  int
+      :value: 16
+
+
+
+   .. py:attribute:: n_steps
+      :type:  int
+      :value: 20000
+
+
+
+   .. py:attribute:: penbump
+      :type:  float
+      :value: 0.4
+
+
+
+   .. py:attribute:: random_seed
+      :type:  int | None
+      :value: None
+
+
+
+   .. py:attribute:: sig2
+      :type:  float
+      :value: 1.0
+
+
+
+   .. py:attribute:: sigma_diff
+      :type:  float
+      :value: 0.5
+
+
+
+.. py:class:: CANN1DPlotConfig
+
+   Bases: :py:obj:`src.canns.analyzer.visualization.PlotConfig`
+
+
+   Specialized PlotConfig for CANN1D visualizations.
+
+
+   .. py:method:: for_bump_animation(**kwargs)
+      :classmethod:
+
+
+      Create configuration for 1D CANN bump animation.
+
+
+
+   .. py:attribute:: bump_selection
+      :type:  str
+      :value: 'strongest'
+
+
+
+   .. py:attribute:: max_height_value
+      :type:  float
+      :value: 0.5
+
+
+
+   .. py:attribute:: max_width_range
+      :type:  int
+      :value: 40
+
+
+
+   .. py:attribute:: nframes
+      :type:  int | None
+      :value: None
+
+
+
+   .. py:attribute:: npoints
+      :type:  int
+      :value: 300
+
 
 
 .. py:class:: CANN2DPlotConfig
@@ -715,6 +837,24 @@ Package Contents
    >>> res.frm.shape  # doctest: +SKIP
 
 
+.. py:function:: create_1d_bump_animation(fits_data, config = None, save_path=None, **kwargs)
+
+   Create 1D CANN bump animation using vectorized operations.
+
+   :param fits_data: numpy.ndarray
+                     Shape (n_fits, 4) array with columns [time, position, amplitude, kappa]
+   :param config: CANN1DPlotConfig, optional
+                  Configuration object with all animation parameters
+   :param save_path: str, optional
+                     Output path for the generated animation (e.g. .gif or .mp4)
+   :param \*\*kwargs: backward compatibility parameters
+
+   :returns:
+
+             matplotlib.animation.FuncAnimation
+                 The animation object
+
+
 .. py:function:: decode_circular_coordinates(persistence_result, spike_data, real_ground = True, real_of = True, save_path = None)
 
    Decode circular coordinates (bump positions) from cohomology.
@@ -728,7 +868,7 @@ Package Contents
    :type real_ground: bool
    :param real_of: Whether the experiment is open-field (controls box coordinate handling).
    :type real_of: bool
-   :param save_path: Path to save decoding results. Defaults to ``Results/spikes_decoding.npz``.
+   :param save_path: Path to save decoding results. If ``None``, results are not saved.
    :type save_path: str, optional
 
    :returns: Dictionary containing:
@@ -756,7 +896,7 @@ Package Contents
    :type persistence_result: dict
    :param spike_data: Spike data dictionary containing ``'spike'``, ``'t'`` and optionally ``'x'``/``'y'``.
    :type spike_data: dict
-   :param save_path: Path to save decoding results. Defaults to ``Results/spikes_decoding.npz``.
+   :param save_path: Path to save decoding results. If ``None``, results are not saved.
    :type save_path: str, optional
    :param num_circ: Number of H1 cocycles/circular coordinates to decode.
    :type num_circ: int
@@ -1161,6 +1301,31 @@ Package Contents
    .. rubric:: Examples
 
    >>> fig = plot_projection(reduce_func, embed_data, show=False)  # doctest: +SKIP
+
+
+.. py:function:: roi_bump_fits(data, config = None, save_path=None, **kwargs)
+
+   Fit CANN1D bumps to ROI data using MCMC optimization.
+
+   :param data: numpy.ndarray
+                Input data for bump fitting
+   :param config: BumpFitsConfig, optional
+                  Configuration object with all fitting parameters
+   :param save_path: str, optional
+                     Path to save the results
+   :param \*\*kwargs: backward compatibility parameters
+
+   :returns:
+
+             list
+                 List of fitted bump objects
+             fits_array : numpy.ndarray
+                 Array of fitted bump parameters
+             nbump_array : numpy.ndarray
+                 Array of bump counts and reconstructed signals
+             centrbump_array : numpy.ndarray
+                 Array of centered bump data
+   :rtype: bumps
 
 
 .. py:function:: save_fr_heatmap_png(M, *, title = 'Firing Rate Heatmap', xlabel = 'Time', ylabel = 'Neuron', cmap = None, interpolation = 'nearest', origin = 'lower', aspect = 'auto', clabel = None, colorbar = True, dpi = 200, show = None, config = None, **kwargs)

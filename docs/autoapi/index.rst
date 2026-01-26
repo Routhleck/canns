@@ -53,13 +53,13 @@ This page contains auto-generated API reference documentation [#f1]_.
    /autoapi/src/canns/analyzer/data/asa/config/index
    /autoapi/src/canns/analyzer/data/asa/decode/index
    /autoapi/src/canns/task/open_loop_navigation/index
+   /autoapi/src/canns/analyzer/data/asa/fly_roi/index
    /autoapi/src/canns/analyzer/data/asa/filters/index
    /autoapi/src/canns/analyzer/data/asa/plotting/index
    /autoapi/src/canns/task/closed_loop_navigation/index
    /autoapi/src/canns/analyzer/visualization/core/index
    /autoapi/src/canns/analyzer/slow_points/finder/index
    /autoapi/src/canns/analyzer/data/legacy/cann2d/index
-   /autoapi/src/canns/analyzer/data/legacy/cann1d/index
    /autoapi/src/canns/analyzer/data/asa/embedding/index
    /autoapi/src/canns/analyzer/data/asa/cohospace/index
    /autoapi/src/canns/models/brain_inspired/linear/index
