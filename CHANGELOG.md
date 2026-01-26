@@ -5,6 +5,40 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.13.0] - 2026-01-26
+
+### Added
+- New ASA (Attractor State Analysis) pipeline with Textual-based terminal user interface (PR #84)
+- Complete `canns.analyzer.data.asa` submodule for experimental data analysis (PR #83)
+- Cohomological analysis tools (CohoMap, CohoSpace alignment)
+- Advanced circular coordinate decoding methods with multiple versions
+- Topological Data Analysis (TDA) utilities with persistent homology
+- Embedding and dimensionality reduction tools (PCA, UMAP)
+- Comprehensive plotting functions for ASA analysis types
+- New example scripts: cohomap.py, cohospace.py, firing_field_map.py, path_compare.py, tda_vis.py
+- Research paper draft (paper.md) with comprehensive bibliography (paper.bib)
+- Architecture diagram (images/architecture.png)
+- GitHub Actions workflow for draft PDF generation
+- CLI entry point for ASA TUI: `python -m canns.pipeline.asa`
+- Image preview and external viewer support in TUI
+- Dataset-specific result directories with log file handling
+
+### Changed
+- Refactored analyzer.data module with new ASA submodule structure (PR #83)
+- Updated type hints to modern Python syntax (PEP 604) throughout ASA modules
+- Improved error handling and validation in decoding functions
+- Enhanced preprocessing config with user and default value merging
+- Moved legacy experimental analysis scripts to `legacy` folder
+- Updated paper.md references and toolkit description
+
+### Removed
+- Legacy theta sweep pipeline module (`src/canns/pipeline/theta_sweep.py`)
+- Theta sweep example scripts (advanced_theta_sweep_pipeline.py, theta_sweep_from_external_data.py)
+
+### Fixed
+- Circular coordinate assignment in decoding functions to prevent unintended values
+- Auto-filtering support in cohospace alignment when activity data lengths mismatch
+
 ## [0.12.7] - 2026-01-19
 
 ### Added
@@ -350,6 +384,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Basic structure template
 - Core application structure
 
+[0.13.0]: https://github.com/routhleck/canns/compare/v0.12.7...v0.13.0
+[0.12.7]: https://github.com/routhleck/canns/compare/v0.12.6...v0.12.7
+[0.12.6]: https://github.com/routhleck/canns/compare/v0.12.5...v0.12.6
 [0.12.5]: https://github.com/routhleck/canns/compare/v0.12.4...v0.12.5
 [0.12.4]: https://github.com/routhleck/canns/compare/v0.12.3...v0.12.4
 [0.12.3]: https://github.com/routhleck/canns/compare/v0.12.2...v0.12.3
