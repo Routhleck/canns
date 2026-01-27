@@ -59,11 +59,11 @@ def embed_spike_trains(spike_trains, config: SpikeEmbeddingConfig | None = None,
         # Step 1: Extract and filter spike data
         spikes_filtered = _extract_spike_data(spike_trains, config)
 
-        # Step 2: Create time bins
-        time_bins = _create_time_bins(spike_trains["t"], config)
+        # Step 2: Create time bins metadata
+        min_time, max_time, n_bins = _create_time_bins(spike_trains["t"], config)
 
         # Step 3: Bin spike data
-        spikes_bin = _bin_spike_data(spikes_filtered, time_bins, config)
+        spikes_bin = _bin_spike_data(spikes_filtered, min_time, max_time, n_bins, config)
 
         # Step 4: Apply temporal smoothing if requested
         if config.smooth:
@@ -73,7 +73,7 @@ def embed_spike_trains(spike_trains, config: SpikeEmbeddingConfig | None = None,
         if config.speed_filter:
             return _apply_speed_filtering(spikes_bin, spike_trains, config)
 
-        return spikes_bin, None, None, None
+        return spikes_bin, spike_trains['x'], spike_trains['y'], spike_trains['t']
 
     except Exception as e:
         raise ProcessingError(f"Failed to embed spike trains: {e}") from e
@@ -132,36 +132,44 @@ def _extract_spike_data(
         raise ProcessingError(f"Error extracting spike data: {e}") from e
 
 
-def _create_time_bins(t: np.ndarray, config: SpikeEmbeddingConfig) -> np.ndarray:
-    """Create time bins for spike discretization."""
+def _create_time_bins(t: np.ndarray, config: SpikeEmbeddingConfig) -> tuple[int, int, int]:
+    """Create time-bin metadata for spike discretization."""
     min_time0 = np.min(t)
     max_time0 = np.max(t)
 
-    min_time = min_time0 * config.res
-    max_time = max_time0 * config.res
+    min_time = int(np.floor(min_time0 * config.res))
+    max_time = int(np.ceil(max_time0 * config.res)) + 1
+    n_bins = max(1, int(np.ceil((max_time - min_time) / config.dt)))
+    last_time = min_time + config.dt * (n_bins - 1)
 
-    return np.arange(np.floor(min_time), np.ceil(max_time) + 1, config.dt)
+    return min_time, last_time, n_bins
 
 
 def _bin_spike_data(
-    spikes: dict[int, np.ndarray], time_bins: np.ndarray, config: SpikeEmbeddingConfig
+    spikes: dict[int, np.ndarray],
+    min_time: int,
+    max_time: int,
+    n_bins: int,
+    config: SpikeEmbeddingConfig,
 ) -> np.ndarray:
     """Convert spike times to binned spike matrix."""
-    min_time = time_bins[0]
-    max_time = time_bins[-1]
-
-    spikes_bin = np.zeros((len(time_bins), len(spikes)), dtype=int)
+    spikes_bin = np.zeros((n_bins, len(spikes)), dtype=np.int32)
+    max_time_offset = max_time - min_time
 
     for n in spikes:
-        spike_times = np.array(spikes[n] * config.res - min_time, dtype=int)
+        spike_times = np.asarray(spikes[n])
+        if spike_times.size == 0:
+            continue
+        spike_times = (spike_times * config.res - min_time).astype(np.int64, copy=False)
         # Filter valid spike times
-        spike_times = spike_times[(spike_times < (max_time - min_time)) & (spike_times > 0)]
-        spike_times = np.array(spike_times / config.dt, int)
+        valid = (spike_times < max_time_offset) & (spike_times > 0)
+        if not np.any(valid):
+            continue
+        spike_times = spike_times[valid]
+        spike_bins = np.floor_divide(spike_times, config.dt).astype(np.int64, copy=False)
 
-        # Bin spikes
-        for j in spike_times:
-            if j < len(time_bins):
-                spikes_bin[j, n] += 1
+        # Bin spikes (vectorized)
+        np.add.at(spikes_bin[:, n], spike_bins, 1)
 
     return spikes_bin
 
@@ -171,21 +179,22 @@ def _apply_temporal_smoothing(spikes_bin: np.ndarray, config: SpikeEmbeddingConf
     # Calculate smoothing parameters (legacy implementation used custom kernel)
     # Current implementation uses scipy's gaussian_filter1d for better performance
 
-    # Apply smoothing (simplified version - could be further optimized)
-    smoothed = np.zeros((spikes_bin.shape[0], spikes_bin.shape[1]))
+    # Convert to float once to avoid holding both int and float arrays.
+    spikes_bin = spikes_bin.astype(np.float32, copy=False)
 
     # Use scipy's gaussian_filter1d for better performance
 
     sigma_bins = config.sigma / config.dt
 
     for n in range(spikes_bin.shape[1]):
-        smoothed[:, n] = gaussian_filter1d(
-            spikes_bin[:, n].astype(float), sigma=sigma_bins, mode="constant"
+        gaussian_filter1d(
+            spikes_bin[:, n], sigma=sigma_bins, mode="constant", output=spikes_bin[:, n]
         )
 
     # Normalize
     normalization_factor = 1 / np.sqrt(2 * np.pi * (config.sigma / config.res) ** 2)
-    return smoothed * normalization_factor
+    spikes_bin *= normalization_factor
+    return spikes_bin
 
 
 def _apply_speed_filtering(
@@ -240,25 +249,19 @@ def _load_pos(t, x, y, res=100000, dt=1000):
 
     tt = np.arange(np.floor(min_time), np.ceil(max_time) + 1, dt) / res
 
-    idt = np.concatenate(([0], np.digitize(t[1:-1], tt[:]) - 1, [len(tt) + 1]))
-    idtt = np.digitize(np.arange(len(tt)), idt) - 1
+    if t.size == 0:
+        return np.array([]), np.array([]), tt, np.array([])
 
-    idx = np.concatenate((np.unique(idtt), [np.max(idtt) + 1]))
-    divisor = np.bincount(idtt)
-    steps = 1.0 / divisor[divisor > 0]
-    N = np.max(divisor)
-    ranges = np.multiply(np.arange(N)[np.newaxis, :], steps[:, np.newaxis])
-    ranges[ranges >= 1] = np.nan
+    # Ensure monotonically increasing time for interpolation.
+    if t.size > 1 and np.any(np.diff(t) < 0):
+        order = np.argsort(t)
+        t = t[order]
+        x = x[order]
+        y = y[order]
 
-    rangesx = x[idx[:-1], np.newaxis] + np.multiply(
-        ranges, (x[idx[1:]] - x[idx[:-1]])[:, np.newaxis]
-    )
-    xx = rangesx[~np.isnan(ranges)]
-
-    rangesy = y[idx[:-1], np.newaxis] + np.multiply(
-        ranges, (y[idx[1:]] - y[idx[:-1]])[:, np.newaxis]
-    )
-    yy = rangesy[~np.isnan(ranges)]
+    # Interpolate positions onto the spike time bins.
+    xx = np.interp(tt, t, x)
+    yy = np.interp(tt, t, y)
 
     xxs = _gaussian_filter1d(xx - np.min(xx), sigma=100)
     yys = _gaussian_filter1d(yy - np.min(yy), sigma=100)
