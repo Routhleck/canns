@@ -6,7 +6,6 @@ distance computations, and polygon operations.
 """
 
 import numpy as np
-from typing import Tuple
 
 
 def fit_ellipse(x: np.ndarray, y: np.ndarray) -> np.ndarray:
@@ -78,14 +77,9 @@ def fit_ellipse(x: np.ndarray, y: np.ndarray) -> np.ndarray:
 
     # Build design matrix
     # D = [x^2, xy, y^2, x, y, 1]
-    D = np.column_stack([
-        x_norm ** 2,
-        x_norm * y_norm,
-        y_norm ** 2,
-        x_norm,
-        y_norm,
-        np.ones_like(x_norm)
-    ])
+    D = np.column_stack(
+        [x_norm**2, x_norm * y_norm, y_norm**2, x_norm, y_norm, np.ones_like(x_norm)]
+    )
 
     # Build scatter matrix
     S = D.T @ D
@@ -129,26 +123,32 @@ def fit_ellipse(x: np.ndarray, y: np.ndarray) -> np.ndarray:
         A_bottom = -tmpE @ A_top
         A = np.concatenate([A_top, A_bottom])
 
-    except np.linalg.LinAlgError:
-        raise ValueError("Failed to fit ellipse: singular matrix encountered")
+    except np.linalg.LinAlgError as err:
+        raise ValueError("Failed to fit ellipse: singular matrix encountered") from err
 
     # Unnormalize the coefficients
-    par = np.array([
-        A[0] * sy * sy,
-        A[1] * sx * sy,
-        A[2] * sx * sx,
-        -2*A[0]*sy*sy*mx - A[1]*sx*sy*my + A[3]*sx*sy*sy,
-        -A[1]*sx*sy*mx - 2*A[2]*sx*sx*my + A[4]*sx*sx*sy,
-        A[0]*sy*sy*mx*mx + A[1]*sx*sy*mx*my + A[2]*sx*sx*my*my -
-        A[3]*sx*sy*sy*mx - A[4]*sx*sx*sy*my + A[5]*sx*sx*sy*sy
-    ])
+    par = np.array(
+        [
+            A[0] * sy * sy,
+            A[1] * sx * sy,
+            A[2] * sx * sx,
+            -2 * A[0] * sy * sy * mx - A[1] * sx * sy * my + A[3] * sx * sy * sy,
+            -A[1] * sx * sy * mx - 2 * A[2] * sx * sx * my + A[4] * sx * sx * sy,
+            A[0] * sy * sy * mx * mx
+            + A[1] * sx * sy * mx * my
+            + A[2] * sx * sx * my * my
+            - A[3] * sx * sy * sy * mx
+            - A[4] * sx * sx * sy * my
+            + A[5] * sx * sx * sy * sy,
+        ]
+    )
 
     # Convert quadratic form to geometric parameters
     theta_rad = 0.5 * np.arctan2(par[1], par[0] - par[2])
     cost = np.cos(theta_rad)
     sint = np.sin(theta_rad)
-    sin_squared = sint ** 2
-    cos_squared = cost ** 2
+    sin_squared = sint**2
+    cos_squared = cost**2
     cos_sin = sint * cost
 
     Ao = par[5]
@@ -160,7 +160,7 @@ def fit_ellipse(x: np.ndarray, y: np.ndarray) -> np.ndarray:
     # Center in rotated coordinates
     tuCentre = -Au / (2 * Auu)
     tvCentre = -Av / (2 * Avv)
-    wCentre = Ao - Auu * tuCentre ** 2 - Avv * tvCentre ** 2
+    wCentre = Ao - Auu * tuCentre**2 - Avv * tvCentre**2
 
     # Transform back to original coordinates
     uCentre = tuCentre * cost - tvCentre * sint
@@ -216,10 +216,10 @@ def squared_distance(X: np.ndarray, Y: np.ndarray) -> np.ndarray:
     Y = np.atleast_2d(Y)
 
     # ||x||^2 for each column of X
-    X_norm_sq = np.sum(X ** 2, axis=0, keepdims=True)  # Shape: (1, n)
+    X_norm_sq = np.sum(X**2, axis=0, keepdims=True)  # Shape: (1, n)
 
     # ||y||^2 for each column of Y
-    Y_norm_sq = np.sum(Y ** 2, axis=0, keepdims=True)  # Shape: (1, m)
+    Y_norm_sq = np.sum(Y**2, axis=0, keepdims=True)  # Shape: (1, m)
 
     # Compute: ||x||^2 + ||y||^2 - 2*x·y using broadcasting
     # X_norm_sq.T: (n, 1)
@@ -279,9 +279,7 @@ def polyarea(x: np.ndarray, y: np.ndarray) -> float:
 
     # Shoelace formula: A = 0.5 * |sum(x_i * y_{i+1} - x_{i+1} * y_i)|
     # Use np.roll to get next elements cyclically
-    area = 0.5 * np.abs(
-        np.sum(x * np.roll(y, -1)) - np.sum(np.roll(x, -1) * y)
-    )
+    area = 0.5 * np.abs(np.sum(x * np.roll(y, -1)) - np.sum(np.roll(x, -1) * y))
 
     return float(area)
 
@@ -313,7 +311,7 @@ def wrap_to_pi(angles: np.ndarray) -> np.ndarray:
     return np.arctan2(np.sin(angles), np.cos(angles))
 
 
-def cart2pol(x: np.ndarray, y: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
+def cart2pol(x: np.ndarray, y: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
     """
     Transform Cartesian coordinates to polar coordinates.
 
@@ -344,11 +342,11 @@ def cart2pol(x: np.ndarray, y: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
     Equivalent to MATLAB's cart2pol function.
     """
     theta = np.arctan2(y, x)
-    rho = np.sqrt(x ** 2 + y ** 2)
+    rho = np.sqrt(x**2 + y**2)
     return theta, rho
 
 
-def pol2cart(theta: np.ndarray, rho: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
+def pol2cart(theta: np.ndarray, rho: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
     """
     Transform polar coordinates to Cartesian coordinates.
 
@@ -389,10 +387,10 @@ if __name__ == "__main__":
 
     # Test 1: Fit ellipse
     print("\nTest 1 - Ellipse fitting:")
-    t = np.linspace(0, 2*np.pi, 100)
+    t = np.linspace(0, 2 * np.pi, 100)
     cx, cy = 5, 3  # center
     rx, ry = 4, 2  # radii
-    angle = np.pi/6  # rotation
+    angle = np.pi / 6  # rotation
 
     # Generate points on ellipse
     x = cx + rx * np.cos(t) * np.cos(angle) - ry * np.sin(t) * np.sin(angle)
@@ -439,6 +437,6 @@ if __name__ == "__main__":
 
     x2, y2 = pol2cart(theta, rho)
     print(f"  Back to Cartesian: {np.column_stack([x2, y2])}")
-    print(f"  Error: {np.max(np.abs(np.column_stack([x-x2, y-y2]))):.10f}")
+    print(f"  Error: {np.max(np.abs(np.column_stack([x - x2, y - y2]))):.10f}")
 
     print("\nAll tests completed!")

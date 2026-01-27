@@ -6,7 +6,6 @@ Functions for computing spatial firing rate maps and related metrics.
 
 import numpy as np
 from scipy import ndimage
-from typing import Tuple, Optional
 
 
 def compute_rate_map(
@@ -14,10 +13,10 @@ def compute_rate_map(
     positions: np.ndarray,
     time_stamps: np.ndarray,
     spatial_bins: int = 20,
-    position_range: Optional[Tuple[float, float]] = None,
+    position_range: tuple[float, float] | None = None,
     smoothing_sigma: float = 2.0,
-    min_occupancy: float = 0.0
-) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+    min_occupancy: float = 0.0,
+) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     """
     Compute 2D spatial firing rate map.
 
@@ -83,22 +82,20 @@ def compute_rate_map(
 
     # Compute occupancy map
     dt = np.median(np.diff(time_stamps))
-    occupancy_map, _, _ = np.histogram2d(
-        positions[:, 0], positions[:, 1],
-        bins=[x_edges, y_edges]
-    )
+    occupancy_map, _, _ = np.histogram2d(positions[:, 0], positions[:, 1], bins=[x_edges, y_edges])
     occupancy_map = occupancy_map.T * dt  # Transpose to match image orientation
 
     # Get spike positions
-    spike_positions = np.column_stack([
-        np.interp(spike_times, time_stamps, positions[:, 0]),
-        np.interp(spike_times, time_stamps, positions[:, 1])
-    ])
+    spike_positions = np.column_stack(
+        [
+            np.interp(spike_times, time_stamps, positions[:, 0]),
+            np.interp(spike_times, time_stamps, positions[:, 1]),
+        ]
+    )
 
     # Compute spike count map
     spike_map, _, _ = np.histogram2d(
-        spike_positions[:, 0], spike_positions[:, 1],
-        bins=[x_edges, y_edges]
+        spike_positions[:, 0], spike_positions[:, 1], bins=[x_edges, y_edges]
     )
     spike_map = spike_map.T  # Transpose
 
@@ -120,7 +117,7 @@ def compute_rate_map_from_binned(
     spike_counts: np.ndarray,
     bins: int = 35,
     min_occupancy: float = 0.0,
-) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     """
     Compute a 2D rate map from binned spike counts aligned to positions.
 
@@ -166,9 +163,7 @@ def compute_rate_map_from_binned(
     spike_counts = spike_counts[valid]
 
     occupancy_map, x_edges, y_edges = np.histogram2d(x, y, bins=bins)
-    spike_map, _, _ = np.histogram2d(
-        x, y, bins=[x_edges, y_edges], weights=spike_counts
-    )
+    spike_map, _, _ = np.histogram2d(x, y, bins=[x_edges, y_edges], weights=spike_counts)
 
     occupancy_map = occupancy_map.T
     spike_map = spike_map.T
@@ -181,9 +176,7 @@ def compute_rate_map_from_binned(
 
 
 def compute_spatial_information(
-    rate_map: np.ndarray,
-    occupancy_map: np.ndarray,
-    mean_rate: Optional[float] = None
+    rate_map: np.ndarray, occupancy_map: np.ndarray, mean_rate: float | None = None
 ) -> float:
     """
     Compute spatial information score (bits per spike).
@@ -250,9 +243,7 @@ def compute_spatial_information(
 
 
 def compute_field_statistics(
-    rate_map: np.ndarray,
-    threshold: float = 0.2,
-    min_area: int = 9
+    rate_map: np.ndarray, threshold: float = 0.2, min_area: int = 9
 ) -> dict:
     """
     Extract firing field statistics from a rate map.
@@ -299,20 +290,16 @@ def compute_field_statistics(
 
     # Extract statistics
     stats = {
-        'num_fields': len(valid_props),
-        'field_sizes': [p.area for p in valid_props],
-        'field_peaks': [np.max(rate_map[p.coords[:, 0], p.coords[:, 1]])
-                       for p in valid_props],
-        'field_centers': [p.centroid for p in valid_props]
+        "num_fields": len(valid_props),
+        "field_sizes": [p.area for p in valid_props],
+        "field_peaks": [np.max(rate_map[p.coords[:, 0], p.coords[:, 1]]) for p in valid_props],
+        "field_centers": [p.centroid for p in valid_props],
     }
 
     return stats
 
 
-def compute_grid_spacing(
-    rate_map: np.ndarray,
-    method: str = 'autocorr'
-) -> Optional[float]:
+def compute_grid_spacing(rate_map: np.ndarray, method: str = "autocorr") -> float | None:
     """
     Estimate grid spacing from a rate map.
 
@@ -333,9 +320,9 @@ def compute_grid_spacing(
     This is a simplified implementation. For full grid analysis,
     use GridnessAnalyzer.
     """
-    if method == 'autocorr':
-        from .grid_cells import compute_2d_autocorrelation
+    if method == "autocorr":
         from ..utils.image_processing import find_regional_maxima
+        from .grid_cells import compute_2d_autocorrelation
 
         # Compute autocorrelation
         autocorr = compute_2d_autocorrelation(rate_map)
@@ -360,7 +347,7 @@ def compute_grid_spacing(
         spacing = np.median(distances[non_center])
         return float(spacing)
 
-    elif method == 'fft':
+    elif method == "fft":
         # FFT-based spacing estimation
         fft = np.fft.fft2(rate_map)
         fft_shift = np.fft.fftshift(fft)
@@ -368,7 +355,7 @@ def compute_grid_spacing(
 
         # Find peak in power spectrum (excluding DC component)
         center = np.array(power.shape) // 2
-        power[center[0]-2:center[0]+3, center[1]-2:center[1]+3] = 0
+        power[center[0] - 2 : center[0] + 3, center[1] - 2 : center[1] + 3] = 0
 
         peak_idx = np.unravel_index(np.argmax(power), power.shape)
         distance = np.linalg.norm(np.array(peak_idx) - center)
@@ -389,17 +376,14 @@ if __name__ == "__main__":
     t = time_stamps
 
     # Circular trajectory
-    positions = np.column_stack([
-        0.5 * np.sin(t * 0.1),
-        0.5 * np.cos(t * 0.1)
-    ])
+    positions = np.column_stack([0.5 * np.sin(t * 0.1), 0.5 * np.cos(t * 0.1)])
 
     # Place cell: fires at (0, 0.5)
     place_field_center = np.array([0.0, 0.5])
     place_field_width = 0.15
 
     distances = np.linalg.norm(positions - place_field_center, axis=1)
-    firing_prob = np.exp(-(distances ** 2) / (2 * place_field_width ** 2))
+    firing_prob = np.exp(-(distances**2) / (2 * place_field_width**2))
     firing_prob = firing_prob * 0.1  # Max 10% per time bin
 
     spike_mask = np.random.rand(len(t)) < firing_prob
@@ -410,10 +394,12 @@ if __name__ == "__main__":
     # Compute rate map
     print("\nComputing rate map...")
     rate_map, occupancy, x_edges, y_edges = compute_rate_map(
-        spike_times, positions, time_stamps,
+        spike_times,
+        positions,
+        time_stamps,
         spatial_bins=20,
         position_range=(-0.75, 0.75),
-        smoothing_sigma=1.5
+        smoothing_sigma=1.5,
     )
 
     print(f"Rate map shape: {rate_map.shape}")
@@ -429,12 +415,17 @@ if __name__ == "__main__":
     print("\nExtracting firing fields...")
     field_stats = compute_field_statistics(rate_map, threshold=0.3)
     print(f"Number of fields: {field_stats['num_fields']}")
-    for i, (size, peak, center) in enumerate(zip(
-        field_stats['field_sizes'],
-        field_stats['field_peaks'],
-        field_stats['field_centers']
-    )):
-        print(f"  Field {i+1}: size={size} pixels, peak={peak:.2f} Hz, "
-              f"center=({center[0]:.1f}, {center[1]:.1f})")
+    for i, (size, peak, center) in enumerate(
+        zip(
+            field_stats["field_sizes"],
+            field_stats["field_peaks"],
+            field_stats["field_centers"],
+            strict=False,
+        )
+    ):
+        print(
+            f"  Field {i + 1}: size={size} pixels, peak={peak:.2f} Hz, "
+            f"center=({center[0]:.1f}, {center[1]:.1f})"
+        )
 
     print("\nSpatial analysis tests completed!")

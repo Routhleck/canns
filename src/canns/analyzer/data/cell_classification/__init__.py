@@ -13,8 +13,8 @@ __version__ = "0.1.0"
 from .core import (  # noqa: F401
     GridnessAnalyzer,
     GridnessResult,
-    HeadDirectionAnalyzer,
     HDCellResult,
+    HeadDirectionAnalyzer,
     compute_2d_autocorrelation,
     compute_field_statistics,
     compute_grid_spacing,

@@ -16,7 +16,6 @@ from canns.pipeline.asa.widgets import ImagePreview, LogViewer, ParamGroup
 from .runner import GalleryRunner
 from .state import GalleryState, get_analysis_options, get_default_analysis
 
-
 CANN1D_DEFAULTS = {
     "seed": "42",
     "num": "256",
@@ -393,7 +392,9 @@ class GalleryApp(App):
 
                             with ParamGroup("Path Integration", id="g-analysis-path"):
                                 yield Label("duration")
-                                yield Input(value=GRID_DEFAULTS["path_duration"], id="g-path-duration")
+                                yield Input(
+                                    value=GRID_DEFAULTS["path_duration"], id="g-path-duration"
+                                )
                                 yield Label("dt")
                                 yield Input(value=GRID_DEFAULTS["path_dt"], id="g-path-dt")
                                 yield Label("speed_mean")
@@ -426,9 +427,7 @@ class GalleryApp(App):
 
     def check_terminal_size(self) -> None:
         width, height = self.size
-        if not self._size_warning_shown and (
-            width < self.MIN_WIDTH or height < self.MIN_HEIGHT
-        ):
+        if not self._size_warning_shown and (width < self.MIN_WIDTH or height < self.MIN_HEIGHT):
             self._size_warning_shown = True
             self.push_screen(TerminalSizeWarning(width, height))
 
@@ -691,8 +690,7 @@ class GalleryApp(App):
         )
         self._set_visible(
             "#g-analysis-firing",
-            self.state.model == "gridcell"
-            and self.state.analysis in {"firing_field", "manifold"},
+            self.state.model == "gridcell" and self.state.analysis in {"firing_field", "manifold"},
         )
         self._set_visible(
             "#g-analysis-path",

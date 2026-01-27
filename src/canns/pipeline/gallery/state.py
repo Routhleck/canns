@@ -5,7 +5,6 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from pathlib import Path
 
-
 MODEL_ANALYSIS_OPTIONS: dict[str, list[tuple[str, str]]] = {
     "cann1d": [
         ("Connectivity Matrix", "connectivity"),

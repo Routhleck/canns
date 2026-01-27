@@ -6,7 +6,7 @@ optimized for neuroscience data analysis.
 """
 
 import numpy as np
-from scipy import signal, fft
+from scipy import signal
 
 
 def pearson_correlation(x: np.ndarray, y: np.ndarray) -> np.ndarray:
@@ -75,7 +75,7 @@ def pearson_correlation(x: np.ndarray, y: np.ndarray) -> np.ndarray:
     # Normalize: r / (dx * dy)
     # Broadcasting handles the division correctly
     r = r / dx.T  # Divide by dx (column-wise)
-    r = r / dy    # Divide by dy (row-wise)
+    r = r / dy  # Divide by dy (row-wise)
 
     # Return as 1D array or scalar
     r = np.squeeze(r)
@@ -84,10 +84,7 @@ def pearson_correlation(x: np.ndarray, y: np.ndarray) -> np.ndarray:
 
 
 def normalized_xcorr2(
-    template: np.ndarray,
-    image: np.ndarray,
-    mode: str = 'same',
-    min_overlap: int = 0
+    template: np.ndarray, image: np.ndarray, mode: str = "same", min_overlap: int = 0
 ) -> np.ndarray:
     """
     Normalized 2D cross-correlation.
@@ -158,9 +155,9 @@ def normalized_xcorr2(
 
     # For neuroscience applications, we typically use FFT-based correlation
     # which is faster for larger arrays
-    if mode == 'full':
+    if mode == "full":
         # Full correlation (output larger than both inputs)
-        C = signal.correlate(image, template, mode='full', method='fft')
+        C = signal.correlate(image, template, mode="full", method="fft")
 
         # Compute normalization factors
         # This is a simplified normalization; full version would handle
@@ -174,16 +171,17 @@ def normalized_xcorr2(
 
         # Normalize
         if template_std > 0 and image_std > 0:
-            C = (C - n_template * template_mean * image_mean) / \
-                (n_template * template_std * image_std)
+            C = (C - n_template * template_mean * image_mean) / (
+                n_template * template_std * image_std
+            )
 
     else:
         # For 'same' or 'valid', use scipy's built-in
-        C = signal.correlate(image, template, mode=mode, method='fft')
+        C = signal.correlate(image, template, mode=mode, method="fft")
 
         # Simple normalization (assumes full overlap in valid region)
-        template_norm = np.sqrt(np.sum(template ** 2))
-        image_norm = np.sqrt(np.sum(image ** 2))
+        template_norm = np.sqrt(np.sum(template**2))
+        image_norm = np.sqrt(np.sum(image**2))
 
         if template_norm > 0 and image_norm > 0:
             C = C / (template_norm * image_norm)
@@ -195,9 +193,7 @@ def normalized_xcorr2(
 
 
 def autocorrelation_2d(
-    array: np.ndarray,
-    overlap: float = 0.8,
-    normalize: bool = True
+    array: np.ndarray, overlap: float = 0.8, normalize: bool = True
 ) -> np.ndarray:
     """
     Compute 2D autocorrelation of an array.
@@ -258,14 +254,14 @@ def autocorrelation_2d(
     array_demean = array - np.mean(array)
 
     # Compute full autocorrelation
-    Rxx = signal.correlate(array_demean, array_demean, mode='full', method='fft')
+    Rxx = signal.correlate(array_demean, array_demean, mode="full", method="fft")
 
     # Extract central overlap region first
     offset_v = (Rxx.shape[0] - new_size_v) // 2
     offset_h = (Rxx.shape[1] - new_size_h) // 2
 
     if offset_v >= 0 and offset_h >= 0:
-        Rxx = Rxx[offset_v:offset_v + new_size_v, offset_h:offset_h + new_size_h]
+        Rxx = Rxx[offset_v : offset_v + new_size_v, offset_h : offset_h + new_size_h]
     else:
         # If requested size is larger than autocorr, just return full
         pass
@@ -293,22 +289,24 @@ if __name__ == "__main__":
     print(f"\nTest 1 - Perfect positive correlation: r = {r:.3f} (should be 1.0)")
 
     # Test 2: Multiple correlations
-    y_multi = np.column_stack([
-        [2, 4, 6, 8, 10],      # Perfect positive
-        [5, 4, 3, 2, 1],       # Perfect negative
-        [1, 1, 1, 1, 1],       # Constant (should be NaN or 0)
-    ])
+    y_multi = np.column_stack(
+        [
+            [2, 4, 6, 8, 10],  # Perfect positive
+            [5, 4, 3, 2, 1],  # Perfect negative
+            [1, 1, 1, 1, 1],  # Constant (should be NaN or 0)
+        ]
+    )
     r_multi = pearson_correlation(x, y_multi[:, :2])  # Skip constant
     print(f"\nTest 2 - Multiple correlations: r = {r_multi} (should be [1.0, -1.0])")
 
     # Test 3: 2D autocorrelation
     # Create a simple grid-like pattern
-    x_coords = np.linspace(0, 4*np.pi, 30)
+    x_coords = np.linspace(0, 4 * np.pi, 30)
     xx, yy = np.meshgrid(x_coords, x_coords)
     grid_pattern = np.cos(xx) * np.cos(yy)
 
     autocorr = autocorrelation_2d(grid_pattern)
-    print(f"\nTest 3 - 2D Autocorrelation:")
+    print("\nTest 3 - 2D Autocorrelation:")
     print(f"  Input shape: {grid_pattern.shape}")
     print(f"  Autocorr shape: {autocorr.shape}")
     print(f"  Autocorr max: {np.max(autocorr):.3f} (should be close to 1.0 at center)")

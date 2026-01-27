@@ -4,12 +4,13 @@ MATLAB Data Loader
 Functions and classes for loading neuroscience data from MATLAB .mat files.
 """
 
+import warnings
+from dataclasses import dataclass, field
+from typing import Any
+
+import h5py
 import numpy as np
 import scipy.io
-import h5py
-from dataclasses import dataclass, field
-from typing import Optional, Dict, Any, List
-import warnings
 
 
 @dataclass
@@ -30,11 +31,12 @@ class TuningCurve:
     peak_rate : float, optional
         Maximum firing rate
     """
+
     bins: np.ndarray
     rates: np.ndarray
-    mvl: Optional[float] = None
-    center_of_mass: Optional[float] = None
-    peak_rate: Optional[float] = None
+    mvl: float | None = None
+    center_of_mass: float | None = None
+    peak_rate: float | None = None
 
     def __post_init__(self):
         """Compute derived properties."""
@@ -70,16 +72,17 @@ class Unit:
     metadata : dict
         Additional metadata
     """
+
     unit_id: Any
     spike_times: np.ndarray
-    spike_indices: Optional[np.ndarray] = None
-    hd_tuning: Optional[TuningCurve] = None
-    pos_tuning: Optional[TuningCurve] = None
-    theta_tuning: Optional[TuningCurve] = None
-    is_grid: Optional[bool] = None
-    is_hd: Optional[bool] = None
-    gridness_score: Optional[float] = None
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    spike_indices: np.ndarray | None = None
+    hd_tuning: TuningCurve | None = None
+    pos_tuning: TuningCurve | None = None
+    theta_tuning: TuningCurve | None = None
+    is_grid: bool | None = None
+    is_hd: bool | None = None
+    gridness_score: float | None = None
+    metadata: dict[str, Any] = field(default_factory=dict)
 
 
 class MATFileLoader:
@@ -90,7 +93,7 @@ class MATFileLoader:
     """
 
     @staticmethod
-    def load(filepath: str) -> Dict[str, Any]:
+    def load(filepath: str) -> dict[str, Any]:
         """
         Load a .mat file, automatically detecting the version.
 
@@ -114,19 +117,19 @@ class MATFileLoader:
             # Try scipy.io first (works for v5/v7)
             data = scipy.io.loadmat(filepath, struct_as_record=False, squeeze_me=True)
             # Remove MATLAB metadata
-            data = {k: v for k, v in data.items() if not k.startswith('__')}
+            data = {k: v for k, v in data.items() if not k.startswith("__")}
             return data
         except NotImplementedError:
             # Fall back to h5py for v7.3+
             return MATFileLoader._load_h5py(filepath)
 
     @staticmethod
-    def _load_h5py(filepath: str) -> Dict[str, Any]:
+    def _load_h5py(filepath: str) -> dict[str, Any]:
         """Load MATLAB v7.3+ file using h5py."""
         data = {}
-        with h5py.File(filepath, 'r') as f:
+        with h5py.File(filepath, "r") as f:
             for key in f.keys():
-                if not key.startswith('#'):
+                if not key.startswith("#"):
                     data[key] = MATFileLoader._h5py_to_numpy(f[key])
         return data
 
@@ -141,7 +144,7 @@ class MATFileLoader:
             return h5_obj
 
     @staticmethod
-    def load_unit_data(filepath: str) -> List[Unit]:
+    def load_unit_data(filepath: str) -> list[Unit]:
         """
         Load unit data from a .mat file.
 
@@ -171,8 +174,8 @@ class MATFileLoader:
         data = MATFileLoader.load(filepath)
 
         # Find the units structure
-        if 'units' in data:
-            units_struct = data['units']
+        if "units" in data:
+            units_struct = data["units"]
         else:
             raise ValueError("Could not find 'units' in .mat file")
 
@@ -186,7 +189,7 @@ class MATFileLoader:
                 unit = MATFileLoader._parse_unit_struct(unit_data, unit_id=i)
                 units.append(unit)
             except Exception as e:
-                warnings.warn(f"Failed to parse unit {i}: {e}")
+                warnings.warn(f"Failed to parse unit {i}: {e}", stacklevel=2)
                 continue
 
         return units
@@ -198,14 +201,14 @@ class MATFileLoader:
         spike_times = None
         spike_indices = None
 
-        if hasattr(unit_struct, 'spikeTimes'):
+        if hasattr(unit_struct, "spikeTimes"):
             spike_times = np.asarray(unit_struct.spikeTimes).ravel()
-        elif hasattr(unit_struct, 'spikeInds'):
+        elif hasattr(unit_struct, "spikeInds"):
             spike_indices = np.asarray(unit_struct.spikeInds).ravel()
 
         # Extract unit ID
         if unit_id is None:
-            if hasattr(unit_struct, 'id'):
+            if hasattr(unit_struct, "id"):
                 unit_id = unit_struct.id
             else:
                 unit_id = 0
@@ -215,24 +218,24 @@ class MATFileLoader:
         pos_tuning = None
         theta_tuning = None
 
-        if hasattr(unit_struct, 'rmf'):
+        if hasattr(unit_struct, "rmf"):
             rmf = unit_struct.rmf
 
             # Head direction tuning
-            if hasattr(rmf, 'hd'):
+            if hasattr(rmf, "hd"):
                 hd_tuning = MATFileLoader._parse_tuning_curve(rmf.hd)
 
             # Position tuning
-            if hasattr(rmf, 'pos'):
+            if hasattr(rmf, "pos"):
                 pos_tuning = MATFileLoader._parse_tuning_curve(rmf.pos)
 
             # Theta phase tuning
-            if hasattr(rmf, 'theta'):
+            if hasattr(rmf, "theta"):
                 theta_tuning = MATFileLoader._parse_tuning_curve(rmf.theta)
 
         # Extract classification flags
         is_grid = None
-        if hasattr(unit_struct, 'isGrid'):
+        if hasattr(unit_struct, "isGrid"):
             is_grid = bool(unit_struct.isGrid)
 
         # Create Unit object
@@ -243,13 +246,13 @@ class MATFileLoader:
             hd_tuning=hd_tuning,
             pos_tuning=pos_tuning,
             theta_tuning=theta_tuning,
-            is_grid=is_grid
+            is_grid=is_grid,
         )
 
         return unit
 
     @staticmethod
-    def _parse_tuning_curve(tuning_struct) -> Optional[TuningCurve]:
+    def _parse_tuning_curve(tuning_struct) -> TuningCurve | None:
         """Parse a MATLAB tuning structure into a TuningCurve object."""
         if tuning_struct is None:
             return None
@@ -261,7 +264,7 @@ class MATFileLoader:
             mvl = None
             center_of_mass = None
 
-            if hasattr(tuning_struct, 'z'):
+            if hasattr(tuning_struct, "z"):
                 # 'z' typically contains the tuning curve values
                 rates = np.asarray(tuning_struct.z)
 
@@ -272,27 +275,22 @@ class MATFileLoader:
                     # For 2D rate maps, bins might not be meaningful
                     bins = np.arange(rates.shape[0])
 
-            if hasattr(tuning_struct, 'mvl'):
+            if hasattr(tuning_struct, "mvl"):
                 mvl = float(tuning_struct.mvl)
 
-            if hasattr(tuning_struct, 'centerOfMass'):
+            if hasattr(tuning_struct, "centerOfMass"):
                 center_of_mass = float(tuning_struct.centerOfMass)
 
             if rates is not None:
-                return TuningCurve(
-                    bins=bins,
-                    rates=rates,
-                    mvl=mvl,
-                    center_of_mass=center_of_mass
-                )
+                return TuningCurve(bins=bins, rates=rates, mvl=mvl, center_of_mass=center_of_mass)
 
         except Exception as e:
-            warnings.warn(f"Failed to parse tuning curve: {e}")
+            warnings.warn(f"Failed to parse tuning curve: {e}", stacklevel=2)
 
         return None
 
     @staticmethod
-    def load_example_cells(filepath: str) -> List[Unit]:
+    def load_example_cells(filepath: str) -> list[Unit]:
         """
         Load example cell data from exampleIdCells.mat format.
 
@@ -321,8 +319,8 @@ class MATFileLoader:
         data = MATFileLoader.load(filepath)
 
         # Find the result structure
-        if 'res' in data:
-            res_struct = data['res']
+        if "res" in data:
+            res_struct = data["res"]
         else:
             raise ValueError("Could not find 'res' in .mat file")
 
@@ -333,14 +331,14 @@ class MATFileLoader:
         for i, cell_data in enumerate(res_struct):
             try:
                 # Extract basic info
-                unit_id = cell_data.id if hasattr(cell_data, 'id') else i
-                rec_name = cell_data.recName if hasattr(cell_data, 'recName') else ""
+                unit_id = cell_data.id if hasattr(cell_data, "id") else i
+                rec_name = cell_data.recName if hasattr(cell_data, "recName") else ""
 
                 # Extract HD tuning
                 hd_tuning = None
-                if hasattr(cell_data, 'hdTuning'):
+                if hasattr(cell_data, "hdTuning"):
                     hd_struct = cell_data.hdTuning
-                    if hasattr(hd_struct, 'z') and hasattr(hd_struct, 'mvl'):
+                    if hasattr(hd_struct, "z") and hasattr(hd_struct, "mvl"):
                         rates = np.asarray(hd_struct.z).ravel()
                         bins = np.linspace(-np.pi, np.pi, len(rates))
                         mvl = float(hd_struct.mvl)
@@ -348,9 +346,9 @@ class MATFileLoader:
 
                 # Extract position tuning
                 pos_tuning = None
-                if hasattr(cell_data, 'posTuning'):
+                if hasattr(cell_data, "posTuning"):
                     pos_struct = cell_data.posTuning
-                    if hasattr(pos_struct, 'z'):
+                    if hasattr(pos_struct, "z"):
                         rates = np.asarray(pos_struct.z)
                         # For 2D rate maps, bins are spatial coordinates
                         bins = np.arange(rates.shape[0])
@@ -362,12 +360,12 @@ class MATFileLoader:
                     spike_times=np.array([]),  # Not provided in example format
                     hd_tuning=hd_tuning,
                     pos_tuning=pos_tuning,
-                    metadata={'recording': rec_name}
+                    metadata={"recording": rec_name},
                 )
                 units.append(unit)
 
             except Exception as e:
-                warnings.warn(f"Failed to parse example cell {i}: {e}")
+                warnings.warn(f"Failed to parse example cell {i}: {e}", stacklevel=2)
                 continue
 
         return units

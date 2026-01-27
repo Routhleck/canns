@@ -2,3 +2,5 @@ cann
 CANN
 climer
 fro
+# Proper nouns
+Zar

@@ -6,16 +6,15 @@ Functions for image manipulation including rotation, filtering, and morphologica
 
 import numpy as np
 from scipy import ndimage
-from skimage import morphology, measure, filters
-from typing import Optional, Tuple
+from skimage import measure, morphology
 
 
 def rotate_image(
     image: np.ndarray,
     angle: float,
-    output_shape: Optional[Tuple[int, int]] = None,
-    method: str = 'bilinear',
-    preserve_range: bool = True
+    output_shape: tuple[int, int] | None = None,
+    method: str = "bilinear",
+    preserve_range: bool = True,
 ) -> np.ndarray:
     """
     Rotate an image by a given angle.
@@ -50,11 +49,7 @@ def rotate_image(
     The rotation is performed around the center of the image.
     """
     # Map method names to scipy orders
-    order_map = {
-        'nearest': 0,
-        'bilinear': 1,
-        'cubic': 3
-    }
+    order_map = {"nearest": 0, "bilinear": 1, "cubic": 3}
     order = order_map.get(method.lower(), 1)
 
     # Rotate image (scipy rotates counter-clockwise for positive angles, same as MATLAB)
@@ -63,9 +58,9 @@ def rotate_image(
         angle,
         order=order,
         reshape=False if output_shape else True,
-        mode='constant',
+        mode="constant",
         cval=0.0,
-        prefilter=True
+        prefilter=True,
     )
 
     # Resize to requested output shape if specified
@@ -81,7 +76,7 @@ def rotate_image(
 
             if h >= oh and w >= ow:
                 # Crop
-                rotated = rotated[start_h:start_h+oh, start_w:start_w+ow]
+                rotated = rotated[start_h : start_h + oh, start_w : start_w + ow]
             elif h <= oh and w <= ow:
                 # Pad
                 pad_h = (oh - h) // 2
@@ -89,12 +84,13 @@ def rotate_image(
                 rotated = np.pad(
                     rotated,
                     ((pad_h, oh - h - pad_h), (pad_w, ow - w - pad_w)),
-                    mode='constant',
-                    constant_values=0
+                    mode="constant",
+                    constant_values=0,
                 )
             else:
                 # Mixed crop/pad - just use zoom
                 from scipy.ndimage import zoom
+
                 zoom_factors = (oh / h, ow / w)
                 rotated = zoom(rotated, zoom_factors, order=order)
 
@@ -102,9 +98,7 @@ def rotate_image(
 
 
 def find_regional_maxima(
-    image: np.ndarray,
-    connectivity: int = 1,
-    allow_diagonal: bool = False
+    image: np.ndarray, connectivity: int = 1, allow_diagonal: bool = False
 ) -> np.ndarray:
     """
     Find regional maxima in an image.
@@ -159,10 +153,7 @@ def find_regional_maxima(
     return maxima
 
 
-def find_contours_at_level(
-    image: np.ndarray,
-    level: float
-) -> list:
+def find_contours_at_level(image: np.ndarray, level: float) -> list:
     """
     Find contours in an image at a specific threshold level.
 
@@ -204,10 +195,7 @@ def find_contours_at_level(
 
 
 def gaussian_filter_2d(
-    image: np.ndarray,
-    sigma: float,
-    mode: str = 'reflect',
-    truncate: float = 4.0
+    image: np.ndarray, sigma: float, mode: str = "reflect", truncate: float = 4.0
 ) -> np.ndarray:
     """
     Apply 2D Gaussian filter to an image.
@@ -243,20 +231,15 @@ def gaussian_filter_2d(
     Based on MATLAB's imgaussfilt function.
     Uses scipy.ndimage.gaussian_filter.
     """
-    filtered = ndimage.gaussian_filter(
-        image,
-        sigma=sigma,
-        mode=mode,
-        truncate=truncate
-    )
+    filtered = ndimage.gaussian_filter(image, sigma=sigma, mode=mode, truncate=truncate)
     return filtered
 
 
 def dilate_image(
     image: np.ndarray,
-    footprint: Optional[np.ndarray] = None,
-    selem_type: str = 'square',
-    selem_size: int = 3
+    footprint: np.ndarray | None = None,
+    selem_type: str = "square",
+    selem_size: int = 3,
 ) -> np.ndarray:
     """
     Perform morphological dilation on a binary image.
@@ -289,11 +272,11 @@ def dilate_image(
     Uses skimage.morphology.dilation.
     """
     if footprint is None:
-        if selem_type == 'square':
+        if selem_type == "square":
             footprint = morphology.footprint_rectangle((selem_size, selem_size))
-        elif selem_type == 'disk':
+        elif selem_type == "disk":
             footprint = morphology.disk(selem_size)
-        elif selem_type == 'diamond':
+        elif selem_type == "diamond":
             footprint = morphology.diamond(selem_size)
         else:
             raise ValueError(f"Unknown structuring element type: {selem_type}")
@@ -303,9 +286,8 @@ def dilate_image(
 
 
 def label_connected_components(
-    binary_image: np.ndarray,
-    connectivity: int = 2
-) -> Tuple[np.ndarray, int]:
+    binary_image: np.ndarray, connectivity: int = 2
+) -> tuple[np.ndarray, int]:
     """
     Label connected components in a binary image.
 
@@ -341,10 +323,7 @@ def label_connected_components(
     return labels, num_labels
 
 
-def regionprops(
-    labeled_image: np.ndarray,
-    intensity_image: Optional[np.ndarray] = None
-) -> list:
+def regionprops(labeled_image: np.ndarray, intensity_image: np.ndarray | None = None) -> list:
     """
     Measure properties of labeled image regions.
 
@@ -399,13 +378,13 @@ if __name__ == "__main__":
     x = np.linspace(-3, 3, 50)
     xx, yy = np.meshgrid(x, x)
     # Two Gaussian peaks
-    peaks = np.exp(-(xx**2 + yy**2)) + 0.5 * np.exp(-((xx-1.5)**2 + (yy-1.5)**2))
+    peaks = np.exp(-(xx**2 + yy**2)) + 0.5 * np.exp(-((xx - 1.5) ** 2 + (yy - 1.5) ** 2))
     maxima = find_regional_maxima(peaks)
     print(f"  Found {np.sum(maxima)} maxima")
-    print(f"  Maxima locations:")
+    print("  Maxima locations:")
     coords = np.argwhere(maxima)
     for i, (y, x) in enumerate(coords[:5]):  # Show first 5
-        print(f"    Peak {i+1}: ({x}, {y}), value={peaks[y, x]:.3f}")
+        print(f"    Peak {i + 1}: ({x}, {y}), value={peaks[y, x]:.3f}")
 
     # Test 3: Contour detection
     print("\nTest 3 - Contour detection:")
@@ -424,14 +403,14 @@ if __name__ == "__main__":
 
     # Test 5: Connected components
     print("\nTest 5 - Connected components:")
-    binary = (np.random.rand(50, 50) > 0.7)
+    binary = np.random.rand(50, 50) > 0.7
     labels, n = label_connected_components(binary)
     print(f"  Binary image has {np.sum(binary)} True pixels")
     print(f"  Found {n} connected components")
 
     props = regionprops(labels)
-    print(f"  Region properties for first 3 components:")
+    print("  Region properties for first 3 components:")
     for i, prop in enumerate(props[:3]):
-        print(f"    Region {i+1}: centroid={prop.centroid}, area={prop.area}")
+        print(f"    Region {i + 1}: centroid={prop.centroid}, area={prop.area}")
 
     print("\nAll tests completed!")

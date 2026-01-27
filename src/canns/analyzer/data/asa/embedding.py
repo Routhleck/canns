@@ -73,7 +73,7 @@ def embed_spike_trains(spike_trains, config: SpikeEmbeddingConfig | None = None,
         if config.speed_filter:
             return _apply_speed_filtering(spikes_bin, spike_trains, config)
 
-        return spikes_bin, spike_trains['x'], spike_trains['y'], spike_trains['t']
+        return spikes_bin, spike_trains["x"], spike_trains["y"], spike_trains["t"]
 
     except Exception as e:
         raise ProcessingError(f"Failed to embed spike trains: {e}") from e

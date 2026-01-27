@@ -1,12 +1,11 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any
 
 import numpy as np
 
 
-def _base_mask(shape: Tuple[int, int], center_bins: int = 2) -> np.ndarray:
+def _base_mask(shape: tuple[int, int], center_bins: int = 2) -> np.ndarray:
     """Create a shared mask: center disk + outside circle (corners)."""
     h, w = shape
     cy = (h - 1) / 2.0
@@ -36,7 +35,9 @@ def _safe_corr(a: np.ndarray, b: np.ndarray) -> float:
     return float((a * b).mean() / (da * db))
 
 
-def _vectorize_autocorrs(autocorrs: np.ndarray, center_bins: int = 2) -> Tuple[np.ndarray, np.ndarray]:
+def _vectorize_autocorrs(
+    autocorrs: np.ndarray, center_bins: int = 2
+) -> tuple[np.ndarray, np.ndarray]:
     """Vectorize autocorrs into point-cloud matrix X and return the shared mask."""
     if autocorrs.ndim != 3:
         raise ValueError(f"autocorrs must be (N,H,W), got {autocorrs.shape}")
@@ -53,12 +54,12 @@ def _build_knn_graph(X: np.ndarray, k: int = 30, metric: str = "manhattan"):
     try:
         from sklearn.neighbors import NearestNeighbors
     except Exception as e:
-        raise ImportError(f"scikit-learn is required for kNN graph: {e}")
+        raise ImportError(f"scikit-learn is required for kNN graph: {e}") from e
 
     try:
         import igraph as ig
     except Exception as e:
-        raise ImportError(f"python-igraph is required for Leiden clustering: {e}")
+        raise ImportError(f"python-igraph is required for Leiden clustering: {e}") from e
 
     N = X.shape[0]
     k_eff = min(max(int(k), 1), max(N - 1, 1))
@@ -95,7 +96,7 @@ def _leiden_membership(graph, resolution: float = 1.0) -> np.ndarray:
     try:
         import leidenalg
     except Exception as e:
-        raise ImportError(f"leidenalg is required for Leiden clustering: {e}")
+        raise ImportError(f"leidenalg is required for Leiden clustering: {e}") from e
 
     part = leidenalg.find_partition(
         graph,
@@ -140,7 +141,7 @@ def identify_grid_modules_and_stats(
     min_cells: int = 10,
     merge_corr_thr: float = 0.7,
     metric: str = "manhattan",
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Identify grid modules with Leiden clustering on autocorrelogram point cloud.
 
     Parameters
@@ -172,7 +173,7 @@ def identify_grid_modules_and_stats(
     cluster_id = _leiden_membership(g, resolution=float(resolution))
 
     # group members
-    clusters: Dict[int, np.ndarray] = {}
+    clusters: dict[int, np.ndarray] = {}
     for cid in np.unique(cluster_id):
         clusters[int(cid)] = np.where(cluster_id == cid)[0]
 
@@ -192,7 +193,6 @@ def identify_grid_modules_and_stats(
         gr = gridness_analyzer.compute_gridness_score(med)
         grid_score = float(getattr(gr, "score", getattr(gr, "grid_score", np.nan)))
 
-
         flat_avg = avg[~base_mask]
         cors = []
         for i in idxs:
@@ -209,7 +209,11 @@ def identify_grid_modules_and_stats(
             "avg_autocorr": avg,
         }
 
-        if (grid_score > float(score_thr)) and (consistency > float(consistency_thr)) and (idxs.size >= int(min_cells)):
+        if (
+            (grid_score > float(score_thr))
+            and (consistency > float(consistency_thr))
+            and (idxs.size >= int(min_cells))
+        ):
             candidate_cids.append(cid)
 
     # Merge candidate clusters based on avg autocorr correlation
@@ -225,7 +229,7 @@ def identify_grid_modules_and_stats(
                 dsu.union(i, j)
 
     # Build merged modules
-    root_to_members: Dict[int, List[int]] = {}
+    root_to_members: dict[int, list[int]] = {}
     for idx, cid in enumerate(cand):
         r = dsu.find(idx)
         root_to_members.setdefault(r, []).append(cid)
@@ -237,7 +241,11 @@ def identify_grid_modules_and_stats(
     roots = sorted(root_to_members.keys())
     for mid, r in enumerate(roots):
         member_cids = root_to_members[r]
-        member_idxs = np.concatenate([clusters[c] for c in member_cids]) if member_cids else np.array([], dtype=int)
+        member_idxs = (
+            np.concatenate([clusters[c] for c in member_cids])
+            if member_cids
+            else np.array([], dtype=int)
+        )
 
         # compute module-level stats (median over clusters)
         gs = [cluster_stats[c]["grid_score"] for c in member_cids]
@@ -247,14 +255,16 @@ def identify_grid_modules_and_stats(
 
         module_id[member_idxs] = mid
 
-        modules.append({
-            "module_id": mid,
-            "clusters": member_cids,
-            "indices": member_idxs.astype(int),
-            "size": int(member_idxs.size),
-            "grid_score": grid_score,
-            "consistency": consistency,
-        })
+        modules.append(
+            {
+                "module_id": mid,
+                "clusters": member_cids,
+                "indices": member_idxs.astype(int),
+                "size": int(member_idxs.size),
+                "grid_score": grid_score,
+                "consistency": consistency,
+            }
+        )
 
     n_grid_cells = int((module_id != -1).sum())
     out = {

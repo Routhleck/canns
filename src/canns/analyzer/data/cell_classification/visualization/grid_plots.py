@@ -5,8 +5,8 @@ from __future__ import annotations
 from typing import Any
 
 import numpy as np
-from matplotlib import pyplot as plt
 from matplotlib import patches
+from matplotlib import pyplot as plt
 
 from canns.analyzer.visualization.core.config import PlotConfig, PlotConfigs, finalize_figure
 
@@ -76,9 +76,13 @@ def plot_autocorrelogram(
     if center_radius is not None:
         center = np.array(autocorr.shape) / 2
         circle = patches.Circle(
-            (center[1], center[0]), center_radius,
-            fill=False, edgecolor="red", linewidth=2, linestyle="--",
-            label="Center field"
+            (center[1], center[0]),
+            center_radius,
+            fill=False,
+            edgecolor="red",
+            linewidth=2,
+            linestyle="--",
+            label="Center field",
         )
         ax.add_patch(circle)
 
@@ -103,7 +107,7 @@ def plot_autocorrelogram(
     ax.set_ylabel(config.ylabel)
 
     if center_radius is not None or peak_locations is not None:
-        ax.legend(loc='upper right')
+        ax.legend(loc="upper right")
 
     if created_fig:
         fig.tight_layout()
@@ -137,11 +141,11 @@ def plot_gridness_analysis(
     fig, axes = plt.subplots(1, 3, figsize=config.figsize)
 
     # Plot 1: Rate map
-    im1 = axes[0].imshow(rate_map, cmap='hot', origin='lower')
-    axes[0].set_title('Firing Rate Map')
-    axes[0].set_xlabel('X (bins)')
-    axes[0].set_ylabel('Y (bins)')
-    plt.colorbar(im1, ax=axes[0], label='Rate (Hz)')
+    im1 = axes[0].imshow(rate_map, cmap="hot", origin="lower")
+    axes[0].set_title("Firing Rate Map")
+    axes[0].set_xlabel("X (bins)")
+    axes[0].set_ylabel("Y (bins)")
+    plt.colorbar(im1, ax=axes[0], label="Rate (Hz)")
 
     # Plot 2: Autocorrelogram with annotations
     plot_autocorrelogram(
@@ -149,12 +153,12 @@ def plot_gridness_analysis(
         gridness_score=result.score,
         center_radius=result.center_radius,
         peak_locations=result.peak_locations,
-        title='Autocorrelogram',
-        ax=axes[1]
+        title="Autocorrelogram",
+        ax=axes[1],
     )
 
     # Plot 3: Grid statistics
-    axes[2].axis('off')
+    axes[2].axis("off")
     stats_text = f"""
 Grid Cell Analysis
 
@@ -177,9 +181,8 @@ Ellipse Parameters:
   Radii: ({result.ellipse[2]:.1f}, {result.ellipse[3]:.1f})
   Angle: {result.ellipse_theta_deg:.1f}°
     """
-    axes[2].text(0.1, 0.5, stats_text, fontsize=10,
-                verticalalignment='center', family='monospace')
-    axes[2].set_title('Grid Statistics')
+    axes[2].text(0.1, 0.5, stats_text, fontsize=10, verticalalignment="center", family="monospace")
+    axes[2].set_title("Grid Statistics")
 
     fig.suptitle(config.title, fontsize=14, fontweight="bold")
     fig.tight_layout()

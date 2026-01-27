@@ -11,15 +11,11 @@ References:
 """
 
 import numpy as np
-from typing import Optional, Union, Tuple
 
 
 def circ_r(
-    alpha: np.ndarray,
-    w: Optional[np.ndarray] = None,
-    d: float = 0.0,
-    axis: int = 0
-) -> Union[float, np.ndarray]:
+    alpha: np.ndarray, w: np.ndarray | None = None, d: float = 0.0, axis: int = 0
+) -> float | np.ndarray:
     """
     Compute mean resultant vector length for circular data.
 
@@ -74,11 +70,7 @@ def circ_r(
     return r
 
 
-def circ_mean(
-    alpha: np.ndarray,
-    w: Optional[np.ndarray] = None,
-    axis: int = 0
-) -> Union[float, np.ndarray]:
+def circ_mean(alpha: np.ndarray, w: np.ndarray | None = None, axis: int = 0) -> float | np.ndarray:
     """
     Compute mean direction for circular data.
 
@@ -127,11 +119,8 @@ def circ_mean(
 
 
 def circ_std(
-    alpha: np.ndarray,
-    w: Optional[np.ndarray] = None,
-    d: float = 0.0,
-    axis: int = 0
-) -> Tuple[Union[float, np.ndarray], Union[float, np.ndarray]]:
+    alpha: np.ndarray, w: np.ndarray | None = None, d: float = 0.0, axis: int = 0
+) -> tuple[float | np.ndarray, float | np.ndarray]:
     """
     Compute circular standard deviation for circular data.
 
@@ -174,7 +163,7 @@ def circ_std(
     r = circ_r(alpha, w=w, d=d, axis=axis)
 
     # Compute standard deviations (equations from Zar)
-    s = np.sqrt(2 * (1 - r))      # 26.20 - angular deviation
+    s = np.sqrt(2 * (1 - r))  # 26.20 - angular deviation
     s0 = np.sqrt(-2 * np.log(r))  # 26.21 - circular standard deviation
 
     return s, s0
@@ -224,7 +213,7 @@ def circ_dist(x: np.ndarray, y: np.ndarray) -> np.ndarray:
     return r
 
 
-def circ_dist2(x: np.ndarray, y: Optional[np.ndarray] = None) -> np.ndarray:
+def circ_dist2(x: np.ndarray, y: np.ndarray | None = None) -> np.ndarray:
     """
     All pairwise angular distances (x_i - y_j) around the circle.
 
@@ -278,14 +267,12 @@ def circ_dist2(x: np.ndarray, y: Optional[np.ndarray] = None) -> np.ndarray:
 
     # Compute all pairwise distances using broadcasting
     # Shape: (len(x), len(y))
-    r = np.angle(
-        np.exp(1j * x) / np.exp(1j * y.T)
-    )
+    r = np.angle(np.exp(1j * x) / np.exp(1j * y.T))
 
     return r
 
 
-def circ_rtest(alpha: np.ndarray, w: Optional[np.ndarray] = None) -> float:
+def circ_rtest(alpha: np.ndarray, w: np.ndarray | None = None) -> float:
     """
     Rayleigh test for non-uniformity of circular data.
 
@@ -334,11 +321,12 @@ def circ_rtest(alpha: np.ndarray, w: Optional[np.ndarray] = None) -> float:
     n = len(alpha)
 
     # Rayleigh test statistic
-    Z = n * r ** 2
+    Z = n * r**2
 
     # Approximate p-value (good for n > 50, reasonable for n > 20)
-    pval = np.exp(-Z) * (1 + (2 * Z - Z ** 2) / (4 * n) -
-                          (24 * Z - 132 * Z ** 2 + 76 * Z ** 3 - 9 * Z ** 4) / (288 * n ** 2))
+    pval = np.exp(-Z) * (
+        1 + (2 * Z - Z**2) / (4 * n) - (24 * Z - 132 * Z**2 + 76 * Z**3 - 9 * Z**4) / (288 * n**2)
+    )
 
     return pval
 
@@ -361,7 +349,7 @@ if __name__ == "__main__":
     s, s0 = circ_std(angles)
     p = circ_rtest(angles)
 
-    print(f"\nConcentrated distribution (mean=0, std=0.1):")
+    print("\nConcentrated distribution (mean=0, std=0.1):")
     print(f"  MVL: {r:.3f} (should be close to 1)")
     print(f"  Mean direction: {mu:.3f} rad (should be close to 0)")
     print(f"  Angular deviation: {s:.3f} rad")
@@ -372,7 +360,7 @@ if __name__ == "__main__":
     r = circ_r(angles)
     p = circ_rtest(angles)
 
-    print(f"\nUniform distribution:")
+    print("\nUniform distribution:")
     print(f"  MVL: {r:.3f} (should be close to 0)")
     print(f"  Rayleigh test p-value: {p:.4f} (should be > 0.05)")
 
@@ -381,12 +369,12 @@ if __name__ == "__main__":
     y = np.array([0.0, -np.pi])
     dist = circ_dist(x, y)
 
-    print(f"\nAngular distances:")
+    print("\nAngular distances:")
     print(f"  dist([0.1, π], [0, -π]) = {dist}")
-    print(f"  Note: π and -π are the same location, so distance is 0")
+    print("  Note: π and -π are the same location, so distance is 0")
 
     # Test 4: Pairwise distances
-    angles = np.array([0, np.pi/2, np.pi, -np.pi/2])
+    angles = np.array([0, np.pi / 2, np.pi, -np.pi / 2])
     D = circ_dist2(angles)
 
     print(f"\nPairwise distance matrix shape: {D.shape}")

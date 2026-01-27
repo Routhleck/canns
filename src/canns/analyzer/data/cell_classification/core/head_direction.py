@@ -6,11 +6,11 @@ Implementation of head direction cell identification based on Mean Vector Length
 Based on MATLAB code from the sweeps analysis pipeline.
 """
 
-import numpy as np
 from dataclasses import dataclass
-from typing import Optional, Tuple
 
-from ..utils.circular_stats import circ_r, circ_mean, circ_rtest
+import numpy as np
+
+from ..utils.circular_stats import circ_mean, circ_r, circ_rtest
 
 
 @dataclass
@@ -33,11 +33,12 @@ class HDCellResult:
     rayleigh_p : float
         P-value from Rayleigh test for non-uniformity
     """
+
     is_hd: bool
     mvl_hd: float
     preferred_direction: float
-    mvl_theta: Optional[float]
-    tuning_curve: Tuple[np.ndarray, np.ndarray]
+    mvl_theta: float | None
+    tuning_curve: tuple[np.ndarray, np.ndarray]
     rayleigh_p: float
 
 
@@ -86,7 +87,7 @@ class HeadDirectionAnalyzer:
         mvl_hd_threshold: float = 0.4,
         mvl_theta_threshold: float = 0.3,
         strict_mode: bool = True,
-        n_bins: int = 60
+        n_bins: int = 60,
     ):
         self.mvl_hd_threshold = mvl_hd_threshold
         self.mvl_theta_threshold = mvl_theta_threshold
@@ -98,7 +99,7 @@ class HeadDirectionAnalyzer:
         spike_times: np.ndarray,
         head_directions: np.ndarray,
         time_stamps: np.ndarray,
-        theta_phases: Optional[np.ndarray] = None
+        theta_phases: np.ndarray | None = None,
     ) -> HDCellResult:
         """
         Classify a cell as head direction cell based on MVL thresholds.
@@ -167,7 +168,7 @@ class HeadDirectionAnalyzer:
             preferred_direction=preferred_direction,
             mvl_theta=mvl_theta,
             tuning_curve=(bin_centers, firing_rates),
-            rayleigh_p=rayleigh_p
+            rayleigh_p=rayleigh_p,
         )
 
         return result
@@ -177,8 +178,8 @@ class HeadDirectionAnalyzer:
         spike_times: np.ndarray,
         head_directions: np.ndarray,
         time_stamps: np.ndarray,
-        n_bins: Optional[int] = None
-    ) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+        n_bins: int | None = None,
+    ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
         """
         Compute directional tuning curve.
 
@@ -241,11 +242,7 @@ class HeadDirectionAnalyzer:
 
         return bin_centers, firing_rates, occupancy
 
-    def compute_mvl(
-        self,
-        angles: np.ndarray,
-        weights: Optional[np.ndarray] = None
-    ) -> float:
+    def compute_mvl(self, angles: np.ndarray, weights: np.ndarray | None = None) -> float:
         """
         Compute Mean Vector Length (MVL).
 
@@ -294,7 +291,9 @@ if __name__ == "__main__":
     # Animal rotates and explores
     angular_velocity = 0.5  # rad/s average
     head_directions = np.cumsum(np.random.randn(len(time_stamps)) * angular_velocity * dt)
-    head_directions = np.arctan2(np.sin(head_directions), np.cos(head_directions))  # Wrap to [-π, π]
+    head_directions = np.arctan2(
+        np.sin(head_directions), np.cos(head_directions)
+    )  # Wrap to [-π, π]
 
     # Cell fires preferentially at 0.5 radians (~28°)
     preferred_dir = 0.5
@@ -302,7 +301,8 @@ if __name__ == "__main__":
 
     # Generate spikes based on von Mises tuning
     from scipy.stats import vonmises
-    firing_prob = vonmises.pdf(head_directions - preferred_dir, kappa=1/tuning_width**2)
+
+    firing_prob = vonmises.pdf(head_directions - preferred_dir, kappa=1 / tuning_width**2)
     firing_prob = firing_prob / firing_prob.max() * 0.1  # Max 10% per bin
 
     # Poisson spike generation
@@ -317,7 +317,7 @@ if __name__ == "__main__":
     analyzer = HeadDirectionAnalyzer(mvl_hd_threshold=0.4, strict_mode=False)
     result = analyzer.classify_hd_cell(spike_times, head_directions, time_stamps)
 
-    print(f"\nResults:")
+    print("\nResults:")
     print(f"  Is HD cell: {result.is_hd}")
     print(f"  MVL: {result.mvl_hd:.3f}")
     print(f"  Preferred direction: {np.rad2deg(result.preferred_direction):.1f}°")
@@ -337,11 +337,9 @@ if __name__ == "__main__":
     n_spikes = int(mean_rate * time_stamps[-1])
     spike_times_random = np.sort(np.random.uniform(0, time_stamps[-1], n_spikes))
 
-    result_random = analyzer.classify_hd_cell(
-        spike_times_random, head_directions, time_stamps
-    )
+    result_random = analyzer.classify_hd_cell(spike_times_random, head_directions, time_stamps)
 
-    print(f"Results for non-directional cell:")
+    print("Results for non-directional cell:")
     print(f"  Is HD cell: {result_random.is_hd}")
     print(f"  MVL: {result_random.mvl_hd:.3f}")
     print(f"  Rayleigh test p-value: {result_random.rayleigh_p:.3f}")

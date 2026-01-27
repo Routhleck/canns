@@ -6,18 +6,23 @@ Implementation of gridness score algorithm for identifying and characterizing gr
 Based on the MATLAB gridnessScore.m implementation.
 """
 
-import numpy as np
-from dataclasses import dataclass
-from typing import Optional, Tuple
 import warnings
+from dataclasses import dataclass
 
-from ..utils.correlation import pearson_correlation, autocorrelation_2d
-from ..utils.geometry import fit_ellipse, squared_distance, polyarea, wrap_to_pi
-from ..utils.image_processing import (
-    rotate_image, find_contours_at_level, gaussian_filter_2d,
-    find_regional_maxima, dilate_image, label_connected_components, regionprops
-)
+import numpy as np
+
 from ..utils.circular_stats import circ_dist2
+from ..utils.correlation import autocorrelation_2d, pearson_correlation
+from ..utils.geometry import fit_ellipse, polyarea, squared_distance, wrap_to_pi
+from ..utils.image_processing import (
+    dilate_image,
+    find_contours_at_level,
+    find_regional_maxima,
+    gaussian_filter_2d,
+    label_connected_components,
+    regionprops,
+    rotate_image,
+)
 
 
 @dataclass
@@ -44,6 +49,7 @@ class GridnessResult:
     peak_locations : np.ndarray
         Coordinates of detected grid peaks (N x 2 array)
     """
+
     score: float
     spacing: np.ndarray
     orientation: np.ndarray
@@ -51,7 +57,7 @@ class GridnessResult:
     ellipse_theta_deg: float
     center_radius: float
     optimal_radius: float
-    peak_locations: Optional[np.ndarray] = None
+    peak_locations: np.ndarray | None = None
 
 
 class GridnessAnalyzer:
@@ -99,17 +105,14 @@ class GridnessAnalyzer:
         threshold: float = 0.2,
         min_orientation: float = 15.0,
         min_center_radius: int = 2,
-        num_gridness_radii: int = 3
+        num_gridness_radii: int = 3,
     ):
         self.threshold = threshold
         self.min_orientation = min_orientation
         self.min_center_radius = min_center_radius
         self.num_gridness_radii = num_gridness_radii
 
-    def compute_gridness_score(
-        self,
-        autocorr: np.ndarray
-    ) -> GridnessResult:
+    def compute_gridness_score(self, autocorr: np.ndarray) -> GridnessResult:
         """
         Compute gridness score from a 2D autocorrelogram.
 
@@ -154,9 +157,7 @@ class GridnessAnalyzer:
         )
 
         # Find optimal radius with maximum gridness
-        score, optimal_radius = self._find_optimal_gridness(
-            gridness_scores, rad_steps
-        )
+        score, optimal_radius = self._find_optimal_gridness(gridness_scores, rad_steps)
 
         # Extract grid statistics (spacing, orientation, ellipse fit)
         grid_stats = self._extract_grid_statistics(
@@ -166,22 +167,18 @@ class GridnessAnalyzer:
         # Create result object
         result = GridnessResult(
             score=score,
-            spacing=grid_stats['spacing'],
-            orientation=grid_stats['orientation'],
-            ellipse=grid_stats['ellipse'],
-            ellipse_theta_deg=grid_stats['ellipse_theta_deg'],
+            spacing=grid_stats["spacing"],
+            orientation=grid_stats["orientation"],
+            ellipse=grid_stats["ellipse"],
+            ellipse_theta_deg=grid_stats["ellipse_theta_deg"],
             center_radius=center_radius,
             optimal_radius=optimal_radius,
-            peak_locations=grid_stats.get('peak_locations')
+            peak_locations=grid_stats.get("peak_locations"),
         )
 
         return result
 
-    def _find_center_radius(
-        self,
-        autocorr: np.ndarray,
-        threshold: float
-    ) -> float:
+    def _find_center_radius(self, autocorr: np.ndarray, threshold: float) -> float:
         """
         Find the radius of the central autocorrelation field.
 
@@ -241,8 +238,8 @@ class GridnessAnalyzer:
         center_radius: float,
         autocorr_rad: float,
         half_height: int,
-        half_width: int
-    ) -> Tuple[np.ndarray, np.ndarray]:
+        half_width: int,
+    ) -> tuple[np.ndarray, np.ndarray]:
         """
         Compute correlations between autocorr and rotated versions.
 
@@ -291,7 +288,7 @@ class GridnessAnalyzer:
         rotated_autocorr = np.zeros((autocorr.shape[0], autocorr.shape[1], n_rot))
         for i, angle in enumerate(rot_angles_deg):
             rotated_autocorr[:, :, i] = rotate_image(
-                autocorr, angle, output_shape=autocorr.shape, method='bilinear'
+                autocorr, angle, output_shape=autocorr.shape, method="bilinear"
             )
 
         # Vectorize autocorr and rotated versions
@@ -325,10 +322,8 @@ class GridnessAnalyzer:
         return gridness_scores, rad_steps
 
     def _find_optimal_gridness(
-        self,
-        gridness_scores: np.ndarray,
-        rad_steps: np.ndarray
-    ) -> Tuple[float, float]:
+        self, gridness_scores: np.ndarray, rad_steps: np.ndarray
+    ) -> tuple[float, float]:
         """
         Find the radius with maximum gridness score.
 
@@ -365,7 +360,7 @@ class GridnessAnalyzer:
         mean_scores = np.zeros(num_windows)
 
         for i in range(num_windows):
-            window = scores[i:i + self.num_gridness_radii]
+            window = scores[i : i + self.num_gridness_radii]
             mean_scores[i] = np.nanmean(window)
 
         # Find maximum
@@ -379,11 +374,7 @@ class GridnessAnalyzer:
         return float(max_score), float(optimal_radius)
 
     def _extract_grid_statistics(
-        self,
-        autocorr: np.ndarray,
-        optimal_radius: float,
-        half_height: int,
-        half_width: int
+        self, autocorr: np.ndarray, optimal_radius: float, half_height: int, half_width: int
     ) -> dict:
         """
         Extract grid field statistics (spacing, orientation, ellipse).
@@ -415,7 +406,9 @@ class GridnessAnalyzer:
         mask_outer = dist_from_center < (optimal_radius + w)
 
         # Smooth autocorr to eliminate spurious maxima
-        autocorr_sm = gaussian_filter_2d(autocorr, sigma=optimal_radius / (2 * np.pi) / 2, mode='reflect')
+        autocorr_sm = gaussian_filter_2d(
+            autocorr, sigma=optimal_radius / (2 * np.pi) / 2, mode="reflect"
+        )
 
         # Apply mask
         masked_autocorr = mask_outer * autocorr_sm
@@ -424,13 +417,13 @@ class GridnessAnalyzer:
         maxima_map = find_regional_maxima(masked_autocorr, connectivity=1)
 
         # Dilate to eliminate fragmentation
-        maxima_map_dilated = dilate_image(maxima_map, selem_type='square', selem_size=3)
+        maxima_map_dilated = dilate_image(maxima_map, selem_type="square", selem_size=3)
 
         # Label connected components
         labels, num_labels = label_connected_components(maxima_map_dilated, connectivity=2)
 
         if num_labels < 5:
-            warnings.warn("Not enough grid peaks found for statistics")
+            warnings.warn("Not enough grid peaks found for statistics", stacklevel=2)
             return self._create_nan_stats()
 
         # Get region properties
@@ -445,14 +438,11 @@ class GridnessAnalyzer:
         # Compute orientations relative to center
         center_point = np.array([half_width - 1, half_height - 1])
         orientations = np.arctan2(
-            centers_of_mass[:, 1] - center_point[1],
-            centers_of_mass[:, 0] - center_point[0]
+            centers_of_mass[:, 1] - center_point[1], centers_of_mass[:, 0] - center_point[0]
         )
 
         # Compute distances to center
-        peaks_to_center = squared_distance(
-            centers_of_mass.T, center_point[:, np.newaxis]
-        ).ravel()
+        peaks_to_center = squared_distance(centers_of_mass.T, center_point[:, np.newaxis]).ravel()
 
         # Remove zero orientation (central peak if any)
         zero_idx = np.where(orientations == 0)[0]
@@ -471,7 +461,7 @@ class GridnessAnalyzer:
 
         rows, cols = np.where(close_fields)
         to_delete = []
-        for row, col in zip(rows, cols):
+        for row, col in zip(rows, cols, strict=True):
             # Keep the one closer to center
             if peaks_to_center[row] > peaks_to_center[col]:
                 to_delete.append(row)
@@ -487,7 +477,7 @@ class GridnessAnalyzer:
             peaks_to_center = peaks_to_center[mask]
 
         if len(centers_of_mass) < 4:
-            warnings.warn("Not enough grid peaks after filtering")
+            warnings.warn("Not enough grid peaks after filtering", stacklevel=2)
             return self._create_nan_stats()
 
         # Sort by distance to center and keep 6 closest
@@ -497,28 +487,31 @@ class GridnessAnalyzer:
             centers_of_mass = centers_of_mass[:6]
 
         # Compute final orientations and spacings
-        orientations_deg = np.rad2deg(np.arctan2(
-            centers_of_mass[:, 1] - center_point[1],
-            centers_of_mass[:, 0] - center_point[0]
-        ))
+        orientations_deg = np.rad2deg(
+            np.arctan2(
+                centers_of_mass[:, 1] - center_point[1], centers_of_mass[:, 0] - center_point[0]
+            )
+        )
 
         spacings = np.sqrt(
-            (centers_of_mass[:, 0] - center_point[0]) ** 2 +
-            (centers_of_mass[:, 1] - center_point[1]) ** 2
+            (centers_of_mass[:, 0] - center_point[0]) ** 2
+            + (centers_of_mass[:, 1] - center_point[1]) ** 2
         )
 
         # Fit ellipse to peaks
         try:
             ellipse = fit_ellipse(centers_of_mass[:, 0], centers_of_mass[:, 1])
             ellipse_theta_deg = np.rad2deg(wrap_to_pi(ellipse[4]) + np.pi)
-        except:
+        except Exception:
             ellipse = np.full(5, np.nan)
             ellipse_theta_deg = np.nan
 
         # Select 3 orientations with smallest absolute values (closest to main axes)
         abs_orient = np.abs(orientations_deg)
         orient_sort_idx = np.argsort(abs_orient)
-        orient_sort_idx2 = np.argsort(np.abs(orientations_deg - orientations_deg[orient_sort_idx[0]]))
+        orient_sort_idx2 = np.argsort(
+            np.abs(orientations_deg - orientations_deg[orient_sort_idx[0]])
+        )
 
         final_idx = orient_sort_idx2[:3]
         orientations_deg = orientations_deg[final_idx]
@@ -530,11 +523,11 @@ class GridnessAnalyzer:
         spacings = spacings[sort_idx]
 
         return {
-            'spacing': spacings,
-            'orientation': orientations_deg,
-            'ellipse': ellipse,
-            'ellipse_theta_deg': ellipse_theta_deg,
-            'peak_locations': centers_of_mass
+            "spacing": spacings,
+            "orientation": orientations_deg,
+            "ellipse": ellipse,
+            "ellipse_theta_deg": ellipse_theta_deg,
+            "peak_locations": centers_of_mass,
         }
 
     def _create_nan_result(self) -> GridnessResult:
@@ -546,23 +539,20 @@ class GridnessAnalyzer:
             ellipse=np.full(5, np.nan),
             ellipse_theta_deg=np.nan,
             center_radius=0,
-            optimal_radius=np.nan
+            optimal_radius=np.nan,
         )
 
     def _create_nan_stats(self) -> dict:
         """Create statistics dict with NaN values."""
         return {
-            'spacing': np.full(3, np.nan),
-            'orientation': np.full(3, np.nan),
-            'ellipse': np.full(5, np.nan),
-            'ellipse_theta_deg': np.nan
+            "spacing": np.full(3, np.nan),
+            "orientation": np.full(3, np.nan),
+            "ellipse": np.full(5, np.nan),
+            "ellipse_theta_deg": np.nan,
         }
 
 
-def compute_2d_autocorrelation(
-    rate_map: np.ndarray,
-    overlap: float = 0.8
-) -> np.ndarray:
+def compute_2d_autocorrelation(rate_map: np.ndarray, overlap: float = 0.8) -> np.ndarray:
     """
     Compute 2D spatial autocorrelation of a firing rate map.
 
@@ -603,13 +593,13 @@ if __name__ == "__main__":
     xx, yy = np.meshgrid(x, x)
 
     # Hexagonal grid pattern (sum of 3 cosines at 60° angles)
-    theta1, theta2, theta3 = 0, np.pi/3, 2*np.pi/3
+    theta1, theta2, theta3 = 0, np.pi / 3, 2 * np.pi / 3
     k = 2 * np.pi / 0.4  # Spatial frequency
 
     grid_pattern = (
-        np.cos(k * (xx * np.cos(theta1) + yy * np.sin(theta1))) +
-        np.cos(k * (xx * np.cos(theta2) + yy * np.sin(theta2))) +
-        np.cos(k * (xx * np.cos(theta3) + yy * np.sin(theta3)))
+        np.cos(k * (xx * np.cos(theta1) + yy * np.sin(theta1)))
+        + np.cos(k * (xx * np.cos(theta2) + yy * np.sin(theta2)))
+        + np.cos(k * (xx * np.cos(theta3) + yy * np.sin(theta3)))
     ) / 3
 
     # Make it a rate map (positive values)
@@ -628,7 +618,7 @@ if __name__ == "__main__":
     analyzer = GridnessAnalyzer()
     result = analyzer.compute_gridness_score(autocorr)
 
-    print(f"\nResults:")
+    print("\nResults:")
     print(f"  Gridness score: {result.score:.3f}")
     print(f"  Grid spacing: {result.spacing}")
     print(f"  Grid orientation: {result.orientation}°")
