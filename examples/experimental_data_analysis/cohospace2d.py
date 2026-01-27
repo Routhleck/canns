@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Simple CohoSpace example using the built-in grid dataset.
+Simple 2D CohoSpace example using the built-in grid dataset.
 """
 
 from canns.analyzer import data
@@ -29,22 +29,22 @@ coordsbox = decoding.get("coordsbox")
 if coords is None:
     raise KeyError("decoding is missing 'coords'.")
 
-config = PlotConfigs.cohospace_trajectory(show=True)
+config = PlotConfigs.cohospace_trajectory_2d(show=True)
 
-data.plot_cohospace_trajectory(
+data.plot_cohospace_trajectory_2d(
     coords=coords[:, :2],
     times=None,
     subsample=2,
     config=config,
 )
 
-config = PlotConfigs.cohospace_neuron(show=True)
+config = PlotConfigs.cohospace_neuron_2d(show=True)
 
-data.plot_cohospace_neuron(
+data.plot_cohospace_neuron_2d(
     coords=coordsbox[:, :2],
     activity=spikes,
     neuron_id=130,
-    mode='fr',
+    mode="fr",
     top_percent=1,
     config=config,
 )

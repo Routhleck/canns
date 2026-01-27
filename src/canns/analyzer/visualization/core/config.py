@@ -280,7 +280,7 @@ class PlotConfigs:
         return PlotConfig.for_static_plot(**defaults)
 
     @staticmethod
-    def cohospace_trajectory(**kwargs: Any) -> PlotConfig:
+    def cohospace_trajectory_2d(**kwargs: Any) -> PlotConfig:
         defaults: dict[str, Any] = {
             "title": "CohoSpace trajectory",
             "xlabel": "theta1 (deg)",
@@ -291,7 +291,18 @@ class PlotConfigs:
         return PlotConfig.for_static_plot(**defaults)
 
     @staticmethod
-    def cohospace_neuron(**kwargs: Any) -> PlotConfig:
+    def cohospace_trajectory_1d(**kwargs: Any) -> PlotConfig:
+        defaults: dict[str, Any] = {
+            "title": "CohoSpace trajectory (1D)",
+            "xlabel": "cos(theta)",
+            "ylabel": "sin(theta)",
+            "figsize": (6, 6),
+        }
+        defaults.update(kwargs)
+        return PlotConfig.for_static_plot(**defaults)
+
+    @staticmethod
+    def cohospace_neuron_2d(**kwargs: Any) -> PlotConfig:
         defaults: dict[str, Any] = {
             "title": "Neuron activity on coho-space",
             "xlabel": "Theta 1 (deg)",
@@ -302,11 +313,33 @@ class PlotConfigs:
         return PlotConfig.for_static_plot(**defaults)
 
     @staticmethod
-    def cohospace_population(**kwargs: Any) -> PlotConfig:
+    def cohospace_neuron_1d(**kwargs: Any) -> PlotConfig:
+        defaults: dict[str, Any] = {
+            "title": "Neuron activity on coho-space (1D)",
+            "xlabel": "cos(theta)",
+            "ylabel": "sin(theta)",
+            "figsize": (6, 6),
+        }
+        defaults.update(kwargs)
+        return PlotConfig.for_static_plot(**defaults)
+
+    @staticmethod
+    def cohospace_population_2d(**kwargs: Any) -> PlotConfig:
         defaults: dict[str, Any] = {
             "title": "Population activity on coho-space",
             "xlabel": "Theta 1 (deg)",
             "ylabel": "Theta 2 (deg)",
+            "figsize": (6, 6),
+        }
+        defaults.update(kwargs)
+        return PlotConfig.for_static_plot(**defaults)
+
+    @staticmethod
+    def cohospace_population_1d(**kwargs: Any) -> PlotConfig:
+        defaults: dict[str, Any] = {
+            "title": "Population activity on coho-space (1D)",
+            "xlabel": "cos(theta)",
+            "ylabel": "sin(theta)",
             "figsize": (6, 6),
         }
         defaults.update(kwargs)
@@ -337,9 +370,18 @@ class PlotConfigs:
         return PlotConfig.for_static_plot(**defaults)
 
     @staticmethod
-    def path_compare(**kwargs: Any) -> PlotConfig:
+    def path_compare_2d(**kwargs: Any) -> PlotConfig:
         defaults: dict[str, Any] = {
             "title": "Path Compare",
+            "figsize": (12, 5),
+        }
+        defaults.update(kwargs)
+        return PlotConfig.for_static_plot(**defaults)
+
+    @staticmethod
+    def path_compare_1d(**kwargs: Any) -> PlotConfig:
+        defaults: dict[str, Any] = {
+            "title": "Path Compare (1D)",
             "figsize": (12, 5),
         }
         defaults.update(kwargs)

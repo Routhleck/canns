@@ -9,13 +9,15 @@ Functions
 
 .. autoapisummary::
 
-   src.canns.analyzer.data.asa.path.align_coords_to_position
+   src.canns.analyzer.data.asa.path.align_coords_to_position_1d
+   src.canns.analyzer.data.asa.path.align_coords_to_position_2d
    src.canns.analyzer.data.asa.path.apply_angle_scale
    src.canns.analyzer.data.asa.path.as_1d
    src.canns.analyzer.data.asa.path.draw_base_parallelogram
    src.canns.analyzer.data.asa.path.find_coords_matrix
    src.canns.analyzer.data.asa.path.find_times_box
    src.canns.analyzer.data.asa.path.interp_coords_to_full
+   src.canns.analyzer.data.asa.path.interp_coords_to_full_1d
    src.canns.analyzer.data.asa.path.load_npz_any
    src.canns.analyzer.data.asa.path.parse_times_box_to_indices
    src.canns.analyzer.data.asa.path.resolve_time_slice
@@ -27,7 +29,12 @@ Functions
 Module Contents
 ---------------
 
-.. py:function:: align_coords_to_position(t_full, x_full, y_full, coords2, use_box, times_box, interp_to_full)
+.. py:function:: align_coords_to_position_1d(t_full, x_full, y_full, coords1, use_box, times_box, interp_to_full)
+
+   Align 1D decoded coordinates to the original (x, y, t) trajectory.
+
+
+.. py:function:: align_coords_to_position_2d(t_full, x_full, y_full, coords2, use_box, times_box, interp_to_full)
 
    Align decoded coordinates to the original (x, y, t) trajectory.
 
@@ -52,7 +59,7 @@ Module Contents
 
    .. rubric:: Examples
 
-   >>> t, x, y, coords2, tag = align_coords_to_position(  # doctest: +SKIP
+   >>> t, x, y, coords2, tag = align_coords_to_position_2d(  # doctest: +SKIP
    ...     t_full, x_full, y_full, coords2,
    ...     use_box=True, times_box=decoding["times_box"], interp_to_full=True
    ... )
@@ -105,6 +112,11 @@ Module Contents
 .. py:function:: interp_coords_to_full(idx_map, coords2, T_full)
 
    Interpolate (K,2) circular coords back to full length (T_full,2).
+
+
+.. py:function:: interp_coords_to_full_1d(idx_map, coords1, T_full)
+
+   Interpolate (K,) circular coords back to full length (T_full,1).
 
 
 .. py:function:: load_npz_any(path)

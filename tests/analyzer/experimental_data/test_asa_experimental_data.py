@@ -195,8 +195,8 @@ def test_cohospace_and_path_compare():
     rng = np.random.default_rng(1)
     coords = rng.random((spikes.shape[0], 2)) * 2 * np.pi
 
-    data.plot_cohospace_trajectory(coords, show=False)
-    data.plot_cohospace_neuron(
+    data.plot_cohospace_trajectory_2d(coords, show=False)
+    data.plot_cohospace_neuron_2d(
         coords=coords,
         activity=spikes,
         neuron_id=0,
@@ -209,7 +209,7 @@ def test_cohospace_and_path_compare():
     times_box = np.arange(0, len(t_full), 2)
     coords_box = rng.random((len(times_box), 2)) * 2 * np.pi
 
-    t_aligned, x_aligned, y_aligned, coords_aligned, _ = data.align_coords_to_position(
+    t_aligned, x_aligned, y_aligned, coords_aligned, _ = data.align_coords_to_position_2d(
         t_full=mock_data["t"],
         x_full=mock_data["x"],
         y_full=mock_data["y"],
@@ -221,7 +221,7 @@ def test_cohospace_and_path_compare():
     assert len(t_aligned) == len(mock_data["t"])
     coords_aligned = data.apply_angle_scale(coords_aligned, "rad")
 
-    data.plot_path_compare(
+    data.plot_path_compare_2d(
         x_aligned,
         y_aligned,
         coords_aligned,

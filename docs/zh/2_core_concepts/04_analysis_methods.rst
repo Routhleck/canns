@@ -43,8 +43,8 @@ ASA pipeline 面向实验神经记录，核心输入为 ``spike/x/y/t``。典型
 2. ``tda_vis`` —— 持续同调 + barcode
 3. ``decode_circular_coordinates_multi`` —— 解码相位轨迹
 4. ``plot_cohomap_multi`` —— 相位投影到真实轨迹
-5. ``plot_cohospace_*`` / ``compute_cohoscore`` —— 神经元相位选择性
-6. ``plot_path_compare`` —— 真实轨迹 vs 解码轨迹
+5. ``plot_cohospace_*_1d`` / ``plot_cohospace_*_2d`` / ``compute_cohoscore_1d`` / ``compute_cohoscore_2d`` —— 神经元相位选择性
+6. ``plot_path_compare_1d`` / ``plot_path_compare_2d`` —— 真实轨迹 vs 解码轨迹
 7. ``compute_fr_heatmap_matrix`` / ``compute_frm`` —— FR Heatmap / FRM
 
 .. note::
@@ -71,17 +71,19 @@ ASA pipeline 面向实验神经记录，核心输入为 ``spike/x/y/t``。典型
    * - **解码**
      - ``decode_circular_coordinates`` / ``decode_circular_coordinates_multi``
    * - **相位与路径**
-     - ``plot_cohomap`` / ``plot_cohomap_multi`` / ``plot_path_compare``
+     - ``plot_cohomap`` / ``plot_cohomap_multi`` / ``plot_path_compare_1d`` / ``plot_path_compare_2d``
    * - **流形与投影**
      - ``plot_projection`` / ``plot_2d_bump_on_manifold`` / ``plot_3d_bump_on_torus`` /
        ``CANN2DPlotConfig``
    * - **CohoSpace**
-     - ``plot_cohospace_trajectory`` / ``plot_cohospace_neuron`` /
-       ``plot_cohospace_population`` / ``compute_cohoscore``
+     - ``plot_cohospace_trajectory_1d`` / ``plot_cohospace_trajectory_2d`` /
+       ``plot_cohospace_neuron_1d`` / ``plot_cohospace_neuron_2d`` /
+       ``plot_cohospace_population_1d`` / ``plot_cohospace_population_2d`` /
+       ``compute_cohoscore_1d`` / ``compute_cohoscore_2d``
    * - **FR/FRM**
      - ``compute_fr_heatmap_matrix`` / ``save_fr_heatmap_png`` / ``compute_frm`` / ``plot_frm``
    * - **路径对齐**
-     - ``align_coords_to_position`` / ``apply_angle_scale``
+     - ``align_coords_to_position_1d`` / ``align_coords_to_position_2d`` / ``apply_angle_scale``
    * - **ROI 1D bump**
      - ``roi_bump_fits`` / ``create_1d_bump_animation`` / ``CANN1DPlotConfig``
 

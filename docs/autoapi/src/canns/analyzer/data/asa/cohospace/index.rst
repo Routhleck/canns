@@ -9,13 +9,17 @@ Functions
 
 .. autoapisummary::
 
-   src.canns.analyzer.data.asa.cohospace.compute_cohoscore
+   src.canns.analyzer.data.asa.cohospace.compute_cohoscore_1d
+   src.canns.analyzer.data.asa.cohospace.compute_cohoscore_2d
    src.canns.analyzer.data.asa.cohospace.draw_torus_parallelogram_grid
-   src.canns.analyzer.data.asa.cohospace.plot_cohospace_neuron
+   src.canns.analyzer.data.asa.cohospace.plot_cohospace_neuron_1d
+   src.canns.analyzer.data.asa.cohospace.plot_cohospace_neuron_2d
    src.canns.analyzer.data.asa.cohospace.plot_cohospace_neuron_skewed
-   src.canns.analyzer.data.asa.cohospace.plot_cohospace_population
+   src.canns.analyzer.data.asa.cohospace.plot_cohospace_population_1d
+   src.canns.analyzer.data.asa.cohospace.plot_cohospace_population_2d
    src.canns.analyzer.data.asa.cohospace.plot_cohospace_population_skewed
-   src.canns.analyzer.data.asa.cohospace.plot_cohospace_trajectory
+   src.canns.analyzer.data.asa.cohospace.plot_cohospace_trajectory_1d
+   src.canns.analyzer.data.asa.cohospace.plot_cohospace_trajectory_2d
    src.canns.analyzer.data.asa.cohospace.skew_transform_torus
    src.canns.analyzer.data.asa.cohospace.tile_parallelogram_points
 
@@ -23,7 +27,19 @@ Functions
 Module Contents
 ---------------
 
-.. py:function:: compute_cohoscore(coords, activity, top_percent = 2.0, times = None, auto_filter = True)
+.. py:function:: compute_cohoscore_1d(coords, activity, top_percent = 2.0, times = None, auto_filter = True)
+
+   Compute 1D cohomology-space selectivity score (CohoScore) for each neuron.
+
+   For each neuron:
+   - Select "active" time points:
+       - If top_percent is None: all time points with activity > 0
+       - Else: top `top_percent`%% time points by activity value
+   - Compute circular variance for theta on the selected points.
+   - CohoScore = var(theta)
+
+
+.. py:function:: compute_cohoscore_2d(coords, activity, top_percent = 2.0, times = None, auto_filter = True)
 
    Compute a simple cohomology-space selectivity score (CohoScore) for each neuron.
 
@@ -54,7 +70,7 @@ Module Contents
 
    .. rubric:: Examples
 
-   >>> scores = compute_cohoscore(coords, spikes)  # doctest: +SKIP
+   >>> scores = compute_cohoscore_2d(coords, spikes)  # doctest: +SKIP
    >>> scores.shape[0]  # doctest: +SKIP
 
 
@@ -73,7 +89,12 @@ Module Contents
    :type n_tiles: int
 
 
-.. py:function:: plot_cohospace_neuron(coords, activity, neuron_id, mode = 'fr', top_percent = 5.0, times = None, auto_filter = True, figsize = (6, 6), cmap = 'hot', save_path = None, show = True, config = None)
+.. py:function:: plot_cohospace_neuron_1d(coords, activity, neuron_id, mode = 'fr', top_percent = 5.0, times = None, auto_filter = True, figsize = (6, 6), cmap = 'hot', save_path = None, show = True, config = None)
+
+   Overlay a single neuron's activity on the 1D cohomology trajectory (unit circle).
+
+
+.. py:function:: plot_cohospace_neuron_2d(coords, activity, neuron_id, mode = 'fr', top_percent = 5.0, times = None, auto_filter = True, figsize = (6, 6), cmap = 'hot', save_path = None, show = True, config = None)
 
    Overlay a single neuron's activity on the cohomology-space trajectory.
 
@@ -96,20 +117,20 @@ Module Contents
    :param top_percent: Used only when mode="fr". For example, 5.0 means "top 5%%" time points.
    :type top_percent: float
    :param figsize:
-   :type figsize: see `plot_cohospace_trajectory`.
+   :type figsize: see `plot_cohospace_trajectory_2d`.
    :param cmap:
-   :type cmap: see `plot_cohospace_trajectory`.
+   :type cmap: see `plot_cohospace_trajectory_2d`.
    :param save_path:
-   :type save_path: see `plot_cohospace_trajectory`.
+   :type save_path: see `plot_cohospace_trajectory_2d`.
    :param show:
-   :type show: see `plot_cohospace_trajectory`.
+   :type show: see `plot_cohospace_trajectory_2d`.
 
    :returns: **ax**
    :rtype: matplotlib.axes.Axes
 
    .. rubric:: Examples
 
-   >>> plot_cohospace_neuron(coords, spikes, neuron_id=0, show=False)  # doctest: +SKIP
+   >>> plot_cohospace_neuron_2d(coords, spikes, neuron_id=0, show=False)  # doctest: +SKIP
 
 
 .. py:function:: plot_cohospace_neuron_skewed(coords, activity, neuron_id, mode='spike', top_percent=2.0, times = None, auto_filter = True, save_path=None, show=None, ax=None, show_grid=True, n_tiles=1, s=6, alpha=0.8, config = None)
@@ -131,7 +152,12 @@ Module Contents
    :type auto_filter: bool
 
 
-.. py:function:: plot_cohospace_population(coords, activity, neuron_ids, mode = 'fr', top_percent = 5.0, times = None, auto_filter = True, figsize = (6, 6), cmap = 'hot', save_path = None, show = True, config = None)
+.. py:function:: plot_cohospace_population_1d(coords, activity, neuron_ids, mode = 'fr', top_percent = 5.0, times = None, auto_filter = True, figsize = (6, 6), cmap = 'hot', save_path = None, show = True, config = None)
+
+   Plot aggregated activity from multiple neurons on the 1D cohomology trajectory.
+
+
+.. py:function:: plot_cohospace_population_2d(coords, activity, neuron_ids, mode = 'fr', top_percent = 5.0, times = None, auto_filter = True, figsize = (6, 6), cmap = 'hot', save_path = None, show = True, config = None)
 
    Plot aggregated activity from multiple neurons in cohomology space.
 
@@ -158,20 +184,20 @@ Module Contents
    :param top_percent: Used only when mode="fr".
    :type top_percent: float
    :param figsize:
-   :type figsize: see `plot_cohospace_trajectory`.
+   :type figsize: see `plot_cohospace_trajectory_2d`.
    :param cmap:
-   :type cmap: see `plot_cohospace_trajectory`.
+   :type cmap: see `plot_cohospace_trajectory_2d`.
    :param save_path:
-   :type save_path: see `plot_cohospace_trajectory`.
+   :type save_path: see `plot_cohospace_trajectory_2d`.
    :param show:
-   :type show: see `plot_cohospace_trajectory`.
+   :type show: see `plot_cohospace_trajectory_2d`.
 
    :returns: **ax**
    :rtype: matplotlib.axes.Axes
 
    .. rubric:: Examples
 
-   >>> plot_cohospace_population(coords, spikes, neuron_ids=[0, 1, 2], show=False)  # doctest: +SKIP
+   >>> plot_cohospace_population_2d(coords, spikes, neuron_ids=[0, 1, 2], show=False)  # doctest: +SKIP
 
 
 .. py:function:: plot_cohospace_population_skewed(coords, activity, neuron_ids, mode='spike', top_percent=2.0, times = None, auto_filter = True, save_path=None, show=False, ax=None, show_grid=True, n_tiles=1, s=4, alpha=0.5, config = None)
@@ -184,7 +210,28 @@ Module Contents
        If True and lengths mismatch, auto-filter activity with activity>0 to mimic decode filtering.
 
 
-.. py:function:: plot_cohospace_trajectory(coords, times = None, subsample = 1, figsize = (6, 6), cmap = 'viridis', save_path = None, show = False, config = None)
+.. py:function:: plot_cohospace_trajectory_1d(coords, times = None, subsample = 1, figsize = (6, 6), cmap = 'viridis', save_path = None, show = False, config = None)
+
+   Plot a 1D cohomology trajectory on the unit circle.
+
+   :param coords: Decoded cohomology angles (theta). Values may be in radians or in [0, 1] "unit circle"
+                  convention depending on upstream decoding; this function will plot on the unit circle.
+   :type coords: ndarray, shape (T,) or (T, 1)
+   :param times: Optional time array used to color points. If None, uses arange(T).
+   :type times: ndarray, optional, shape (T,)
+   :param subsample: Downsampling step (>1 reduces the number of plotted points).
+   :type subsample: int
+   :param figsize: Matplotlib figure size.
+   :type figsize: tuple
+   :param cmap: Matplotlib colormap name.
+   :type cmap: str
+   :param save_path: If provided, saves the figure to this path.
+   :type save_path: str, optional
+   :param show: If True, calls plt.show(). If False, closes the figure and returns the Axes.
+   :type show: bool
+
+
+.. py:function:: plot_cohospace_trajectory_2d(coords, times = None, subsample = 1, figsize = (6, 6), cmap = 'viridis', save_path = None, show = False, config = None)
 
    Plot a trajectory in cohomology space.
 
@@ -209,7 +256,7 @@ Module Contents
 
    .. rubric:: Examples
 
-   >>> fig = plot_cohospace_trajectory(coords, subsample=2, show=False)  # doctest: +SKIP
+   >>> fig = plot_cohospace_trajectory_2d(coords, subsample=2, show=False)  # doctest: +SKIP
 
 
 .. py:function:: skew_transform_torus(coords)

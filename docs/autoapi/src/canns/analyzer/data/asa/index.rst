@@ -51,9 +51,11 @@ Functions
 
 .. autoapisummary::
 
-   src.canns.analyzer.data.asa.align_coords_to_position
+   src.canns.analyzer.data.asa.align_coords_to_position_1d
+   src.canns.analyzer.data.asa.align_coords_to_position_2d
    src.canns.analyzer.data.asa.apply_angle_scale
-   src.canns.analyzer.data.asa.compute_cohoscore
+   src.canns.analyzer.data.asa.compute_cohoscore_1d
+   src.canns.analyzer.data.asa.compute_cohoscore_2d
    src.canns.analyzer.data.asa.compute_fr_heatmap_matrix
    src.canns.analyzer.data.asa.compute_frm
    src.canns.analyzer.data.asa.create_1d_bump_animation
@@ -64,11 +66,15 @@ Functions
    src.canns.analyzer.data.asa.plot_3d_bump_on_torus
    src.canns.analyzer.data.asa.plot_cohomap
    src.canns.analyzer.data.asa.plot_cohomap_multi
-   src.canns.analyzer.data.asa.plot_cohospace_neuron
-   src.canns.analyzer.data.asa.plot_cohospace_population
-   src.canns.analyzer.data.asa.plot_cohospace_trajectory
+   src.canns.analyzer.data.asa.plot_cohospace_neuron_1d
+   src.canns.analyzer.data.asa.plot_cohospace_neuron_2d
+   src.canns.analyzer.data.asa.plot_cohospace_population_1d
+   src.canns.analyzer.data.asa.plot_cohospace_population_2d
+   src.canns.analyzer.data.asa.plot_cohospace_trajectory_1d
+   src.canns.analyzer.data.asa.plot_cohospace_trajectory_2d
    src.canns.analyzer.data.asa.plot_frm
-   src.canns.analyzer.data.asa.plot_path_compare
+   src.canns.analyzer.data.asa.plot_path_compare_1d
+   src.canns.analyzer.data.asa.plot_path_compare_2d
    src.canns.analyzer.data.asa.plot_projection
    src.canns.analyzer.data.asa.roi_bump_fits
    src.canns.analyzer.data.asa.save_fr_heatmap_png
@@ -686,7 +692,12 @@ Package Contents
 
 
 
-.. py:function:: align_coords_to_position(t_full, x_full, y_full, coords2, use_box, times_box, interp_to_full)
+.. py:function:: align_coords_to_position_1d(t_full, x_full, y_full, coords1, use_box, times_box, interp_to_full)
+
+   Align 1D decoded coordinates to the original (x, y, t) trajectory.
+
+
+.. py:function:: align_coords_to_position_2d(t_full, x_full, y_full, coords2, use_box, times_box, interp_to_full)
 
    Align decoded coordinates to the original (x, y, t) trajectory.
 
@@ -711,7 +722,7 @@ Package Contents
 
    .. rubric:: Examples
 
-   >>> t, x, y, coords2, tag = align_coords_to_position(  # doctest: +SKIP
+   >>> t, x, y, coords2, tag = align_coords_to_position_2d(  # doctest: +SKIP
    ...     t_full, x_full, y_full, coords2,
    ...     use_box=True, times_box=decoding["times_box"], interp_to_full=True
    ... )
@@ -739,7 +750,19 @@ Package Contents
    >>> apply_angle_scale([[0.25, 0.5]], "unit")  # doctest: +SKIP
 
 
-.. py:function:: compute_cohoscore(coords, activity, top_percent = 2.0, times = None, auto_filter = True)
+.. py:function:: compute_cohoscore_1d(coords, activity, top_percent = 2.0, times = None, auto_filter = True)
+
+   Compute 1D cohomology-space selectivity score (CohoScore) for each neuron.
+
+   For each neuron:
+   - Select "active" time points:
+       - If top_percent is None: all time points with activity > 0
+       - Else: top `top_percent`%% time points by activity value
+   - Compute circular variance for theta on the selected points.
+   - CohoScore = var(theta)
+
+
+.. py:function:: compute_cohoscore_2d(coords, activity, top_percent = 2.0, times = None, auto_filter = True)
 
    Compute a simple cohomology-space selectivity score (CohoScore) for each neuron.
 
@@ -770,7 +793,7 @@ Package Contents
 
    .. rubric:: Examples
 
-   >>> scores = compute_cohoscore(coords, spikes)  # doctest: +SKIP
+   >>> scores = compute_cohoscore_2d(coords, spikes)  # doctest: +SKIP
    >>> scores.shape[0]  # doctest: +SKIP
 
 
@@ -1099,7 +1122,12 @@ Package Contents
    >>> fig = plot_cohomap_multi(decoding, {"x": xx, "y": yy}, show=False)  # doctest: +SKIP
 
 
-.. py:function:: plot_cohospace_neuron(coords, activity, neuron_id, mode = 'fr', top_percent = 5.0, times = None, auto_filter = True, figsize = (6, 6), cmap = 'hot', save_path = None, show = True, config = None)
+.. py:function:: plot_cohospace_neuron_1d(coords, activity, neuron_id, mode = 'fr', top_percent = 5.0, times = None, auto_filter = True, figsize = (6, 6), cmap = 'hot', save_path = None, show = True, config = None)
+
+   Overlay a single neuron's activity on the 1D cohomology trajectory (unit circle).
+
+
+.. py:function:: plot_cohospace_neuron_2d(coords, activity, neuron_id, mode = 'fr', top_percent = 5.0, times = None, auto_filter = True, figsize = (6, 6), cmap = 'hot', save_path = None, show = True, config = None)
 
    Overlay a single neuron's activity on the cohomology-space trajectory.
 
@@ -1122,23 +1150,28 @@ Package Contents
    :param top_percent: Used only when mode="fr". For example, 5.0 means "top 5%%" time points.
    :type top_percent: float
    :param figsize:
-   :type figsize: see `plot_cohospace_trajectory`.
+   :type figsize: see `plot_cohospace_trajectory_2d`.
    :param cmap:
-   :type cmap: see `plot_cohospace_trajectory`.
+   :type cmap: see `plot_cohospace_trajectory_2d`.
    :param save_path:
-   :type save_path: see `plot_cohospace_trajectory`.
+   :type save_path: see `plot_cohospace_trajectory_2d`.
    :param show:
-   :type show: see `plot_cohospace_trajectory`.
+   :type show: see `plot_cohospace_trajectory_2d`.
 
    :returns: **ax**
    :rtype: matplotlib.axes.Axes
 
    .. rubric:: Examples
 
-   >>> plot_cohospace_neuron(coords, spikes, neuron_id=0, show=False)  # doctest: +SKIP
+   >>> plot_cohospace_neuron_2d(coords, spikes, neuron_id=0, show=False)  # doctest: +SKIP
 
 
-.. py:function:: plot_cohospace_population(coords, activity, neuron_ids, mode = 'fr', top_percent = 5.0, times = None, auto_filter = True, figsize = (6, 6), cmap = 'hot', save_path = None, show = True, config = None)
+.. py:function:: plot_cohospace_population_1d(coords, activity, neuron_ids, mode = 'fr', top_percent = 5.0, times = None, auto_filter = True, figsize = (6, 6), cmap = 'hot', save_path = None, show = True, config = None)
+
+   Plot aggregated activity from multiple neurons on the 1D cohomology trajectory.
+
+
+.. py:function:: plot_cohospace_population_2d(coords, activity, neuron_ids, mode = 'fr', top_percent = 5.0, times = None, auto_filter = True, figsize = (6, 6), cmap = 'hot', save_path = None, show = True, config = None)
 
    Plot aggregated activity from multiple neurons in cohomology space.
 
@@ -1165,23 +1198,44 @@ Package Contents
    :param top_percent: Used only when mode="fr".
    :type top_percent: float
    :param figsize:
-   :type figsize: see `plot_cohospace_trajectory`.
+   :type figsize: see `plot_cohospace_trajectory_2d`.
    :param cmap:
-   :type cmap: see `plot_cohospace_trajectory`.
+   :type cmap: see `plot_cohospace_trajectory_2d`.
    :param save_path:
-   :type save_path: see `plot_cohospace_trajectory`.
+   :type save_path: see `plot_cohospace_trajectory_2d`.
    :param show:
-   :type show: see `plot_cohospace_trajectory`.
+   :type show: see `plot_cohospace_trajectory_2d`.
 
    :returns: **ax**
    :rtype: matplotlib.axes.Axes
 
    .. rubric:: Examples
 
-   >>> plot_cohospace_population(coords, spikes, neuron_ids=[0, 1, 2], show=False)  # doctest: +SKIP
+   >>> plot_cohospace_population_2d(coords, spikes, neuron_ids=[0, 1, 2], show=False)  # doctest: +SKIP
 
 
-.. py:function:: plot_cohospace_trajectory(coords, times = None, subsample = 1, figsize = (6, 6), cmap = 'viridis', save_path = None, show = False, config = None)
+.. py:function:: plot_cohospace_trajectory_1d(coords, times = None, subsample = 1, figsize = (6, 6), cmap = 'viridis', save_path = None, show = False, config = None)
+
+   Plot a 1D cohomology trajectory on the unit circle.
+
+   :param coords: Decoded cohomology angles (theta). Values may be in radians or in [0, 1] "unit circle"
+                  convention depending on upstream decoding; this function will plot on the unit circle.
+   :type coords: ndarray, shape (T,) or (T, 1)
+   :param times: Optional time array used to color points. If None, uses arange(T).
+   :type times: ndarray, optional, shape (T,)
+   :param subsample: Downsampling step (>1 reduces the number of plotted points).
+   :type subsample: int
+   :param figsize: Matplotlib figure size.
+   :type figsize: tuple
+   :param cmap: Matplotlib colormap name.
+   :type cmap: str
+   :param save_path: If provided, saves the figure to this path.
+   :type save_path: str, optional
+   :param show: If True, calls plt.show(). If False, closes the figure and returns the Axes.
+   :type show: bool
+
+
+.. py:function:: plot_cohospace_trajectory_2d(coords, times = None, subsample = 1, figsize = (6, 6), cmap = 'viridis', save_path = None, show = False, config = None)
 
    Plot a trajectory in cohomology space.
 
@@ -1206,7 +1260,7 @@ Package Contents
 
    .. rubric:: Examples
 
-   >>> fig = plot_cohospace_trajectory(coords, subsample=2, show=False)  # doctest: +SKIP
+   >>> fig = plot_cohospace_trajectory_2d(coords, subsample=2, show=False)  # doctest: +SKIP
 
 
 .. py:function:: plot_frm(frm, *, title = 'Firing Rate Map', dpi = 200, show = None, config = None, **kwargs)
@@ -1234,7 +1288,12 @@ Package Contents
    >>> plot_frm(frm, config=cfg)  # doctest: +SKIP
 
 
-.. py:function:: plot_path_compare(x, y, coords, config = None, *, title = 'Path Compare', figsize = (12, 5), show = True, save_path = None)
+.. py:function:: plot_path_compare_1d(x, y, coords, config = None, *, title = 'Path Compare (1D)', figsize = (12, 5), show = True, save_path = None)
+
+   1D wrapper for :func:`plot_path_compare_2d`.
+
+
+.. py:function:: plot_path_compare_2d(x, y, coords, config = None, *, title = 'Path Compare', figsize = (12, 5), show = True, save_path = None)
 
    Plot physical path vs decoded coho-space path side-by-side.
 
@@ -1260,7 +1319,7 @@ Package Contents
 
    .. rubric:: Examples
 
-   >>> fig, axes = plot_path_compare(x, y, coords, show=False)  # doctest: +SKIP
+   >>> fig, axes = plot_path_compare_2d(x, y, coords, show=False)  # doctest: +SKIP
 
 
 .. py:function:: plot_projection(reduce_func, embed_data, config = None, title='Projection (3D)', xlabel='Component 1', ylabel='Component 2', zlabel='Component 3', save_path=None, show=True, dpi=300, figsize=(10, 8), **kwargs)
