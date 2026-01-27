@@ -345,17 +345,32 @@ Module Contents
 
 
 
-   .. py:method:: cohospace_neuron(**kwargs)
+   .. py:method:: cohospace_neuron_1d(**kwargs)
       :staticmethod:
 
 
 
-   .. py:method:: cohospace_population(**kwargs)
+   .. py:method:: cohospace_neuron_2d(**kwargs)
       :staticmethod:
 
 
 
-   .. py:method:: cohospace_trajectory(**kwargs)
+   .. py:method:: cohospace_population_1d(**kwargs)
+      :staticmethod:
+
+
+
+   .. py:method:: cohospace_population_2d(**kwargs)
+      :staticmethod:
+
+
+
+   .. py:method:: cohospace_trajectory_1d(**kwargs)
+      :staticmethod:
+
+
+
+   .. py:method:: cohospace_trajectory_2d(**kwargs)
       :staticmethod:
 
 
@@ -538,7 +553,12 @@ Module Contents
 
 
 
-   .. py:method:: path_compare(**kwargs)
+   .. py:method:: path_compare_1d(**kwargs)
+      :staticmethod:
+
+
+
+   .. py:method:: path_compare_2d(**kwargs)
       :staticmethod:
 
 

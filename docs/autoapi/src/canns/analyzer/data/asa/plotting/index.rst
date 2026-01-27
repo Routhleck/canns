@@ -13,7 +13,8 @@ Functions
    src.canns.analyzer.data.asa.plotting.plot_3d_bump_on_torus
    src.canns.analyzer.data.asa.plotting.plot_cohomap
    src.canns.analyzer.data.asa.plotting.plot_cohomap_multi
-   src.canns.analyzer.data.asa.plotting.plot_path_compare
+   src.canns.analyzer.data.asa.plotting.plot_path_compare_1d
+   src.canns.analyzer.data.asa.plotting.plot_path_compare_2d
    src.canns.analyzer.data.asa.plotting.plot_projection
 
 
@@ -177,7 +178,12 @@ Module Contents
    >>> fig = plot_cohomap_multi(decoding, {"x": xx, "y": yy}, show=False)  # doctest: +SKIP
 
 
-.. py:function:: plot_path_compare(x, y, coords, config = None, *, title = 'Path Compare', figsize = (12, 5), show = True, save_path = None)
+.. py:function:: plot_path_compare_1d(x, y, coords, config = None, *, title = 'Path Compare (1D)', figsize = (12, 5), show = True, save_path = None)
+
+   1D wrapper for :func:`plot_path_compare_2d`.
+
+
+.. py:function:: plot_path_compare_2d(x, y, coords, config = None, *, title = 'Path Compare', figsize = (12, 5), show = True, save_path = None)
 
    Plot physical path vs decoded coho-space path side-by-side.
 
@@ -203,7 +209,7 @@ Module Contents
 
    .. rubric:: Examples
 
-   >>> fig, axes = plot_path_compare(x, y, coords, show=False)  # doctest: +SKIP
+   >>> fig, axes = plot_path_compare_2d(x, y, coords, show=False)  # doctest: +SKIP
 
 
 .. py:function:: plot_projection(reduce_func, embed_data, config = None, title='Projection (3D)', xlabel='Component 1', ylabel='Component 2', zlabel='Component 3', save_path=None, show=True, dpi=300, figsize=(10, 8), **kwargs)

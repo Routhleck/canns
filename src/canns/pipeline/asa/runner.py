@@ -682,9 +682,11 @@ class PipelineRunner:
     ) -> dict[str, Path]:
         """Run path comparison visualization."""
         from canns.analyzer.data.asa import (
-            align_coords_to_position,
+            align_coords_to_position_1d,
+            align_coords_to_position_2d,
             apply_angle_scale,
-            plot_path_compare,
+            plot_path_compare_1d,
+            plot_path_compare_2d,
         )
         from canns.analyzer.data.asa.path import (
             find_coords_matrix,
@@ -731,7 +733,7 @@ class PipelineRunner:
             idx = max(0, dim - 1)
             if idx >= coords_raw.shape[1]:
                 raise ProcessingError(f"dim out of range for coords shape {coords_raw.shape}")
-            coords2 = coords_raw[:, [idx]]
+            coords1 = coords_raw[:, idx]
         else:
             idx1 = max(0, dim1 - 1)
             idx2 = max(0, dim2 - 1)
@@ -753,15 +755,26 @@ class PipelineRunner:
             times_box = None
 
         log_callback("Aligning decoded coordinates to position...")
-        t_use, x_use, y_use, coords_use, _ = align_coords_to_position(
-            t_full=t_full,
-            x_full=x_full,
-            y_full=y_full,
-            coords2=coords2,
-            use_box=use_box,
-            times_box=times_box,
-            interp_to_full=interp_full,
-        )
+        if dim_mode == "1d":
+            t_use, x_use, y_use, coords_use, _ = align_coords_to_position_1d(
+                t_full=t_full,
+                x_full=x_full,
+                y_full=y_full,
+                coords1=coords1,
+                use_box=use_box,
+                times_box=times_box,
+                interp_to_full=interp_full,
+            )
+        else:
+            t_use, x_use, y_use, coords_use, _ = align_coords_to_position_2d(
+                t_full=t_full,
+                x_full=x_full,
+                y_full=y_full,
+                coords2=coords2,
+                use_box=use_box,
+                times_box=times_box,
+                interp_to_full=interp_full,
+            )
         scale = str(angle_scale) if str(angle_scale) in {"rad", "deg", "unit", "auto"} else "rad"
         coords_use = apply_angle_scale(coords_use, scale)
 
@@ -809,8 +822,12 @@ class PipelineRunner:
             return {"path_compare": out_path}
 
         log_callback("Generating path comparison...")
-        config = PlotConfigs.path_compare(show=False, save_path=str(out_path))
-        plot_path_compare(x_use, y_use, coords_use, config=config)
+        if dim_mode == "1d":
+            config = PlotConfigs.path_compare_1d(show=False, save_path=str(out_path))
+            plot_path_compare_1d(x_use, y_use, coords_use, config=config)
+        else:
+            config = PlotConfigs.path_compare_2d(show=False, save_path=str(out_path))
+            plot_path_compare_2d(x_use, y_use, coords_use, config=config)
 
         self._write_cache_meta(self._stage_cache_path(out_dir), {"hash": stage_hash})
         return {"path_compare": out_path}
@@ -820,9 +837,12 @@ class PipelineRunner:
     ) -> dict[str, Path]:
         """Run cohomology space visualization."""
         from canns.analyzer.data.asa import (
-            plot_cohospace_neuron,
-            plot_cohospace_population,
-            plot_cohospace_trajectory,
+            plot_cohospace_neuron_1d,
+            plot_cohospace_neuron_2d,
+            plot_cohospace_population_1d,
+            plot_cohospace_population_2d,
+            plot_cohospace_trajectory_1d,
+            plot_cohospace_trajectory_2d,
         )
         from canns.analyzer.data.asa.cohospace import (
             plot_cohospace_neuron_skewed,
@@ -865,8 +885,7 @@ class PipelineRunner:
                 idx = max(0, dim - 1)
                 if idx >= arr.shape[1]:
                     raise ProcessingError(f"dim out of range for coords shape {arr.shape}")
-                one = arr[:, [idx]]
-                return np.hstack([one, np.zeros_like(one)])
+                return arr[:, idx]
             idx1 = max(0, dim1 - 1)
             idx2 = max(0, dim2 - 1)
             if idx1 >= arr.shape[1] or idx2 >= arr.shape[1]:
@@ -915,15 +934,29 @@ class PipelineRunner:
 
         log_callback("Plotting cohomology space trajectory...")
         traj_path = out_dir / "cohospace_trajectory.png"
-        traj_cfg = PlotConfigs.cohospace_trajectory(show=False, save_path=str(traj_path))
-        plot_cohospace_trajectory(coords=coords2, times=None, subsample=subsample, config=traj_cfg)
+        if dim_mode == "1d":
+            traj_cfg = PlotConfigs.cohospace_trajectory_1d(show=False, save_path=str(traj_path))
+            plot_cohospace_trajectory_1d(
+                coords=coords2,
+                times=None,
+                subsample=subsample,
+                config=traj_cfg,
+            )
+        else:
+            traj_cfg = PlotConfigs.cohospace_trajectory_2d(show=False, save_path=str(traj_path))
+            plot_cohospace_trajectory_2d(
+                coords=coords2,
+                times=None,
+                subsample=subsample,
+                config=traj_cfg,
+            )
         artifacts["trajectory"] = traj_path
 
         neuron_id = params.get("neuron_id", None)
         if neuron_id is not None and view in {"both", "single"}:
             log_callback(f"Plotting neuron {neuron_id}...")
             neuron_path = out_dir / f"cohospace_neuron_{neuron_id}.png"
-            if unfold == "skew":
+            if unfold == "skew" and dim_mode != "1d":
                 plot_cohospace_neuron_skewed(
                     coords=coordsbox2,
                     activity=activity,
@@ -936,22 +969,37 @@ class PipelineRunner:
                     n_tiles=skew_tiles,
                 )
             else:
-                neuron_cfg = PlotConfigs.cohospace_neuron(show=False, save_path=str(neuron_path))
-                plot_cohospace_neuron(
-                    coords=coordsbox2,
-                    activity=activity,
-                    neuron_id=int(neuron_id),
-                    mode=mode,
-                    top_percent=top_percent,
-                    config=neuron_cfg,
-                )
+                if dim_mode == "1d":
+                    neuron_cfg = PlotConfigs.cohospace_neuron_1d(
+                        show=False, save_path=str(neuron_path)
+                    )
+                    plot_cohospace_neuron_1d(
+                        coords=coordsbox2,
+                        activity=activity,
+                        neuron_id=int(neuron_id),
+                        mode=mode,
+                        top_percent=top_percent,
+                        config=neuron_cfg,
+                    )
+                else:
+                    neuron_cfg = PlotConfigs.cohospace_neuron_2d(
+                        show=False, save_path=str(neuron_path)
+                    )
+                    plot_cohospace_neuron_2d(
+                        coords=coordsbox2,
+                        activity=activity,
+                        neuron_id=int(neuron_id),
+                        mode=mode,
+                        top_percent=top_percent,
+                        config=neuron_cfg,
+                    )
             artifacts["neuron"] = neuron_path
 
         if view in {"both", "population"}:
             log_callback("Plotting population activity...")
             pop_path = out_dir / "cohospace_population.png"
             neuron_ids = list(range(activity.shape[1]))
-            if unfold == "skew":
+            if unfold == "skew" and dim_mode != "1d":
                 plot_cohospace_population_skewed(
                     coords=coords2,
                     activity=activity,
@@ -964,15 +1012,30 @@ class PipelineRunner:
                     n_tiles=skew_tiles,
                 )
             else:
-                pop_cfg = PlotConfigs.cohospace_population(show=False, save_path=str(pop_path))
-                plot_cohospace_population(
-                    coords=coords2,
-                    activity=activity,
-                    neuron_ids=neuron_ids,
-                    mode=mode,
-                    top_percent=top_percent,
-                    config=pop_cfg,
-                )
+                if dim_mode == "1d":
+                    pop_cfg = PlotConfigs.cohospace_population_1d(
+                        show=False, save_path=str(pop_path)
+                    )
+                    plot_cohospace_population_1d(
+                        coords=coords2,
+                        activity=activity,
+                        neuron_ids=neuron_ids,
+                        mode=mode,
+                        top_percent=top_percent,
+                        config=pop_cfg,
+                    )
+                else:
+                    pop_cfg = PlotConfigs.cohospace_population_2d(
+                        show=False, save_path=str(pop_path)
+                    )
+                    plot_cohospace_population_2d(
+                        coords=coords2,
+                        activity=activity,
+                        neuron_ids=neuron_ids,
+                        mode=mode,
+                        top_percent=top_percent,
+                        config=pop_cfg,
+                    )
             artifacts["population"] = pop_path
 
         self._write_cache_meta(meta_path, {"hash": stage_hash})

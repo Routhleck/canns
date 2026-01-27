@@ -91,7 +91,7 @@ def _align_activity_to_coords(
     return activity
 
 
-def plot_cohospace_trajectory(
+def plot_cohospace_trajectory_2d(
     coords: np.ndarray,
     times: np.ndarray | None = None,
     subsample: int = 1,
@@ -129,7 +129,7 @@ def plot_cohospace_trajectory(
 
     Examples
     --------
-    >>> fig = plot_cohospace_trajectory(coords, subsample=2, show=False)  # doctest: +SKIP
+    >>> fig = plot_cohospace_trajectory_2d(coords, subsample=2, show=False)  # doctest: +SKIP
     """
 
     try:
@@ -194,7 +194,106 @@ def plot_cohospace_trajectory(
     return ax
 
 
-def plot_cohospace_neuron(
+def plot_cohospace_trajectory_1d(
+    coords: np.ndarray,
+    times: np.ndarray | None = None,
+    subsample: int = 1,
+    figsize: tuple[int, int] = (6, 6),
+    cmap: str = "viridis",
+    save_path: str | None = None,
+    show: bool = False,
+    config: PlotConfig | None = None,
+) -> plt.Axes:
+    """
+    Plot a 1D cohomology trajectory on the unit circle.
+
+    Parameters
+    ----------
+    coords : ndarray, shape (T,) or (T, 1)
+        Decoded cohomology angles (theta). Values may be in radians or in [0, 1] "unit circle"
+        convention depending on upstream decoding; this function will plot on the unit circle.
+    times : ndarray, optional, shape (T,)
+        Optional time array used to color points. If None, uses arange(T).
+    subsample : int
+        Downsampling step (>1 reduces the number of plotted points).
+    figsize : tuple
+        Matplotlib figure size.
+    cmap : str
+        Matplotlib colormap name.
+    save_path : str, optional
+        If provided, saves the figure to this path.
+    show : bool
+        If True, calls plt.show(). If False, closes the figure and returns the Axes.
+    """
+    try:
+        subsample_i = int(subsample)
+    except Exception:
+        subsample_i = 1
+    if subsample_i < 1:
+        subsample_i = 1
+
+    coords = np.asarray(coords)
+    if coords.ndim == 2 and coords.shape[1] == 1:
+        coords = coords[:, 0]
+    if coords.ndim != 1:
+        raise ValueError(f"`coords` must have shape (T,) or (T, 1). Got {coords.shape}.")
+
+    if times is None:
+        times_vis = np.arange(coords.shape[0])
+    else:
+        times_vis = np.asarray(times)
+        if times_vis.shape[0] != coords.shape[0]:
+            raise ValueError(
+                f"`times` length must match coords length. Got times={times_vis.shape[0]}, coords={coords.shape[0]}."
+            )
+
+    if subsample_i > 1:
+        coords = coords[::subsample_i]
+        times_vis = times_vis[::subsample_i]
+
+    theta = coords % (2 * np.pi)
+    x = np.cos(theta)
+    y = np.sin(theta)
+
+    config = _ensure_plot_config(
+        config,
+        PlotConfig.for_static_plot,
+        title="CohoSpace trajectory (1D)",
+        xlabel="cos(theta)",
+        ylabel="sin(theta)",
+        figsize=figsize,
+        save_path=save_path,
+        show=show,
+    )
+
+    fig, ax = plt.subplots(figsize=config.figsize)
+    circle = np.linspace(0, 2 * np.pi, 200)
+    ax.plot(np.cos(circle), np.sin(circle), color="0.85", lw=1.0, zorder=0)
+    sc = ax.scatter(
+        x,
+        y,
+        c=times_vis,
+        cmap=cmap,
+        s=5,
+        alpha=0.8,
+    )
+    cbar = plt.colorbar(sc, ax=ax)
+    cbar.set_label("Time")
+
+    ax.set_xlim(-1.2, 1.2)
+    ax.set_ylim(-1.2, 1.2)
+    ax.set_xlabel(config.xlabel)
+    ax.set_ylabel(config.ylabel)
+    ax.set_title(config.title)
+    ax.set_aspect("equal", adjustable="box")
+    ax.grid(True, alpha=0.2)
+
+    _ensure_parent_dir(config.save_path)
+    finalize_figure(fig, config)
+    return ax
+
+
+def plot_cohospace_neuron_2d(
     coords: np.ndarray,
     activity: np.ndarray,
     neuron_id: int,
@@ -230,7 +329,7 @@ def plot_cohospace_neuron(
     mode : {"fr", "spike"}
     top_percent : float
         Used only when mode="fr". For example, 5.0 means "top 5%%" time points.
-    figsize, cmap, save_path, show : see `plot_cohospace_trajectory`.
+    figsize, cmap, save_path, show : see `plot_cohospace_trajectory_2d`.
 
     Returns
     -------
@@ -238,7 +337,7 @@ def plot_cohospace_neuron(
 
     Examples
     --------
-    >>> plot_cohospace_neuron(coords, spikes, neuron_id=0, show=False)  # doctest: +SKIP
+    >>> plot_cohospace_neuron_2d(coords, spikes, neuron_id=0, show=False)  # doctest: +SKIP
     """
     coords = np.asarray(coords)
     activity = _align_activity_to_coords(
@@ -300,7 +399,94 @@ def plot_cohospace_neuron(
     return fig
 
 
-def plot_cohospace_population(
+def plot_cohospace_neuron_1d(
+    coords: np.ndarray,
+    activity: np.ndarray,
+    neuron_id: int,
+    mode: str = "fr",
+    top_percent: float = 5.0,
+    times: np.ndarray | None = None,
+    auto_filter: bool = True,
+    figsize: tuple = (6, 6),
+    cmap: str = "hot",
+    save_path: str | None = None,
+    show: bool = True,
+    config: PlotConfig | None = None,
+) -> plt.Figure:
+    """
+    Overlay a single neuron's activity on the 1D cohomology trajectory (unit circle).
+    """
+    coords = np.asarray(coords)
+    if coords.ndim == 2 and coords.shape[1] == 1:
+        coords = coords[:, 0]
+    if coords.ndim != 1:
+        raise ValueError(f"coords must have shape (T,) or (T, 1), got {coords.shape}")
+
+    activity = _align_activity_to_coords(
+        coords[:, None], activity, times, label="activity", auto_filter=auto_filter
+    )
+
+    signal = activity[:, neuron_id]
+
+    if mode == "fr":
+        threshold = np.percentile(signal, 100 - top_percent)
+        idx = signal >= threshold
+        color = signal[idx]
+        title = f"Neuron {neuron_id} FR top {top_percent:.1f}% on coho-space (1D)"
+        use_cmap = cmap
+    elif mode == "spike":
+        idx = signal > 0
+        color = None
+        title = f"Neuron {neuron_id} spikes on coho-space (1D)"
+        use_cmap = None
+    else:
+        raise ValueError("mode must be 'fr' or 'spike'")
+
+    theta = coords % (2 * np.pi)
+    x = np.cos(theta)
+    y = np.sin(theta)
+
+    config = _ensure_plot_config(
+        config,
+        PlotConfig.for_static_plot,
+        title=title,
+        xlabel="cos(theta)",
+        ylabel="sin(theta)",
+        figsize=figsize,
+        save_path=save_path,
+        show=show,
+    )
+
+    fig, ax = plt.subplots(figsize=config.figsize)
+    circle = np.linspace(0, 2 * np.pi, 200)
+    ax.plot(np.cos(circle), np.sin(circle), color="0.85", lw=1.0, zorder=0)
+    sc = ax.scatter(
+        x[idx],
+        y[idx],
+        c=color if mode == "fr" else "red",
+        cmap=use_cmap,
+        s=8,
+        alpha=0.9,
+    )
+
+    if mode == "fr":
+        cbar = plt.colorbar(sc, ax=ax)
+        cbar.set_label("Firing rate")
+
+    ax.set_xlim(-1.2, 1.2)
+    ax.set_ylim(-1.2, 1.2)
+    ax.set_xlabel(config.xlabel)
+    ax.set_ylabel(config.ylabel)
+    ax.set_title(config.title)
+    ax.set_aspect("equal", adjustable="box")
+
+    _ensure_parent_dir(config.save_path)
+    finalize_figure(fig, config)
+
+    return fig
+
+
+def plot_cohospace_population_2d(
     coords: np.ndarray,
     activity: np.ndarray,
     neuron_ids: list[int] | np.ndarray,
@@ -338,7 +524,7 @@ def plot_cohospace_population(
     mode : {"fr", "spike"}
     top_percent : float
         Used only when mode="fr".
-    figsize, cmap, save_path, show : see `plot_cohospace_trajectory`.
+    figsize, cmap, save_path, show : see `plot_cohospace_trajectory_2d`.
 
     Returns
     -------
@@ -346,7 +532,7 @@ def plot_cohospace_population(
 
     Examples
     --------
-    >>> plot_cohospace_population(coords, spikes, neuron_ids=[0, 1, 2], show=False)  # doctest: +SKIP
+    >>> plot_cohospace_population_2d(coords, spikes, neuron_ids=[0, 1, 2], show=False)  # doctest: +SKIP
     """
     coords = np.asarray(coords)
     activity = _align_activity_to_coords(
@@ -411,7 +597,97 @@ def plot_cohospace_population(
     return fig
 
 
-def compute_cohoscore(
+def plot_cohospace_population_1d(
+    coords: np.ndarray,
+    activity: np.ndarray,
+    neuron_ids: list[int] | np.ndarray,
+    mode: str = "fr",
+    top_percent: float = 5.0,
+    times: np.ndarray | None = None,
+    auto_filter: bool = True,
+    figsize: tuple = (6, 6),
+    cmap: str = "hot",
+    save_path: str | None = None,
+    show: bool = True,
+    config: PlotConfig | None = None,
+) -> plt.Figure:
+    """
+    Plot aggregated activity from multiple neurons on the 1D cohomology trajectory.
+    """
+    coords = np.asarray(coords)
+    if coords.ndim == 2 and coords.shape[1] == 1:
+        coords = coords[:, 0]
+    if coords.ndim != 1:
+        raise ValueError(f"coords must have shape (T,) or (T, 1), got {coords.shape}")
+
+    activity = _align_activity_to_coords(
+        coords[:, None], activity, times, label="activity", auto_filter=auto_filter
+    )
+    neuron_ids = np.asarray(neuron_ids, dtype=int)
+
+    T = activity.shape[0]
+    mask = np.zeros(T, dtype=bool)
+    agg_color = np.zeros(T, dtype=float)
+
+    for n in neuron_ids:
+        signal = activity[:, n]
+
+        if mode == "fr":
+            threshold = np.percentile(signal, 100 - top_percent)
+            idx = signal >= threshold
+            agg_color[idx] += signal[idx]
+            mask |= idx
+        elif mode == "spike":
+            idx = signal > 0
+            agg_color[idx] += 1.0
+            mask |= idx
+        else:
+            raise ValueError("mode must be 'fr' or 'spike'")
+
+    theta = coords % (2 * np.pi)
+    x = np.cos(theta)
+    y = np.sin(theta)
+
+    config = _ensure_plot_config(
+        config,
+        PlotConfig.for_static_plot,
+        title=f"{len(neuron_ids)} neurons on coho-space (1D)",
+        xlabel="cos(theta)",
+        ylabel="sin(theta)",
+        figsize=figsize,
+        save_path=save_path,
+        show=show,
+    )
+
+    fig, ax = plt.subplots(figsize=config.figsize)
+    circle = np.linspace(0, 2 * np.pi, 200)
+    ax.plot(np.cos(circle), np.sin(circle), color="0.85", lw=1.0, zorder=0)
+    sc = ax.scatter(
+        x[mask],
+        y[mask],
+        c=agg_color[mask],
+        cmap=cmap,
+        s=6,
+        alpha=0.9,
+    )
+    cbar = plt.colorbar(sc, ax=ax)
+    label = "Aggregate FR" if mode == "fr" else "Spike count"
+    cbar.set_label(label)
+
+    ax.set_xlim(-1.2, 1.2)
+    ax.set_ylim(-1.2, 1.2)
+    ax.set_xlabel(config.xlabel)
+    ax.set_ylabel(config.ylabel)
+    ax.set_title(config.title)
+    ax.set_aspect("equal", adjustable="box")
+
+    _ensure_parent_dir(config.save_path)
+    finalize_figure(fig, config)
+
+    return fig
+
+
+def compute_cohoscore_2d(
     coords: np.ndarray,
     activity: np.ndarray,
     top_percent: float = 2.0,
@@ -451,7 +727,7 @@ def compute_cohoscore(
 
     Examples
     --------
-    >>> scores = compute_cohoscore(coords, spikes)  # doctest: +SKIP
+    >>> scores = compute_cohoscore_2d(coords, spikes)  # doctest: +SKIP
     >>> scores.shape[0]  # doctest: +SKIP
     """
     coords = np.asarray(coords)
@@ -483,6 +759,56 @@ def compute_cohoscore(
         var2 = circvar(theta2, high=2 * np.pi, low=0)
 
         scores[n] = 0.5 * (var1 + var2)
+
+    return scores
+
+
+def compute_cohoscore_1d(
+    coords: np.ndarray,
+    activity: np.ndarray,
+    top_percent: float = 2.0,
+    times: np.ndarray | None = None,
+    auto_filter: bool = True,
+) -> np.ndarray:
+    """
+    Compute 1D cohomology-space selectivity score (CohoScore) for each neuron.
+
+    For each neuron:
+    - Select "active" time points:
+        - If top_percent is None: all time points with activity > 0
+        - Else: top `top_percent`%% time points by activity value
+    - Compute circular variance for theta on the selected points.
+    - CohoScore = var(theta)
+    """
+    coords = np.asarray(coords)
+    if coords.ndim == 2 and coords.shape[1] == 1:
+        coords = coords[:, 0]
+    if coords.ndim != 1:
+        raise ValueError(f"coords must have shape (T,) or (T, 1), got {coords.shape}")
+
+    activity = _align_activity_to_coords(
+        coords[:, None], activity, times, label="activity", auto_filter=auto_filter
+    )
+    _, n_neurons = activity.shape
+
+    theta = coords % (2 * np.pi)
+    scores = np.zeros(n_neurons, dtype=float)
+
+    for n in range(n_neurons):
+        signal = activity[:, n]
+
+        if top_percent is None:
+            idx = signal > 0
+        else:
+            threshold = np.percentile(signal, 100 - top_percent)
+            idx = signal >= threshold
+
+        if np.sum(idx) < 5:
+            scores[n] = np.nan
+            continue
+
+        var1 = circvar(theta[idx], high=2 * np.pi, low=0)
+        scores[n] = var1
 
     return scores
 

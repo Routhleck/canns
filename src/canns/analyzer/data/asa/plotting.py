@@ -237,7 +237,7 @@ def plot_projection(
     return fig
 
 
-def plot_path_compare(
+def plot_path_compare_2d(
     x: np.ndarray,
     y: np.ndarray,
     coords: np.ndarray,
@@ -248,14 +248,14 @@ def plot_path_compare(
     show: bool = True,
     save_path: str | None = None,
 ) -> tuple[plt.Figure, np.ndarray]:
-    """Plot physical path vs decoded coho-space path side-by-side.
+    """Plot physical path vs decoded coho-space path (2D) side-by-side.
 
     Parameters
     ----------
     x, y : np.ndarray
         Physical position arrays of shape (T,).
     coords : np.ndarray
-        Decoded circular coordinates, shape (T, 1) or (T, 2).
+        Decoded circular coordinates, shape (T, 2) or (T, 2+).
     config : PlotConfig, optional
         Plot configuration. If None, a default config is created.
     title, figsize, show, save_path : optional
@@ -268,7 +268,7 @@ def plot_path_compare(
 
     Examples
     --------
-    >>> fig, axes = plot_path_compare(x, y, coords, show=False)  # doctest: +SKIP
+    >>> fig, axes = plot_path_compare_2d(x, y, coords, show=False)  # doctest: +SKIP
     """
     from .path import draw_base_parallelogram, skew_transform, snake_wrap_trail_in_parallelogram
 
@@ -276,8 +276,8 @@ def plot_path_compare(
     y = np.asarray(y).ravel()
     coords = np.asarray(coords)
 
-    if coords.ndim != 2 or coords.shape[1] < 1:
-        raise ValueError(f"coords must be 2D with at least 1 column, got {coords.shape}")
+    if coords.ndim != 2 or coords.shape[1] < 2:
+        raise ValueError(f"coords must be 2D with at least 2 columns, got {coords.shape}")
 
     config = _ensure_plot_config(
         config,
@@ -314,19 +314,88 @@ def plot_path_compare(
     ax1.set_aspect("equal", "box")
     ax1.axis("off")
 
-    if coords.shape[1] >= 2:
-        theta2 = coords[:, :2] % (2 * np.pi)
-        xy = skew_transform(theta2)
-        draw_base_parallelogram(ax1)
-        trail = snake_wrap_trail_in_parallelogram(
-            xy, np.array([2 * np.pi, 0.0]), np.array([np.pi, np.sqrt(3) * np.pi])
-        )
-        ax1.plot(trail[:, 0], trail[:, 1], lw=0.9, alpha=0.9)
-    else:
-        th = coords[:, 0] % (2 * np.pi)
-        ax1.plot(np.cos(th), np.sin(th), lw=0.9, alpha=0.9)
-        ax1.set_xlim(-1.2, 1.2)
-        ax1.set_ylim(-1.2, 1.2)
+    theta2 = coords[:, :2] % (2 * np.pi)
+    xy = skew_transform(theta2)
+    draw_base_parallelogram(ax1)
+    trail = snake_wrap_trail_in_parallelogram(
+        xy, np.array([2 * np.pi, 0.0]), np.array([np.pi, np.sqrt(3) * np.pi])
+    )
+    ax1.plot(trail[:, 0], trail[:, 1], lw=0.9, alpha=0.9)
+
+    fig.tight_layout()
+    _ensure_parent_dir(config.save_path)
+    finalize_figure(fig, config)
+    return fig, axes
+
+
+def plot_path_compare_1d(
+    x: np.ndarray,
+    y: np.ndarray,
+    coords: np.ndarray,
+    config: PlotConfig | None = None,
+    *,
+    title: str = "Path Compare (1D)",
+    figsize: tuple[int, int] = (12, 5),
+    show: bool = True,
+    save_path: str | None = None,
+) -> tuple[plt.Figure, np.ndarray]:
+    """Plot physical path vs decoded coho-space path (1D) side-by-side."""
+    x = np.asarray(x).ravel()
+    y = np.asarray(y).ravel()
+    coords = np.asarray(coords)
+    if coords.ndim == 2 and coords.shape[1] == 1:
+        coords = coords[:, 0]
+    if coords.ndim != 1:
+        raise ValueError(f"coords must have shape (T,) or (T, 1), got {coords.shape}")
+
+    config = _ensure_plot_config(
+        config,
+        PlotConfig.for_static_plot,
+        title=title,
+        figsize=figsize,
+        save_path=save_path,
+        show=show,
+    )
+
+    fig, axes = plt.subplots(1, 2, figsize=config.figsize)
+    if config.title:
+        fig.suptitle(config.title)
+
+    ax0 = axes[0]
+    ax0.set_title("Physical path (x,y)")
+    ax0.set_aspect("equal", "box")
+    ax0.plot(x, y, lw=0.9, alpha=0.8)
+    ax0.set_xticks([])
+    ax0.set_yticks([])
+    for spine in ax0.spines.values():
+        spine.set_visible(True)
+    x_min, x_max = np.min(x), np.max(x)
+    y_min, y_max = np.min(y), np.max(y)
+    pad_x = (x_max - x_min) * 0.03 if x_max > x_min else 1.0
+    pad_y = (y_max - y_min) * 0.03 if y_max > y_min else 1.0
+    ax0.set_xlim(x_min - pad_x, x_max + pad_x)
+    ax0.set_ylim(y_min - pad_y, y_max + pad_y)
+
+    ax1 = axes[1]
+    ax1.set_title("Decoded coho path (1D)")
+    ax1.set_aspect("equal", "box")
+    ax1.axis("off")
+
+    theta = coords % (2 * np.pi)
+    x_unit = np.cos(theta)
+    y_unit = np.sin(theta)
+    sc = ax1.scatter(
+        x_unit,
+        y_unit,
+        c=np.arange(len(theta)),
+        cmap="viridis",
+        s=4,
+        alpha=0.8,
+    )
+    cbar = plt.colorbar(sc, ax=ax1, fraction=0.046, pad=0.04)
+    cbar.set_label("Time")
+    ax1.set_xlim(-1.2, 1.2)
+    ax1.set_ylim(-1.2, 1.2)
 
     fig.tight_layout()
     _ensure_parent_dir(config.save_path)

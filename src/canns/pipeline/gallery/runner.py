@@ -6,9 +6,10 @@ import multiprocessing as mp
 import sys
 import time
 import traceback
+from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Callable
+from typing import Any
 
 import brainpy.math as bm
 import matplotlib
@@ -67,8 +68,8 @@ class GalleryRunner:
     def _ensure_brainpy_environment(self) -> None:
         """Initialize BrainPy environment for worker threads."""
         try:
-            from brainpy.math import defaults as bm_defaults
             import brainstate.environ as bs_env
+            from brainpy.math import defaults as bm_defaults
 
             bm_defaults.setting()
             bm.set_environment(
@@ -238,9 +239,7 @@ class GalleryRunner:
                 return model.r.value
 
             rs = bm.for_loop(run_step, operands=(task.data,), progress_bar=False)
-            neuron_indices = self._parse_indices(
-                analysis_params["tuning_neurons"], len(model.x)
-            )
+            neuron_indices = self._parse_indices(analysis_params["tuning_neurons"], len(model.x))
             config = PlotConfigs.tuning_curve(
                 num_bins=analysis_params["tuning_bins"],
                 pref_stim=np.asarray(model.x),
@@ -276,7 +275,9 @@ class GalleryRunner:
             us, inps = bm.for_loop(run_step, operands=(task.data,), progress_bar=False)
             select_index = len(task.data) // 2
             fig, ax = plt.subplots(figsize=(6, 4))
-            ax.plot(np.asarray(model.x), np.asarray(inps)[select_index], "r--", linewidth=2.0, alpha=0.6)
+            ax.plot(
+                np.asarray(model.x), np.asarray(inps)[select_index], "r--", linewidth=2.0, alpha=0.6
+            )
             ax.plot(np.asarray(model.x), np.asarray(us)[select_index], "b-", linewidth=2.5)
             ax.grid(True, alpha=0.3)
             ax.set_title("Template Matching", fontsize=12, fontweight="bold")
@@ -291,7 +292,9 @@ class GalleryRunner:
             warmup = analysis_params["manifold_warmup"]
             iext = (0.0, 0.0, np.pi, 2 * np.pi, -2 * np.pi, 0.0)
             durations = (warmup, segment, segment, segment, segment)
-            task = SmoothTracking1D(model, Iext=iext, duration=durations, time_step=model_params["dt"])
+            task = SmoothTracking1D(
+                model, Iext=iext, duration=durations, time_step=model_params["dt"]
+            )
             task.get_data(progress_bar=False)
 
             def run_step(t, inputs):
@@ -305,7 +308,9 @@ class GalleryRunner:
             projected = self._pca_projection(firing_rates, n_components=2)
 
             fig, ax = plt.subplots(figsize=(6, 4))
-            ax.scatter(projected[:, 0], projected[:, 1], c=stimulus_pos, cmap="viridis", s=2, alpha=0.7)
+            ax.scatter(
+                projected[:, 0], projected[:, 1], c=stimulus_pos, cmap="viridis", s=2, alpha=0.7
+            )
             ax.set_title("Neural Manifold (PC1/PC2)", fontsize=12, fontweight="bold")
             ax.set_xticks([])
             ax.set_yticks([])
@@ -433,7 +438,9 @@ class GalleryRunner:
                 (-2.0, -2.0),
             )
             durations = (warmup, segment, segment, segment, segment)
-            task = SmoothTracking2D(model, Iext=iext, duration=durations, time_step=model_params["dt"])
+            task = SmoothTracking2D(
+                model, Iext=iext, duration=durations, time_step=model_params["dt"]
+            )
             task.get_data(progress_bar=False)
             true_positions = np.asarray(task.Iext_sequence)
 

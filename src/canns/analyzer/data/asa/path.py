@@ -216,7 +216,31 @@ def interp_coords_to_full(idx_map: np.ndarray, coords2: np.ndarray, T_full: int)
     return np.mod(out, 2 * np.pi)
 
 
-def align_coords_to_position(
+def interp_coords_to_full_1d(idx_map: np.ndarray, coords1: np.ndarray, T_full: int) -> np.ndarray:
+    """Interpolate (K,) circular coords back to full length (T_full,1)."""
+    idx_map = np.asarray(idx_map).astype(int).ravel()
+    coords1 = np.asarray(coords1, float)
+    if coords1.ndim == 2 and coords1.shape[1] == 1:
+        coords1 = coords1[:, 0]
+    if coords1.ndim != 1:
+        raise ValueError(f"coords1 must have shape (K,) or (K,1), got {coords1.shape}")
+
+    order = np.argsort(idx_map)
+    idx_map = idx_map[order]
+    coords1 = coords1[order]
+
+    uniq_idx, uniq_pos = np.unique(idx_map, return_index=True)
+    coords1 = coords1[uniq_pos]
+    idx_map = uniq_idx
+
+    ang = np.unwrap(coords1)
+    full_i = np.arange(T_full, dtype=float)
+    out = np.interp(full_i, idx_map.astype(float), ang)
+
+    return np.mod(out, 2 * np.pi)[:, None]
+
+
+def align_coords_to_position_2d(
     t_full: np.ndarray,
     x_full: np.ndarray,
     y_full: np.ndarray,
@@ -248,7 +272,7 @@ def align_coords_to_position(
 
     Examples
     --------
-    >>> t, x, y, coords2, tag = align_coords_to_position(  # doctest: +SKIP
+    >>> t, x, y, coords2, tag = align_coords_to_position_2d(  # doctest: +SKIP
     ...     t_full, x_full, y_full, coords2,
     ...     use_box=True, times_box=decoding["times_box"], interp_to_full=True
     ... )
@@ -316,6 +340,84 @@ def align_coords_to_position(
         x_full[idx_map],
         y_full[idx_map],
         coords2,
+        f"subset(times_box kind={kind}, K={len(idx_map)})",
+    )
+
+
+def align_coords_to_position_1d(
+    t_full: np.ndarray,
+    x_full: np.ndarray,
+    y_full: np.ndarray,
+    coords1: np.ndarray,
+    use_box: bool,
+    times_box: np.ndarray | None,
+    interp_to_full: bool,
+) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, str]:
+    """Align 1D decoded coordinates to the original (x, y, t) trajectory."""
+    t_full = np.asarray(t_full).ravel()
+    x_full = np.asarray(x_full).ravel()
+    y_full = np.asarray(y_full).ravel()
+    coords1 = np.asarray(coords1, float)
+    if coords1.ndim == 2 and coords1.shape[1] == 1:
+        coords1 = coords1[:, 0]
+    if coords1.ndim != 1:
+        raise ValueError(f"coords1 must have shape (T,) or (T,1), got {coords1.shape}")
+
+    T_full = len(t_full)
+
+    if not use_box:
+        if len(coords1) != T_full:
+            raise ValueError(
+                f"coords length {len(coords1)} != t length {T_full} "
+                f"(set --use-box if you have times_box)"
+            )
+        return t_full, x_full, y_full, coords1[:, None], "full(no-box)"
+
+    if times_box is None:
+        if len(coords1) == T_full:
+            return (
+                t_full,
+                x_full,
+                y_full,
+                coords1[:, None],
+                "full(use-box but no times_box; treated as full)",
+            )
+        raise KeyError("use_box=True but times_box not found, and coords is not full-length.")
+
+    idx_map, kind = parse_times_box_to_indices(times_box, t_full)
+
+    if len(coords1) == T_full and len(idx_map) == T_full:
+        return (
+            t_full,
+            x_full,
+            y_full,
+            coords1[:, None],
+            f"full(coords already full; times_box kind={kind} ignored)",
+        )
+
+    if len(idx_map) != len(coords1):
+        raise ValueError(f"times_box length {len(idx_map)} != coords length {len(coords1)}")
+
+    order = np.argsort(idx_map)
+    idx_map = idx_map[order]
+    coords1 = coords1[order]
+
+    if interp_to_full:
+        coords_full = interp_coords_to_full_1d(idx_map, coords1, T_full)
+        return (
+            t_full,
+            x_full,
+            y_full,
+            coords_full,
+            f"interp_to_full(times_box kind={kind}, K={len(idx_map)})",
+        )
+
+    idx_map = np.clip(idx_map, 0, T_full - 1)
+    return (
+        t_full[idx_map],
+        x_full[idx_map],
+        y_full[idx_map],
+        coords1[:, None],
         f"subset(times_box kind={kind}, K={len(idx_map)})",
     )
 

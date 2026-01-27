@@ -2,10 +2,14 @@ from __future__ import annotations
 
 # Coho-space analysis + visualization
 from .cohospace import (
-    compute_cohoscore,
-    plot_cohospace_neuron,
-    plot_cohospace_population,
-    plot_cohospace_trajectory,
+    compute_cohoscore_1d,
+    compute_cohoscore_2d,
+    plot_cohospace_neuron_1d,
+    plot_cohospace_neuron_2d,
+    plot_cohospace_population_1d,
+    plot_cohospace_population_2d,
+    plot_cohospace_trajectory_1d,
+    plot_cohospace_trajectory_2d,
 )
 from .config import (
     CANN2DError,
@@ -33,7 +37,11 @@ from .fr import (
 )
 
 # Path utilities
-from .path import align_coords_to_position, apply_angle_scale
+from .path import (
+    align_coords_to_position_1d,
+    align_coords_to_position_2d,
+    apply_angle_scale,
+)
 
 # Higher-level plotting helpers
 from .plotting import (
@@ -41,7 +49,8 @@ from .plotting import (
     plot_3d_bump_on_torus,
     plot_cohomap,
     plot_cohomap_multi,
-    plot_path_compare,
+    plot_path_compare_1d,
+    plot_path_compare_2d,
     plot_projection,
 )
 
@@ -61,7 +70,8 @@ __all__ = [
     "decode_circular_coordinates",
     "decode_circular_coordinates_multi",
     "plot_projection",
-    "plot_path_compare",
+    "plot_path_compare_1d",
+    "plot_path_compare_2d",
     "plot_cohomap",
     "plot_cohomap_multi",
     "plot_3d_bump_on_torus",
@@ -75,10 +85,15 @@ __all__ = [
     "FRMResult",
     "compute_frm",
     "plot_frm",
-    "plot_cohospace_trajectory",
-    "plot_cohospace_neuron",
-    "plot_cohospace_population",
-    "compute_cohoscore",
-    "align_coords_to_position",
+    "plot_cohospace_trajectory_1d",
+    "plot_cohospace_trajectory_2d",
+    "plot_cohospace_neuron_1d",
+    "plot_cohospace_neuron_2d",
+    "plot_cohospace_population_1d",
+    "plot_cohospace_population_2d",
+    "compute_cohoscore_1d",
+    "compute_cohoscore_2d",
+    "align_coords_to_position_1d",
+    "align_coords_to_position_2d",
     "apply_angle_scale",
 ]
