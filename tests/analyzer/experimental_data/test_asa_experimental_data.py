@@ -113,7 +113,10 @@ def test_embed_spike_trains_basic():
     assert isinstance(spikes, np.ndarray)
     assert spikes.ndim == 2
     assert spikes.shape[1] == 12
-    assert xx is None and yy is None and tt is None
+    assert xx is not None and yy is not None and tt is not None
+    assert np.allclose(xx, mock_data["x"])
+    assert np.allclose(yy, mock_data["y"])
+    assert np.allclose(tt, mock_data["t"])
 
 
 def test_embed_spike_trains_speed_filter():
