@@ -41,7 +41,7 @@ def tda_vis(embed_data: np.ndarray, config: TDAConfig | None = None, **kwargs) -
     **kwargs : Any
         Legacy keyword parameters (``dim``, ``num_times``, ``active_times``, ``k``,
         ``n_points``, ``metric``, ``nbs``, ``maxdim``, ``coeff``, ``show``,
-        ``do_shuffle``, ``num_shuffles``, ``progress_bar``).
+        ``do_shuffle``, ``num_shuffles``, ``progress_bar``, ``standardize``).
 
     Returns
     -------
@@ -77,6 +77,7 @@ def tda_vis(embed_data: np.ndarray, config: TDAConfig | None = None, **kwargs) -
             do_shuffle=kwargs.get("do_shuffle", False),
             num_shuffles=kwargs.get("num_shuffles", 1000),
             progress_bar=kwargs.get("progress_bar", True),
+            standardize=kwargs.get("standardize", True),
         )
 
     try:
@@ -120,7 +121,7 @@ def _compute_real_persistence(embed_data: np.ndarray, config: TDAConfig) -> dict
 
     # Step 3: PCA dimensionality reduction
     logging.info("Step 3/5: PCA dimensionality reduction")
-    dimred = _apply_pca_reduction(embed_data, movetimes, config.dim)
+    dimred = _apply_pca_reduction(embed_data, movetimes, config.dim, config.standardize)
 
     # Step 4: Point cloud sampling (denoising)
     logging.info("Step 4/5: Point cloud denoising")
@@ -156,9 +157,15 @@ def _select_active_timepoints(
     return times_cube[movetimes]
 
 
-def _apply_pca_reduction(embed_data: np.ndarray, movetimes: np.ndarray, dim: int) -> np.ndarray:
+def _apply_pca_reduction(
+    embed_data: np.ndarray, movetimes: np.ndarray, dim: int, standardize: bool
+) -> np.ndarray:
     """Apply PCA dimensionality reduction."""
-    scaled_data = preprocessing.scale(embed_data[movetimes, :])
+    subset = embed_data[movetimes, :]
+    if standardize:
+        scaled_data = preprocessing.scale(subset)
+    else:
+        scaled_data = np.asarray(subset, dtype=np.float32)
     dimred, *_ = _pca(scaled_data, dim=dim)
     return dimred
 

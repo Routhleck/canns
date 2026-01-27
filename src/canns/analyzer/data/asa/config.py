@@ -72,6 +72,8 @@ class TDAConfig:
         Number of shuffles for null distribution.
     progress_bar : bool
         Whether to show progress bars.
+    standardize : bool
+        Whether to standardize data before PCA (z-score).
 
     Examples
     --------
@@ -94,6 +96,7 @@ class TDAConfig:
     do_shuffle: bool = False
     num_shuffles: int = 1000
     progress_bar: bool = True
+    standardize: bool = True
 
 
 @dataclass

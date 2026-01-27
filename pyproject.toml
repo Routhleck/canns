@@ -98,12 +98,18 @@ cuda13 = [
 tpu = [
     "brainpy[tpu]; platform_system == 'Linux'"
 ]
+gui = [
+    "PySide6>=6.6.0",
+    "pillow",
+    "imageio",
+]
 
 [project.scripts]
 # Add script entry points here:
 canns = "canns:master"
 canns-tui = "canns.pipeline.launcher:main"
 canns-gallery = "canns.pipeline.gallery:main"
+canns-gui = "canns.pipeline.asa_gui:main"
 
 
 # ---- Build system ----
