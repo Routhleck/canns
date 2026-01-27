@@ -9,6 +9,7 @@ from .spatial_analysis import (
     compute_field_statistics,
     compute_grid_spacing
 )
+from .grid_modules_leiden import identify_grid_modules_and_stats
 
 __all__ = [
     'GridnessAnalyzer',
@@ -21,4 +22,5 @@ __all__ = [
     'compute_spatial_information',
     'compute_field_statistics',
     'compute_grid_spacing',
+    'identify_grid_modules_and_stats',
 ]

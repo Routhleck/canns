@@ -21,6 +21,7 @@ from .core import (  # noqa: F401
     compute_rate_map,
     compute_rate_map_from_binned,
     compute_spatial_information,
+    identify_grid_modules_and_stats,
 )
 from .io import MATFileLoader, TuningCurve, Unit  # noqa: F401
 from .utils import (  # noqa: F401
@@ -64,6 +65,7 @@ __all__ = [
     "compute_spatial_information",
     "compute_field_statistics",
     "compute_grid_spacing",
+    "identify_grid_modules_and_stats",
     "MATFileLoader",
     "TuningCurve",
     "Unit",

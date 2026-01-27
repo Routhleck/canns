@@ -53,6 +53,8 @@ dependencies = [
     "imageio[ffmpeg]>=2.37.0",
     "textual>=7.3.0",
     "climage>=0.2.2",
+    "igraph>=1.0.0",
+    "leidenalg>=0.11.0",
 ]
 
 
