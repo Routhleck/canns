@@ -5,6 +5,10 @@
 本文档整理 ``canns.analyzer`` 当前实现的分析与可视化工具，覆盖数据分析（ASA pipeline）、
 模型可视化、空间指标、RNN 动力学以及模型专用分析。
 
+.. note::
+   如需深入了解拓扑数据分析与神经群体流形研究，可参阅
+   :cite:p:`carlsson2009topology,edelsbrunner2010computational,Vaupel2023Duality,Gardner2022Toroidal`。
+
 概览
 ========
 
