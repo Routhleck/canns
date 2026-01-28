@@ -206,6 +206,9 @@ class AnalysisPage(QWidget):
         self.run_btn.setText("运行分析" if is_zh else "Run Analysis")
         self.stop_btn.setText("停止" if is_zh else "Stop")
         self.logs_label.setText("日志" if is_zh else "Logs")
+        self.analysis_mode.setToolTip(
+            "选择分析模块" if is_zh else "Select an analysis mode to run."
+        )
 
         if self._last_state is not None:
             self._update_info(self._last_state)
@@ -215,6 +218,10 @@ class AnalysisPage(QWidget):
                 if is_zh
                 else "Mode=— | preset=— | preprocess=— | spike_main_shape=—"
             )
+
+        for mode in self._modes.values():
+            if hasattr(mode, "apply_language"):
+                mode.apply_language(self._lang)
 
     def load_state(self, state) -> None:
         self._last_state = state

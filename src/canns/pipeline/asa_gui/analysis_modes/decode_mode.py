@@ -50,3 +50,16 @@ class DecodeMode(AbstractAnalysisMode):
             self.num_circ.setValue(2)
         elif preset == "hd":
             self.num_circ.setValue(1)
+
+    def apply_language(self, lang: str) -> None:
+        is_zh = str(lang).lower().startswith("zh")
+        if is_zh:
+            self.decode_version.setToolTip("解码版本（推荐 v2）。")
+            self.num_circ.setToolTip("解码圆数（grid=2，hd=1）。")
+            self.real_ground.setToolTip("是否使用 real_ground。")
+            self.real_of.setToolTip("是否使用 real_of。")
+        else:
+            self.decode_version.setToolTip("Decode version (recommend v2).")
+            self.num_circ.setToolTip("Number of circles to decode (grid=2, hd=1).")
+            self.real_ground.setToolTip("Use real_ground if available.")
+            self.real_of.setToolTip("Use real_of if available.")

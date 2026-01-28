@@ -14,6 +14,14 @@ QLabel#muted {
     color: #6b7280;
 }
 
+QToolTip {
+    color: #111827;
+    background-color: #fef3c7;
+    border: 1px solid #f59e0b;
+    border-radius: 4px;
+    padding: 4px 8px;
+}
+
 QFrame#card, QGroupBox#card {
     background-color: #ffffff;
     border: 1px solid #e5e7eb;

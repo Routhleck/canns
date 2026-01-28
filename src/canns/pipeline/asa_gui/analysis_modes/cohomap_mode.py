@@ -54,3 +54,14 @@ class CohoMapMode(AbstractAnalysisMode):
             self.num_circ.setValue(2)
         elif preset == "hd":
             self.num_circ.setValue(1)
+
+    def apply_language(self, lang: str) -> None:
+        is_zh = str(lang).lower().startswith("zh")
+        if is_zh:
+            self.decode_version.setToolTip("解码版本（推荐 v2）。")
+            self.num_circ.setToolTip("解码圆数（grid 常用 2，hd 常用 1）。")
+            self.subsample.setToolTip("CohoMap 绘制下采样步长。")
+        else:
+            self.decode_version.setToolTip("Decode version (recommend v2).")
+            self.num_circ.setToolTip("Number of circles to decode (grid=2, hd=1).")
+            self.subsample.setToolTip("Subsample step for CohoMap plotting.")

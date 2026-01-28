@@ -317,6 +317,35 @@ class PreprocessPage(QWidget):
         self.stop_btn.setText("停止" if is_zh else "Stop")
         self.logs_label.setText("日志" if is_zh else "Logs")
 
+        self.input_mode.setToolTip(
+            "仅支持 ASA .npz 输入" if is_zh else "Only ASA .npz input is supported in this GUI."
+        )
+        self.preprocess_method.setToolTip(
+            "嵌入会生成稠密矩阵供 TDA/FR 使用"
+            if is_zh
+            else "Embedding builds a dense spike matrix for TDA/FR."
+        )
+        self.embed_res.setToolTip(
+            "时间分箱分辨率（与 t 单位一致）。" if is_zh else "Time bin resolution (same unit as t)."
+        )
+        self.embed_dt.setToolTip(
+            "时间步长（与 t 单位一致）。" if is_zh else "Time step (same unit as t)."
+        )
+        self.embed_sigma.setToolTip(
+            "高斯平滑尺度，越大越平滑。" if is_zh else "Gaussian smoothing scale."
+        )
+        self.embed_smooth.setToolTip("是否启用平滑。" if is_zh else "Enable smoothing.")
+        self.embed_speed_filter.setToolTip(
+            "过滤低速时间点（常见于 grid 数据）。"
+            if is_zh
+            else "Remove low-speed samples (common for grid data)."
+        )
+        self.embed_min_speed.setToolTip(
+            "速度阈值（与 t/x/y 单位一致）。"
+            if is_zh
+            else "Speed threshold (same unit as t/x/y)."
+        )
+
     def _show_help(self) -> None:
         lang = str(QSettings("canns", "asa_gui").value("lang", "en"))
         title = (

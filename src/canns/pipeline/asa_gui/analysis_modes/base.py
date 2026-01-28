@@ -29,6 +29,10 @@ class AbstractAnalysisMode(ABC):
         """Apply neuron/time ranges based on loaded data."""
         return None
 
+    def apply_language(self, lang: str) -> None:
+        """Apply localized tooltips/text."""
+        return None
+
 
 def configure_form_layout(form: QFormLayout) -> None:
     """Apply consistent spacing/alignment for analysis parameter forms."""

@@ -117,6 +117,29 @@ class GridScoreMode(AbstractAnalysisMode):
         if "neuron_id" in meta:
             self.neuron_id.setValue(int(meta["neuron_id"]))
 
+    def apply_language(self, lang: str) -> None:
+        is_zh = str(lang).lower().startswith("zh")
+        if is_zh:
+            self.neuron_start.setToolTip("神经元起始索引。")
+            self.neuron_end.setToolTip("神经元结束索引（不包含）。")
+            self.bins.setToolTip("空间分箱数。")
+            self.min_occupancy.setToolTip("最小占据数。")
+            self.smoothing.setToolTip("是否启用平滑（需 scipy）。")
+            self.sigma.setToolTip("平滑强度（sigma）。")
+            self.overlap.setToolTip("自相关重叠比例。")
+            self.mode.setToolTip("fr 需要预处理；spike 直接用事件。")
+            self.score_thr.setToolTip("可视化阈值（仅显示）。")
+        else:
+            self.neuron_start.setToolTip("Start neuron index.")
+            self.neuron_end.setToolTip("End neuron index (exclusive).")
+            self.bins.setToolTip("Spatial bin count.")
+            self.min_occupancy.setToolTip("Minimum occupancy.")
+            self.smoothing.setToolTip("Enable smoothing (requires scipy).")
+            self.sigma.setToolTip("Smoothing strength (sigma).")
+            self.overlap.setToolTip("Autocorrelation overlap ratio.")
+            self.mode.setToolTip("fr requires preprocess; spike uses events directly.")
+            self.score_thr.setToolTip("Visualization threshold only.")
+
 
 class GridScoreInspectMode(GridScoreMode):
     name = "gridscore_inspect"

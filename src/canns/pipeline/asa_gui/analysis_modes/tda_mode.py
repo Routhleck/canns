@@ -110,3 +110,30 @@ class TDAMode(AbstractAnalysisMode):
             self.maxdim.setValue(2)
         elif preset == "hd":
             self.maxdim.setValue(1)
+
+    def apply_language(self, lang: str) -> None:
+        is_zh = str(lang).lower().startswith("zh")
+        if is_zh:
+            self.dim.setToolTip("PCA 维度（常见起点 6–12）。")
+            self.num_times.setToolTip("时间下采样步长；越大越快但可能丢细节。")
+            self.active_times.setToolTip("选取最活跃时间点数；过小不稳，过大更慢。")
+            self.k.setToolTip("采样/去噪相关参数，影响速度与稳定性。")
+            self.n_points.setToolTip("点云代表点数量，越大越慢。")
+            self.metric.setToolTip("距离度量；推荐 cosine。")
+            self.nbs.setToolTip("邻域规模参数，影响稳定性与速度。")
+            self.maxdim.setToolTip("最大同调维度；先 1 再 2。")
+            self.coeff.setToolTip("有限域系数（默认 47）。")
+            self.do_shuffle.setToolTip("显著性检验；代价高，建议少量。")
+            self.num_shuffles.setToolTip("Shuffle 次数（越多越慢）。")
+        else:
+            self.dim.setToolTip("PCA dimension (typical 6–12).")
+            self.num_times.setToolTip("Time downsampling step; larger is faster but less detail.")
+            self.active_times.setToolTip("Number of most active points; too small is unstable.")
+            self.k.setToolTip("Sampling/denoising parameter; affects speed/stability.")
+            self.n_points.setToolTip("Number of representative points; larger is slower.")
+            self.metric.setToolTip("Distance metric; recommend cosine.")
+            self.nbs.setToolTip("Neighborhood parameter; affects stability and speed.")
+            self.maxdim.setToolTip("Max homology dimension; start with 1, then 2.")
+            self.coeff.setToolTip("Finite field coefficient (default 47).")
+            self.do_shuffle.setToolTip("Significance test; expensive, keep small.")
+            self.num_shuffles.setToolTip("Number of shuffles (more is slower).")

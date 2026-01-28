@@ -86,6 +86,23 @@ class FRMMode(AbstractAnalysisMode):
             return
         self.neuron_id.setRange(0, max(0, neuron_count - 1))
 
+    def apply_language(self, lang: str) -> None:
+        is_zh = str(lang).lower().startswith("zh")
+        if is_zh:
+            self.neuron_id.setToolTip("要查看的神经元编号。")
+            self.bin_size.setToolTip("空间分箱大小。")
+            self.min_occupancy.setToolTip("最小占据数。")
+            self.smoothing.setToolTip("是否启用平滑。")
+            self.smooth_sigma.setToolTip("平滑强度（sigma）。")
+            self.mode.setToolTip("fr 需要预处理；spike 直接用事件。")
+        else:
+            self.neuron_id.setToolTip("Neuron index to inspect.")
+            self.bin_size.setToolTip("Spatial bin size.")
+            self.min_occupancy.setToolTip("Minimum occupancy.")
+            self.smoothing.setToolTip("Enable smoothing.")
+            self.smooth_sigma.setToolTip("Smoothing strength (sigma).")
+            self.mode.setToolTip("fr requires preprocess; spike uses events directly.")
+
     def _shift(self, delta: int) -> None:
         val = self.neuron_id.value() + int(delta)
         val = max(self.neuron_id.minimum(), min(self.neuron_id.maximum(), val))

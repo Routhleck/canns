@@ -79,3 +79,20 @@ class FRMode(AbstractAnalysisMode):
             self.time_end.setRange(0, total_steps)
             if self.time_end.value() == 0:
                 self.time_end.setValue(total_steps)
+
+    def apply_language(self, lang: str) -> None:
+        is_zh = str(lang).lower().startswith("zh")
+        if is_zh:
+            self.normalize.setToolTip("归一化方式；none 表示不归一化。")
+            self.mode.setToolTip("fr 需要预处理；spike 直接用事件。")
+            self.neuron_start.setToolTip("神经元起始索引。")
+            self.neuron_end.setToolTip("神经元结束索引（不包含）。")
+            self.time_start.setToolTip("时间起始索引。")
+            self.time_end.setToolTip("时间结束索引（不包含）。")
+        else:
+            self.normalize.setToolTip("Normalization method; none = no normalization.")
+            self.mode.setToolTip("fr requires preprocess; spike uses events directly.")
+            self.neuron_start.setToolTip("Start neuron index.")
+            self.neuron_end.setToolTip("End neuron index (exclusive).")
+            self.time_start.setToolTip("Start time index.")
+            self.time_end.setToolTip("End time index (exclusive).")
