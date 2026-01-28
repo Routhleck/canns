@@ -496,6 +496,7 @@ class PipelineRunner:
             do_shuffle=params.get("do_shuffle", False),
             num_shuffles=params.get("num_shuffles", 1000),
             progress_bar=False,
+            standardize=False,
         )
 
         log_callback("Computing persistent homology...")

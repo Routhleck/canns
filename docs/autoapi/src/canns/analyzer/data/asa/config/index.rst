@@ -380,6 +380,12 @@ Module Contents
 
       :type: bool
 
+   .. attribute:: standardize
+
+      Whether to standardize data before PCA (z-score).
+
+      :type: bool
+
    .. rubric:: Examples
 
    >>> from canns.analyzer.data import TDAConfig
@@ -461,6 +467,12 @@ Module Contents
 
 
    .. py:attribute:: show
+      :type:  bool
+      :value: True
+
+
+
+   .. py:attribute:: standardize
       :type:  bool
       :value: True
 

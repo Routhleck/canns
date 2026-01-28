@@ -17,8 +17,17 @@ Submodules
 
    /autoapi/src/canns/pipeline/__main__/index
    /autoapi/src/canns/pipeline/asa/index
+   /autoapi/src/canns/pipeline/asa_gui/index
    /autoapi/src/canns/pipeline/gallery/index
    /autoapi/src/canns/pipeline/launcher/index
+
+
+Attributes
+----------
+
+.. autoapisummary::
+
+   src.canns.pipeline.ASAGuiApp
 
 
 Classes
@@ -444,5 +453,9 @@ Package Contents
 .. py:function:: launcher_main()
 
    Entry point for the unified canns-tui launcher.
+
+
+.. py:data:: ASAGuiApp
+   :value: None
 
 

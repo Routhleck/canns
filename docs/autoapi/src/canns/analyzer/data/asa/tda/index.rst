@@ -33,7 +33,7 @@ Module Contents
    :type config: TDAConfig, optional
    :param \*\*kwargs: Legacy keyword parameters (``dim``, ``num_times``, ``active_times``, ``k``,
                       ``n_points``, ``metric``, ``nbs``, ``maxdim``, ``coeff``, ``show``,
-                      ``do_shuffle``, ``num_shuffles``, ``progress_bar``).
+                      ``do_shuffle``, ``num_shuffles``, ``progress_bar``, ``standardize``).
    :type \*\*kwargs: Any
 
    :returns: Dictionary containing:

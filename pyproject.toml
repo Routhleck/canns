@@ -73,6 +73,13 @@ dev = [
     "datasets>=4.4.1",
     "sphinx-copybutton>=0.5.2",
 ]
+dev-gui = [
+    "PySide6>=6.6.0",
+    "pillow",
+    "imageio",
+    "qtawesome",
+    "pytest-qt",
+]
 docs = [
     "myst-parser>=4.0.1",
     "nbsphinx>=0.9.7",
@@ -98,12 +105,19 @@ cuda13 = [
 tpu = [
     "brainpy[tpu]; platform_system == 'Linux'"
 ]
+gui = [
+    "PySide6>=6.6.0",
+    "pillow",
+    "imageio",
+    "qtawesome",
+]
 
 [project.scripts]
 # Add script entry points here:
 canns = "canns:master"
 canns-tui = "canns.pipeline.launcher:main"
 canns-gallery = "canns.pipeline.gallery:main"
+canns-gui = "canns.pipeline.asa_gui:main"
 
 
 # ---- Build system ----

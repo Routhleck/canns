@@ -190,3 +190,4 @@ cython_debug/
 
 # Model checkpoints
 *.pkl
+/Results

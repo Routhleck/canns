@@ -13,11 +13,12 @@
 
    01_asa_tui
    02_model_gallery_tui
+   03_asa_gui
 
 概述
 ----
 
-本场景展示了基于 ASA TUI 的端到端分析流程，面向实验神经科学家与研究人员，
+本场景展示了基于 ASA TUI 与 ASA GUI 的端到端分析流程，面向实验神经科学家与研究人员，
 提供可视化界面来完成预处理、TDA、解码与结果浏览。
 
 **教程1: ASA TUI 端到端分析**
@@ -32,6 +33,12 @@
 - 对齐 ``canns-experiments/figure2`` 的 5×3 分析布局
 - CANN1D / CANN2D / GridCell 的典型可视化一键生成
 - 结果预览与输出目录统一管理
+
+**教程3: ASA GUI 端到端分析**
+
+- PySide6 图形界面完成预处理与分析
+- 支持 TDA / CohoMap / PathCompare / CohoSpace / FR / FRM / GridScore
+- 结果标签页预览与输出目录快速打开
 
 谁应该使用流水线？
 ------------------

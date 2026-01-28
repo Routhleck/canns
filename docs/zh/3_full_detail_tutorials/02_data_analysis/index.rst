@@ -12,6 +12,7 @@
 
    01_asa_pipeline
    02_cann1d_bump_fit
+   04_cell_classification
 
 .. toctree::
    :maxdepth: 1
@@ -32,6 +33,11 @@
 展示如何使用 ``roi_bump_fits`` 提取 bump 参数，并生成动画用于
 分析环形吸引子动态。
 
+**Cell Classification 教程**
+
+展示基于 GridScore 与自相关特征的细胞分类流程，
+包括单细胞评分与网格模块划分示例。
+
 **RNN不动点分析教程（FlipFlop任务）**
 
 本教程提供了使用 ``FixedPointFinder`` 工具分析循环神经网络（RNN）动力学特性的详细指南：
@@ -43,6 +49,12 @@
 - **多配置比较**: 比较2位、3位和4位任务的不动点结构
 
 **关键发现**: 对于N位FlipFlop任务，成功训练的RNN学会创建2^N个稳定不动点——每个不动点对应一个唯一的记忆状态组合。
+
+示例代码
+--------
+
+- ``examples/experimental_data_analysis``：ASA pipeline 相关脚本（TDA/解码/CohoMap/CohoSpace/PathCompare/FR 等）
+- ``examples/cell_classification``：细胞分类与相关分析示例
 
 相关资源
 --------
