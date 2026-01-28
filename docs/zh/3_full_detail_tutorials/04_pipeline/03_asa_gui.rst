@@ -1,4 +1,4 @@
-教程3：ASA GUI 端到端分析教程
+教程1：ASA GUI 端到端分析教程
 ===========================
 
 本教程介绍 ASA GUI（Attractor Structure Analyzer）如何将 ASA pipeline 的数据预处理、

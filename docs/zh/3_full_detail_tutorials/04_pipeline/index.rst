@@ -1,8 +1,11 @@
 场景4: 端到端研究工作流
 ========================
 
-通过交互式 ASA TUI（Attractor Structure Analyzer）完成从数据加载到分析与可视化的完整研究流程，
+通过交互式 ASA GUI（Attractor Structure Analyzer）完成从数据加载到分析与可视化的完整研究流程，
 无需深入了解模型实现细节。
+
+.. note::
+   推荐优先使用 **ASA GUI**。ASA TUI 属于较早版本，后续将不再维护，仅作为过渡使用。
 
 教程
 ----
@@ -11,34 +14,34 @@
    :maxdepth: 1
    :caption: 研究流水线
 
+   03_asa_gui
    01_asa_tui
    02_model_gallery_tui
-   03_asa_gui
 
 概述
 ----
 
-本场景展示了基于 ASA TUI 与 ASA GUI 的端到端分析流程，面向实验神经科学家与研究人员，
+本场景展示了基于 ASA GUI 与 ASA TUI 的端到端分析流程，面向实验神经科学家与研究人员，
 提供可视化界面来完成预处理、TDA、解码与结果浏览。
 
-**教程1: ASA TUI 端到端分析**
+**教程1: ASA GUI 端到端分析**
+
+- PySide6 图形界面完成预处理与分析
+- 支持 TDA / CohoMap / PathCompare / CohoSpace / FR / FRM / GridScore
+- 结果标签页预览与输出目录快速打开
+
+**教程2: ASA TUI 端到端分析（旧版）**
 
 - 交互式界面完成数据准备、预处理、分析与结果导出
 - 支持 ASA ``.npz`` 与 Neuron + Trajectory 双输入模式
 - 内置 TDA / CohoMap / PathCompare / CohoSpace / FR / FRM / GridScore
 - 结果自动归档并提供日志与预览
 
-**教程2: Model Gallery TUI**
+**教程3: Model Gallery TUI**
 
 - 对齐 ``canns-experiments/figure2`` 的 5×3 分析布局
 - CANN1D / CANN2D / GridCell 的典型可视化一键生成
 - 结果预览与输出目录统一管理
-
-**教程3: ASA GUI 端到端分析**
-
-- PySide6 图形界面完成预处理与分析
-- 支持 TDA / CohoMap / PathCompare / CohoSpace / FR / FRM / GridScore
-- 结果标签页预览与输出目录快速打开
 
 谁应该使用流水线？
 ------------------
@@ -64,7 +67,7 @@
 **快速入门**:
 
 1. 准备 ASA 或 Neuron + Trajectory 数据
-2. 启动 ASA TUI 并选择输入文件
+2. 启动 ASA GUI 并选择输入文件
 3. 预处理与分析参数采用默认值运行
 4. 在 Results 目录中查看输出并按需调参
 
@@ -85,14 +88,14 @@
 预计时间
 --------
 
-- 教程1: 35-45分钟
+- 教程1: 30-40分钟
 - 为您自己的数据设置: 15-30分钟
 - 总计: 70分钟
 
 流水线特性
 ----------
 
-ASA TUI 提供：
+ASA GUI 提供：
 
 - **交互式流程**——界面化完成预处理与分析
 - **自动数据验证**——检查输入格式与缺失字段
@@ -114,7 +117,7 @@ ASA TUI 提供：
 
 完成本场景后：
 
-- 将 ASA TUI 应用于真实实验数据
+- 将 ASA GUI 应用于真实实验数据
 - 基于生成的中间结果开展自定义分析
 - 参考 ``canns.pipeline.asa`` 扩展新功能
 - 为库贡献新的分析模块
