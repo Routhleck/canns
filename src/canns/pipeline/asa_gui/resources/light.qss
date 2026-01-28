@@ -1,7 +1,7 @@
 /* Light theme */
 QWidget {
     font-family: "Segoe UI Variable", "Segoe UI", "Helvetica Neue", "Arial", sans-serif;
-    font-size: 13px;
+    font-size: 10pt;
     color: #374151;
     background-color: #f3f4f6;
 }

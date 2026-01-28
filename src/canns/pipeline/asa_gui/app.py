@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from PySide6.QtCore import QSettings
+from PySide6.QtGui import QFont
 from PySide6.QtWidgets import QApplication
 
 from .main_window import MainWindow
@@ -19,6 +20,11 @@ class ASAGuiApp(MainWindow):
             settings = QSettings("canns", "asa_gui")
             theme = settings.value("theme", "Light")
             qss = load_theme_qss(str(theme))
-            QApplication.instance().setStyleSheet(qss)
+            app = QApplication.instance()
+            app.setStyleSheet(qss)
+            font = app.font()
+            if font.pointSize() <= 0:
+                font.setPointSize(10)
+                app.setFont(font)
         except Exception:
             pass

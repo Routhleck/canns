@@ -1,7 +1,7 @@
 /* Dark theme */
 QWidget {
     font-family: "Segoe UI Variable", "Segoe UI", "Helvetica Neue", "Arial", sans-serif;
-    font-size: 13px;
+    font-size: 10pt;
     color: #e5e7eb;
     background-color: #111827;
 }
