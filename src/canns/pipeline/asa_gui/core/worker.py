@@ -6,14 +6,13 @@ in the background without blocking the UI.
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Callable
+from collections.abc import Callable
+from typing import TYPE_CHECKING, Any
 
 from PySide6.QtCore import QCoreApplication, QObject, QThread, Signal, Slot
 
 if TYPE_CHECKING:
-    from .state import WorkflowState
-
-    from ..models.job import JobResult
+    pass
 
 
 class AnalysisWorker(QObject):
@@ -99,7 +98,7 @@ class _UiDispatcher(QObject):
 
     def __init__(
         self,
-        manager: "WorkerManager",
+        manager: WorkerManager,
         *,
         on_log: Callable[[str], None] | None,
         on_progress: Callable[[int], None] | None,

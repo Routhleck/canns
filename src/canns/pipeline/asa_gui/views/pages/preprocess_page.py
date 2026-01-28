@@ -4,32 +4,32 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from PySide6.QtCore import Qt, Signal, QSettings
+from PySide6.QtCore import QSettings, Qt, Signal
+from PySide6.QtGui import QColor
 from PySide6.QtWidgets import (
     QCheckBox,
     QDoubleSpinBox,
     QFileDialog,
     QFormLayout,
+    QGraphicsDropShadowEffect,
     QGroupBox,
     QHBoxLayout,
     QLabel,
+    QProgressBar,
     QPushButton,
-    QSplitter,
     QSpinBox,
+    QSplitter,
     QVBoxLayout,
     QWidget,
-    QProgressBar,
-    QGraphicsDropShadowEffect,
 )
-from PySide6.QtGui import QColor
 
 from ...controllers import PreprocessController
 from ...core import WorkerManager
 from ..help_content import preprocess_help_markdown
 from ..widgets.drop_zone import DropZone
-from ..widgets.popup_combo import PopupComboBox
 from ..widgets.help_dialog import show_help_dialog
 from ..widgets.log_box import LogBox
+from ..widgets.popup_combo import PopupComboBox
 
 
 class PreprocessPage(QWidget):
@@ -289,7 +289,9 @@ class PreprocessPage(QWidget):
             self.label_min_speed.setText("min_speed")
 
         self.asa_zone.set_title("ASA 文件" if is_zh else "ASA file")
-        self.asa_zone.set_hint("拖入含 spike/x/y/t 的 .npz" if is_zh else "Drop a .npz with spike/x/y/t")
+        self.asa_zone.set_hint(
+            "拖入含 spike/x/y/t 的 .npz" if is_zh else "Drop a .npz with spike/x/y/t"
+        )
         self.asa_zone.set_empty_text("未选择文件" if is_zh else "No file")
         self.asa_hint.setText(
             "需要字段：spike, x, y, t" if is_zh else "Expected keys: spike, x, y, t"
@@ -317,7 +319,9 @@ class PreprocessPage(QWidget):
 
     def _show_help(self) -> None:
         lang = str(QSettings("canns", "asa_gui").value("lang", "en"))
-        title = "Preprocess Guide" if not str(lang).lower().startswith("zh") else "Preprocess 参数说明"
+        title = (
+            "Preprocess Guide" if not str(lang).lower().startswith("zh") else "Preprocess 参数说明"
+        )
         show_help_dialog(self, title, preprocess_help_markdown(lang=lang))
 
     def _embedding_defaults(self) -> dict:

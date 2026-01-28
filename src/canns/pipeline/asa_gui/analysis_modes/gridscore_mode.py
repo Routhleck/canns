@@ -6,8 +6,8 @@ from typing import Any
 
 from PySide6.QtWidgets import QCheckBox, QDoubleSpinBox, QFormLayout, QGroupBox, QSpinBox
 
-from .base import AbstractAnalysisMode, configure_form_layout
 from ..views.widgets.popup_combo import PopupComboBox
+from .base import AbstractAnalysisMode, configure_form_layout
 
 
 class GridScoreMode(AbstractAnalysisMode):

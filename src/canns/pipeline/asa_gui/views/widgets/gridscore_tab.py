@@ -280,9 +280,12 @@ class GridScoreTab(QWidget):
         if mode == "neuron id (desc)":
             order_ids = sorted(ids, reverse=True)
         elif mode == "grid score (asc)" and scores is not None:
-            order_ids = [i for i, _ in sorted(zip(ids, scores), key=lambda t: t[1])]
+            order_ids = [i for i, _ in sorted(zip(ids, scores, strict=False), key=lambda t: t[1])]
         elif mode == "grid score (desc)" and scores is not None:
-            order_ids = [i for i, _ in sorted(zip(ids, scores), key=lambda t: t[1], reverse=True)]
+            order_ids = [
+                i
+                for i, _ in sorted(zip(ids, scores, strict=False), key=lambda t: t[1], reverse=True)
+            ]
         else:
             order_ids = sorted(ids)
 

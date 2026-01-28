@@ -3,10 +3,6 @@
 from __future__ import annotations
 
 import sys
-from typing import TYPE_CHECKING
-
-if TYPE_CHECKING:
-    from PySide6.QtWidgets import QApplication
 
 __all__ = ["main", "ASAGuiApp"]
 

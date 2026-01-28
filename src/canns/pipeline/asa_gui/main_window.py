@@ -4,18 +4,18 @@ from __future__ import annotations
 
 import sys
 
-from PySide6.QtCore import Qt, QSettings, QUrl, Signal
+from PySide6.QtCore import QSettings, Qt, QUrl, Signal
 from PySide6.QtGui import QDesktopServices, QIcon
 from PySide6.QtWidgets import (
     QApplication,
+    QComboBox,
     QHBoxLayout,
     QLabel,
+    QMainWindow,
     QPushButton,
-    QComboBox,
     QStackedWidget,
     QVBoxLayout,
     QWidget,
-    QMainWindow,
 )
 
 from .controllers import AnalysisController, PreprocessController
@@ -33,7 +33,6 @@ class LogoLabel(QLabel):
         if event.button() == Qt.LeftButton:
             self.clicked.emit()
         super().mousePressEvent(event)
-
 
 
 class MainWindow(QMainWindow):

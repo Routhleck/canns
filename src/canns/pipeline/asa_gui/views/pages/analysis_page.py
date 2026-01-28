@@ -5,36 +5,35 @@ from __future__ import annotations
 from pathlib import Path
 
 import numpy as np
-
-from PySide6.QtCore import Qt, Signal, QSettings
+from PySide6.QtCore import QSettings, Qt, Signal
 from PySide6.QtGui import QColor
 from PySide6.QtWidgets import (
     QCheckBox,
     QFrame,
+    QGraphicsDropShadowEffect,
+    QGroupBox,
     QHBoxLayout,
     QLabel,
-    QGroupBox,
+    QProgressBar,
     QPushButton,
-    QSplitter,
     QScrollArea,
+    QSplitter,
     QTabWidget,
     QVBoxLayout,
     QWidget,
-    QProgressBar,
-    QGraphicsDropShadowEffect,
 )
 
+from ...analysis_modes import AbstractAnalysisMode, get_analysis_modes
 from ...controllers import AnalysisController
 from ...core import WorkerManager
-from ...analysis_modes import AbstractAnalysisMode, get_analysis_modes
 from ..help_content import analysis_help_markdown
 from ..widgets.artifacts_tab import ArtifactsTab
 from ..widgets.gridscore_tab import GridScoreTab
 from ..widgets.help_dialog import show_help_dialog
 from ..widgets.image_tab import ImageTab
 from ..widgets.log_box import LogBox
-from ..widgets.popup_combo import PopupComboBox
 from ..widgets.pathcompare_tab import PathCompareTab
+from ..widgets.popup_combo import PopupComboBox
 
 
 class AnalysisPage(QWidget):
@@ -197,8 +196,12 @@ class AnalysisPage(QWidget):
         self.param_container.setTitle("分析参数" if is_zh else "Analysis Parameters")
         self.label_analysis_module.setText("分析模块:" if is_zh else "Analysis module:")
         self.help_btn.setText("帮助" if is_zh else "Help")
-        self.help_btn.setToolTip("查看参数说明" if is_zh else "Show parameter guide for the selected mode.")
-        self.grp_standardize.setTitle("预处理（标准化）" if is_zh else "Preprocess (Standardization)")
+        self.help_btn.setToolTip(
+            "查看参数说明" if is_zh else "Show parameter guide for the selected mode."
+        )
+        self.grp_standardize.setTitle(
+            "预处理（标准化）" if is_zh else "Preprocess (Standardization)"
+        )
         self.chk_standardize.setText("StandardScaler")
         self.run_btn.setText("运行分析" if is_zh else "Run Analysis")
         self.stop_btn.setText("停止" if is_zh else "Stop")
@@ -408,7 +411,9 @@ class AnalysisPage(QWidget):
             elif mode == "cohospace":
                 mode_flag = params.get("mode")
             if mode_flag == "fr" and state.embed_data is None:
-                self.log_box.log("Preprocess required for FR-mode. Use spike-mode or run preprocess.")
+                self.log_box.log(
+                    "Preprocess required for FR-mode. Use spike-mode or run preprocess."
+                )
                 return
 
         self._controller.update_analysis(analysis_mode=mode, analysis_params=params)

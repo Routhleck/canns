@@ -14,8 +14,8 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from .base import AbstractAnalysisMode, configure_form_layout
 from ..views.widgets.popup_combo import PopupComboBox
+from .base import AbstractAnalysisMode, configure_form_layout
 
 
 class CohoSpaceMode(AbstractAnalysisMode):
@@ -170,7 +170,7 @@ class CohoSpaceMode(AbstractAnalysisMode):
 
     def _refresh_dim_mode(self) -> None:
         mode = str(self.dim_mode.currentData() or "2d")
-        is_1d = (mode == "1d")
+        is_1d = mode == "1d"
         self._dims1d_label.setVisible(is_1d)
         self._dims1d_wrap.setVisible(is_1d)
         self._dims2d_label.setVisible(not is_1d)

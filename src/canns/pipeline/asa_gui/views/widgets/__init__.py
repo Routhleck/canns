@@ -1,8 +1,8 @@
 """Reusable widgets for ASA GUI."""
 
+from .artifacts_tab import ArtifactsTab
 from .drop_zone import DropZone
 from .file_list import FileList
-from .artifacts_tab import ArtifactsTab
 from .gridscore_tab import GridScoreTab
 from .image_tab import ImageTab
 from .image_viewer import ImageViewer

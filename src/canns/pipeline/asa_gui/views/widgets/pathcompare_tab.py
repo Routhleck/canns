@@ -7,10 +7,10 @@ from pathlib import Path
 from PySide6.QtCore import Qt, QTimer, QUrl
 from PySide6.QtGui import QDesktopServices, QMovie
 from PySide6.QtWidgets import (
-    QLabel,
     QHBoxLayout,
-    QPushButton,
+    QLabel,
     QProgressBar,
+    QPushButton,
     QSplitter,
     QVBoxLayout,
     QWidget,

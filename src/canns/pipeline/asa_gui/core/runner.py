@@ -9,9 +9,10 @@ from __future__ import annotations
 import hashlib
 import json
 import time
+from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Callable
+from typing import Any
 
 import numpy as np
 
@@ -728,7 +729,9 @@ class PipelineRunner:
         out_dir.mkdir(parents=True, exist_ok=True)
 
         params = state.analysis_params or {}
-        pc_params = params.get("pathcompare") if isinstance(params.get("pathcompare"), dict) else params
+        pc_params = (
+            params.get("pathcompare") if isinstance(params.get("pathcompare"), dict) else params
+        )
 
         def _param(key: str, default: Any = None) -> Any:
             return pc_params.get(key, default) if isinstance(pc_params, dict) else default
@@ -949,9 +952,7 @@ class PipelineRunner:
             theta = theta[idx]
             t = t[idx]
             n_frames = len(theta)
-            log_callback(
-                f"PathCompare animation downsampled by x{factor} (frames={n_frames})."
-            )
+            log_callback(f"PathCompare animation downsampled by x{factor} (frames={n_frames}).")
 
         fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 5), dpi=120)
 
@@ -972,9 +973,9 @@ class PipelineRunner:
         ax2.set_xlim(-1.2, 1.2)
         ax2.set_ylim(-1.2, 1.2)
 
-        phys_trail, = ax1.plot([], [], lw=1.0)
+        (phys_trail,) = ax1.plot([], [], lw=1.0)
         phys_dot = ax1.scatter([], [], s=30)
-        circ_trail, = ax2.plot([], [], lw=1.0)
+        (circ_trail,) = ax2.plot([], [], lw=1.0)
         circ_dot = ax2.scatter([], [], s=30)
         title_text = fig.suptitle("", y=1.02)
 
@@ -1036,9 +1037,7 @@ class PipelineRunner:
             coords = coords[idx]
             t = t[idx]
             n_frames = len(coords)
-            log_callback(
-                f"PathCompare animation downsampled by x{factor} (frames={n_frames})."
-            )
+            log_callback(f"PathCompare animation downsampled by x{factor} (frames={n_frames}).")
 
         xy_skew = skew_transform(coords[:, :2])
 
@@ -1071,9 +1070,9 @@ class PipelineRunner:
         ax2.set_xlim(xm - px2, xM + px2)
         ax2.set_ylim(ym - py2, yM + py2)
 
-        phys_trail, = ax1.plot([], [], lw=1.0)
+        (phys_trail,) = ax1.plot([], [], lw=1.0)
         phys_dot = ax1.scatter([], [], s=30)
-        tor_trail, = ax2.plot([], [], lw=1.0)
+        (tor_trail,) = ax2.plot([], [], lw=1.0)
         tor_dot = ax2.scatter([], [], s=30)
         title_text = fig.suptitle("", y=1.02)
 
@@ -1828,7 +1827,9 @@ class PipelineRunner:
                 activity_full = self._embed_data
                 log_callback("GridScoreInspect[FR]: using preprocessed spike matrix.")
             else:
-                log_callback("GridScoreInspect[FR]: no preprocessed matrix, falling back to spike mode.")
+                log_callback(
+                    "GridScoreInspect[FR]: no preprocessed matrix, falling back to spike mode."
+                )
                 activity_full = self._build_spike_matrix_from_events(asa_data)
         else:
             activity_full = self._build_spike_matrix_from_events(asa_data)
@@ -1904,11 +1905,15 @@ class PipelineRunner:
             overlap=overlap,
             mode=mode,
             grid_score=float(result.score),
-            spacing=np.asarray(result.spacing) if result.spacing is not None else np.full((3,), np.nan),
+            spacing=np.asarray(result.spacing)
+            if result.spacing is not None
+            else np.full((3,), np.nan),
             orientation=np.asarray(result.orientation)
             if result.orientation is not None
             else np.full((3,), np.nan),
-            ellipse=np.asarray(result.ellipse) if result.ellipse is not None else np.full((5,), np.nan),
+            ellipse=np.asarray(result.ellipse)
+            if result.ellipse is not None
+            else np.full((5,), np.nan),
             ellipse_theta_deg=float(getattr(result, "ellipse_theta_deg", np.nan)),
             center_radius=float(getattr(result, "center_radius", np.nan)),
             optimal_radius=float(getattr(result, "optimal_radius", np.nan)),

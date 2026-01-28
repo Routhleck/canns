@@ -210,7 +210,7 @@ class StateManager(QObject):
         if isinstance(a, (list, tuple)) and isinstance(b, (list, tuple)):
             if len(a) != len(b):
                 return False
-            return all(StateManager._is_equal(x, y) for x, y in zip(a, b))
+            return all(StateManager._is_equal(x, y) for x, y in zip(a, b, strict=False))
         try:
             return a == b
         except Exception:

@@ -14,8 +14,8 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from .base import AbstractAnalysisMode, configure_form_layout
 from ..views.widgets.popup_combo import PopupComboBox
+from .base import AbstractAnalysisMode, configure_form_layout
 
 
 class PathCompareMode(AbstractAnalysisMode):
@@ -141,7 +141,7 @@ class PathCompareMode(AbstractAnalysisMode):
 
         def _refresh_dim_mode() -> None:
             mode = str(self.dim_mode.currentData() or "2d")
-            is_1d = (mode == "1d")
+            is_1d = mode == "1d"
             self._dims1d_label.setVisible(is_1d)
             dims_1d.setVisible(is_1d)
             self._dims2d_label.setVisible(not is_1d)
@@ -152,7 +152,7 @@ class PathCompareMode(AbstractAnalysisMode):
             self.interp_full.setEnabled(use_box)
 
         def _refresh_slice_mode() -> None:
-            is_time = (self.slice_mode.currentData() == "time")
+            is_time = self.slice_mode.currentData() == "time"
             self.tmin.setEnabled(is_time)
             self.tmax.setEnabled(is_time)
             self.imin.setEnabled(not is_time)

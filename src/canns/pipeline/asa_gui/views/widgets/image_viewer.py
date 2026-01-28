@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from PySide6.QtCore import Qt, QRectF, QPointF
+from PySide6.QtCore import QPointF, QRectF, Qt
 from PySide6.QtGui import QColor, QPainter, QPixmap
 from PySide6.QtWidgets import QGraphicsPixmapItem, QGraphicsScene, QGraphicsTextItem, QGraphicsView
 
@@ -92,4 +92,6 @@ class ImageViewer(QGraphicsView):
         view_rect = self.viewport().rect()
         center_scene = self.mapToScene(view_rect.center())
         br = self._placeholder.boundingRect()
-        self._placeholder.setPos(QPointF(center_scene.x() - br.width() / 2, center_scene.y() - br.height() / 2))
+        self._placeholder.setPos(
+            QPointF(center_scene.x() - br.width() / 2, center_scene.y() - br.height() / 2)
+        )

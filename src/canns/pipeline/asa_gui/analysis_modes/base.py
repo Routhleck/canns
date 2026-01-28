@@ -23,9 +23,11 @@ class AbstractAnalysisMode(ABC):
 
     def apply_preset(self, preset: str) -> None:
         """Apply preset hints (grid/hd) to parameters."""
+        return None
 
     def apply_ranges(self, neuron_count: int | None, total_steps: int | None) -> None:
         """Apply neuron/time ranges based on loaded data."""
+        return None
 
 
 def configure_form_layout(form: QFormLayout) -> None:

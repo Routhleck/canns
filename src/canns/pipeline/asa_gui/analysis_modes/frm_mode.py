@@ -13,8 +13,8 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from .base import AbstractAnalysisMode, configure_form_layout
 from ..views.widgets.popup_combo import PopupComboBox
+from .base import AbstractAnalysisMode, configure_form_layout
 
 
 class FRMMode(AbstractAnalysisMode):

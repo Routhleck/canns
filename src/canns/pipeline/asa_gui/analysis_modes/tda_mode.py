@@ -4,8 +4,8 @@ from __future__ import annotations
 
 from PySide6.QtWidgets import QCheckBox, QFormLayout, QGroupBox, QSpinBox
 
-from .base import AbstractAnalysisMode, configure_form_layout
 from ..views.widgets.popup_combo import PopupComboBox
+from .base import AbstractAnalysisMode, configure_form_layout
 
 
 class TDAMode(AbstractAnalysisMode):
