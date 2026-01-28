@@ -180,18 +180,18 @@ Module Contents
 
 .. py:function:: plot_path_compare_1d(x, y, coords, config = None, *, title = 'Path Compare (1D)', figsize = (12, 5), show = True, save_path = None)
 
-   1D wrapper for :func:`plot_path_compare_2d`.
+   Plot physical path vs decoded coho-space path (1D) side-by-side.
 
 
 .. py:function:: plot_path_compare_2d(x, y, coords, config = None, *, title = 'Path Compare', figsize = (12, 5), show = True, save_path = None)
 
-   Plot physical path vs decoded coho-space path side-by-side.
+   Plot physical path vs decoded coho-space path (2D) side-by-side.
 
    :param x: Physical position arrays of shape (T,).
    :type x: np.ndarray
    :param y: Physical position arrays of shape (T,).
    :type y: np.ndarray
-   :param coords: Decoded circular coordinates, shape (T, 1) or (T, 2).
+   :param coords: Decoded circular coordinates, shape (T, 2) or (T, 2+).
    :type coords: np.ndarray
    :param config: Plot configuration. If None, a default config is created.
    :type config: PlotConfig, optional

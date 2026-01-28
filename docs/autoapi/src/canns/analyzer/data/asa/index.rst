@@ -606,6 +606,12 @@ Package Contents
 
       :type: bool
 
+   .. attribute:: standardize
+
+      Whether to standardize data before PCA (z-score).
+
+      :type: bool
+
    .. rubric:: Examples
 
    >>> from canns.analyzer.data import TDAConfig
@@ -687,6 +693,12 @@ Package Contents
 
 
    .. py:attribute:: show
+      :type:  bool
+      :value: True
+
+
+
+   .. py:attribute:: standardize
       :type:  bool
       :value: True
 
@@ -1290,18 +1302,18 @@ Package Contents
 
 .. py:function:: plot_path_compare_1d(x, y, coords, config = None, *, title = 'Path Compare (1D)', figsize = (12, 5), show = True, save_path = None)
 
-   1D wrapper for :func:`plot_path_compare_2d`.
+   Plot physical path vs decoded coho-space path (1D) side-by-side.
 
 
 .. py:function:: plot_path_compare_2d(x, y, coords, config = None, *, title = 'Path Compare', figsize = (12, 5), show = True, save_path = None)
 
-   Plot physical path vs decoded coho-space path side-by-side.
+   Plot physical path vs decoded coho-space path (2D) side-by-side.
 
    :param x: Physical position arrays of shape (T,).
    :type x: np.ndarray
    :param y: Physical position arrays of shape (T,).
    :type y: np.ndarray
-   :param coords: Decoded circular coordinates, shape (T, 1) or (T, 2).
+   :param coords: Decoded circular coordinates, shape (T, 2) or (T, 2+).
    :type coords: np.ndarray
    :param config: Plot configuration. If None, a default config is created.
    :type config: PlotConfig, optional
@@ -1444,7 +1456,7 @@ Package Contents
    :type config: TDAConfig, optional
    :param \*\*kwargs: Legacy keyword parameters (``dim``, ``num_times``, ``active_times``, ``k``,
                       ``n_points``, ``metric``, ``nbs``, ``maxdim``, ``coeff``, ``show``,
-                      ``do_shuffle``, ``num_shuffles``, ``progress_bar``).
+                      ``do_shuffle``, ``num_shuffles``, ``progress_bar``, ``standardize``).
    :type \*\*kwargs: Any
 
    :returns: Dictionary containing:

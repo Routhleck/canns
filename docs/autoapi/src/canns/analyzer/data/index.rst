@@ -16,5 +16,6 @@ Submodules
    :maxdepth: 1
 
    /autoapi/src/canns/analyzer/data/asa/index
+   /autoapi/src/canns/analyzer/data/cell_classification/index
 
 
