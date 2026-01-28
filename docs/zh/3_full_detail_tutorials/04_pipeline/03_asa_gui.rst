@@ -60,12 +60,6 @@ TDA、解码与可视化整合为图形化工作流。你将学会用窗口界�
 Preprocess 页：输入配置、预处理参数与日志。
 Analysis 页：分析参数、结果预览与文件输出。
 
-.. figure:: /_static/asa_gui_overview.png
-   :alt: ASA GUI 界面总览
-   :width: 90%
-
-   ASA GUI 主界面总览（占位图）
-
 界面元素清单
 ------------
 
