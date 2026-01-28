@@ -5,6 +5,53 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.14.0] - 2026-01-28
+
+### Added
+- Complete PySide6-based ASA GUI application with 10+ analysis modes (PR #91)
+  - Interactive desktop interface with drag-and-drop file loading
+  - Light/dark theme support with modern UI design
+  - Real-time progress tracking and result visualization
+  - CLI entry points: `canns-gui` and `python -m canns.pipeline.asa_gui`
+  - Comprehensive Chinese tutorial with screenshots (`docs/zh/3_full_detail_tutorials/04_pipeline/03_asa_gui.rst`)
+- Cell classification module for grid cells and head direction cells (PR #89)
+  - Grid cell analysis: gridness score, spatial rate maps, autocorrelogram features
+  - Head direction cell analysis: directional tuning, mean vector length, Rayleigh test
+  - Leiden clustering for grid module identification
+  - Complete utilities: circular statistics, correlation, geometry, image processing
+  - Visualization tools for grid plots and HD plots
+  - Tutorial notebook (`docs/zh/examples/02_data_analysis/04_cell_classification.ipynb`)
+  - Example scripts in `examples/cell_classification/`
+- ASA core references section to documentation (PR #90)
+- Application icon (`images/logo.ico`)
+- 12 new documentation images for ASA GUI modes
+
+### Changed
+- Refactored ASA API with explicit 1D/2D function separation (PR #89)
+  - `plot_cohospace_trajectory()` → `plot_cohospace_trajectory_1d()` / `plot_cohospace_trajectory_2d()`
+  - `align_coords_to_position()` → `align_coords_to_position_1d()` / `align_coords_to_position_2d()`
+  - `compare_paths()` → `compare_paths_1d()` / `compare_paths_2d()`
+- Optimized `embed_spike_trains` binning and smoothing performance (PR #89)
+- Modernized type annotations to Python 3.10+ syntax in cell classification modules (PR #89)
+- Improved import ordering and code consistency across ASA GUI (PR #91)
+- Updated example scripts to use new 1D/2D API variants
+
+### Added Dependencies
+- **PySide6 (>=6.8.1)**: Qt6 bindings for GUI (optional: `pip install canns[gui]`)
+- **scikit-image (>=0.24.0)**: Image processing for spatial analysis
+- **h5py (>=3.12.1)**: HDF5 file support for MATLAB data
+- **igraph (>=0.11.8)**: Graph algorithms for clustering
+- **leidenalg (>=0.10.2)**: Leiden clustering algorithm
+
+### Breaking Changes
+- ASA cohospace and path functions split into explicit 1D/2D variants
+- Old function names deprecated (will be removed in v0.15.0)
+
+### Technical Improvements
+- Added `standardize` option to TDAConfig for normalized persistence diagrams
+- Enhanced warnings with stacklevel for better debugging
+- Improved test assertions in `test_embed_spike_trains_basic`
+
 ## [0.13.2] - 2026-01-26
 
 ### Added
@@ -435,6 +482,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Basic structure template
 - Core application structure
 
+[0.14.0]: https://github.com/routhleck/canns/compare/v0.13.2...v0.14.0
 [0.13.2]: https://github.com/routhleck/canns/compare/v0.13.1...v0.13.2
 [0.13.1]: https://github.com/routhleck/canns/compare/v0.13.0...v0.13.1
 [0.13.0]: https://github.com/routhleck/canns/compare/v0.12.7...v0.13.0
