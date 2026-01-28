@@ -19,9 +19,6 @@ class ImageViewer(QGraphicsView):
         self.setResizeAnchor(QGraphicsView.AnchorUnderMouse)
         self.setDragMode(QGraphicsView.ScrollHandDrag)
         self.setMinimumHeight(200)
-        self.setStyleSheet(
-            "QGraphicsView { background: #ffffff; border: 1px solid #d8d4cc; border-radius: 8px; }"
-        )
 
         self._scene = QGraphicsScene(self)
         self.setScene(self._scene)

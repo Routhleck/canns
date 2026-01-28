@@ -2,11 +2,11 @@
 
 from __future__ import annotations
 
-from pathlib import Path
-
+from PySide6.QtCore import QSettings
 from PySide6.QtWidgets import QApplication
 
 from .main_window import MainWindow
+from .resources import load_theme_qss
 
 
 class ASAGuiApp(MainWindow):
@@ -15,10 +15,10 @@ class ASAGuiApp(MainWindow):
         self._apply_styles()
 
     def _apply_styles(self) -> None:
-        qss_path = Path(__file__).parent / "resources" / "styles.qss"
-        if not qss_path.exists():
-            return
         try:
-            QApplication.instance().setStyleSheet(qss_path.read_text(encoding="utf-8"))
+            settings = QSettings("canns", "asa_gui")
+            theme = settings.value("theme", "Light")
+            qss = load_theme_qss(str(theme))
+            QApplication.instance().setStyleSheet(qss)
         except Exception:
             pass

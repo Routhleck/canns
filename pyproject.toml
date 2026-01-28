@@ -73,6 +73,13 @@ dev = [
     "datasets>=4.4.1",
     "sphinx-copybutton>=0.5.2",
 ]
+dev-gui = [
+    "PySide6>=6.6.0",
+    "pillow",
+    "imageio",
+    "qtawesome",
+    "pytest-qt",
+]
 docs = [
     "myst-parser>=4.0.1",
     "nbsphinx>=0.9.7",
@@ -102,6 +109,7 @@ gui = [
     "PySide6>=6.6.0",
     "pillow",
     "imageio",
+    "qtawesome",
 ]
 
 [project.scripts]

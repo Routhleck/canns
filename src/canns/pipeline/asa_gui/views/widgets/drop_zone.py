@@ -20,7 +20,7 @@ class DropZone(QFrame):
 
         self._title = QLabel(f"<b>{title}</b>")
         self._hint = QLabel(hint)
-        self._hint.setStyleSheet("color: #666;")
+        self._hint.setObjectName("muted")
 
         self._path_label = QLabel("No file")
         self._path_label.setTextInteractionFlags(Qt.TextSelectableByMouse)
@@ -30,21 +30,6 @@ class DropZone(QFrame):
         layout.addWidget(self._title)
         layout.addWidget(self._hint)
         layout.addWidget(self._path_label)
-
-        self.setStyleSheet(
-            """
-            QFrame#DropZone {
-                border: 2px dashed #b5b1a8;
-                border-radius: 10px;
-                padding: 8px;
-                background: #fbfaf8;
-            }
-            QFrame#DropZone[drag="true"] {
-                border-color: #1b8a6a;
-                background: #eef7f4;
-            }
-            """
-        )
 
     def set_path(self, path: str) -> None:
         self._path_label.setText(path)

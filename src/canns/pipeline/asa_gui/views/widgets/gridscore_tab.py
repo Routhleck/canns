@@ -11,6 +11,7 @@ from PySide6.QtWidgets import (
     QHBoxLayout,
     QLabel,
     QPushButton,
+    QComboBox,
     QSpinBox,
     QSplitter,
     QVBoxLayout,
@@ -71,12 +72,24 @@ class GridScoreTab(QWidget):
         self.neuron_id = QSpinBox()
         self.neuron_id.setRange(0, 0)
         self.neuron_id.setValue(0)
+        self.sort_combo = QComboBox()
+        self.sort_combo.addItems(
+            [
+                "neuron id (asc)",
+                "neuron id (desc)",
+                "grid score (desc)",
+                "grid score (asc)",
+            ]
+        )
         self.btn_show = QPushButton("Show neuron")
 
         ctrl.addWidget(QLabel("neuron_id:"))
         ctrl.addWidget(self.btn_prev)
         ctrl.addWidget(self.neuron_id)
         ctrl.addWidget(self.btn_next)
+        ctrl.addSpacing(8)
+        ctrl.addWidget(QLabel("sort:"))
+        ctrl.addWidget(self.sort_combo)
         ctrl.addStretch(1)
         ctrl.addWidget(self.btn_show)
         insp_layout.addLayout(ctrl)
@@ -99,6 +112,7 @@ class GridScoreTab(QWidget):
         self.btn_prev.clicked.connect(lambda: self._shift(-1))
         self.btn_next.clicked.connect(lambda: self._shift(+1))
         self.neuron_id.valueChanged.connect(self._on_neuron_changed)
+        self.sort_combo.currentIndexChanged.connect(self._on_sort_changed)
         self.btn_show.clicked.connect(self._emit_inspect)
 
         self.set_enabled(False)
@@ -107,6 +121,7 @@ class GridScoreTab(QWidget):
         self.btn_prev.setEnabled(enabled)
         self.btn_next.setEnabled(enabled)
         self.neuron_id.setEnabled(enabled)
+        self.sort_combo.setEnabled(enabled)
         self.btn_show.setEnabled(enabled)
 
     def clear(self) -> None:
@@ -117,6 +132,9 @@ class GridScoreTab(QWidget):
         self._spacing = None
         self._orientation = None
         self._id_to_idx = {}
+        self._order_ids: list[int] = []
+        self._order_index: dict[int, int] = {}
+        self._current_order_pos = 0
         self.dist_header.setText("Grid score distribution")
         self.insp_header.setText("Neuron inspector")
         self.lbl_metrics.setText("grid_score: —    spacing: —    orientation: —")
@@ -184,9 +202,8 @@ class GridScoreTab(QWidget):
             mn = int(self._ids.min())
             mx = int(self._ids.max())
             self.neuron_id.setRange(mn, mx)
-            self.neuron_id.setValue(mn)
             self.set_enabled(True)
-            self._on_neuron_changed(mn)
+            self._apply_sort(preserve_id=mn)
             self.lbl_status.setText(f"Loaded {len(self._ids)} neurons from {path.name}")
         else:
             self.set_enabled(False)
@@ -207,13 +224,21 @@ class GridScoreTab(QWidget):
     def _shift(self, step: int) -> None:
         if not self.neuron_id.isEnabled():
             return
-        self.neuron_id.setValue(self.neuron_id.value() + int(step))
+        if not self._order_ids:
+            self.neuron_id.setValue(self.neuron_id.value() + int(step))
+            return
+        new_pos = self._current_order_pos + int(step)
+        new_pos = max(0, min(len(self._order_ids) - 1, new_pos))
+        self._current_order_pos = new_pos
+        self.neuron_id.setValue(int(self._order_ids[new_pos]))
 
     def _on_neuron_changed(self, nid: int) -> None:
         if not self.has_scores():
             self.lbl_metrics.setText("grid_score: —    spacing: —    orientation: —")
             return
         nid = int(nid)
+        if self._order_index:
+            self._current_order_pos = self._order_index.get(nid, self._current_order_pos)
         idx = self._id_to_idx.get(nid)
         if idx is None:
             self.lbl_metrics.setText("grid_score: —    spacing: —    orientation: —")
@@ -234,6 +259,42 @@ class GridScoreTab(QWidget):
         self.lbl_metrics.setText(
             f"grid_score: {score:.3f}    spacing: {spc_txt}    orientation: {ori_txt}"
         )
+
+    def _on_sort_changed(self) -> None:
+        if not self.has_scores():
+            return
+        self._apply_sort(preserve_id=int(self.neuron_id.value()))
+
+    def _apply_sort(self, preserve_id: int | None = None) -> None:
+        if self._ids is None:
+            return
+        ids = [int(nid) for nid in self._ids.tolist()]
+        scores = None
+        if self._scores is not None:
+            try:
+                scores = [float(s) for s in self._scores.tolist()]
+            except Exception:
+                scores = None
+
+        mode = self.sort_combo.currentText()
+        if mode == "neuron id (desc)":
+            order_ids = sorted(ids, reverse=True)
+        elif mode == "grid score (asc)" and scores is not None:
+            order_ids = [i for i, _ in sorted(zip(ids, scores), key=lambda t: t[1])]
+        elif mode == "grid score (desc)" and scores is not None:
+            order_ids = [i for i, _ in sorted(zip(ids, scores), key=lambda t: t[1], reverse=True)]
+        else:
+            order_ids = sorted(ids)
+
+        self._order_ids = order_ids
+        self._order_index = {nid: idx for idx, nid in enumerate(order_ids)}
+
+        if preserve_id is None or preserve_id not in self._order_index:
+            preserve_id = order_ids[0] if order_ids else None
+
+        if preserve_id is not None:
+            self._current_order_pos = self._order_index.get(preserve_id, 0)
+            self.neuron_id.setValue(int(preserve_id))
 
     def _emit_inspect(self) -> None:
         if not self.has_scores():

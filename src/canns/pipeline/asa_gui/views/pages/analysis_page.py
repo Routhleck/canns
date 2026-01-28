@@ -7,18 +7,21 @@ from pathlib import Path
 import numpy as np
 
 from PySide6.QtCore import Qt, Signal
+from PySide6.QtGui import QColor
 from PySide6.QtWidgets import (
     QComboBox,
     QFrame,
     QHBoxLayout,
     QLabel,
     QPushButton,
+    QSplitter,
     QScrollArea,
     QStackedWidget,
     QTabWidget,
     QVBoxLayout,
     QWidget,
     QProgressBar,
+    QGraphicsDropShadowEffect,
 )
 
 from ...controllers import AnalysisController
@@ -48,10 +51,15 @@ class AnalysisPage(QWidget):
         self._build_ui()
 
     def _build_ui(self) -> None:
-        root = QHBoxLayout(self)
+        root = QVBoxLayout(self)
 
-        left = QVBoxLayout()
-        right = QVBoxLayout()
+        splitter = QSplitter(Qt.Horizontal)
+        root.addWidget(splitter, 1)
+
+        left_wrap = QWidget()
+        right_wrap = QWidget()
+        left = QVBoxLayout(left_wrap)
+        right = QVBoxLayout(right_wrap)
 
         title = QLabel("Analysis")
         title.setAlignment(Qt.AlignLeft)
@@ -77,19 +85,19 @@ class AnalysisPage(QWidget):
         self.param_widgets: dict[str, QWidget] = {}
         for mode in self._modes.values():
             widget = mode.create_params_widget()
+            widget.setObjectName("card")
             self.param_widgets[mode.name] = widget
             self.param_stack.addWidget(widget)
         self.param_scroll = QScrollArea()
         self.param_scroll.setWidgetResizable(True)
         self.param_scroll.setFrameShape(QFrame.NoFrame)
         self.param_scroll.setWidget(self.param_stack)
-        left.addWidget(self.param_scroll, 1)
 
         controls = QHBoxLayout()
         self.run_btn = QPushButton("Run Analysis")
-        self.run_btn.setObjectName("PrimaryButton")
+        self.run_btn.setObjectName("btn_run")
         self.stop_btn = QPushButton("Stop")
-        self.stop_btn.setObjectName("DangerButton")
+        self.stop_btn.setObjectName("btn_stop")
         self.stop_btn.setEnabled(False)
         self.progress = QProgressBar()
         self.progress.setRange(0, 100)
@@ -97,11 +105,16 @@ class AnalysisPage(QWidget):
         controls.addWidget(self.run_btn)
         controls.addWidget(self.stop_btn)
         controls.addWidget(self.progress, 1)
-        left.addLayout(controls)
 
-        left.addWidget(QLabel("Logs"))
         self.log_box = LogBox()
-        left.addWidget(self.log_box, 1)
+        log_wrap = QWidget()
+        log_layout = QVBoxLayout(log_wrap)
+        log_layout.addWidget(QLabel("Logs"))
+        log_layout.addWidget(self.log_box, 1)
+
+        left.addWidget(self.param_scroll, 2)
+        left.addLayout(controls)
+        left.addWidget(log_wrap, 1)
 
         # Results
         self.tabs = QTabWidget()
@@ -126,8 +139,10 @@ class AnalysisPage(QWidget):
 
         right.addWidget(self.tabs, 1)
 
-        root.addLayout(left, 2)
-        root.addLayout(right, 2)
+        splitter.addWidget(left_wrap)
+        splitter.addWidget(right_wrap)
+        splitter.setStretchFactor(0, 1)
+        splitter.setStretchFactor(1, 2)
 
         self.analysis_mode.currentIndexChanged.connect(self._on_mode_changed)
         self.run_btn.clicked.connect(self._run_analysis)
@@ -135,6 +150,15 @@ class AnalysisPage(QWidget):
         self.tab_gridscore.inspectRequested.connect(self._run_gridscore_inspect)
 
         self._on_mode_changed()
+        self._apply_card_effects(list(self.param_widgets.values()))
+
+    def _apply_card_effects(self, widgets: list[QWidget]) -> None:
+        for widget in widgets:
+            effect = QGraphicsDropShadowEffect(self)
+            effect.setBlurRadius(18)
+            effect.setOffset(0, 3)
+            effect.setColor(QColor(0, 0, 0, 40))
+            widget.setGraphicsEffect(effect)
 
     def load_state(self, state) -> None:
         preset = getattr(state, "preset", None)

@@ -1391,6 +1391,8 @@ class PipelineRunner:
         neuron_range = params.get("neuron_range", None)
         time_range = params.get("time_range", None)
         normalize = params.get("normalize", "zscore_per_neuron")
+        if normalize in {"none", "", None}:
+            normalize = None
         mode = params.get("mode", "fr")
 
         if mode == "spike":

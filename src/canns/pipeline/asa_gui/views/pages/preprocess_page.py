@@ -15,11 +15,14 @@ from PySide6.QtWidgets import (
     QHBoxLayout,
     QLabel,
     QPushButton,
+    QSplitter,
     QSpinBox,
     QVBoxLayout,
     QWidget,
     QProgressBar,
+    QGraphicsDropShadowEffect,
 )
+from PySide6.QtGui import QColor
 
 from ...controllers import PreprocessController
 from ...core import WorkerManager
@@ -51,8 +54,15 @@ class PreprocessPage(QWidget):
         title.setStyleSheet("font-size: 18px; font-weight: 600;")
         root.addWidget(title)
 
+        content_split = QSplitter(Qt.Vertical)
+        root.addWidget(content_split, 1)
+
+        top_wrap = QWidget()
+        top_layout = QVBoxLayout(top_wrap)
+
         # Input group
         input_group = QGroupBox("Input")
+        input_group.setObjectName("card")
         input_layout = QVBoxLayout(input_group)
 
         top_row = QHBoxLayout()
@@ -82,7 +92,7 @@ class PreprocessPage(QWidget):
         asa_row.addWidget(self.asa_browse)
         input_layout.addLayout(asa_row)
         self.asa_hint = QLabel("Expected keys: spike, x, y, t")
-        self.asa_hint.setStyleSheet("color: #666;")
+        self.asa_hint.setObjectName("muted")
         input_layout.addWidget(self.asa_hint)
 
         # Neuron + Trajectory input
@@ -103,10 +113,11 @@ class PreprocessPage(QWidget):
         input_layout.addLayout(neuron_row)
         input_layout.addLayout(traj_row)
 
-        root.addWidget(input_group)
+        top_layout.addWidget(input_group)
 
         # Preprocess group
         preprocess_group = QGroupBox("Preprocess")
+        preprocess_group.setObjectName("card")
         preprocess_layout = QFormLayout(preprocess_group)
 
         self.preprocess_method = QComboBox()
@@ -154,24 +165,25 @@ class PreprocessPage(QWidget):
 
         preprocess_layout.addRow(self.embed_params)
 
-        root.addWidget(preprocess_group)
+        top_layout.addWidget(preprocess_group)
 
         # Pre-classification (placeholder)
         preclass_group = QGroupBox("Pre-classification")
+        preclass_group.setObjectName("card")
         preclass_form = QFormLayout(preclass_group)
         self.preclass = QComboBox()
         self.preclass.addItems(["none", "grid", "hd"])
         self.preclass.setCurrentText("none")
         preclass_form.addRow("Preclass", self.preclass)
-        root.addWidget(preclass_group)
+        top_layout.addWidget(preclass_group)
 
         # Controls
         control_row = QHBoxLayout()
         self.run_btn = QPushButton("Run Preprocess")
-        self.run_btn.setObjectName("PrimaryButton")
+        self.run_btn.setObjectName("btn_run")
         self.run_btn.clicked.connect(self._run_preprocess)
         self.stop_btn = QPushButton("Stop")
-        self.stop_btn.setObjectName("DangerButton")
+        self.stop_btn.setObjectName("btn_stop")
         self.stop_btn.clicked.connect(self._stop_preprocess)
         self.stop_btn.setEnabled(False)
         self.progress = QProgressBar()
@@ -181,11 +193,18 @@ class PreprocessPage(QWidget):
         control_row.addWidget(self.run_btn)
         control_row.addWidget(self.stop_btn)
         control_row.addWidget(self.progress, 1)
-        root.addLayout(control_row)
+        top_layout.addLayout(control_row)
 
-        root.addWidget(QLabel("Logs"))
+        log_wrap = QWidget()
+        log_layout = QVBoxLayout(log_wrap)
+        log_layout.addWidget(QLabel("Logs"))
         self.log_box = LogBox()
-        root.addWidget(self.log_box, 1)
+        log_layout.addWidget(self.log_box, 1)
+
+        content_split.addWidget(top_wrap)
+        content_split.addWidget(log_wrap)
+        content_split.setStretchFactor(0, 3)
+        content_split.setStretchFactor(1, 1)
 
         self.input_mode.currentIndexChanged.connect(self._toggle_input_mode)
         self.asa_zone.fileDropped.connect(lambda path: self.asa_zone.set_path(path))
@@ -197,6 +216,15 @@ class PreprocessPage(QWidget):
         self._toggle_input_mode()
         self._toggle_embed_params()
         self._update_run_enabled()
+        self._apply_card_effects([input_group, preprocess_group, preclass_group])
+
+    def _apply_card_effects(self, widgets: list[QWidget]) -> None:
+        for widget in widgets:
+            effect = QGraphicsDropShadowEffect(self)
+            effect.setBlurRadius(18)
+            effect.setOffset(0, 3)
+            effect.setColor(QColor(0, 0, 0, 40))
+            widget.setGraphicsEffect(effect)
 
     def _embedding_defaults(self) -> dict:
         try:
