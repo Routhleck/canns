@@ -42,12 +42,20 @@ def main() -> int:
     app.setApplicationDisplayName("ASA GUI")
     QGuiApplication.setApplicationDisplayName("ASA GUI")
 
-    base = Path(__file__).resolve().parents[4] / "images"
-    logo_path = base / "logo_256.png"
+    from .resources import resource_path
+
+    logo_path = resource_path("logo_256.png")
     if not logo_path.exists():
-        logo_path = base / "logo.svg"
+        logo_path = resource_path("logo.svg")
     if not logo_path.exists():
-        logo_path = base / "logo.ico"
+        logo_path = resource_path("logo.ico")
+    if not logo_path.exists():
+        base = Path(__file__).resolve().parents[4] / "images"
+        logo_path = base / "logo_256.png"
+        if not logo_path.exists():
+            logo_path = base / "logo.svg"
+        if not logo_path.exists():
+            logo_path = base / "logo.ico"
     icon = QIcon(str(logo_path)) if logo_path.exists() else QIcon()
     if not icon.isNull():
         app.setWindowIcon(icon)

@@ -27,7 +27,7 @@ CANNs is a Python library built on top of brainpy with performance‑critical mo
 - **Task-first API** – `canns.task.tracking` and `canns.task.open_loop_navigation` generate smooth tracking inputs, population coding stimuli, or import experimental trajectories.
 - **Rich analysis suite** – `canns.analyzer` covers energy landscapes, tuning curves, spike embeddings, UMAP/TDA helpers, and theta-sweep animations.
 - **Unified training** – `canns.trainer.HebbianTrainer` implements generic Hebbian learning and prediction, layered on the abstract `Trainer` base.
-- **Pipeline workspace** – the ASA TUI (Attractor Structure Analyzer) provides an end-to-end analysis workflow (TDA → decode → CohoMap/CohoSpace/FR/FRM) for interactive runs.
+- **Pipeline workspace** – the ASA GUI (Attractor Structure Analyzer) provides an end-to-end analysis workflow (TDA → decode → CohoMap/CohoSpace/FR/FRM) with interactive visualization, help tips, and bilingual UI.
 - **Extensible foundations** – base classes (`BasicModel`, `Task`, `Trainer`, `Pipeline`) keep custom components consistent with the built-in ecosystem.
 
 ## Visual Gallery
@@ -78,6 +78,9 @@ pip install canns
 pip install canns[cuda12]
 pip install canns[tpu]
 
+# GUI (recommended for pipeline usage)
+pip install canns[gui]
+
 ```
 
 ## Quick Start
@@ -106,20 +109,30 @@ def step(t, stimulus):
 
 us, inputs = bm.for_loop(
     step,
-    (
-	task.run_steps,
-	task.data,
-    )
+    task.run_steps,
+    task.data,
 )
 ```
 
-For the ASA pipeline, run the TUI via `python -m canns.pipeline.asa` (or the `canns-tui` entrypoint) and point it at your ASA `.npz` inputs.
+For the ASA pipeline, the recommended entrypoint is the GUI:
+
+```bash
+canns-gui
+# or
+python -m canns.pipeline.asa_gui
+```
+
+> Note: ASA TUI (`python -m canns.pipeline.asa` / `canns-tui`) is a legacy interface kept for transition.
 
 ## Documentation & Notebooks
 
 - [Quick Start Guide](https://routhleck.com/canns/en/notebooks/01_quick_start.html) – condensed tour of the library layout.
 - [Design Philosophy](https://routhleck.com/canns/en/notebooks/00_design_philosophy.html) – detailed design rationale for each module.
 - Interactive launchers: [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/routhleck/canns/HEAD?filepath=docs%2Fen%2Fnotebooks) [![Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/routhleck/canns/blob/master/docs/en/notebooks/)
+- Tutorials (Chinese, online):
+  - [ASA GUI end-to-end](https://routhleck.com/canns/zh/3_full_detail_tutorials/04_pipeline/03_asa_gui.html)
+  - [ASA pipeline principles & parameters](https://routhleck.com/canns/zh/3_full_detail_tutorials/02_data_analysis/01_asa_pipeline.html)
+  - [Cell classification](https://routhleck.com/canns/zh/3_full_detail_tutorials/02_data_analysis/04_cell_classification.html)
 
 ## Development Workflow
 

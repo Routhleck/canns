@@ -28,7 +28,7 @@ CANNs 是一个构建于 brainpy 之上的 Python 库，并通过专门的 Rust 
 - **任务优先 API** – `canns.task.tracking` 与 `canns.task.open_loop_navigation` 可生成平滑跟踪输入、群体编码刺激，或导入实验轨迹。
 - **丰富分析套件** – `canns.analyzer` 覆盖能量景观、调谐曲线、脉冲嵌入、UMAP/TDA 辅助工具，以及 theta 扫描动画。
 - **统一训练框架** – `canns.trainer.HebbianTrainer` 实现通用的 Hebb 学习与预测，基于抽象 `Trainer` 基类。
-- **流水线工作台** – ASA TUI（Attractor Structure Analyzer）提供端到端分析（TDA → 解码 → CohoMap/CohoSpace/FR/FRM），并支持 Textual TUI 交互运行。
+- **流水线工作台** – ASA GUI（Attractor Structure Analyzer）提供端到端分析（TDA → 解码 → CohoMap/CohoSpace/FR/FRM），支持交互式可视化、Help 提示与中英双语切换。
 - **可扩展基础** – 基类（`BasicModel`, `Task`, `Trainer`, `Pipeline`）让自定义组件与内置生态保持一致。
 
 ## 可视化展示
@@ -79,6 +79,9 @@ pip install canns
 pip install canns[cuda12]
 pip install canns[tpu]
 
+# GUI（推荐用于流水线）
+pip install canns[gui]
+
 ```
 
 ## 快速开始
@@ -112,12 +115,21 @@ us, inputs = bm.for_loop(
 )
 ```
 
-若需 ASA pipeline，可运行 `python -m canns.pipeline.asa`（或 `canns-tui` 入口），并选择你的 ASA `.npz` 数据。
+若需 ASA pipeline，推荐使用 GUI：
+
+```bash
+canns-gui
+# 或
+python -m canns.pipeline.asa_gui
+```
+
+> 说明：ASA TUI（`python -m canns.pipeline.asa` / `canns-tui`）为旧版，仅作过渡使用。
 
 ## 文档与示例笔记本
 
 - [快速开始指南](https://routhleck.com/canns/zh/notebooks/01_quick_start.html) – 库结构速览。
 - [设计理念](https://routhleck.com/canns/zh/notebooks/00_design_philosophy.html) – 各模块设计理念详解。
+- 教程入口：https://routhleck.com/canns
 - 交互式运行： [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/routhleck/canns/HEAD?filepath=docs%2Fzh%2Fnotebooks) [![Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/routhleck/canns/blob/master/docs/zh/notebooks/)
 
 ## 开发流程

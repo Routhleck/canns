@@ -20,7 +20,7 @@ from PySide6.QtWidgets import (
 
 from .controllers import AnalysisController, PreprocessController
 from .core import PipelineRunner, StateManager, WorkerManager
-from .resources import load_theme_qss
+from .resources import load_theme_qss, resource_path
 from .views.pages.analysis_page import AnalysisPage
 from .views.pages.preprocess_page import PreprocessPage
 from .views.widgets.popup_combo import PopupComboBox
@@ -164,12 +164,13 @@ class MainWindow(QMainWindow):
             pass
 
     def _load_logo_pixmap(self, height: int):
-        from pathlib import Path
-
-        base = Path(__file__).resolve().parents[4] / "images"
-        logo_path = base / "logo.svg"
+        logo_path = resource_path("logo.svg")
         if not logo_path.exists():
-            return None
+            from pathlib import Path
+
+            logo_path = Path(__file__).resolve().parents[4] / "images" / "logo.svg"
+            if not logo_path.exists():
+                return None
         icon = QIcon(str(logo_path))
         if icon.isNull():
             return None

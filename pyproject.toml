@@ -143,6 +143,9 @@ bump = true
 [tool.hatch.build.targets.wheel]
 # The source location for the package.
 packages = ["src/canns"]
+include = [
+    "src/canns/pipeline/asa_gui/resources/**",
+]
 
 
 # ---- Settings ----

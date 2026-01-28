@@ -14,3 +14,8 @@ def load_theme_qss(theme: str) -> str:
         fname = "light.qss"
     path = Path(__file__).parent / fname
     return path.read_text(encoding="utf-8")
+
+
+def resource_path(name: str) -> Path:
+    """Return the package resource path for a bundled file."""
+    return Path(__file__).parent / name
