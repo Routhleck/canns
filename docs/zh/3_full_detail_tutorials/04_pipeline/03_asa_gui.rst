@@ -121,23 +121,59 @@ Analysis 页面
    * - **Files**
      - 列出输出文件并可 **Open Folder** 打开结果目录。
 
-.. figure:: /_static/asa_gui_results.png
-   :alt: ASA GUI 结果预览
+.. figure:: /_static/asa_gui_tda.png
+   :alt: ASA GUI TDA 模式
    :width: 85%
 
-   ASA GUI 结果预览（占位图）
+   TDA 模式示例（占位图）
 
-.. figure:: /_static/asa_gui_help.png
-   :alt: ASA GUI 帮助按钮
+.. figure:: /_static/asa_gui_cohomap.png
+   :alt: ASA GUI CohoMap 模式
+   :width: 85%
+
+   CohoMap 模式示例（占位图）
+
+.. figure:: /_static/asa_gui_path_compare.png
+   :alt: ASA GUI Path Compare 模式
+   :width: 85%
+
+   Path Compare 模式示例（占位图）
+
+.. figure:: /_static/asa_gui_cohospace.png
+   :alt: ASA GUI CohoSpace 模式
+   :width: 85%
+
+   CohoSpace 模式示例（占位图）
+
+.. figure:: /_static/asa_gui_fr.png
+   :alt: ASA GUI FR 模式
+   :width: 85%
+
+   FR 模式示例（占位图）
+
+.. figure:: /_static/asa_gui_frm.png
+   :alt: ASA GUI FRM 模式
+   :width: 85%
+
+   FRM 模式示例（占位图）
+
+.. figure:: /_static/asa_gui_gridscore.png
+   :alt: ASA GUI GridScore 模式
+   :width: 85%
+
+   GridScore 模式示例（占位图）
+
+.. figure:: /_static/asa_gui_help_preprocess.png
+   :alt: ASA GUI 预处理帮助
    :width: 60%
 
-   Help 按钮与帮助面板（占位图）
+   Preprocess 帮助面板（占位图）
 
-.. figure:: /_static/asa_gui_language_toggle.png
-   :alt: ASA GUI 语言切换
+.. figure:: /_static/asa_gui_help_tda.png
+   :alt: ASA GUI TDA 帮助
    :width: 60%
 
-   中英文切换入口（占位图）
+   TDA 帮助面板（占位图）
 
 工作流程概览
 ------------
