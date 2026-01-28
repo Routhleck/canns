@@ -2,18 +2,20 @@
 
 from __future__ import annotations
 
-from PySide6.QtWidgets import QComboBox, QFormLayout, QGroupBox, QSpinBox
+from PySide6.QtWidgets import QFormLayout, QGroupBox, QSpinBox
 
-from .base import AbstractAnalysisMode
+from .base import AbstractAnalysisMode, configure_form_layout
+from ..views.widgets.popup_combo import PopupComboBox
 
 
 class FRMode(AbstractAnalysisMode):
     name = "fr"
-    display_name = "FR"
+    display_name = "FR Heatmap"
 
     def create_params_widget(self) -> QGroupBox:
-        box = QGroupBox("FR Parameters")
+        box = QGroupBox("FR (population heatmap)")
         form = QFormLayout(box)
+        configure_form_layout(form)
 
         self.neuron_start = QSpinBox()
         self.neuron_start.setRange(0, 1_000_000)
@@ -31,20 +33,20 @@ class FRMode(AbstractAnalysisMode):
         self.time_end.setRange(0, 10_000_000)
         self.time_end.setValue(0)
 
-        self.normalize = QComboBox()
+        self.normalize = PopupComboBox()
         self.normalize.addItems(["none", "zscore_per_neuron", "minmax_per_neuron"])
         self.normalize.setCurrentText("none")
 
-        self.mode = QComboBox()
+        self.mode = PopupComboBox()
         self.mode.addItems(["fr", "spike"])
         self.mode.setToolTip("Use 'fr' for firing-rate matrix (requires preprocessing).")
 
-        form.addRow("neuron_start", self.neuron_start)
-        form.addRow("neuron_end", self.neuron_end)
-        form.addRow("t_start", self.time_start)
-        form.addRow("t_end", self.time_end)
-        form.addRow("normalize", self.normalize)
-        form.addRow("mode", self.mode)
+        form.addRow("FR neuron_start", self.neuron_start)
+        form.addRow("FR neuron_end", self.neuron_end)
+        form.addRow("FR t_start", self.time_start)
+        form.addRow("FR t_end", self.time_end)
+        form.addRow("FR mode", self.mode)
+        form.addRow("FR normalize", self.normalize)
 
         return box
 

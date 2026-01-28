@@ -1,7 +1,7 @@
 /* Dark theme */
 QWidget {
-    font-family: "Segoe UI Variable", "Segoe UI", "Helvetica Neue", "Arial", sans-serif;
-    font-size: 10pt;
+    font-family: "SF Pro Text", "Helvetica Neue", "Segoe UI", "Arial", sans-serif;
+    font-size: 11pt;
     color: #e5e7eb;
     background-color: #111827;
 }
@@ -41,12 +41,14 @@ QLineEdit, QSpinBox, QDoubleSpinBox, QComboBox {
     border: 1px solid #4b5563;
     border-radius: 6px;
     padding: 4px 8px;
+    min-width: 120px;
     selection-background-color: #34d399;
 }
 
 QLineEdit:focus, QSpinBox:focus, QDoubleSpinBox:focus, QComboBox:focus {
     border: 1px solid #34d399;
 }
+
 
 QPushButton {
     background-color: #374151;

@@ -1184,6 +1184,8 @@ class PipelineRunner:
             plot_cohospace_trajectory_2d,
         )
         from canns.analyzer.data.asa.cohospace import (
+            compute_cohoscore_1d,
+            compute_cohoscore_2d,
             plot_cohospace_neuron_skewed,
             plot_cohospace_population_skewed,
         )
@@ -1218,6 +1220,10 @@ class PipelineRunner:
         unfold = str(params.get("unfold", "square"))
         skew_show_grid = bool(params.get("skew_show_grid", True))
         skew_tiles = int(params.get("skew_tiles", 0))
+        enable_score = bool(params.get("enable_score", True))
+        top_k = int(params.get("top_k", 10))
+        use_best = bool(params.get("use_best", True))
+        times = decode_result.get("times")
 
         def pick_coords(arr: np.ndarray) -> np.ndarray:
             if dim_mode == "1d":
@@ -1243,6 +1249,42 @@ class PipelineRunner:
                 else self._build_spike_matrix_from_events(asa_data)
             )
 
+        scores = None
+        top_ids = None
+        neuron_id = int(params.get("neuron_id", 0))
+        if enable_score:
+            try:
+                if dim_mode == "1d":
+                    scores = compute_cohoscore_1d(
+                        coords2, activity, top_percent=top_percent, times=times
+                    )
+                else:
+                    scores = compute_cohoscore_2d(
+                        coords2, activity, top_percent=top_percent, times=times
+                    )
+                cohoscore_path = out_dir / "cohoscore.npy"
+                np.save(cohoscore_path, scores)
+            except Exception as e:
+                log_callback(f"⚠️ CohoScore computation failed: {e}")
+                scores = None
+
+            if scores is not None:
+                valid = np.where(~np.isnan(scores))[0]
+                if valid.size > 0:
+                    sorted_idx = valid[np.argsort(scores[valid])]
+                    top_ids = sorted_idx[: min(top_k, len(sorted_idx))]
+                    top_ids_path = out_dir / "cohospace_top_ids.npy"
+                    np.save(top_ids_path, top_ids)
+                else:
+                    log_callback("⚠️ CohoScore: all values are NaN.")
+
+        if view in {"both", "single"} and enable_score and scores is not None and use_best:
+            valid = np.where(~np.isnan(scores))[0]
+            if valid.size > 0:
+                best_id = int(valid[np.argmin(scores[valid])])
+                neuron_id = best_id
+                log_callback(f"🎯 CohoSpace neuron auto-selected by best CohoScore: {neuron_id}")
+
         decode_meta = self._load_cache_meta(
             self._stage_cache_path(self._results_dir(state) / "CohoMap")
         )
@@ -1255,16 +1297,15 @@ class PipelineRunner:
         )
         meta_path = self._stage_cache_path(out_dir)
         required = [out_dir / "cohospace_trajectory.png"]
-        neuron_id = params.get("neuron_id")
         if view in {"both", "population"}:
             required.append(out_dir / "cohospace_population.png")
-        if neuron_id is not None and view in {"both", "single"}:
+        if view in {"both", "single"}:
             required.append(out_dir / f"cohospace_neuron_{neuron_id}.png")
 
         if self._stage_cache_hit(out_dir, stage_hash, required):
             log_callback("♻️ Using cached CohoSpace plots.")
             artifacts = {"trajectory": out_dir / "cohospace_trajectory.png"}
-            if neuron_id is not None and view in {"both", "single"}:
+            if view in {"both", "single"}:
                 artifacts["neuron"] = out_dir / f"cohospace_neuron_{neuron_id}.png"
             if view in {"both", "population"}:
                 artifacts["population"] = out_dir / "cohospace_population.png"
@@ -1300,6 +1341,7 @@ class PipelineRunner:
                     neuron_id=int(neuron_id),
                     mode=mode,
                     top_percent=top_percent,
+                    times=times,
                     save_path=str(neuron_path),
                     show=False,
                     show_grid=skew_show_grid,
@@ -1316,6 +1358,7 @@ class PipelineRunner:
                         neuron_id=int(neuron_id),
                         mode=mode,
                         top_percent=top_percent,
+                        times=times,
                         config=neuron_cfg,
                     )
                 else:
@@ -1328,6 +1371,7 @@ class PipelineRunner:
                         neuron_id=int(neuron_id),
                         mode=mode,
                         top_percent=top_percent,
+                        times=times,
                         config=neuron_cfg,
                     )
             artifacts["neuron"] = neuron_path
@@ -1335,7 +1379,11 @@ class PipelineRunner:
         if view in {"both", "population"}:
             log_callback("Plotting population activity...")
             pop_path = out_dir / "cohospace_population.png"
-            neuron_ids = list(range(activity.shape[1]))
+            if enable_score and top_ids is not None:
+                neuron_ids = [int(i) for i in top_ids.tolist()]
+                log_callback(f"CohoSpace: aggregating top-{len(neuron_ids)} neurons by CohoScore.")
+            else:
+                neuron_ids = list(range(activity.shape[1]))
             if unfold == "skew" and dim_mode != "1d":
                 plot_cohospace_population_skewed(
                     coords=coords2,
@@ -1343,6 +1391,7 @@ class PipelineRunner:
                     neuron_ids=neuron_ids,
                     mode=mode,
                     top_percent=top_percent,
+                    times=times,
                     save_path=str(pop_path),
                     show=False,
                     show_grid=skew_show_grid,
@@ -1359,6 +1408,7 @@ class PipelineRunner:
                         neuron_ids=neuron_ids,
                         mode=mode,
                         top_percent=top_percent,
+                        times=times,
                         config=pop_cfg,
                     )
                 else:
@@ -1371,6 +1421,7 @@ class PipelineRunner:
                         neuron_ids=neuron_ids,
                         mode=mode,
                         top_percent=top_percent,
+                        times=times,
                         config=pop_cfg,
                     )
             artifacts["population"] = pop_path

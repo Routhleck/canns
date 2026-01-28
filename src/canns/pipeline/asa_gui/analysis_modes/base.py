@@ -5,7 +5,8 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from typing import Any
 
-from PySide6.QtWidgets import QWidget
+from PySide6.QtCore import Qt
+from PySide6.QtWidgets import QFormLayout, QWidget
 
 
 class AbstractAnalysisMode(ABC):
@@ -25,3 +26,12 @@ class AbstractAnalysisMode(ABC):
 
     def apply_ranges(self, neuron_count: int | None, total_steps: int | None) -> None:
         """Apply neuron/time ranges based on loaded data."""
+
+
+def configure_form_layout(form: QFormLayout) -> None:
+    """Apply consistent spacing/alignment for analysis parameter forms."""
+    form.setLabelAlignment(Qt.AlignRight | Qt.AlignVCenter)
+    form.setFormAlignment(Qt.AlignTop | Qt.AlignLeft)
+    form.setHorizontalSpacing(12)
+    form.setVerticalSpacing(6)
+    form.setFieldGrowthPolicy(QFormLayout.AllNonFixedFieldsGrow)

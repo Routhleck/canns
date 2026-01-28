@@ -6,17 +6,17 @@ from pathlib import Path
 
 import numpy as np
 
-from PySide6.QtCore import Qt, Signal
+from PySide6.QtCore import Qt, Signal, QSettings
 from PySide6.QtGui import QColor
 from PySide6.QtWidgets import (
-    QComboBox,
+    QCheckBox,
     QFrame,
     QHBoxLayout,
     QLabel,
+    QGroupBox,
     QPushButton,
     QSplitter,
     QScrollArea,
-    QStackedWidget,
     QTabWidget,
     QVBoxLayout,
     QWidget,
@@ -27,10 +27,13 @@ from PySide6.QtWidgets import (
 from ...controllers import AnalysisController
 from ...core import WorkerManager
 from ...analysis_modes import AbstractAnalysisMode, get_analysis_modes
+from ..help_content import analysis_help_markdown
 from ..widgets.artifacts_tab import ArtifactsTab
 from ..widgets.gridscore_tab import GridScoreTab
+from ..widgets.help_dialog import show_help_dialog
 from ..widgets.image_tab import ImageTab
 from ..widgets.log_box import LogBox
+from ..widgets.popup_combo import PopupComboBox
 from ..widgets.pathcompare_tab import PathCompareTab
 
 
@@ -48,10 +51,18 @@ class AnalysisPage(QWidget):
         super().__init__(parent)
         self._controller = controller
         self._workers = worker_manager
+        self._last_state = None
+        self._lang = "en"
         self._build_ui()
 
     def _build_ui(self) -> None:
         root = QVBoxLayout(self)
+
+        info_row = QHBoxLayout()
+        self.info_label = QLabel("Mode=— | preset=— | preprocess=— | spike_main_shape=—")
+        self.info_label.setObjectName("muted")
+        info_row.addWidget(self.info_label, 1)
+        root.addLayout(info_row)
 
         splitter = QSplitter(Qt.Horizontal)
         root.addWidget(splitter, 1)
@@ -61,13 +72,14 @@ class AnalysisPage(QWidget):
         left = QVBoxLayout(left_wrap)
         right = QVBoxLayout(right_wrap)
 
-        title = QLabel("Analysis")
-        title.setAlignment(Qt.AlignLeft)
-        title.setStyleSheet("font-size: 18px; font-weight: 600;")
-        left.addWidget(title)
+        self.param_container = QGroupBox("Analysis Parameters")
+        self.param_container.setObjectName("card")
+        self.param_layout = QVBoxLayout(self.param_container)
+        self.param_layout.setContentsMargins(0, 0, 0, 0)
+        self.param_layout.setSpacing(12)
 
         mode_row = QHBoxLayout()
-        self.analysis_mode = QComboBox()
+        self.analysis_mode = PopupComboBox()
         self.analysis_mode.setToolTip("Select an analysis mode to run.")
         self._modes: dict[str, AbstractAnalysisMode] = {}
         hidden_modes = {"decode", "gridscore_inspect", "batch"}
@@ -76,22 +88,38 @@ class AnalysisPage(QWidget):
             if mode.name not in hidden_modes:
                 self.analysis_mode.addItem(mode.display_name, userData=mode.name)
 
-        mode_row.addWidget(QLabel("Mode"))
-        mode_row.addWidget(self.analysis_mode)
-        mode_row.addStretch(1)
-        left.addLayout(mode_row)
+        self.label_analysis_module = QLabel("Analysis module:")
+        mode_row.addWidget(self.label_analysis_module)
+        mode_row.addWidget(self.analysis_mode, 1)
+        self.help_btn = QPushButton("Help")
+        self.help_btn.setToolTip("Show parameter guide for the selected mode.")
+        self.help_btn.clicked.connect(self._show_help)
+        mode_row.addWidget(self.help_btn)
+        self.param_layout.addLayout(mode_row)
 
-        self.param_stack = QStackedWidget()
+        self.grp_standardize = QGroupBox("Preprocess (Standardization)")
+        std_layout = QHBoxLayout(self.grp_standardize)
+        self.chk_standardize = QCheckBox("StandardScaler")
+        std_layout.addWidget(self.chk_standardize)
+        std_layout.addStretch(1)
+        self.param_layout.addWidget(self.grp_standardize)
+
         self.param_widgets: dict[str, QWidget] = {}
         for mode in self._modes.values():
             widget = mode.create_params_widget()
             widget.setObjectName("card")
+            btn_show = getattr(mode, "btn_show", None)
+            if btn_show is not None:
+                btn_show.clicked.connect(
+                    lambda _=False, mode_name=mode.name: self._run_analysis(mode_override=mode_name)
+                )
             self.param_widgets[mode.name] = widget
-            self.param_stack.addWidget(widget)
+            self.param_layout.addWidget(widget)
+        self.param_layout.addStretch(1)
         self.param_scroll = QScrollArea()
         self.param_scroll.setWidgetResizable(True)
         self.param_scroll.setFrameShape(QFrame.NoFrame)
-        self.param_scroll.setWidget(self.param_stack)
+        self.param_scroll.setWidget(self.param_container)
 
         controls = QHBoxLayout()
         self.run_btn = QPushButton("Run Analysis")
@@ -109,7 +137,8 @@ class AnalysisPage(QWidget):
         self.log_box = LogBox()
         log_wrap = QWidget()
         log_layout = QVBoxLayout(log_wrap)
-        log_layout.addWidget(QLabel("Logs"))
+        self.logs_label = QLabel("Logs")
+        log_layout.addWidget(self.logs_label)
         log_layout.addWidget(self.log_box, 1)
 
         left.addWidget(self.param_scroll, 2)
@@ -150,7 +179,9 @@ class AnalysisPage(QWidget):
         self.tab_gridscore.inspectRequested.connect(self._run_gridscore_inspect)
 
         self._on_mode_changed()
-        self._apply_card_effects(list(self.param_widgets.values()))
+        self._apply_card_effects([self.param_container] + list(self.param_widgets.values()))
+        self._sync_standardize()
+        self.apply_language(str(QSettings("canns", "asa_gui").value("lang", "en")))
 
     def _apply_card_effects(self, widgets: list[QWidget]) -> None:
         for widget in widgets:
@@ -160,7 +191,31 @@ class AnalysisPage(QWidget):
             effect.setColor(QColor(0, 0, 0, 40))
             widget.setGraphicsEffect(effect)
 
+    def apply_language(self, lang: str) -> None:
+        self._lang = str(lang or "en")
+        is_zh = self._lang.lower().startswith("zh")
+        self.param_container.setTitle("分析参数" if is_zh else "Analysis Parameters")
+        self.label_analysis_module.setText("分析模块:" if is_zh else "Analysis module:")
+        self.help_btn.setText("帮助" if is_zh else "Help")
+        self.help_btn.setToolTip("查看参数说明" if is_zh else "Show parameter guide for the selected mode.")
+        self.grp_standardize.setTitle("预处理（标准化）" if is_zh else "Preprocess (Standardization)")
+        self.chk_standardize.setText("StandardScaler")
+        self.run_btn.setText("运行分析" if is_zh else "Run Analysis")
+        self.stop_btn.setText("停止" if is_zh else "Stop")
+        self.logs_label.setText("日志" if is_zh else "Logs")
+
+        if self._last_state is not None:
+            self._update_info(self._last_state)
+        else:
+            self.info_label.setText(
+                "模式=— | 预设=— | 预处理=— | spike_main_shape=—"
+                if is_zh
+                else "Mode=— | preset=— | preprocess=— | spike_main_shape=—"
+            )
+
     def load_state(self, state) -> None:
+        self._last_state = state
+        self._update_info(state)
         preset = getattr(state, "preset", None)
         if preset:
             for mode in self._modes.values():
@@ -187,6 +242,25 @@ class AnalysisPage(QWidget):
 
         for mode in self._modes.values():
             mode.apply_ranges(neuron_count, total_steps)
+
+    def _update_info(self, state) -> None:
+        mode = getattr(state, "input_mode", "—")
+        preset = getattr(state, "preset", "—")
+        preprocess = getattr(state, "preprocess_method", "—")
+        preclass = getattr(state, "preclass", None)
+        shape = "None"
+        embed = getattr(state, "embed_data", None)
+        if isinstance(embed, np.ndarray) and embed.ndim == 2:
+            shape = f"{embed.shape}"
+        is_zh = str(self._lang).lower().startswith("zh")
+        if is_zh:
+            parts = [f"模式={mode}", f"预设={preset}", f"预处理={preprocess}"]
+        else:
+            parts = [f"Mode={mode}", f"preset={preset}", f"preprocess={preprocess}"]
+        if preclass is not None:
+            parts.append(("预分类" if is_zh else "preclass") + f"={preclass}")
+        parts.append(f"spike_main_shape={shape}")
+        self.info_label.setText(" | ".join(parts))
 
     def _infer_counts_from_state(self, state) -> tuple[int | None, int | None] | None:
         try:
@@ -262,9 +336,46 @@ class AnalysisPage(QWidget):
 
     def _on_mode_changed(self) -> None:
         mode = self.analysis_mode.currentData() or "tda"
-        widget = self.param_widgets.get(mode)
-        if widget is not None:
-            self.param_stack.setCurrentWidget(widget)
+        self._sync_standardize()
+        visible = {
+            "tda": {"tda"},
+            "cohomap": {"cohomap"},
+            "pathcompare": {"pathcompare"},
+            "cohospace": {"cohospace"},
+            "fr": {"fr"},
+            "frm": {"frm"},
+            "gridscore": {"gridscore"},
+            "gridscore_inspect": {"gridscore"},
+            "decode": {"decode"},
+        }.get(mode, {mode})
+
+        for name, widget in self.param_widgets.items():
+            widget.setVisible(name in visible)
+
+        self.grp_standardize.setVisible(mode in {"tda", "cohomap"})
+
+    def _sync_standardize(self) -> None:
+        tda_mode = self._modes.get("tda")
+        if tda_mode is None or not hasattr(tda_mode, "standardize"):
+            return
+        try:
+            checkbox = tda_mode.standardize
+            if checkbox.isChecked() != self.chk_standardize.isChecked():
+                self.chk_standardize.setChecked(bool(checkbox.isChecked()))
+        except Exception:
+            return
+
+        def _on_toggle(val: bool) -> None:
+            try:
+                checkbox.setChecked(bool(val))
+            except Exception:
+                pass
+
+        try:
+            self.chk_standardize.toggled.disconnect()
+        except Exception:
+            pass
+        self.chk_standardize.toggled.connect(_on_toggle)
 
     def _run_analysis(self, mode_override: str | None = None) -> None:
         if self._workers.is_running():
@@ -358,6 +469,13 @@ class AnalysisPage(QWidget):
             on_cleanup=_on_cleanup,
         )
 
+    def _show_help(self) -> None:
+        mode = self.analysis_mode.currentData()
+        lang = str(QSettings("canns", "asa_gui").value("lang", "en"))
+        markdown = analysis_help_markdown(str(mode) if mode is not None else "", lang=lang)
+        title = "ASA Help" if not str(lang).lower().startswith("zh") else "ASA 参数说明"
+        show_help_dialog(self, title, markdown)
+
     def _stop_analysis(self) -> None:
         if self._workers.is_running():
             self._workers.request_cancel()
@@ -375,12 +493,12 @@ class AnalysisPage(QWidget):
             )
         if "path_compare_mp4" in artifacts:
             self.tab_pathcompare.set_animation(Path(artifacts["path_compare_mp4"]))
-        if "population" in artifacts:
+        if "neuron" in artifacts:
+            self.tab_cohospace.set_image(artifacts.get("neuron"))
+        elif "population" in artifacts:
             self.tab_cohospace.set_image(artifacts.get("population"))
         elif "trajectory" in artifacts:
             self.tab_cohospace.set_image(artifacts.get("trajectory"))
-        elif "neuron" in artifacts:
-            self.tab_cohospace.set_image(artifacts.get("neuron"))
         if "fr_heatmap" in artifacts:
             self.tab_fr.set_image(artifacts.get("fr_heatmap"))
         if "frm" in artifacts:

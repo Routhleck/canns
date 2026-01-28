@@ -11,7 +11,6 @@ from PySide6.QtWidgets import (
     QHBoxLayout,
     QLabel,
     QPushButton,
-    QComboBox,
     QSpinBox,
     QSplitter,
     QVBoxLayout,
@@ -19,6 +18,7 @@ from PySide6.QtWidgets import (
 )
 
 from .image_viewer import ImageViewer
+from .popup_combo import PopupComboBox
 
 
 class GridScoreTab(QWidget):
@@ -72,7 +72,7 @@ class GridScoreTab(QWidget):
         self.neuron_id = QSpinBox()
         self.neuron_id.setRange(0, 0)
         self.neuron_id.setValue(0)
-        self.sort_combo = QComboBox()
+        self.sort_combo = PopupComboBox()
         self.sort_combo.addItems(
             [
                 "neuron id (asc)",

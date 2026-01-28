@@ -18,11 +18,15 @@ class DropZone(QFrame):
         self.setFrameShape(QFrame.StyledPanel)
         self.setMinimumHeight(110)
 
+        self._title_text = title
+        self._hint_text = hint
+        self._empty_text = "No file"
+
         self._title = QLabel(f"<b>{title}</b>")
         self._hint = QLabel(hint)
         self._hint.setObjectName("muted")
 
-        self._path_label = QLabel("No file")
+        self._path_label = QLabel(self._empty_text)
         self._path_label.setTextInteractionFlags(Qt.TextSelectableByMouse)
         self._current_path: str | None = None
 
@@ -34,6 +38,19 @@ class DropZone(QFrame):
     def set_path(self, path: str) -> None:
         self._path_label.setText(path)
         self._current_path = path
+
+    def set_title(self, title: str) -> None:
+        self._title_text = title
+        self._title.setText(f"<b>{title}</b>")
+
+    def set_hint(self, hint: str) -> None:
+        self._hint_text = hint
+        self._hint.setText(hint)
+
+    def set_empty_text(self, text: str) -> None:
+        self._empty_text = text
+        if not self._current_path:
+            self._path_label.setText(text)
 
     def path(self) -> str | None:
         return self._current_path

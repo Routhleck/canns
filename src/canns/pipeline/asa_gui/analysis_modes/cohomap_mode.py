@@ -2,20 +2,22 @@
 
 from __future__ import annotations
 
-from PySide6.QtWidgets import QCheckBox, QComboBox, QFormLayout, QGroupBox, QSpinBox
+from PySide6.QtWidgets import QCheckBox, QFormLayout, QGroupBox, QSpinBox
 
-from .base import AbstractAnalysisMode
+from .base import AbstractAnalysisMode, configure_form_layout
+from ..views.widgets.popup_combo import PopupComboBox
 
 
 class CohoMapMode(AbstractAnalysisMode):
     name = "cohomap"
-    display_name = "CohoMap"
+    display_name = "CohoMap (TDA + decode)"
 
     def create_params_widget(self) -> QGroupBox:
         box = QGroupBox("CohoMap Parameters")
         form = QFormLayout(box)
+        configure_form_layout(form)
 
-        self.decode_version = QComboBox()
+        self.decode_version = PopupComboBox()
         self.decode_version.addItems(["v2", "v0"])
 
         self.num_circ = QSpinBox()
@@ -32,11 +34,9 @@ class CohoMapMode(AbstractAnalysisMode):
         self.subsample.setRange(1, 5000)
         self.subsample.setValue(10)
 
-        form.addRow("decode_version", self.decode_version)
-        form.addRow("num_circ", self.num_circ)
-        form.addRow("real_ground", self.real_ground)
-        form.addRow("real_of", self.real_of)
-        form.addRow("subsample", self.subsample)
+        form.addRow("Decode version", self.decode_version)
+        form.addRow("Decode num_circ", self.num_circ)
+        form.addRow("CohoMap subsample", self.subsample)
 
         return box
 

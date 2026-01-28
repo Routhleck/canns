@@ -4,18 +4,20 @@ from __future__ import annotations
 
 from typing import Any
 
-from PySide6.QtWidgets import QCheckBox, QComboBox, QDoubleSpinBox, QFormLayout, QGroupBox, QSpinBox
+from PySide6.QtWidgets import QCheckBox, QDoubleSpinBox, QFormLayout, QGroupBox, QSpinBox
 
-from .base import AbstractAnalysisMode
+from .base import AbstractAnalysisMode, configure_form_layout
+from ..views.widgets.popup_combo import PopupComboBox
 
 
 class GridScoreMode(AbstractAnalysisMode):
     name = "gridscore"
-    display_name = "GridScore"
+    display_name = "Grid Score (classic)"
 
     def create_params_widget(self) -> QGroupBox:
-        box = QGroupBox("GridScore Parameters")
+        box = QGroupBox("Grid Score (classic)")
         form = QFormLayout(box)
+        configure_form_layout(form)
 
         self.neuron_start = QSpinBox()
         self.neuron_start.setRange(0, 10_000_000)
@@ -46,7 +48,7 @@ class GridScoreMode(AbstractAnalysisMode):
         self.overlap.setSingleStep(0.05)
         self.overlap.setValue(0.8)
 
-        self.mode = QComboBox()
+        self.mode = PopupComboBox()
         self.mode.addItems(["fr", "spike"])
         self.mode.setToolTip("Use 'fr' for firing-rate maps (requires preprocessing).")
 
@@ -65,10 +67,9 @@ class GridScoreMode(AbstractAnalysisMode):
         form.addRow("min_occupancy", self.min_occupancy)
         form.addRow("smoothing", self.smoothing)
         form.addRow("sigma", self.sigma)
-        form.addRow("overlap", self.overlap)
+        form.addRow("autocorr overlap", self.overlap)
         form.addRow("mode", self.mode)
-        form.addRow("score_thr", self.score_thr)
-        form.addRow("inspect neuron_id", self.neuron_id)
+        form.addRow("score threshold (viz)", self.score_thr)
 
         return box
 

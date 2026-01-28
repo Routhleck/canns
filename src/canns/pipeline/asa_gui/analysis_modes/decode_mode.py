@@ -2,9 +2,10 @@
 
 from __future__ import annotations
 
-from PySide6.QtWidgets import QCheckBox, QComboBox, QFormLayout, QGroupBox, QSpinBox
+from PySide6.QtWidgets import QCheckBox, QFormLayout, QGroupBox, QSpinBox
 
-from .base import AbstractAnalysisMode
+from .base import AbstractAnalysisMode, configure_form_layout
+from ..views.widgets.popup_combo import PopupComboBox
 
 
 class DecodeMode(AbstractAnalysisMode):
@@ -14,8 +15,9 @@ class DecodeMode(AbstractAnalysisMode):
     def create_params_widget(self) -> QGroupBox:
         box = QGroupBox("Decode Parameters")
         form = QFormLayout(box)
+        configure_form_layout(form)
 
-        self.decode_version = QComboBox()
+        self.decode_version = PopupComboBox()
         self.decode_version.addItems(["v2", "v0"])
 
         self.num_circ = QSpinBox()

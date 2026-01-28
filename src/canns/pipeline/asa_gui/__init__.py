@@ -22,10 +22,31 @@ def main() -> int:
         )
         raise SystemExit(1) from e
 
+    from pathlib import Path
+
+    from PySide6.QtGui import QGuiApplication, QIcon
+
     from .app import ASAGuiApp
 
     app = QApplication(sys.argv)
+    app.setOrganizationName("canns")
+    app.setApplicationName("ASA GUI")
+    app.setApplicationDisplayName("ASA GUI")
+    QGuiApplication.setApplicationDisplayName("ASA GUI")
+
+    base = Path(__file__).resolve().parents[4] / "images"
+    logo_path = base / "logo_256.png"
+    if not logo_path.exists():
+        logo_path = base / "logo.svg"
+    if not logo_path.exists():
+        logo_path = base / "logo.ico"
+    icon = QIcon(str(logo_path)) if logo_path.exists() else QIcon()
+    if not icon.isNull():
+        app.setWindowIcon(icon)
+
     window = ASAGuiApp()
+    if not icon.isNull():
+        window.setWindowIcon(icon)
     window.show()
     return app.exec()
 
