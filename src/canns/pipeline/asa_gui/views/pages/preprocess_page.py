@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import numpy as np
+
 from PySide6.QtCore import QSettings, Qt, Signal
 from PySide6.QtGui import QColor
 from PySide6.QtWidgets import (
@@ -15,6 +17,7 @@ from PySide6.QtWidgets import (
     QGroupBox,
     QHBoxLayout,
     QLabel,
+    QLineEdit,
     QProgressBar,
     QPushButton,
     QSpinBox,
@@ -86,6 +89,12 @@ class PreprocessPage(QWidget):
         self.preset.addItems(["grid", "hd", "none"])
         self.preset.setToolTip("Preset hints apply to analysis mode defaults.")
 
+        self.input_source = PopupComboBox()
+        self.input_source.addItem("Local file", userData="local")
+        self.input_source.addItem("CANNs dataset", userData="dataset")
+        self.input_source.addItem("URL", userData="url")
+        self.input_source.currentIndexChanged.connect(self._toggle_input_source)
+
         self.label_mode = QLabel("Mode")
         top_row.addWidget(self.label_mode)
         top_row.addWidget(self.input_mode)
@@ -93,6 +102,10 @@ class PreprocessPage(QWidget):
         self.label_preset = QLabel("Preset")
         top_row.addWidget(self.label_preset)
         top_row.addWidget(self.preset)
+        top_row.addSpacing(16)
+        self.label_source = QLabel("Source")
+        top_row.addWidget(self.label_source)
+        top_row.addWidget(self.input_source)
         top_row.addStretch(1)
         input_layout.addLayout(top_row)
 
@@ -125,6 +138,46 @@ class PreprocessPage(QWidget):
 
         input_layout.addLayout(neuron_row)
         input_layout.addLayout(traj_row)
+
+        self.dataset_group = QGroupBox("Dataset")
+        self.dataset_group.setObjectName("card")
+        dataset_form = QFormLayout(self.dataset_group)
+
+        self.dataset_key = PopupComboBox()
+        self.dataset_key.addItem("grid_1", userData="grid_1")
+        self.dataset_key.addItem("grid_2", userData="grid_2")
+        self.dataset_key.addItem("roi_data", userData="roi_data")
+        self.dataset_key.addItem("left_right_data_of", userData="left_right_data_of")
+        self.dataset_key.currentIndexChanged.connect(self._update_dataset_hint)
+
+        self.dataset_session = QLineEdit()
+        self.dataset_session.setPlaceholderText("e.g. 26034_3")
+
+        self.dataset_filename = QLineEdit()
+        self.dataset_filename.setPlaceholderText("e.g. 26034_3_ASA_full.npz")
+
+        self.dataset_url = QLineEdit()
+        self.dataset_url.setPlaceholderText("https://.../data.npz")
+
+        self.dataset_hint = QLabel("")
+        self.dataset_hint.setObjectName("muted")
+        self.dataset_hint.setWordWrap(True)
+
+        dataset_form.addRow("Dataset", self.dataset_key)
+        self.label_dataset = dataset_form.labelForField(self.dataset_key)
+        dataset_form.addRow("Session id", self.dataset_session)
+        self.label_session = dataset_form.labelForField(self.dataset_session)
+        dataset_form.addRow("Filename", self.dataset_filename)
+        self.label_filename = dataset_form.labelForField(self.dataset_filename)
+        url_row = QWidget()
+        url_layout = QHBoxLayout(url_row)
+        url_layout.setContentsMargins(0, 0, 0, 0)
+        url_layout.addWidget(self.dataset_url, 1)
+        dataset_form.addRow("URL", url_row)
+        self.label_url = dataset_form.labelForField(self.dataset_url)
+        dataset_form.addRow(self.dataset_hint)
+
+        input_layout.addWidget(self.dataset_group)
 
         top_layout.addWidget(input_group)
 
@@ -244,6 +297,8 @@ class PreprocessPage(QWidget):
         self.asa_browse.clicked.connect(self._update_run_enabled)
 
         self._toggle_input_mode()
+        self._toggle_input_source()
+        self._update_dataset_hint()
         self._toggle_embed_params()
         self._update_run_enabled()
         self._apply_card_effects([input_group, preprocess_group, preclass_group])
@@ -270,6 +325,7 @@ class PreprocessPage(QWidget):
 
         self.label_mode.setText("模式" if is_zh else "Mode")
         self.label_preset.setText("预设" if is_zh else "Preset")
+        self.label_source.setText("来源" if is_zh else "Source")
         if self.label_method is not None:
             self.label_method.setText("方法" if is_zh else "Method")
         if self.label_preclass is not None:
@@ -317,6 +373,34 @@ class PreprocessPage(QWidget):
         self.stop_btn.setText("停止" if is_zh else "Stop")
         self.logs_label.setText("日志" if is_zh else "Logs")
 
+        self.dataset_group.setTitle("数据集" if is_zh else "Dataset")
+        if self.label_dataset is not None:
+            self.label_dataset.setText("数据集" if is_zh else "Dataset")
+        if self.label_session is not None:
+            self.label_session.setText("Session id" if not is_zh else "会话 id")
+        if self.label_filename is not None:
+            self.label_filename.setText("Filename" if not is_zh else "文件名")
+        if self.label_url is not None:
+            self.label_url.setText("URL")
+
+        self.input_source.setToolTip(
+            "选择本地文件、内置数据集或 URL"
+            if is_zh
+            else "Choose local file, built-in dataset, or URL."
+        )
+        self.dataset_key.setToolTip(
+            "选择内置数据集" if is_zh else "Select a built-in dataset."
+        )
+        self.dataset_session.setToolTip(
+            "Left-Right 数据集的会话 id。" if is_zh else "Session id for Left-Right dataset."
+        )
+        self.dataset_filename.setToolTip(
+            "Left-Right 数据集文件名。" if is_zh else "Filename within Left-Right dataset."
+        )
+        self.dataset_url.setToolTip(
+            "直接加载 .npz 链接。" if is_zh else "Load a .npz URL directly."
+        )
+
         self.input_mode.setToolTip(
             "仅支持 ASA .npz 输入" if is_zh else "Only ASA .npz input is supported in this GUI."
         )
@@ -345,6 +429,15 @@ class PreprocessPage(QWidget):
             if is_zh
             else "Speed threshold (same unit as t/x/y)."
         )
+
+        self.dataset_session.setPlaceholderText("例如 26034_3" if is_zh else "e.g. 26034_3")
+        self.dataset_filename.setPlaceholderText(
+            "例如 26034_3_ASA_full.npz" if is_zh else "e.g. 26034_3_ASA_full.npz"
+        )
+        self.dataset_url.setPlaceholderText(
+            "https://.../data.npz" if not is_zh else "https://.../data.npz"
+        )
+        self._update_dataset_hint()
 
     def _show_help(self) -> None:
         lang = str(QSettings("canns", "asa_gui").value("lang", "en"))
@@ -386,6 +479,63 @@ class PreprocessPage(QWidget):
         self.traj_zone.setVisible(not use_asa)
         self.traj_browse.setVisible(not use_asa)
 
+    def _toggle_input_source(self) -> None:
+        source = self.input_source.currentData() or "local"
+        use_local = source == "local"
+        self.asa_zone.setVisible(use_local)
+        self.asa_browse.setVisible(use_local)
+        self.asa_hint.setVisible(use_local)
+        self.dataset_group.setVisible(not use_local)
+        self._update_dataset_hint()
+        self._update_run_enabled()
+
+    def _update_dataset_hint(self) -> None:
+        source = self.input_source.currentData() or "local"
+        key = self.dataset_key.currentData() or self.dataset_key.currentText()
+        is_left_right = key == "left_right_data_of"
+        is_zh = str(self._lang).lower().startswith("zh")
+        show_dataset = source == "dataset"
+        if self.label_session is not None:
+            self.label_session.setVisible(is_left_right and show_dataset)
+        self.dataset_session.setVisible(is_left_right and show_dataset)
+        if self.label_filename is not None:
+            self.label_filename.setVisible(is_left_right and show_dataset)
+        self.dataset_filename.setVisible(is_left_right and show_dataset)
+        if self.label_dataset is not None:
+            self.label_dataset.setVisible(show_dataset)
+        self.dataset_key.setVisible(show_dataset)
+        if self.label_url is not None:
+            self.label_url.setVisible(source == "url")
+        self.dataset_url.setVisible(source == "url")
+
+        hint = ""
+        if source == "url":
+            hint = (
+                "加载包含 spike/x/y/t 的 .npz 链接。"
+                if is_zh
+                else "Load a .npz URL that contains spike/x/y/t."
+            )
+        elif source == "dataset":
+            try:
+                from canns.data import datasets as _datasets
+
+                info = _datasets.DATASETS.get(str(key))
+                if info:
+                    size = info.get("size_mb", "?")
+                    desc = info.get("description", "")
+                    hint = f"{desc} (size ~{size} MB)" if not is_zh else f"{desc} (约 {size} MB)"
+            except Exception:
+                hint = ""
+            if is_left_right:
+                hint = (
+                    (hint + "\n") if hint else ""
+                ) + (
+                    "左/右数据集需要 session id 和文件名。"
+                    if is_zh
+                    else "Left-right dataset requires session id + filename."
+                )
+        self.dataset_hint.setText(hint)
+
     def _toggle_embed_params(self) -> None:
         method = self.preprocess_method.currentData() or "none"
         self.embed_params.setVisible(method == "embed_spike_trains")
@@ -420,6 +570,96 @@ class PreprocessPage(QWidget):
             }
         return params
 
+    def _slugify(self, text: str) -> str:
+        out = []
+        for ch in text:
+            if ch.isalnum() or ch in ("-", "_"):
+                out.append(ch)
+            else:
+                out.append("_")
+        return "".join(out).strip("_") or "dataset"
+
+    def _normalize_npz_payload(self, data: dict) -> dict:
+        payload: dict = {}
+        for key, value in data.items():
+            if isinstance(value, dict):
+                payload[key] = np.array(value, dtype=object)
+            else:
+                payload[key] = value
+        return payload
+
+    def _prepare_dataset_asa(self) -> str | None:
+        source = self.input_source.currentData() or "local"
+        if source == "local":
+            return self.asa_zone.path()
+
+        data = None
+        label = ""
+        if source == "url":
+            url = self.dataset_url.text().strip()
+            if not url:
+                self.log_box.log("Please provide a dataset URL.")
+                return None
+            label = self._slugify(Path(url).stem or "dataset_url")
+            try:
+                from canns.data import datasets as _datasets
+
+                data = _datasets.load(url, file_type="numpy")
+            except Exception as exc:
+                self.log_box.log(f"Failed to load URL dataset: {exc}")
+                return None
+        elif source == "dataset":
+            key = self.dataset_key.currentData() or self.dataset_key.currentText()
+            label = self._slugify(str(key))
+            try:
+                from canns.data import loaders as _loaders
+                from canns.data import datasets as _datasets
+
+                if key == "roi_data":
+                    data = _loaders.load_roi_data()
+                elif key == "left_right_data_of":
+                    session_id = self.dataset_session.text().strip()
+                    filename = self.dataset_filename.text().strip()
+                    if not session_id or not filename:
+                        self.log_box.log("Left-Right dataset requires session id + filename.")
+                        return None
+                    data = _loaders.load_left_right_npz(session_id=session_id, filename=filename)
+                    label = self._slugify(f"{session_id}_{filename}")
+                elif str(key).startswith("grid_"):
+                    data = _loaders.load_grid_data(dataset_key=str(key))
+                else:
+                    path = _datasets.download_dataset(str(key))
+                    if path is not None and path.exists():
+                        data = dict(np.load(path, allow_pickle=True))
+            except Exception as exc:
+                self.log_box.log(f"Failed to load dataset '{key}': {exc}")
+                return None
+
+        if data is None:
+            self.log_box.log("Dataset load failed or returned empty data.")
+            return None
+
+        if not isinstance(data, dict):
+            self.log_box.log("Dataset is not an ASA .npz dict (missing spike/x/y/t).")
+            return None
+
+        payload = self._normalize_npz_payload(data)
+        if "spike" not in payload or "t" not in payload:
+            self.log_box.log("Dataset does not contain required keys: spike, t.")
+            return None
+
+        out_dir = Path.cwd() / "Results" / "asa_gui_datasets"
+        out_dir.mkdir(parents=True, exist_ok=True)
+        out_path = out_dir / f"{label}.npz"
+        try:
+            np.savez_compressed(out_path, **payload)
+        except Exception as exc:
+            self.log_box.log(f"Failed to save dataset as npz: {exc}")
+            return None
+
+        self.asa_zone.set_path(str(out_path))
+        return str(out_path)
+
     def _run_preprocess(self) -> None:
         if self._workers.is_running():
             self.log_box.log("A task is already running.")
@@ -432,6 +672,9 @@ class PreprocessPage(QWidget):
         asa_file = self.asa_zone.path() if input_mode == "asa" else None
         neuron_file = self.neuron_zone.path() if input_mode != "asa" else None
         traj_file = self.traj_zone.path() if input_mode != "asa" else None
+
+        if input_mode == "asa":
+            asa_file = self._prepare_dataset_asa()
 
         if not self._validate_inputs(asa_file):
             return
@@ -509,13 +752,17 @@ class PreprocessPage(QWidget):
         return True
 
     def _update_run_enabled(self) -> None:
+        source = self.input_source.currentData() or "local"
         asa_file = self.asa_zone.path()
         valid = False
-        if asa_file:
+        if source == "local" and asa_file:
             path = Path(asa_file)
             valid = path.exists() and path.suffix.lower() == ".npz"
         self.run_btn.setEnabled(True)
-        if valid:
-            self.run_btn.setToolTip("")
+        if source == "local":
+            if valid:
+                self.run_btn.setToolTip("")
+            else:
+                self.run_btn.setToolTip("Select a valid ASA .npz file to run preprocessing.")
         else:
-            self.run_btn.setToolTip("Select a valid ASA .npz file to run preprocessing.")
+            self.run_btn.setToolTip("Dataset/URL will be loaded on Run.")

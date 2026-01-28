@@ -10,6 +10,7 @@ from PySide6.QtWidgets import (
     QHBoxLayout,
     QLabel,
     QLineEdit,
+    QPushButton,
     QSpinBox,
     QWidget,
 )
@@ -49,7 +50,7 @@ class PathCompareMode(AbstractAnalysisMode):
         self.dim2.setValue(2)
 
         self.use_box = QCheckBox("Use coordsbox / times_box")
-        self.use_box.setChecked(False)
+        self.use_box.setChecked(True)
 
         self.interp_full = QCheckBox("Interpolate to full trajectory")
         self.interp_full.setChecked(True)
@@ -57,8 +58,13 @@ class PathCompareMode(AbstractAnalysisMode):
 
         self.coords_key = QLineEdit()
         self.coords_key.setPlaceholderText("coords / coordsbox (optional)")
+        self.btn_coordsbox = QPushButton("coordsbox")
+        self.btn_coordsbox.clicked.connect(lambda: self.coords_key.setText("coordsbox"))
+
         self.times_key = QLineEdit()
         self.times_key.setPlaceholderText("times_box (optional)")
+        self.btn_times_box = QPushButton("times_box")
+        self.btn_times_box.clicked.connect(lambda: self.times_key.setText("times_box"))
 
         self.slice_mode = PopupComboBox()
         self.slice_mode.addItem("Time (tmin/tmax)", userData="time")
@@ -125,8 +131,20 @@ class PathCompareMode(AbstractAnalysisMode):
         form.addRow(self._dims2d_label, dims_2d)
         form.addRow(self.use_box)
         form.addRow(self.interp_full)
-        form.addRow("coords key", self.coords_key)
-        form.addRow("times key", self.times_key)
+        coords_row = QWidget()
+        coords_layout = QHBoxLayout(coords_row)
+        coords_layout.setContentsMargins(0, 0, 0, 0)
+        coords_layout.addWidget(self.coords_key, 1)
+        coords_layout.addWidget(self.btn_coordsbox)
+
+        times_row = QWidget()
+        times_layout = QHBoxLayout(times_row)
+        times_layout.setContentsMargins(0, 0, 0, 0)
+        times_layout.addWidget(self.times_key, 1)
+        times_layout.addWidget(self.btn_times_box)
+
+        form.addRow("coords key", coords_row)
+        form.addRow("times key", times_row)
         form.addRow("Slice mode", self.slice_mode)
         form.addRow("tmin (sec, -1=auto)", self.tmin)
         form.addRow("tmax (sec, -1=auto)", self.tmax)
@@ -150,6 +168,10 @@ class PathCompareMode(AbstractAnalysisMode):
         def _refresh_enabled() -> None:
             use_box = bool(self.use_box.isChecked())
             self.interp_full.setEnabled(use_box)
+            self.coords_key.setEnabled(use_box)
+            self.times_key.setEnabled(use_box)
+            self.btn_coordsbox.setEnabled(use_box)
+            self.btn_times_box.setEnabled(use_box)
 
         def _refresh_slice_mode() -> None:
             is_time = self.slice_mode.currentData() == "time"
@@ -210,6 +232,8 @@ class PathCompareMode(AbstractAnalysisMode):
             self.interp_full.setToolTip("插值回完整轨迹。")
             self.coords_key.setToolTip("可选：解码坐标键（默认 coords/coordsbox）。")
             self.times_key.setToolTip("可选：times_box 键名。")
+            self.btn_coordsbox.setToolTip("填入 coordsbox。")
+            self.btn_times_box.setToolTip("填入 times_box。")
             self.slice_mode.setToolTip("按时间或索引裁剪。")
             self.tmin.setToolTip("起始时间（秒），-1 自动。")
             self.tmax.setToolTip("结束时间（秒），-1 自动。")
@@ -230,6 +254,8 @@ class PathCompareMode(AbstractAnalysisMode):
             self.interp_full.setToolTip("Interpolate back to full trajectory.")
             self.coords_key.setToolTip("Optional decode coords key (default coords/coordsbox).")
             self.times_key.setToolTip("Optional times_box key.")
+            self.btn_coordsbox.setToolTip("Fill coordsbox.")
+            self.btn_times_box.setToolTip("Fill times_box.")
             self.slice_mode.setToolTip("Slice by time or index.")
             self.tmin.setToolTip("Start time (sec), -1 = auto.")
             self.tmax.setToolTip("End time (sec), -1 = auto.")

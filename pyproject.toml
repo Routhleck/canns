@@ -79,6 +79,7 @@ dev-gui = [
     "imageio",
     "qtawesome",
     "pytest-qt",
+    "requests>=2.31.0",
 ]
 docs = [
     "myst-parser>=4.0.1",
@@ -110,6 +111,7 @@ gui = [
     "pillow",
     "imageio",
     "qtawesome",
+    "requests>=2.31.0",
 ]
 
 [project.scripts]

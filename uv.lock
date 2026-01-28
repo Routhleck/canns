@@ -513,6 +513,7 @@ gui = [
     { name = "pillow" },
     { name = "pyside6" },
     { name = "qtawesome" },
+    { name = "requests" },
 ]
 tpu = [
     { name = "brainpy", extra = ["tpu"], marker = "sys_platform == 'linux'" },
@@ -537,6 +538,7 @@ dev-gui = [
     { name = "pyside6" },
     { name = "pytest-qt" },
     { name = "qtawesome" },
+    { name = "requests" },
 ]
 docs = [
     { name = "myst-parser" },
@@ -574,6 +576,7 @@ requires-dist = [
     { name = "pillow", marker = "extra == 'gui'" },
     { name = "pyside6", marker = "extra == 'gui'", specifier = ">=6.6.0" },
     { name = "qtawesome", marker = "extra == 'gui'" },
+    { name = "requests", marker = "extra == 'gui'", specifier = ">=2.31.0" },
     { name = "scikit-image", specifier = ">=0.19" },
     { name = "scipy", specifier = ">=1.9.0" },
     { name = "seaborn", specifier = ">=0.13.2" },
@@ -601,6 +604,7 @@ dev-gui = [
     { name = "pyside6", specifier = ">=6.6.0" },
     { name = "pytest-qt" },
     { name = "qtawesome" },
+    { name = "requests", specifier = ">=2.31.0" },
 ]
 docs = [
     { name = "myst-parser", specifier = ">=4.0.1" },
