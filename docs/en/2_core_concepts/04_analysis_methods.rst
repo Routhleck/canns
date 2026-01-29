@@ -1,3 +1,6 @@
+
+.. note::
+   For background on TDA and population manifolds, see :cite:p:`carlsson2009topology,edelsbrunner2010computational,Vaupel2023Duality,Gardner2022Toroidal`.
 ================
 Analysis Methods
 ================
