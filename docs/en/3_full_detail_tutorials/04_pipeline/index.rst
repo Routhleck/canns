@@ -10,7 +10,7 @@ Tutorials
 ---------
 
 .. toctree::
-   :maxdepth:  '', 1
+   :maxdepth: 1
    :caption: Research Pipeline
 
    03_asa_gui
@@ -105,10 +105,10 @@ The ASA GUI provides:
 Data Input Formats
 ------------------
 
-Two input types are supported:
+Input support differs between GUI and TUI:
 
-- **ASA ``.npz``**: Contains ``spike`` / ``t`` (optionally ``x`` / ``y``)
-- **Neuron + Traj ``.npz``**: Neuron file contains ``spike``; trajectory file contains ``x`` / ``y`` / ``t``
+- **ASA GUI**: only supports ASA ``.npz`` (``spike`` / ``t``; optional ``x`` / ``y``)
+- **ASA TUI (legacy)**: supports both ASA ``.npz`` and Neuron + Traj ``.npz``
 
 Next Steps
 ----------
@@ -117,5 +117,5 @@ After completing this scenario:
 
 - Apply ASA GUI to your real experimental data
 - Build custom analyses on top of generated intermediate results
-- Extend functionality by referencing ``canns.pipeline.asa``
+- Extend functionality by referencing ``canns.pipeline.asa_gui`` (GUI) or ``canns.pipeline.asa`` (legacy TUI)
 - Contribute new analysis modules to the library
