@@ -1,123 +1,121 @@
-场景4: 端到端研究工作流
-========================
+Scenario 4: End-to-End Research Workflow
+======================================
 
-通过交互式 ASA GUI（Attractor Structure Analyzer）完成从数据加载到分析与可视化的完整研究流程，
-无需深入了解模型实现细节。
+Complete the full research workflow—from data loading to analysis and visualization—via the interactive ASA GUI (Attractor Structure Analyzer), without needing in-depth knowledge of model implementation details.
 
 .. note::
-   推荐优先使用 **ASA GUI**。ASA TUI 属于较早版本，后续将不再维护，仅作为过渡使用。
+   It is recommended to prioritize using the **ASA GUI**. The ASA TUI is an earlier version and will no longer be maintained; it is provided only for transitional use.
 
-教程
-----
+Tutorials
+---------
 
 .. toctree::
-   :maxdepth: 1
-   :caption: 研究流水线
+   :maxdepth:  '', 1
+   :caption: Research Pipeline
 
    03_asa_gui
    01_asa_tui
    02_model_gallery_tui
 
-概述
-----
+Overview
+--------
 
-本场景展示了基于 ASA GUI 与 ASA TUI 的端到端分析流程，面向实验神经科学家与研究人员，
-提供可视化界面来完成预处理、TDA、解码与结果浏览。
+This scenario demonstrates an end-to-end analysis pipeline based on both the ASA GUI and ASA TUI, targeting experimental neuroscientists and researchers. It provides a graphical interface to perform preprocessing, TDA, decoding, and result browsing.
 
-**教程1: ASA GUI 端到端分析**
+**Tutorial 1: End-to-End Analysis with ASA GUI**
 
-- PySide6 图形界面完成预处理与分析
-- 支持 TDA / CohoMap / PathCompare / CohoSpace / FR / FRM / GridScore
-- 结果标签页预览与输出目录快速打开
+- Complete preprocessing and analysis via a PySide6 graphical interface
+- Supports TDA / CohoMap / PathCompare / CohoSpace / FR / FRM / GridScore
+- Preview results in dedicated tabs and quickly open the output directory
 
-**教程2: ASA TUI 端到端分析（旧版）**
+**Tutorial 2: End-to-End Analysis with ASA TUI (Legacy)**
 
-- 交互式界面完成数据准备、预处理、分析与结果导出
-- 支持 ASA ``.npz`` 与 Neuron + Trajectory 双输入模式
-- 内置 TDA / CohoMap / PathCompare / CohoSpace / FR / FRM / GridScore
-- 结果自动归档并提供日志与预览
+- Interactive interface for data preparation, preprocessing, analysis, and result export
+- Supports dual input modes: ASA ``.npz`` and Neuron + Trajectory
+- Built-in support for TDA / CohoMap / PathCompare / CohoSpace / FR / FRM / GridScore
+- Results are automatically archived with logs and previews provided
 
-**教程3: Model Gallery TUI**
+**Tutorial 3: Model Gallery TUI**
 
-- 对齐 ``canns-experiments/figure2`` 的 5×3 分析布局
-- CANN1D / CANN2D / GridCell 的典型可视化一键生成
-- 结果预览与输出目录统一管理
+- Replicates the 5×3 analysis layout from ``canns-experiments/figure2``
+- One-click generation of canonical visualizations for CANN1D / CANN2D / GridCell
+- Unified management of result previews and output directories
 
-谁应该使用流水线？
+Who Should Use This Pipeline?
+-----------------------------
+
+**Highly Suitable For**:
+
+- Experimental neuroscientists without extensive coding expertise
+- Rapid prototyping and exploratory analysis
+- Standardized processing of multiple datasets
+- Generating publication-quality figures
+- Teaching and demonstrations
+
+**Consider Manual Approaches When**:
+
+- Implementing non-standard model architectures
+- Developing novel analysis methods
+- Requiring fine-grained control over each step
+- Extending pipeline functionality
+
+Learning Path
+-------------
+
+**Quick Start**:
+
+1. Prepare ASA or Neuron + Trajectory data
+2. Launch ASA GUI and select input files
+3. Run with default preprocessing and analysis parameters
+4. Inspect outputs in the Results directory and adjust parameters as needed
+
+**Advanced Usage**:
+
+- Batch process multiple sessions (by switching working directories and input files)
+- Fine-tune parameters for TDA, decoding, and visualization
+- Feed generated intermediate results into custom analyses
+- Integrate with existing experimental workflows
+
+Prerequisites
+-------------
+
+- Basic Python knowledge
+- Familiarity with your experimental data format (spike/x/y/t)
+- Ability to run commands in a terminal
+
+Estimated Time
+--------------
+
+- Tutorial 1: 30–40 minutes
+- Setting up with your own data: 15–30 minutes
+- Total: 70 minutes
+
+Pipeline Features
+-----------------
+
+The ASA GUI provides:
+
+- **Interactive Workflow** — GUI-based preprocessing and analysis
+- **Automatic Data Validation** — Checks input format and missing fields
+- **TDA + Decoding** — Persistent homology, phase decoding, and comparison
+- **Visualization Suite** — CohoMap / CohoSpace / FR / FRM / GridScore
+- **Result Archiving** — Automatic per-dataset directory organization
+- **Logging and Caching** — Execution logs and stage-wise cache reuse
+
+Data Input Formats
 ------------------
 
-**非常适合**:
+Two input types are supported:
 
-- 没有深厚编码专业知识的实验神经科学家
-- 快速原型设计和探索性分析
-- 多个数据集的标准化处理
-- 出版质量的图表生成
-- 教学和演示
+- **ASA ``.npz``**: Contains ``spike`` / ``t`` (optionally ``x`` / ``y``)
+- **Neuron + Traj ``.npz``**: Neuron file contains ``spike``; trajectory file contains ``x`` / ``y`` / ``t``
 
-**在以下情况下考虑手动方法**:
-
-- 实现非标准模型架构
-- 开发新的分析方法
-- 需要对每个步骤进行精细控制
-- 扩展流水线功能
-
-学习路径
---------
-
-**快速入门**:
-
-1. 准备 ASA 或 Neuron + Trajectory 数据
-2. 启动 ASA GUI 并选择输入文件
-3. 预处理与分析参数采用默认值运行
-4. 在 Results 目录中查看输出并按需调参
-
-**进阶用法**:
-
-- 批量处理多个会话（切换工作目录与输入文件）
-- 细化 TDA/解码/可视化参数
-- 将生成的中间结果接入自定义分析
-- 与现有实验工作流集成
-
-前置要求
---------
-
-- 基本的Python知识
-- 了解您的实验数据格式（spike/x/y/t）
-- 能在终端中运行命令
-
-预计时间
---------
-
-- 教程1: 30-40分钟
-- 为您自己的数据设置: 15-30分钟
-- 总计: 70分钟
-
-流水线特性
+Next Steps
 ----------
 
-ASA GUI 提供：
+After completing this scenario:
 
-- **交互式流程**——界面化完成预处理与分析
-- **自动数据验证**——检查输入格式与缺失字段
-- **TDA + 解码**——持久同调、相位解码与对比
-- **可视化套件**——CohoMap/CohoSpace/FR/FRM/GridScore
-- **结果归档**——按数据集自动分目录保存
-- **日志与缓存**——运行日志与阶段缓存复用
-
-数据输入格式
-------------
-
-支持两类输入：
-
-- **ASA ``.npz`` ** ：包含 ``spike`` / ``t`` （可选 ``x`` / ``y``）
-- **Neuron + Traj ``.npz`` ** ：神经元文件包含 ``spike``；轨迹文件包含 ``x`` / ``y`` / ``t``
-
-下一步
-------
-
-完成本场景后：
-
-- 将 ASA GUI 应用于真实实验数据
-- 基于生成的中间结果开展自定义分析
-- 参考 ``canns.pipeline.asa`` 扩展新功能
-- 为库贡献新的分析模块
+- Apply ASA GUI to your real experimental data
+- Build custom analyses on top of generated intermediate results
+- Extend functionality by referencing ``canns.pipeline.asa``
+- Contribute new analysis modules to the library
