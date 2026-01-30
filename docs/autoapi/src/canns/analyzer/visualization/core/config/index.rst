@@ -553,6 +553,11 @@ Module Contents
 
 
 
+   .. py:method:: internal_position_trajectory_static(**kwargs)
+      :staticmethod:
+
+
+
    .. py:method:: path_compare_1d(**kwargs)
       :staticmethod:
 
