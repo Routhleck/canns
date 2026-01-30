@@ -37,6 +37,12 @@ Module Contents
    inheritance.
 
 
+   .. py:method:: apply_language(lang)
+
+      Apply localized tooltips/text.
+
+
+
    .. py:method:: apply_preset(preset)
 
       Apply preset hints (grid/hd) to parameters.

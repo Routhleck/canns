@@ -41,6 +41,9 @@ Module Contents
    Bases: :py:obj:`src.canns.pipeline.asa_gui.analysis_modes.base.AbstractAnalysisMode`
 
 
+   .. py:method:: apply_language(lang)
+
+
    .. py:method:: apply_meta(meta)
 
 

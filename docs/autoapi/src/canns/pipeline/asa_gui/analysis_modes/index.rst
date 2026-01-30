@@ -65,6 +65,12 @@ Package Contents
    inheritance.
 
 
+   .. py:method:: apply_language(lang)
+
+      Apply localized tooltips/text.
+
+
+
    .. py:method:: apply_preset(preset)
 
       Apply preset hints (grid/hd) to parameters.
@@ -127,6 +133,9 @@ Package Contents
    Bases: :py:obj:`src.canns.pipeline.asa_gui.analysis_modes.base.AbstractAnalysisMode`
 
 
+   .. py:method:: apply_language(lang)
+
+
    .. py:method:: apply_preset(preset)
 
 
@@ -149,6 +158,9 @@ Package Contents
 .. py:class:: CohoSpaceMode
 
    Bases: :py:obj:`src.canns.pipeline.asa_gui.analysis_modes.base.AbstractAnalysisMode`
+
+
+   .. py:method:: apply_language(lang)
 
 
    .. py:method:: apply_ranges(neuron_count, total_steps)
@@ -175,6 +187,9 @@ Package Contents
    Bases: :py:obj:`src.canns.pipeline.asa_gui.analysis_modes.base.AbstractAnalysisMode`
 
 
+   .. py:method:: apply_language(lang)
+
+
    .. py:method:: apply_preset(preset)
 
 
@@ -199,6 +214,9 @@ Package Contents
    Bases: :py:obj:`src.canns.pipeline.asa_gui.analysis_modes.base.AbstractAnalysisMode`
 
 
+   .. py:method:: apply_language(lang)
+
+
    .. py:method:: apply_ranges(neuron_count, total_steps)
 
 
@@ -221,6 +239,9 @@ Package Contents
 .. py:class:: FRMode
 
    Bases: :py:obj:`src.canns.pipeline.asa_gui.analysis_modes.base.AbstractAnalysisMode`
+
+
+   .. py:method:: apply_language(lang)
 
 
    .. py:method:: apply_ranges(neuron_count, total_steps)
@@ -262,6 +283,9 @@ Package Contents
    Bases: :py:obj:`src.canns.pipeline.asa_gui.analysis_modes.base.AbstractAnalysisMode`
 
 
+   .. py:method:: apply_language(lang)
+
+
    .. py:method:: apply_meta(meta)
 
 
@@ -289,6 +313,9 @@ Package Contents
    Bases: :py:obj:`src.canns.pipeline.asa_gui.analysis_modes.base.AbstractAnalysisMode`
 
 
+   .. py:method:: apply_language(lang)
+
+
    .. py:method:: collect_params()
 
 
@@ -308,6 +335,9 @@ Package Contents
 .. py:class:: TDAMode
 
    Bases: :py:obj:`src.canns.pipeline.asa_gui.analysis_modes.base.AbstractAnalysisMode`
+
+
+   .. py:method:: apply_language(lang)
 
 
    .. py:method:: apply_preset(preset)
