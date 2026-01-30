@@ -91,7 +91,8 @@ copybutton_remove_prompts = True
 copybutton_line_continuation_character = "\\"
 
 # -- AutoAPI configuration ---------------------------------------------------
-autoapi_dirs = ['../src/']
+# Point AutoAPI at the package itself so the top-level is "canns", not "src.canns".
+autoapi_dirs = ['../src/canns']
 autoapi_type = 'python'
 autoapi_template_dir = '_templates/autoapi'
 autoapi_root = 'autoapi'
@@ -104,6 +105,8 @@ autoapi_options = [
     'imported-members',
 ]
 autoapi_generate_api_docs = True
+# Avoid dumping every API page into the global sidebar; keep a hierarchical tree.
+# Auto-generate the API index and add it to the main sidebar.
 autoapi_add_toctree_entry = True
 # Suppress duplicate object warnings
 suppress_warnings = ['autosummary', 'autosummary.import_cycle']
@@ -135,6 +138,10 @@ html_favicon = '_static/logo.svg'
 # Custom CSS files
 html_css_files = [
     'custom.css',
+]
+
+html_js_files = [
+    'sidebar-current.js',
 ]
 
 # Furo theme options

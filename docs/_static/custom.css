@@ -112,3 +112,28 @@ p.caption {
         color: #aaa;
     }
 }
+
+/* Sidebar: make current location more visible in deep API trees */
+.sidebar-tree li.current > .reference,
+.sidebar-tree li.current-page > .reference,
+.sidebar-tree .reference.current {
+    background: var(--color-background-secondary);
+    box-shadow: inset 3px 0 0 var(--color-brand-content);
+    color: var(--color-foreground-primary);
+    font-weight: 600;
+    border-radius: 4px;
+}
+
+.sidebar-tree li.current-page > .reference,
+.sidebar-tree .reference.current {
+    box-shadow: inset 4px 0 0 var(--color-brand-primary),
+        0 0 0 1px var(--color-background-border);
+    font-weight: 700;
+    border-radius: 6px;
+}
+
+.sidebar-tree li.current > .reference:hover,
+.sidebar-tree li.current-page > .reference:hover,
+.sidebar-tree .reference.current:hover {
+    background: var(--color-background-hover);
+}
