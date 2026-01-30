@@ -15,6 +15,7 @@ from canns.analyzer.visualization import PlotConfigs
 from canns.analyzer.visualization.theta_sweep_plots import (
     create_theta_sweep_grid_cell_animation,
     plot_grid_cell_manifold,
+    plot_internal_position_trajectory,
     plot_population_activity_with_theta,
 )
 from canns.models.basic.theta_sweep_model import (
@@ -30,8 +31,8 @@ def main() -> None:
     np.random.seed(10)
     Env_size = 1.5
     simulate_time = 2.0
-    dt = 0.001
-    bm.set_dt(dt=1.0)
+    dt = 0.001  # seconds for the navigation task
+    bm.set_dt(dt=1.0)  # milliseconds for the neural simulation
 
     # Create and run spatial navigation task
     snt = OpenLoopNavigationTask(
@@ -69,11 +70,11 @@ def main() -> None:
         noise_strength=0.0,
     )
 
-    mapping_ratio = 5
+    mapping_ratio = 10
     gc_net = GridCellNetwork(
         num_dc=dc_net.num,
         num_gc_x=100,
-        adaptation_strength=8,
+        adaptation_strength=25,
         mapping_ratio=mapping_ratio,
         noise_strength=0.0,
     )
@@ -84,9 +85,9 @@ def main() -> None:
             linear_gain=linear_gain,
             ang_gain=ang_gain,
             theta_strength_hd=1.0,
-            theta_strength_gc=0.5,
+            theta_strength_gc=1.0,
             theta_cycle_len=100.0,
-            dt=dt,
+            dt=None,  # use bm.get_dt() in ms to match theta_cycle_len
         )
 
         dc_net(hd_angle, theta_modulation_hd)
@@ -134,7 +135,8 @@ def main() -> None:
         xlabel="Time (s)",
         ylabel="Direction (°)",
         figsize=(10, 4),
-        show=True,
+        show=False,
+        save_path="theta_population_activity.png",
     )
 
     plot_population_activity_with_theta(
@@ -155,13 +157,30 @@ def main() -> None:
     config_manifold = PlotConfigs.grid_cell_manifold_static(
         title="Grid Cell Activity on Twisted Torus Manifold",
         figsize=(6, 5),
-        show=True,
+        show=False,
+        save_path="grid_cell_manifold.png",
     )
 
     plot_grid_cell_manifold(
         value_grid_twisted=value_grid_twisted / mapping_ratio,
         grid_cell_activity=grid_cell_activity[frame_idx],
         config=config_manifold,
+    )
+
+    print("Plotting internal position vs. real trajectory...")
+    max_gc_activity = np.max(gc_netactivity, axis=1)
+    config_internal = PlotConfigs.internal_position_trajectory_static(
+        title="Internal Position (GC bump) vs. Real Trajectory",
+        figsize=(5, 4),
+        show=False,
+        save_path="grid_cell_internal_position.png",
+    )
+    plot_internal_position_trajectory(
+        internal_position=internal_position,
+        position=position,
+        max_activity=max_gc_activity,
+        env_size=Env_size,
+        config=config_internal,
     )
 
     print("Creating theta sweep animation...")

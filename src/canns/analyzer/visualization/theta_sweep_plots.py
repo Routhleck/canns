@@ -760,6 +760,148 @@ def plot_grid_cell_manifold(
         raise e
 
 
+def plot_internal_position_trajectory(
+    internal_position: np.ndarray,
+    position: np.ndarray,
+    max_activity: np.ndarray | None = None,
+    env_size: float | tuple[float, float] | tuple[float, float, float, float] | None = None,
+    config: PlotConfig | None = None,
+    ax: plt.Axes | None = None,
+    # Backward compatibility parameters
+    title: str = "Internal Position (GC bump) vs. Real Trajectory",
+    figsize: tuple[int, int] = (6, 4),
+    cmap: str = "cool",
+    show: bool = True,
+    save_path: str | None = None,
+    **kwargs,
+) -> tuple[plt.Figure, plt.Axes]:
+    """Plot internal position (GC bump) against the real trajectory.
+
+    Args:
+        internal_position: Internal decoded positions ``(T, 2)``.
+        position: Real positions ``(T, 2)``.
+        max_activity: Optional per-time max activity to color the internal position.
+        env_size: Environment size. If float, uses ``[0, env_size]`` for both axes.
+            If a tuple of 2, treats as ``(width, height)``. If a tuple of 4, treats as
+            ``(xmin, xmax, ymin, ymax)``.
+        config: PlotConfig object for unified configuration.
+        ax: Optional axis to draw on instead of creating a new figure.
+        **kwargs: Additional parameters for backward compatibility.
+
+    Returns:
+        tuple: ``(figure, axis)`` objects.
+    """
+    if internal_position.ndim != 2 or internal_position.shape[1] != 2:
+        raise ValueError(
+            f"internal_position must be (T, 2), got shape {internal_position.shape}"
+        )
+    if position.ndim != 2 or position.shape[1] != 2:
+        raise ValueError(f"position must be (T, 2), got shape {position.shape}")
+    if internal_position.shape[0] != position.shape[0]:
+        raise ValueError(
+            "internal_position and position must have the same length: "
+            f"{internal_position.shape[0]} != {position.shape[0]}"
+        )
+    if max_activity is not None and max_activity.shape[0] != internal_position.shape[0]:
+        raise ValueError(
+            "max_activity must have same length as internal_position: "
+            f"{max_activity.shape[0]} != {internal_position.shape[0]}"
+        )
+
+    if config is None:
+        config = PlotConfig(
+            title=title,
+            figsize=figsize,
+            show=show,
+            save_path=save_path,
+            kwargs={"cmap": cmap, **kwargs},
+        )
+
+    plot_kwargs = config.to_matplotlib_kwargs()
+    trajectory_color = plot_kwargs.pop("trajectory_color", "black")
+    trajectory_linewidth = plot_kwargs.pop("trajectory_linewidth", 1.0)
+    scatter_size = plot_kwargs.pop("scatter_size", 4)
+    scatter_alpha = plot_kwargs.pop("scatter_alpha", 0.9)
+    add_colorbar = bool(plot_kwargs.pop("add_colorbar", True))
+    colorbar_options = plot_kwargs.pop("colorbar", {}) if add_colorbar else {}
+    if "cmap" not in plot_kwargs:
+        plot_kwargs["cmap"] = "cool"
+
+    if max_activity is None:
+        add_colorbar = False
+
+    axis_provided = ax is not None
+    if not axis_provided:
+        fig, ax = plt.subplots(figsize=config.figsize)
+    else:
+        fig = ax.figure
+
+    try:
+        scatter = ax.scatter(
+            internal_position[:, 0],
+            internal_position[:, 1],
+            c=max_activity,
+            s=scatter_size,
+            alpha=scatter_alpha,
+            **plot_kwargs,
+        )
+        ax.plot(position[:, 0], position[:, 1], color=trajectory_color, lw=trajectory_linewidth)
+
+        ax.set_aspect("equal", adjustable="box")
+        if config.title:
+            ax.set_title(config.title, fontsize=14, fontweight="bold")
+
+        if env_size is not None:
+            if isinstance(env_size, (tuple, list, np.ndarray)):
+                if len(env_size) == 2:
+                    ax.set_xlim(0, env_size[0])
+                    ax.set_ylim(0, env_size[1])
+                elif len(env_size) == 4:
+                    ax.set_xlim(env_size[0], env_size[1])
+                    ax.set_ylim(env_size[2], env_size[3])
+                else:
+                    raise ValueError("env_size tuple must be length 2 or 4.")
+            else:
+                ax.set_xlim(0, env_size)
+                ax.set_ylim(0, env_size)
+
+        sns.despine(ax=ax)
+
+        if add_colorbar:
+            default_cbar_opts = {"pad": 0.15, "size": "5%", "label": "Max GC activity"}
+            if isinstance(colorbar_options, dict):
+                extra_cbar_kwargs = colorbar_options.get("kwargs", {})
+                for key in ("pad", "size", "label"):
+                    if key in colorbar_options:
+                        default_cbar_opts[key] = colorbar_options[key]
+            else:
+                extra_cbar_kwargs = {}
+
+            divider = make_axes_locatable(ax)
+            cax = divider.append_axes(
+                "right", size=default_cbar_opts["size"], pad=default_cbar_opts["pad"]
+            )
+            cbar = fig.colorbar(scatter, cax=cax, **extra_cbar_kwargs)
+            if default_cbar_opts["label"]:
+                cbar.set_label(default_cbar_opts["label"], fontsize=12)
+
+        if not axis_provided:
+            fig.tight_layout()
+
+        show_flag = config.show and not axis_provided
+        finalize_figure(
+            fig,
+            replace(config, show=show_flag),
+            rasterize_artists=[scatter] if config.rasterized else None,
+            always_close=not show_flag,
+        )
+        return fig, ax
+
+    except Exception as e:
+        plt.close(fig)
+        raise e
+
+
 @dataclass(slots=True)
 class _PlaceCellAnimationData:
     """Immutable container for place cell animation arrays."""
