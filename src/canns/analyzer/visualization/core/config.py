@@ -470,6 +470,26 @@ class PlotConfigs:
         return PlotConfig.for_static_plot(**defaults)
 
     @staticmethod
+    def internal_position_trajectory_static(**kwargs: Any) -> PlotConfig:
+        defaults: dict[str, Any] = {
+            "title": "Internal Position vs. Real Trajectory",
+            "figsize": (6, 4),
+        }
+        plot_kwargs: dict[str, Any] = {
+            "cmap": "cool",
+            "add_colorbar": True,
+            "colorbar": {"label": "Max GC activity"},
+            "trajectory_color": "black",
+            "trajectory_linewidth": 1.0,
+            "scatter_size": 4,
+            "scatter_alpha": 0.9,
+        }
+        plot_kwargs.update(kwargs.pop("kwargs", {}))
+        defaults["kwargs"] = plot_kwargs
+        defaults.update(kwargs)
+        return PlotConfig.for_static_plot(**defaults)
+
+    @staticmethod
     def direction_cell_polar(**kwargs: Any) -> PlotConfig:
         """Configuration for direction cell polar plot visualization.
 

@@ -59,6 +59,7 @@ Functions
    src.canns.analyzer.visualization.plot_grid_cell_manifold
    src.canns.analyzer.visualization.plot_grid_score
    src.canns.analyzer.visualization.plot_grid_spacing_analysis
+   src.canns.analyzer.visualization.plot_internal_position_trajectory
    src.canns.analyzer.visualization.plot_population_activity_with_theta
    src.canns.analyzer.visualization.population_activity_heatmap
    src.canns.analyzer.visualization.raster_plot
@@ -816,6 +817,11 @@ Package Contents
       ...     title="Grid Field Spacing",
       ...     save_path="spacing.png"
       ... )
+
+
+
+   .. py:method:: internal_position_trajectory_static(**kwargs)
+      :staticmethod:
 
 
 
@@ -1618,6 +1624,24 @@ Package Contents
    ... )
    >>> print(spacing_m is not None)
    True
+
+
+.. py:function:: plot_internal_position_trajectory(internal_position, position, max_activity = None, env_size = None, config = None, ax = None, title = 'Internal Position (GC bump) vs. Real Trajectory', figsize = (6, 4), cmap = 'cool', show = True, save_path = None, **kwargs)
+
+   Plot internal position (GC bump) against the real trajectory.
+
+   :param internal_position: Internal decoded positions ``(T, 2)``.
+   :param position: Real positions ``(T, 2)``.
+   :param max_activity: Optional per-time max activity to color the internal position.
+   :param env_size: Environment size. If float, uses ``[0, env_size]`` for both axes.
+                    If a tuple of 2, treats as ``(width, height)``. If a tuple of 4, treats as
+                    ``(xmin, xmax, ymin, ymax)``.
+   :param config: PlotConfig object for unified configuration.
+   :param ax: Optional axis to draw on instead of creating a new figure.
+   :param \*\*kwargs: Additional parameters for backward compatibility.
+
+   :returns: ``(figure, axis)`` objects.
+   :rtype: tuple
 
 
 .. py:function:: plot_population_activity_with_theta(time_steps, theta_phase, net_activity, direction, config = None, add_lines = True, atol = 0.01, title = 'Population Activity with Theta', xlabel = 'Time (s)', ylabel = 'Direction (°)', figsize = (12, 4), cmap = 'jet', show = True, save_path = None, **kwargs)

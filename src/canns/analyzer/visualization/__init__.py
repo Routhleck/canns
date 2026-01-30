@@ -34,6 +34,7 @@ from .theta_sweep_plots import (
     create_theta_sweep_grid_cell_animation,
     create_theta_sweep_place_cell_animation,
     plot_grid_cell_manifold,
+    plot_internal_position_trajectory,
     plot_population_activity_with_theta,
 )
 from .tuning_plots import tuning_curve
@@ -70,5 +71,6 @@ __all__ = [
     "create_theta_sweep_grid_cell_animation",
     "create_theta_sweep_place_cell_animation",
     "plot_grid_cell_manifold",
+    "plot_internal_position_trajectory",
     "plot_population_activity_with_theta",
 ]
