@@ -240,6 +240,76 @@ def interp_coords_to_full_1d(idx_map: np.ndarray, coords1: np.ndarray, T_full: i
     return np.mod(out, 2 * np.pi)[:, None]
 
 
+def _align_activity_to_coords(
+    coords: np.ndarray,
+    activity: np.ndarray,
+    times: np.ndarray | None = None,
+    *,
+    label: str = "activity",
+    auto_filter: bool = True,
+) -> np.ndarray:
+    """
+    Align activity to coords by optional time indices and validate lengths.
+
+    Parameters
+    ----------
+    coords : ndarray
+        Decoded coordinates array.
+    activity : ndarray
+        Activity matrix (firing rate or spikes).
+    times : ndarray, optional
+        Optional time indices to align activity to coords when coords are computed
+        on a subset of timepoints.
+    label : str
+        Label for error messages (default: "activity").
+    auto_filter : bool
+        If True and lengths mismatch, auto-filter activity with activity>0 to mimic
+        decode filtering.
+
+    Returns
+    -------
+    ndarray
+        Aligned activity array.
+
+    Raises
+    ------
+    ValueError
+        If activity length doesn't match coords length after alignment attempts.
+    """
+    coords = np.asarray(coords)
+    activity = np.asarray(activity)
+
+    if times is not None:
+        times = np.asarray(times)
+        try:
+            activity = activity[times]
+        except Exception as exc:
+            raise ValueError(
+                f"Failed to index {label} with `times`. Ensure `times` indexes the original time axis."
+            ) from exc
+
+    if activity.shape[0] != coords.shape[0]:
+        # Try to reproduce decode's zero-spike filtering if lengths mismatch.
+        if auto_filter and times is None and activity.ndim == 2:
+            mask = np.sum(activity > 0, axis=1) >= 1
+            if mask.sum() == coords.shape[0]:
+                activity = activity[mask]
+            else:
+                raise ValueError(
+                    f"{label} length must match coords length. Got {activity.shape[0]} vs {coords.shape[0]}. "
+                    "If coords are computed on a subset of timepoints (e.g., decode['times']), pass "
+                    "`times=decoding['times']` or slice the activity accordingly."
+                )
+        else:
+            raise ValueError(
+                f"{label} length must match coords length. Got {activity.shape[0]} vs {coords.shape[0]}. "
+                "If coords are computed on a subset of timepoints (e.g., decode['times']), pass "
+                "`times=decoding['times']` or slice the activity accordingly."
+            )
+
+    return activity
+
+
 def align_coords_to_position_2d(
     t_full: np.ndarray,
     x_full: np.ndarray,

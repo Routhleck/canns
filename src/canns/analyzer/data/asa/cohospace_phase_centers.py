@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from ...visualization.core import PlotConfig, finalize_figure
-from .cohospace_scatter import skew_transform_torus_scatter
+from .path import skew_transform
 from .utils import _ensure_parent_dir, _ensure_plot_config
 
 
@@ -22,7 +22,7 @@ def cohospace_phase_centers(cohospace_result: dict[str, Any]) -> dict[str, Any]:
         Output from `data.cohospace(...)` (must include `centers`).
     """
     centers = np.asarray(cohospace_result["centers"], dtype=float) % (2 * np.pi)
-    centers_skew = skew_transform_torus_scatter(centers)
+    centers_skew = skew_transform(centers)
     return {
         "centers": centers,
         "centers_skew": centers_skew,
