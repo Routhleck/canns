@@ -5,6 +5,63 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.15.0] - 2026-01-31
+
+### Added
+- New CohoMap modules for topological feature extraction (PR #94)
+  - `cohomap.py`: Core CohoMap computation
+  - `cohomap_scatter.py`: Scatter plot visualization (renamed from `cohomap.py`)
+  - `cohomap_vectors.py`: Vector field visualization with 4-panel layouts
+- New CohoSpace modules for enhanced trajectory analysis (PR #94)
+  - `cohospace_scatter.py`: Refactored scatter plotting for 1D/2D trajectories
+  - `cohospace_phase_centers.py`: Phase center analysis and alignment
+- BTN (Border-to-Neighbor) analysis for spatial boundary detection (PR #94)
+  - `btn.py`: Border cell classification and spatial analysis
+  - `btn_plots.py`: Comprehensive BTN visualization tools
+- `plot_internal_position_trajectory()` function for grid cell bump tracking (PR #93)
+- `PlotConfigs.internal_position_trajectory_static` configuration helper (PR #93)
+- New English tutorial notebooks (PR #92)
+  - `01_asa_pipeline.ipynb`: Comprehensive ASA pipeline tutorial
+  - `02_cann1d_bump_fit.ipynb`: CANN1D bump fitting guide
+  - `04_cell_classification.ipynb`: Cell classification tutorial
+- Pipeline documentation pages (PR #92)
+  - `01_asa_tui.rst`: ASA TUI (legacy) guide
+  - `02_model_gallery_tui.rst`: Model Gallery TUI guide
+  - `03_asa_gui.rst`: ASA GUI (primary) guide
+- New example scripts (PR #94)
+  - `btn_example.py`: BTN analysis demonstration
+  - `cohomap_example.py`: Basic CohoMap computation
+  - `cohomap_vectors_example.py`: Vector field visualization
+  - `cohospace_example.py`: CohoSpace trajectory analysis
+  - `cohospace_phase_centers_example.py`: Phase center alignment
+- Sidebar auto-scroll functionality with `sidebar-current.js` (1f8a6cc)
+- TDA literature references (Vaupel2023, Gardner2022) in documentation (PR #92)
+- Active page highlighting in documentation sidebar (1f8a6cc)
+
+### Changed
+- Migrated API documentation from `src.canns` to `canns` namespace (1f8a6cc)
+  - Updated 150+ autoapi RST files for consistent import paths
+  - Improved documentation discoverability and user experience
+- Refactored `cohospace.py` by extracting specialized functions into dedicated modules (PR #94)
+  - Improved code maintainability and reduced complexity
+  - Backward compatible - existing functions remain available
+- Enhanced documentation navigation with auto-scroll and visual highlighting (1f8a6cc)
+- Updated ASA documentation to prioritize GUI as primary interface, TUI as legacy (PR #92)
+- Improved `GridCellNetwork` parameters for better demonstrations (PR #93)
+  - Stronger `adaptation_strength` and `mapping_ratio`
+  - Updated theta sweep example workflow
+- Optimized theta sweep animation GIF (2.9MB → 1.5MB) (PR #93)
+- Renamed example scripts for clarity (PR #94)
+  - `cohomap.py` → `cohomap_scatter.py`
+  - `cohospace1d.py` → `cohospace_scatter1d.py`
+  - `cohospace2d.py` → `cohospace_scatter2d.py`
+- Enhanced tutorial notebook formatting and metadata (33bad11, f4bf5a4)
+- Added `apply_language()` method documentation to ASA GUI analysis modes (33bad11)
+- Improved cell classification tutorial with better code outputs and examples (f4bf5a4)
+
+### Fixed
+- Added `strict=True` to zip() calls for better error detection (PR #94)
+
 ## [0.14.3] - 2026-01-28
 
 ### Added
@@ -520,6 +577,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Basic structure template
 - Core application structure
 
+[0.15.0]: https://github.com/routhleck/canns/compare/v0.14.3...v0.15.0
 [0.14.3]: https://github.com/routhleck/canns/compare/v0.14.2...v0.14.3
 [0.14.2]: https://github.com/routhleck/canns/compare/v0.14.1...v0.14.2
 [0.14.1]: https://github.com/routhleck/canns/compare/v0.14.0...v0.14.1
