@@ -57,6 +57,36 @@ def _rot_coord(
     c2: np.ndarray,
     p: tuple[int, int],
 ) -> np.ndarray:
+    """Transform and align decoded coordinates based on stripe orientation.
+
+    This function rotates and aligns coordinates to match the dominant stripe
+    orientation in the CohoMap. It handles the torus geometry by choosing the
+    appropriate coordinate system and applying reflections/rotations.
+
+    Parameters
+    ----------
+    params1 : np.ndarray
+        Stripe fit parameters for first dimension (includes orientation angle).
+    params2 : np.ndarray
+        Stripe fit parameters for second dimension (includes orientation angle).
+    c1 : np.ndarray
+        Decoded coordinates for first dimension.
+    c2 : np.ndarray
+        Decoded coordinates for second dimension.
+    p : tuple[int, int]
+        Direction indicators (1 or -1) for each dimension, controlling reflections.
+
+    Returns
+    -------
+    np.ndarray
+        Aligned coordinates of shape (N, 2), wrapped to [0, 2π).
+
+    Notes
+    -----
+    The function selects the coordinate system based on which dimension has
+    stronger horizontal alignment (larger |cos(angle)|), then applies geometric
+    transformations to align the coordinates with the stripe pattern.
+    """
     if abs(np.cos(params1[0])) < abs(np.cos(params2[0])):
         cc1 = c2.copy()
         cc2 = c1.copy()
@@ -96,6 +126,46 @@ def _toroidal_align_coords(
     trim: int,
     grid_size: int | None,
 ) -> tuple[np.ndarray, float, float]:
+    """Align decoded coordinates to CohoMap stripe patterns.
+
+    This function fits stripe patterns to both phase maps, determines the
+    optimal orientation and phase signs, then transforms the decoded coordinates
+    to align with the detected stripe structure.
+
+    Parameters
+    ----------
+    coords : np.ndarray
+        Decoded coordinates of shape (N, 2+). Only first two columns are used.
+    phase_map1 : np.ndarray
+        Phase map for first dimension (2D grid).
+    phase_map2 : np.ndarray
+        Phase map for second dimension (2D grid), must match phase_map1 shape.
+    trim : int
+        Number of edge bins to trim when fitting stripes.
+    grid_size : int, optional
+        Grid size for stripe fitting. If None, inferred from phase_map shape.
+
+    Returns
+    -------
+    aligned : np.ndarray
+        Aligned coordinates of shape (N, 2), wrapped to [0, 2π).
+    f1 : float
+        Fit quality score for first dimension (higher is better).
+    f2 : float
+        Fit quality score for second dimension (higher is better).
+
+    Raises
+    ------
+    ValueError
+        If phase_map shapes don't match or coords has wrong shape.
+
+    Notes
+    -----
+    The alignment process:
+    1. Fits stripe patterns to both phase maps using FFT-based detection
+    2. Determines phase signs (±1) for each dimension
+    3. Applies geometric transformations via `_rot_coord()` to align coordinates
+    """
     if phase_map1.shape != phase_map2.shape:
         raise ValueError("phase_map shapes do not match for alignment")
     coords = np.asarray(coords)
@@ -381,28 +451,3 @@ def plot_cohomap(
     _ensure_parent_dir(config.save_path)
     finalize_figure(fig, config)
     return fig
-
-
-def cohomap_upgrade(*args, **kwargs) -> dict[str, Any]:
-    """Legacy alias for EcohoMap (formerly cohomap_upgrade)."""
-    return cohomap(*args, **kwargs)
-
-
-def ecohomap(*args, **kwargs) -> dict[str, Any]:
-    """Alias for EcohoMap (GridCellTorus-style)."""
-    return cohomap(*args, **kwargs)
-
-
-def fit_cohomap_stripes_upgrade(*args, **kwargs) -> tuple[np.ndarray, float]:
-    """Legacy alias for EcohoMap stripe fitting."""
-    return fit_cohomap_stripes(*args, **kwargs)
-
-
-def plot_cohomap_upgrade(*args, **kwargs) -> plt.Figure:
-    """Legacy alias for EcohoMap plotting (formerly plot_cohomap_upgrade)."""
-    return plot_cohomap(*args, **kwargs)
-
-
-def plot_ecohomap(*args, **kwargs) -> plt.Figure:
-    """Alias for EcohoMap plotting."""
-    return plot_cohomap(*args, **kwargs)

@@ -6,7 +6,6 @@ import numpy as np
 from scipy.ndimage import gaussian_filter1d
 
 from .config import DataLoadError, ProcessingError, SpikeEmbeddingConfig
-from .filters import _gaussian_filter1d
 
 
 def embed_spike_trains(spike_trains, config: SpikeEmbeddingConfig | None = None, **kwargs):
@@ -262,8 +261,8 @@ def _load_pos(t, x, y, res=100000, dt=1000):
     xx = np.interp(tt, t, x)
     yy = np.interp(tt, t, y)
 
-    xxs = _gaussian_filter1d(xx - np.min(xx), sigma=100)
-    yys = _gaussian_filter1d(yy - np.min(yy), sigma=100)
+    xxs = gaussian_filter1d(xx - np.min(xx), sigma=100)
+    yys = gaussian_filter1d(yy - np.min(yy), sigma=100)
     dx = (xxs[1:] - xxs[:-1]) * 100
     dy = (yys[1:] - yys[:-1]) * 100
     speed = np.sqrt(dx**2 + dy**2) / 0.01

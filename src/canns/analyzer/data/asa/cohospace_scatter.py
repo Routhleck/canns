@@ -2,38 +2,13 @@
 
 from __future__ import annotations
 
-import os
-
 import matplotlib.pyplot as plt
 import numpy as np
 from scipy.stats import circvar
 
 from ...visualization.core import PlotConfig, finalize_figure
-
-
-def _ensure_plot_config(
-    config: PlotConfig | None,
-    factory,
-    *,
-    kwargs: dict | None = None,
-    **defaults,
-) -> PlotConfig:
-    if config is None:
-        defaults.update({"kwargs": kwargs or {}})
-        return factory(**defaults)
-
-    if kwargs:
-        config_kwargs = config.kwargs or {}
-        config_kwargs.update(kwargs)
-        config.kwargs = config_kwargs
-    return config
-
-
-def _ensure_parent_dir(save_path: str | None) -> None:
-    if save_path:
-        parent = os.path.dirname(save_path)
-        if parent:
-            os.makedirs(parent, exist_ok=True)
+from .path import _align_activity_to_coords, skew_transform
+from .utils import _ensure_parent_dir, _ensure_plot_config
 
 
 # =====================================================================
@@ -46,51 +21,6 @@ def _coho_coords_to_degrees(coords: np.ndarray) -> np.ndarray:
     Convert decoded coho coordinates (T x 2, radians) into degrees in [0, 360).
     """
     return np.degrees(coords % (2 * np.pi))
-
-
-def _align_activity_to_coords(
-    coords: np.ndarray,
-    activity: np.ndarray,
-    times: np.ndarray | None = None,
-    *,
-    label: str = "activity",
-    auto_filter: bool = True,
-) -> np.ndarray:
-    """
-    Align activity to coords by optional time indices and validate lengths.
-    """
-    coords = np.asarray(coords)
-    activity = np.asarray(activity)
-
-    if times is not None:
-        times = np.asarray(times)
-        try:
-            activity = activity[times]
-        except Exception as exc:
-            raise ValueError(
-                f"Failed to index {label} with `times`. Ensure `times` indexes the original time axis."
-            ) from exc
-
-    if activity.shape[0] != coords.shape[0]:
-        # Try to reproduce decode's zero-spike filtering if lengths mismatch.
-        if auto_filter and times is None and activity.ndim == 2:
-            mask = np.sum(activity > 0, axis=1) >= 1
-            if mask.sum() == coords.shape[0]:
-                activity = activity[mask]
-            else:
-                raise ValueError(
-                    f"{label} length must match coords length. Got {activity.shape[0]} vs {coords.shape[0]}. "
-                    "If coords are computed on a subset of timepoints (e.g., decode['times']), pass "
-                    "`times=decoding['times']` or slice the activity accordingly."
-                )
-        else:
-            raise ValueError(
-                f"{label} length must match coords length. Got {activity.shape[0]} vs {coords.shape[0]}. "
-                "If coords are computed on a subset of timepoints (e.g., decode['times']), pass "
-                "`times=decoding['times']` or slice the activity accordingly."
-            )
-
-    return activity
 
 
 def plot_cohospace_scatter_trajectory_2d(
@@ -802,41 +732,6 @@ def compute_cohoscore_scatter_1d(
     return scores
 
 
-def skew_transform_torus_scatter(coords):
-    """
-    Convert torus angles (theta1, theta2) into coordinates in a skewed parallelogram fundamental domain.
-
-    Given theta1, theta2 in radians, map:
-        x = theta1 + 0.5 * theta2
-        y = (sqrt(3)/2) * theta2
-
-    This is a linear change of basis that turns the square [0, 2π)×[0, 2π) into a 60-degree
-    parallelogram, which is convenient for visualizing wrap-around behavior on a 2-torus.
-
-    Parameters
-    ----------
-    coords : ndarray, shape (T, 2)
-        Angles (theta1, theta2) in radians.
-
-    Returns
-    -------
-    xy : ndarray, shape (T, 2)
-        Skewed planar coordinates.
-    """
-    coords = np.asarray(coords)
-    if coords.ndim != 2 or coords.shape[1] != 2:
-        raise ValueError(f"coords must be (T,2), got {coords.shape}")
-
-    theta1 = coords[:, 0]
-    theta2 = coords[:, 1]
-
-    # Linear change of basis (NO nonlinear scaling)
-    x = theta1 + 0.5 * theta2
-    y = (np.sqrt(3) / 2.0) * theta2
-
-    return np.stack([x, y], axis=1)
-
-
 def draw_torus_parallelogram_grid_scatter(ax, n_tiles=1, color="0.7", lw=1.0, alpha=0.8):
     """
     Draw parallelogram grid corresponding to torus fundamental domain.
@@ -874,7 +769,7 @@ def tile_parallelogram_points_scatter(xy, n_tiles=1):
     Parameters
     ----------
     points : ndarray, shape (T, 2)
-        Points in the skewed plane (same coordinates as returned by `skew_transform_torus_scatter`).
+        Points in the skewed plane (same coordinates as returned by `skew_transform`).
     n_tiles : int
         Number of tiles to extend around the base domain.
         - n_tiles=1 produces a 3x3 tiling
@@ -1020,7 +915,7 @@ def plot_cohospace_scatter_neuron_skewed(
         )
 
     # --- skew transform
-    xy = skew_transform_torus_scatter(coords[mask])
+    xy = skew_transform(coords[mask])
 
     # Tiling: if points are tiled, values must be tiled too (FR mode) to keep lengths consistent
     if n_tiles and n_tiles > 0:
@@ -1165,7 +1060,7 @@ def plot_cohospace_scatter_population_skewed(
             thr = np.percentile(a, 100 - top_percent)
             mask = a >= thr
 
-        xy = skew_transform_torus_scatter(coords[mask])
+        xy = skew_transform(coords[mask])
 
         if n_tiles and n_tiles > 0:
             xy = tile_parallelogram_points_scatter(xy, n_tiles=n_tiles)

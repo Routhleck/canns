@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import os
 from typing import Any
 
 import matplotlib.pyplot as plt
@@ -11,27 +10,37 @@ from scipy.ndimage import rotate
 
 from ...visualization.core import PlotConfig, finalize_figure
 from .cohomap import fit_cohomap_stripes
-
-
-def _ensure_plot_config(
-    config: PlotConfig | None,
-    factory,
-    *args,
-    **defaults,
-) -> PlotConfig:
-    if config is None:
-        return factory(*args, **defaults)
-    return config
-
-
-def _ensure_parent_dir(save_path: str | None) -> None:
-    if save_path:
-        parent = os.path.dirname(save_path)
-        if parent:
-            os.makedirs(parent, exist_ok=True)
+from .utils import _ensure_parent_dir, _ensure_plot_config
 
 
 def _rot_para(params1: np.ndarray, params2: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+    """Transform stripe fit parameters to canonical orientation.
+
+    This function adjusts the orientation angles of stripe fit parameters to
+    align them with a canonical coordinate system. Unlike `_rot_coord()` which
+    transforms actual coordinate data, this operates on the fit parameters
+    themselves (orientation angles, wavelengths, etc.).
+
+    Parameters
+    ----------
+    params1 : np.ndarray
+        Stripe fit parameters for first dimension. First element is orientation angle.
+    params2 : np.ndarray
+        Stripe fit parameters for second dimension. First element is orientation angle.
+
+    Returns
+    -------
+    x : np.ndarray
+        Transformed parameters for the dimension with stronger horizontal alignment.
+    y : np.ndarray
+        Transformed parameters for the other dimension.
+
+    Notes
+    -----
+    The function selects which parameter set becomes 'x' and 'y' based on which
+    has larger |cos(angle)|, then applies angle adjustments to ensure the stripe
+    vectors are in a canonical orientation for visualization and analysis.
+    """
     if abs(np.cos(params1[0])) < abs(np.cos(params2[0])):
         y = params1.copy()
         x = params2.copy()
@@ -204,12 +213,57 @@ def plot_cohomap_vectors(
 
 
 def _resolve_grid_size(phase_map: np.ndarray, grid_size: int | None, trim: int) -> int:
+    """Determine grid size for stripe fitting.
+
+    Parameters
+    ----------
+    phase_map : np.ndarray
+        Phase map array (2D grid).
+    grid_size : int, optional
+        Explicit grid size. If None, inferred from phase_map shape.
+    trim : int
+        Number of edge bins to trim.
+
+    Returns
+    -------
+    int
+        Grid size to use for stripe fitting.
+    """
     if grid_size is None:
         return int(phase_map.shape[0]) + 2 * trim + 1
     return int(grid_size)
 
 
 def _stripe_fit_map(params: np.ndarray, grid_size: int, trim: int) -> np.ndarray:
+    """Generate a synthetic stripe pattern from fit parameters.
+
+    Creates a 2D cosine stripe pattern based on the fitted parameters (orientation,
+    phase, and spatial frequency). Used for visualizing the fitted stripe model
+    and comparing it with the actual phase map.
+
+    Parameters
+    ----------
+    params : np.ndarray
+        Stripe fit parameters: [angle, phase, frequency].
+        - angle: Orientation angle in radians
+        - phase: Phase offset in radians
+        - frequency: Spatial frequency (inverse wavelength)
+    grid_size : int
+        Size of the grid to generate (before trimming).
+    trim : int
+        Number of edge bins to trim from the generated pattern.
+
+    Returns
+    -------
+    np.ndarray
+        2D array of shape (grid_size-2*trim, grid_size-2*trim) containing
+        the cosine stripe pattern with values in [-1, 1].
+
+    Notes
+    -----
+    The pattern is generated on a [0, 3π] × [0, 3π] domain to cover the
+    extended torus space, then rotated by the fitted angle and trimmed.
+    """
     numangsint = grid_size
     x, _ = np.meshgrid(
         np.linspace(0, 3 * np.pi, numangsint - 1),

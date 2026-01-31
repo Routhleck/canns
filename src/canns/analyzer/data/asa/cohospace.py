@@ -219,33 +219,3 @@ def plot_cohospace_skewed(
     _ensure_parent_dir(config.save_path)
     finalize_figure(fig, config)
     return fig
-
-
-def cohospace_upgrade(*args, **kwargs) -> dict[str, Any]:
-    """Legacy alias for EcohoSpace (formerly cohospace_upgrade)."""
-    return cohospace(*args, **kwargs)
-
-
-def ecohospace(*args, **kwargs) -> dict[str, Any]:
-    """Alias for EcohoSpace (GridCellTorus-style)."""
-    return cohospace(*args, **kwargs)
-
-
-def plot_cohospace_upgrade(*args, **kwargs) -> plt.Figure:
-    """Legacy alias for EcohoSpace plotting (formerly plot_cohospace_upgrade)."""
-    return plot_cohospace(*args, **kwargs)
-
-
-def plot_cohospace_upgrade_skewed(*args, **kwargs) -> plt.Figure:
-    """Legacy alias for EcohoSpace skewed plotting."""
-    return plot_cohospace_skewed(*args, **kwargs)
-
-
-def plot_ecohospace(*args, **kwargs) -> plt.Figure:
-    """Alias for EcohoSpace plotting."""
-    return plot_cohospace(*args, **kwargs)
-
-
-def plot_ecohospace_skewed(*args, **kwargs) -> plt.Figure:
-    """Alias for EcohoSpace skewed plotting."""
-    return plot_cohospace_skewed(*args, **kwargs)
