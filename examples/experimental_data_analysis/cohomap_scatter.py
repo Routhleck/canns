@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Simple CohoMap example using the built-in grid dataset.
+Simple CohoMap scatter example using the built-in grid dataset.
 """
 
 from canns.analyzer import data
@@ -26,7 +26,7 @@ decoding = data.decode_circular_coordinates_multi(
 
 config = PlotConfigs.cohomap(show=True)
 
-data.plot_cohomap_multi(
+data.plot_cohomap_scatter_multi(
     decoding_result=decoding,
     position_data={"x": grid_data["x"], "y": grid_data["y"]},
     config=config,

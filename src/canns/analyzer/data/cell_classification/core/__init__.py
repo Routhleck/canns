@@ -1,5 +1,6 @@
 """Core analysis modules."""
 
+from .btn import BTNAnalyzer, BTNConfig, BTNResult
 from .grid_cells import GridnessAnalyzer, GridnessResult, compute_2d_autocorrelation
 from .grid_modules_leiden import identify_grid_modules_and_stats
 from .head_direction import HDCellResult, HeadDirectionAnalyzer
@@ -15,6 +16,9 @@ __all__ = [
     "GridnessAnalyzer",
     "compute_2d_autocorrelation",
     "GridnessResult",
+    "BTNAnalyzer",
+    "BTNConfig",
+    "BTNResult",
     "HeadDirectionAnalyzer",
     "HDCellResult",
     "compute_rate_map",

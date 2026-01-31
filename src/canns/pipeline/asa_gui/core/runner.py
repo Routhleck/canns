@@ -651,7 +651,7 @@ class PipelineRunner:
     def _run_cohomap(
         self, asa_data: dict[str, Any], state: WorkflowState, log_callback
     ) -> dict[str, Path]:
-        from canns.analyzer.data.asa import plot_cohomap_multi
+        from canns.analyzer.data.asa import plot_cohomap_scatter_multi
         from canns.analyzer.visualization import PlotConfigs
 
         tda_dir = self._results_dir(state) / "TDA"
@@ -684,7 +684,7 @@ class PipelineRunner:
         log_callback("Generating cohomology map...")
         pos = self._aligned_pos if self._aligned_pos is not None else asa_data
         config = PlotConfigs.cohomap(show=False, save_path=str(cohomap_path))
-        plot_cohomap_multi(
+        plot_cohomap_scatter_multi(
             decoding_result=decode_result,
             position_data={"x": pos["x"], "y": pos["y"]},
             config=config,
@@ -1175,18 +1175,18 @@ class PipelineRunner:
         self, asa_data: dict[str, Any], state: WorkflowState, log_callback
     ) -> dict[str, Path]:
         from canns.analyzer.data.asa import (
-            plot_cohospace_neuron_1d,
-            plot_cohospace_neuron_2d,
-            plot_cohospace_population_1d,
-            plot_cohospace_population_2d,
-            plot_cohospace_trajectory_1d,
-            plot_cohospace_trajectory_2d,
+            plot_cohospace_scatter_neuron_1d,
+            plot_cohospace_scatter_neuron_2d,
+            plot_cohospace_scatter_population_1d,
+            plot_cohospace_scatter_population_2d,
+            plot_cohospace_scatter_trajectory_1d,
+            plot_cohospace_scatter_trajectory_2d,
         )
-        from canns.analyzer.data.asa.cohospace import (
-            compute_cohoscore_1d,
-            compute_cohoscore_2d,
-            plot_cohospace_neuron_skewed,
-            plot_cohospace_population_skewed,
+        from canns.analyzer.data.asa.cohospace_scatter import (
+            compute_cohoscore_scatter_1d,
+            compute_cohoscore_scatter_2d,
+            plot_cohospace_scatter_neuron_skewed,
+            plot_cohospace_scatter_population_skewed,
         )
         from canns.analyzer.visualization import PlotConfigs
 
@@ -1254,11 +1254,11 @@ class PipelineRunner:
         if enable_score:
             try:
                 if dim_mode == "1d":
-                    scores = compute_cohoscore_1d(
+                    scores = compute_cohoscore_scatter_1d(
                         coords2, activity, top_percent=top_percent, times=times
                     )
                 else:
-                    scores = compute_cohoscore_2d(
+                    scores = compute_cohoscore_scatter_2d(
                         coords2, activity, top_percent=top_percent, times=times
                     )
                 cohoscore_path = out_dir / "cohoscore.npy"
@@ -1314,7 +1314,7 @@ class PipelineRunner:
         traj_path = out_dir / "cohospace_trajectory.png"
         if dim_mode == "1d":
             traj_cfg = PlotConfigs.cohospace_trajectory_1d(show=False, save_path=str(traj_path))
-            plot_cohospace_trajectory_1d(
+            plot_cohospace_scatter_trajectory_1d(
                 coords=coords2,
                 times=None,
                 subsample=subsample,
@@ -1322,7 +1322,7 @@ class PipelineRunner:
             )
         else:
             traj_cfg = PlotConfigs.cohospace_trajectory_2d(show=False, save_path=str(traj_path))
-            plot_cohospace_trajectory_2d(
+            plot_cohospace_scatter_trajectory_2d(
                 coords=coords2,
                 times=None,
                 subsample=subsample,
@@ -1334,7 +1334,7 @@ class PipelineRunner:
             log_callback(f"Plotting neuron {neuron_id}...")
             neuron_path = out_dir / f"cohospace_neuron_{neuron_id}.png"
             if unfold == "skew" and dim_mode != "1d":
-                plot_cohospace_neuron_skewed(
+                plot_cohospace_scatter_neuron_skewed(
                     coords=coordsbox2,
                     activity=activity,
                     neuron_id=int(neuron_id),
@@ -1351,7 +1351,7 @@ class PipelineRunner:
                     neuron_cfg = PlotConfigs.cohospace_neuron_1d(
                         show=False, save_path=str(neuron_path)
                     )
-                    plot_cohospace_neuron_1d(
+                    plot_cohospace_scatter_neuron_1d(
                         coords=coordsbox2,
                         activity=activity,
                         neuron_id=int(neuron_id),
@@ -1364,7 +1364,7 @@ class PipelineRunner:
                     neuron_cfg = PlotConfigs.cohospace_neuron_2d(
                         show=False, save_path=str(neuron_path)
                     )
-                    plot_cohospace_neuron_2d(
+                    plot_cohospace_scatter_neuron_2d(
                         coords=coordsbox2,
                         activity=activity,
                         neuron_id=int(neuron_id),
@@ -1384,7 +1384,7 @@ class PipelineRunner:
             else:
                 neuron_ids = list(range(activity.shape[1]))
             if unfold == "skew" and dim_mode != "1d":
-                plot_cohospace_population_skewed(
+                plot_cohospace_scatter_population_skewed(
                     coords=coords2,
                     activity=activity,
                     neuron_ids=neuron_ids,
@@ -1401,7 +1401,7 @@ class PipelineRunner:
                     pop_cfg = PlotConfigs.cohospace_population_1d(
                         show=False, save_path=str(pop_path)
                     )
-                    plot_cohospace_population_1d(
+                    plot_cohospace_scatter_population_1d(
                         coords=coords2,
                         activity=activity,
                         neuron_ids=neuron_ids,
@@ -1414,7 +1414,7 @@ class PipelineRunner:
                     pop_cfg = PlotConfigs.cohospace_population_2d(
                         show=False, save_path=str(pop_path)
                     )
-                    plot_cohospace_population_2d(
+                    plot_cohospace_scatter_population_2d(
                         coords=coords2,
                         activity=activity,
                         neuron_ids=neuron_ids,

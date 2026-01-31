@@ -403,7 +403,7 @@ def plot_path_compare_1d(
     return fig, axes
 
 
-def plot_cohomap(
+def plot_cohomap_scatter(
     decoding_result: dict[str, Any],
     position_data: dict[str, Any],
     config: PlotConfig | None = None,
@@ -453,7 +453,7 @@ def plot_cohomap(
         >>> # Decode coordinates
         >>> decoding = decode_circular_coordinates(persistence_result, spike_data)
         >>> # Visualize with trajectory data
-        >>> fig = plot_cohomap(
+        >>> fig = plot_cohomap_scatter(
         ...     decoding,
         ...     position_data={'x': xx, 'y': yy},
         ...     save_path='cohomap.png',
@@ -518,7 +518,7 @@ def plot_cohomap(
     return fig
 
 
-def plot_cohomap_multi(
+def plot_cohomap_scatter_multi(
     decoding_result: dict,
     position_data: dict,
     config: PlotConfig | None = None,
@@ -560,7 +560,7 @@ def plot_cohomap_multi(
 
     Examples
     --------
-    >>> fig = plot_cohomap_multi(decoding, {"x": xx, "y": yy}, show=False)  # doctest: +SKIP
+    >>> fig = plot_cohomap_scatter_multi(decoding, {"x": xx, "y": yy}, show=False)  # doctest: +SKIP
     """
     config = _ensure_plot_config(
         config,

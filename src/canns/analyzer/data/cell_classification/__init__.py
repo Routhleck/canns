@@ -11,6 +11,9 @@ Vollan, Gardner, Moser & Moser (Nature, 2025)
 __version__ = "0.1.0"
 
 from .core import (  # noqa: F401
+    BTNAnalyzer,
+    BTNConfig,
+    BTNResult,
     GridnessAnalyzer,
     GridnessResult,
     HDCellResult,
@@ -46,6 +49,8 @@ from .utils import (  # noqa: F401
 )
 from .visualization import (  # noqa: F401
     plot_autocorrelogram,
+    plot_btn_autocorr_summary,
+    plot_btn_distance_matrix,
     plot_grid_score_histogram,
     plot_gridness_analysis,
     plot_hd_analysis,
@@ -57,6 +62,9 @@ from .visualization import (  # noqa: F401
 __all__ = [
     "GridnessAnalyzer",
     "GridnessResult",
+    "BTNAnalyzer",
+    "BTNConfig",
+    "BTNResult",
     "HeadDirectionAnalyzer",
     "HDCellResult",
     "compute_2d_autocorrelation",
@@ -94,4 +102,6 @@ __all__ = [
     "plot_polar_tuning",
     "plot_temporal_autocorr",
     "plot_hd_analysis",
+    "plot_btn_autocorr_summary",
+    "plot_btn_distance_matrix",
 ]

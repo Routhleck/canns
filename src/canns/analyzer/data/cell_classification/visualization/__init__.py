@@ -7,6 +7,7 @@ from .grid_plots import (
     plot_rate_map,
 )
 from .hd_plots import plot_hd_analysis, plot_polar_tuning, plot_temporal_autocorr
+from .btn_plots import plot_btn_autocorr_summary, plot_btn_distance_matrix
 
 __all__ = [
     "plot_autocorrelogram",
@@ -16,4 +17,6 @@ __all__ = [
     "plot_polar_tuning",
     "plot_temporal_autocorr",
     "plot_hd_analysis",
+    "plot_btn_distance_matrix",
+    "plot_btn_autocorr_summary",
 ]
