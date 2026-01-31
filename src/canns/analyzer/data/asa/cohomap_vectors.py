@@ -291,7 +291,7 @@ def plot_cohomap_stripes(
         (fit2, "Stripe Fit 2"),
     ]
 
-    for ax, (img, title) in zip(axes.flat, panels):
+    for ax, (img, title) in zip(axes.flat, panels, strict=True):
         ax.imshow(
             img,
             origin="lower",
