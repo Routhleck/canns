@@ -2,38 +2,12 @@
 
 from __future__ import annotations
 
-import os
-
 import matplotlib.pyplot as plt
 import numpy as np
 from scipy.stats import circvar
 
 from ...visualization.core import PlotConfig, finalize_figure
-
-
-def _ensure_plot_config(
-    config: PlotConfig | None,
-    factory,
-    *,
-    kwargs: dict | None = None,
-    **defaults,
-) -> PlotConfig:
-    if config is None:
-        defaults.update({"kwargs": kwargs or {}})
-        return factory(**defaults)
-
-    if kwargs:
-        config_kwargs = config.kwargs or {}
-        config_kwargs.update(kwargs)
-        config.kwargs = config_kwargs
-    return config
-
-
-def _ensure_parent_dir(save_path: str | None) -> None:
-    if save_path:
-        parent = os.path.dirname(save_path)
-        if parent:
-            os.makedirs(parent, exist_ok=True)
+from .utils import _ensure_parent_dir, _ensure_plot_config
 
 
 # =====================================================================

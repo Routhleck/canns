@@ -8,6 +8,7 @@ import numpy as np
 from matplotlib import pyplot as plt
 from scipy.ndimage import gaussian_filter1d
 
+from canns.analyzer.data.asa.utils import _ensure_plot_config
 from canns.analyzer.visualization.core.config import PlotConfig, finalize_figure
 
 _DEFAULT_BTN_COLORS = {
@@ -15,24 +16,6 @@ _DEFAULT_BTN_COLORS = {
     "T": "#000000",
     "N": "#2ca02c",
 }
-
-
-def _ensure_plot_config(
-    config: PlotConfig | None,
-    factory,
-    *,
-    kwargs: dict[str, Any] | None = None,
-    **defaults: Any,
-) -> PlotConfig:
-    if config is None:
-        defaults.update({"kwargs": kwargs or {}})
-        return factory(**defaults)
-
-    if kwargs:
-        config_kwargs = config.kwargs or {}
-        config_kwargs.update(kwargs)
-        config.kwargs = config_kwargs
-    return config
 
 
 def _canonical_label(label: str) -> str:

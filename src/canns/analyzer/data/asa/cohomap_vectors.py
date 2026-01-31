@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import os
 from typing import Any
 
 import matplotlib.pyplot as plt
@@ -11,24 +10,7 @@ from scipy.ndimage import rotate
 
 from ...visualization.core import PlotConfig, finalize_figure
 from .cohomap import fit_cohomap_stripes
-
-
-def _ensure_plot_config(
-    config: PlotConfig | None,
-    factory,
-    *args,
-    **defaults,
-) -> PlotConfig:
-    if config is None:
-        return factory(*args, **defaults)
-    return config
-
-
-def _ensure_parent_dir(save_path: str | None) -> None:
-    if save_path:
-        parent = os.path.dirname(save_path)
-        if parent:
-            os.makedirs(parent, exist_ok=True)
+from .utils import _ensure_parent_dir, _ensure_plot_config
 
 
 def _rot_para(params1: np.ndarray, params2: np.ndarray) -> tuple[np.ndarray, np.ndarray]:

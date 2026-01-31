@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import os
 from typing import Any
 
 import matplotlib.pyplot as plt
@@ -10,24 +9,7 @@ import numpy as np
 
 from ...visualization.core import PlotConfig, finalize_figure
 from .cohospace_scatter import skew_transform_torus_scatter
-
-
-def _ensure_plot_config(
-    config: PlotConfig | None,
-    factory,
-    *args,
-    **defaults,
-) -> PlotConfig:
-    if config is None:
-        return factory(*args, **defaults)
-    return config
-
-
-def _ensure_parent_dir(save_path: str | None) -> None:
-    if save_path:
-        parent = os.path.dirname(save_path)
-        if parent:
-            os.makedirs(parent, exist_ok=True)
+from .utils import _ensure_parent_dir, _ensure_plot_config
 
 
 def cohospace_phase_centers(cohospace_result: dict[str, Any]) -> dict[str, Any]:

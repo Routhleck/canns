@@ -2,15 +2,9 @@ from __future__ import annotations
 
 from .cohomap import (
     cohomap,
-    cohomap_upgrade,
-    ecohomap,
     fit_cohomap_stripes,
-    fit_cohomap_stripes_upgrade,
     plot_cohomap,
-    plot_cohomap_upgrade,
-    plot_ecohomap,
 )
-from .cohomap_scatter import plot_cohomap_scatter, plot_cohomap_scatter_multi
 from .cohomap_vectors import (
     cohomap_vectors,
     plot_cohomap_stripes,
@@ -18,14 +12,8 @@ from .cohomap_vectors import (
 )
 from .cohospace import (
     cohospace,
-    cohospace_upgrade,
-    ecohospace,
     plot_cohospace,
     plot_cohospace_skewed,
-    plot_cohospace_upgrade,
-    plot_cohospace_upgrade_skewed,
-    plot_ecohospace,
-    plot_ecohospace_skewed,
 )
 from .cohospace_phase_centers import (
     cohospace_phase_centers,
@@ -81,6 +69,8 @@ from .path import (
 from .plotting import (
     plot_2d_bump_on_manifold,
     plot_3d_bump_on_torus,
+    plot_cohomap_scatter,
+    plot_cohomap_scatter_multi,
     plot_path_compare_1d,
     plot_path_compare_2d,
     plot_projection,
@@ -109,22 +99,11 @@ __all__ = [
     "plot_3d_bump_on_torus",
     "plot_2d_bump_on_manifold",
     "cohomap",
-    "cohomap_upgrade",
     "fit_cohomap_stripes",
-    "fit_cohomap_stripes_upgrade",
     "plot_cohomap",
-    "plot_cohomap_upgrade",
     "cohospace",
-    "cohospace_upgrade",
     "plot_cohospace",
     "plot_cohospace_skewed",
-    "plot_cohospace_upgrade",
-    "plot_cohospace_upgrade_skewed",
-    "ecohomap",
-    "ecohospace",
-    "plot_ecohomap",
-    "plot_ecohospace",
-    "plot_ecohospace_skewed",
     "cohomap_vectors",
     "plot_cohomap_stripes",
     "plot_cohomap_vectors",

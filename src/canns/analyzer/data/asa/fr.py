@@ -1,18 +1,11 @@
 from __future__ import annotations
 
-import os
 from dataclasses import dataclass
 
 import numpy as np
 
 from ...visualization.core import PlotConfig, finalize_figure
-
-
-def _ensure_parent_dir(save_path: str | None) -> None:
-    if save_path:
-        parent = os.path.dirname(save_path)
-        if parent:
-            os.makedirs(parent, exist_ok=True)
+from .utils import _ensure_parent_dir
 
 
 def _slice_range(r: tuple[int, int] | None, length: int) -> slice:

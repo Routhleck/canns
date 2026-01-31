@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import os
 from typing import Any
 
 import matplotlib.pyplot as plt
@@ -24,31 +23,7 @@ from ...visualization.core import (
 from ...visualization.core.jupyter_utils import display_animation_in_jupyter, is_jupyter_environment
 from .config import CANN2DPlotConfig, ProcessingError, SpikeEmbeddingConfig
 from .embedding import embed_spike_trains
-
-
-def _ensure_plot_config(
-    config: PlotConfig | None,
-    factory,
-    *,
-    kwargs: dict[str, Any] | None = None,
-    **defaults: Any,
-) -> PlotConfig:
-    if config is None:
-        defaults.update({"kwargs": kwargs or {}})
-        return factory(**defaults)
-
-    if kwargs:
-        config_kwargs = config.kwargs or {}
-        config_kwargs.update(kwargs)
-        config.kwargs = config_kwargs
-    return config
-
-
-def _ensure_parent_dir(save_path: str | None) -> None:
-    if save_path:
-        parent = os.path.dirname(save_path)
-        if parent:
-            os.makedirs(parent, exist_ok=True)
+from .utils import _ensure_parent_dir, _ensure_plot_config
 
 
 def _render_torus_frame(frame_index: int, frame_data: dict[str, Any]) -> np.ndarray:

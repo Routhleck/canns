@@ -381,28 +381,3 @@ def plot_cohomap(
     _ensure_parent_dir(config.save_path)
     finalize_figure(fig, config)
     return fig
-
-
-def cohomap_upgrade(*args, **kwargs) -> dict[str, Any]:
-    """Legacy alias for EcohoMap (formerly cohomap_upgrade)."""
-    return cohomap(*args, **kwargs)
-
-
-def ecohomap(*args, **kwargs) -> dict[str, Any]:
-    """Alias for EcohoMap (GridCellTorus-style)."""
-    return cohomap(*args, **kwargs)
-
-
-def fit_cohomap_stripes_upgrade(*args, **kwargs) -> tuple[np.ndarray, float]:
-    """Legacy alias for EcohoMap stripe fitting."""
-    return fit_cohomap_stripes(*args, **kwargs)
-
-
-def plot_cohomap_upgrade(*args, **kwargs) -> plt.Figure:
-    """Legacy alias for EcohoMap plotting (formerly plot_cohomap_upgrade)."""
-    return plot_cohomap(*args, **kwargs)
-
-
-def plot_ecohomap(*args, **kwargs) -> plt.Figure:
-    """Alias for EcohoMap plotting."""
-    return plot_cohomap(*args, **kwargs)
