@@ -183,7 +183,7 @@ def test_tda_decode_and_cohomap():
     assert "coords" in decoding and "coordsbox" in decoding
 
     config = PlotConfig.for_static_plot(show=False)
-    data.plot_cohomap_multi(
+    data.plot_cohomap_scatter_multi(
         decoding_result=decoding,
         position_data={"x": grid_data["x"], "y": grid_data["y"]},
         config=config,
@@ -198,8 +198,8 @@ def test_cohospace_and_path_compare():
     rng = np.random.default_rng(1)
     coords = rng.random((spikes.shape[0], 2)) * 2 * np.pi
 
-    data.plot_cohospace_trajectory_2d(coords, show=False)
-    data.plot_cohospace_neuron_2d(
+    data.plot_cohospace_scatter_trajectory_2d(coords, show=False)
+    data.plot_cohospace_scatter_neuron_2d(
         coords=coords,
         activity=spikes,
         neuron_id=0,

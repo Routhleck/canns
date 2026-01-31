@@ -250,7 +250,9 @@ class PathCompareMode(AbstractAnalysisMode):
             self.dim.setToolTip("1D decoded dimension index.")
             self.dim1.setToolTip("2D decoded dimension 1.")
             self.dim2.setToolTip("2D decoded dimension 2.")
-            self.use_box.setToolTip("Use coordsbox/times_box alignment (recommended with speed_filter).")
+            self.use_box.setToolTip(
+                "Use coordsbox/times_box alignment (recommended with speed_filter)."
+            )
             self.interp_full.setToolTip("Interpolate back to full trajectory.")
             self.coords_key.setToolTip("Optional decode coords key (default coords/coordsbox).")
             self.times_key.setToolTip("Optional times_box key.")

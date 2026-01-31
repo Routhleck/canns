@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Simple 1D CohoSpace example using the built-in grid dataset.
+Simple 1D CohoSpace scatter example using the built-in grid dataset.
 """
 
 from canns.analyzer import data
@@ -31,7 +31,7 @@ if coords is None:
 
 config = PlotConfigs.cohospace_trajectory_1d(show=True)
 
-data.plot_cohospace_trajectory_1d(
+data.plot_cohospace_scatter_trajectory_1d(
     coords=coords,
     times=None,
     subsample=2,
@@ -40,7 +40,7 @@ data.plot_cohospace_trajectory_1d(
 
 config = PlotConfigs.cohospace_neuron_1d(show=True)
 
-data.plot_cohospace_neuron_1d(
+data.plot_cohospace_scatter_neuron_1d(
     coords=coordsbox,
     activity=spikes,
     neuron_id=130,

@@ -5,7 +5,6 @@ from __future__ import annotations
 from pathlib import Path
 
 import numpy as np
-
 from PySide6.QtCore import QSettings, Qt, Signal
 from PySide6.QtGui import QColor
 from PySide6.QtWidgets import (
@@ -388,9 +387,7 @@ class PreprocessPage(QWidget):
             if is_zh
             else "Choose local file, built-in dataset, or URL."
         )
-        self.dataset_key.setToolTip(
-            "选择内置数据集" if is_zh else "Select a built-in dataset."
-        )
+        self.dataset_key.setToolTip("选择内置数据集" if is_zh else "Select a built-in dataset.")
         self.dataset_session.setToolTip(
             "Left-Right 数据集的会话 id。" if is_zh else "Session id for Left-Right dataset."
         )
@@ -410,7 +407,9 @@ class PreprocessPage(QWidget):
             else "Embedding builds a dense spike matrix for TDA/FR."
         )
         self.embed_res.setToolTip(
-            "时间分箱分辨率（与 t 单位一致）。" if is_zh else "Time bin resolution (same unit as t)."
+            "时间分箱分辨率（与 t 单位一致）。"
+            if is_zh
+            else "Time bin resolution (same unit as t)."
         )
         self.embed_dt.setToolTip(
             "时间步长（与 t 单位一致）。" if is_zh else "Time step (same unit as t)."
@@ -425,9 +424,7 @@ class PreprocessPage(QWidget):
             else "Remove low-speed samples (common for grid data)."
         )
         self.embed_min_speed.setToolTip(
-            "速度阈值（与 t/x/y 单位一致）。"
-            if is_zh
-            else "Speed threshold (same unit as t/x/y)."
+            "速度阈值（与 t/x/y 单位一致）。" if is_zh else "Speed threshold (same unit as t/x/y)."
         )
 
         self.dataset_session.setPlaceholderText("例如 26034_3" if is_zh else "e.g. 26034_3")
@@ -527,9 +524,7 @@ class PreprocessPage(QWidget):
             except Exception:
                 hint = ""
             if is_left_right:
-                hint = (
-                    (hint + "\n") if hint else ""
-                ) + (
+                hint = ((hint + "\n") if hint else "") + (
                     "左/右数据集需要 session id 和文件名。"
                     if is_zh
                     else "Left-right dataset requires session id + filename."
@@ -612,8 +607,8 @@ class PreprocessPage(QWidget):
             key = self.dataset_key.currentData() or self.dataset_key.currentText()
             label = self._slugify(str(key))
             try:
-                from canns.data import loaders as _loaders
                 from canns.data import datasets as _datasets
+                from canns.data import loaders as _loaders
 
                 if key == "roi_data":
                     data = _loaders.load_roi_data()

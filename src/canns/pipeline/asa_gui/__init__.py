@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
-import sys
-import os
 import importlib.util
+import os
+import sys
 
 __all__ = ["main", "ASAGuiApp"]
 
@@ -14,7 +14,9 @@ if _pyside6_missing:
         try:  # pragma: no cover - only used in CI/test runs
             import pytest
 
-            pytest.skip("PySide6 is not installed; skipping asa_gui module.", allow_module_level=True)
+            pytest.skip(
+                "PySide6 is not installed; skipping asa_gui module.", allow_module_level=True
+            )
         except Exception:
             pass
 

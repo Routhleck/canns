@@ -1,5 +1,6 @@
 """Visualization modules."""
 
+from .btn_plots import plot_btn_autocorr_summary, plot_btn_distance_matrix
 from .grid_plots import (
     plot_autocorrelogram,
     plot_grid_score_histogram,
@@ -16,4 +17,6 @@ __all__ = [
     "plot_polar_tuning",
     "plot_temporal_autocorr",
     "plot_hd_analysis",
+    "plot_btn_distance_matrix",
+    "plot_btn_autocorr_summary",
 ]

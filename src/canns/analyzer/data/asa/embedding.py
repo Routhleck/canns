@@ -31,10 +31,9 @@ def embed_spike_trains(spike_trains, config: SpikeEmbeddingConfig | None = None,
     Returns
     -------
     tuple
-        ``(spikes_bin, xx, yy, tt)`` where:
-        - ``spikes_bin`` is a (T, N) binned spike matrix.
-        - ``xx``, ``yy``, ``tt`` are position/time arrays when ``speed_filter=True``,
-          otherwise ``None``.
+        ``(spikes_bin, xx, yy, tt)``. ``spikes_bin`` is a (T, N) binned spike matrix.
+        ``xx``, ``yy``, ``tt`` are position/time arrays when ``speed_filter=True``,
+        otherwise ``None``.
 
     Examples
     --------
