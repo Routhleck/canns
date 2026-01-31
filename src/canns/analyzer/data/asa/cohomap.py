@@ -220,8 +220,7 @@ def cohomap(
                     f1 > align_max_fit_error or f2 > align_max_fit_error
                 ):
                     align_error = (
-                        "fit error too high "
-                        f"({f1:.4f}, {f2:.4f} > {align_max_fit_error:.4f})"
+                        f"fit error too high ({f1:.4f}, {f2:.4f} > {align_max_fit_error:.4f})"
                     )
                 else:
                     coords_use = coords_use.copy()

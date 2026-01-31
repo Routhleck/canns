@@ -10,7 +10,6 @@ from scipy.ndimage import gaussian_filter1d
 
 from canns.analyzer.visualization.core.config import PlotConfig, finalize_figure
 
-
 _DEFAULT_BTN_COLORS = {
     "B": "#1f77b4",
     "T": "#000000",
