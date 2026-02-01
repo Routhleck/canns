@@ -149,6 +149,18 @@ include = [
     "src/canns/pipeline/asa_gui/resources/**",
 ]
 
+[tool.hatch.build.targets.sdist]
+# Only include essential files in source distribution
+include = [
+    "/src",
+    "/README.md",
+    "/README_zh.md",
+    "/LICENSE",
+    "/CHANGELOG.md",
+    "/CITATION.cff",
+    "/pyproject.toml",
+]
+
 
 # ---- Settings ----
 
