@@ -17,177 +17,184 @@
 [![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/Routhleck/canns)
 [<img src="https://badges.ws/badge/Buy_Me_a_Coffee-ff813f?icon=buymeacoffee" />](https://buymeacoffee.com/forrestcai6)
 
+> English version: [README.md](README.md)
 
-> 英文版说明请参见 [README.md](README.md)
+## 概览
 
-CANNs 是一个构建于 brainpy 之上的 Python 库，并通过专门的 Rust 后端（`canns-lib`）加速部分性能敏感模块，旨在提升连续吸引子神经网络（Continuous Attractor Neural Networks, CANNs）及相关类脑模型的实验效率。它提供可直接使用的模型、任务生成器、分析工具与流水线（pipelines），让神经科学与人工智能研究者从想法到可复现仿真更加高效。
+CANNs（Continuous Attractor Neural Networks toolkit）是基于 [BrainPy](https://github.com/brainpy/BrainPy) 和 [JAX](https://github.com/jax-ml/jax) 构建的研究工具库，并可选使用 Rust 加速库 [`canns-lib`](https://github.com/Routhleck/canns-lib) 优化部分性能敏感例程（如 TDA/Ripser 与任务生成）。它提供模型集合、任务生成器、分析器以及 ASA 流水线（GUI/TUI），帮助研究者在统一工作流中完成仿真与分析。API 按模型、任务、分析器和训练器分层设计，便于模块化扩展。
 
-## 亮点概览
+## 架构
 
-- **模型家族** – `canns.models.basic` 提供 1D/2D CANN（含 SFA 变体与分层网络），`canns.models.brain_inspired` 进一步加入类 Hopfield 系统。
-- **任务优先 API** – `canns.task.tracking` 与 `canns.task.open_loop_navigation` 可生成平滑跟踪输入、群体编码刺激，或导入实验轨迹。
-- **丰富分析套件** – `canns.analyzer` 覆盖能量景观、调谐曲线、脉冲嵌入、UMAP/TDA 辅助工具，以及 theta 扫描动画。
-- **统一训练框架** – `canns.trainer.HebbianTrainer` 实现通用的 Hebb 学习与预测，基于抽象 `Trainer` 基类。
-- **流水线工作台** – ASA GUI（Attractor Structure Analyzer）提供端到端分析（TDA → 解码 → CohoMap/CohoSpace/FR/FRM），支持交互式可视化、Help 提示与中英双语切换。
-- **可扩展基础** – 基类（`BasicModel`, `Task`, `Trainer`, `Pipeline`）让自定义组件与内置生态保持一致。
+<p align="center">
+  <img src="images/architecture.png" alt="CANNs Architecture" width="900">
+  <br>
+  <span style="color: grey; font-size: 14px;">架构概览：模型、任务、分析器、训练器与流水线基于 BrainPy/JAX，部分环节可选 Rust 加速。</span>
+</p>
 
-## 可视化展示
+CANNs 采用模块化架构，遵循两条核心原则：**关注点分离** 与 **通过基类实现可扩展性**。
+设计将功能职责拆分为五个独立模块：
+1. **模型**（`canns.models`）定义神经网络动力学；
+2. **任务**（`canns.task`）生成实验范式与输入数据；
+3. **分析器**（`canns.analyzer`）提供可视化与分析工具；
+4. **训练器**（`canns.trainer`）实现类脑模型的学习规则；
+5. **流水线**（`canns.pipeline`）编排完整实验流程。
+
+各模块职责单一——模型不生成输入、任务不分析结果、分析器不修改参数。
+这种设计有利于维护、测试与扩展。核心组件继承抽象基类
+（`BasicModel`、`BrainInspiredModel`、`Trainer`），
+保证自定义实现能与内置生态无缝集成。
+
+## 核心特性
+
+<p align="center">
+  <img src="docs/_static/figure2_full.png" alt="Model Analysis Overview" width="900">
+  <br>
+  <span style="color: grey; font-size: 14px;">模型集合与分析目标的整体概览。</span>
+</p>
+
+- **模型集合**：基础 CANN（1D/2D、SFA）、层级路径积分、theta-sweep 模型、类脑模型（如 Amari-Hopfield、线性/脉冲层）
+- **任务生成**：平滑追踪、群体编码、模板匹配、开/闭环导航
+- **分析器能力**：能量景观、调谐曲线、栅格/放电率图、TDA 与解码工具、细胞分类
+- **ASA 流水线 & GUI/TUI**：端到端流程（预处理、TDA、解码与结果可视化，如 CohoMap/CohoSpace/PathCompare/FR/FRM/GridScore）
+- **训练与扩展**：HebbianTrainer 与统一基类便于扩展
+- **可选加速**：`canns-lib` 覆盖部分性能敏感例程
+
+## Analyzer 可视化
+
+<p align="center">
+  <img src="images/analyzer-display.png" alt="Analyzer Display" width="900">
+  <br>
+  <span style="color: grey; font-size: 14px;">丰富的 Analyzer 可视化结果</span>
+</p>
+<p align="center">
+  <a href="https://youtu.be/OoEo5Qa9f7M">
+    <img src="https://img.youtube.com/vi/OoEo5Qa9f7M/hqdefault.jpg" alt="ASA GUI Demo (YouTube)" width="720">
+  </a>
+  <br>
+  <span style="color: grey; font-size: 14px;">ASA GUI 演示视频</span>
+</p>
 
 <div align="center">
 <table>
 <tr>
 <td align="center" width="50%" valign="top">
-<h4>1D CANN 平滑跟踪</h4>
-<img src="docs/_static/smooth_tracking_1d.gif" alt="1D CANN 平滑跟踪" width="320">
-<br><em>平滑跟踪过程中的实时动态</em>
+<h4>Smooth Tracking 1D</h4>
+<img src="docs/_static/smooth_tracking_1d.gif" alt="Smooth Tracking 1D" width="320">
+<br><em>活动波包随刺激移动</em>
 </td>
 <td align="center" width="50%" valign="top">
-<h4>2D CANN 群体编码</h4>
-<img src="docs/_static/CANN2D_encoding.gif" alt="2D CANN 编码" width="320">
-<br><em>空间信息编码活动模式</em>
+<h4>CANN2D Encoding</h4>
+<img src="docs/_static/CANN2D_encoding.gif" alt="CANN2D Encoding" width="320">
+<br><em>二维群体编码的演化过程</em>
 </td>
 </tr>
 <tr>
 <td colspan="2" align="center">
-<h4>Theta 扫描分析</h4>
-<img src="docs/_static/theta_sweep_animation.gif" alt="Theta 扫描动画" width="600">
-<br><em>网格细胞和头朝向网络的 theta 节律调制</em>
+<h4>Theta Sweep Animation</h4>
+<img src="docs/_static/theta_sweep_animation.gif" alt="Theta Sweep Animation" width="600">
+<br><em>Theta 调制下的扫描动力学</em>
 </td>
 </tr>
 <tr>
 <td align="center" width="50%" valign="top">
-<h4>凸包分析</h4>
-<img src="docs/_static/bump_analysis_demo.gif" alt="凸包分析演示" width="320">
-<br><em>1D 凸包拟合与分析</em>
+<h4>Bump Analysis</h4>
+<img src="docs/_static/bump_analysis_demo.gif" alt="Bump Analysis Demo" width="320">
+<br><em>波包拟合与稳定性分析</em>
 </td>
 <td align="center" width="50%" valign="top">
-<h4>环面拓扑分析</h4>
-<img src="docs/_static/torus_bump.gif" alt="环面凸包分析" width="320">
-<br><em>3D 环面可视化与解码</em>
+<h4>Torus Bump</h4>
+<img src="docs/_static/torus_bump.gif" alt="Torus Bump" width="320">
+<br><em>环面流形上的波包投影</em>
 </td>
 </tr>
 </table>
 </div>
 
-## 安装方式
+## 🚀 快速开始
 
-```bash
-# 仅 CPU 安装
-pip install canns
-
-# 可选加速（仅 Linux）
-pip install canns[cuda12]
-pip install canns[tpu]
-
-# GUI（推荐用于流水线）
-pip install canns[gui]
-
-```
-
-## 快速开始
+1D CANN 平滑追踪（导入 → 仿真 → 可视化）
 
 ```python
-import brainpy as bp
 import brainpy.math as bm
+from canns.analyzer.visualization import PlotConfigs, energy_landscape_1d_animation
 from canns.models.basic import CANN1D
 from canns.task.tracking import SmoothTracking1D
 
+# 模拟时间步长
 bm.set_dt(0.1)
 
+# 构建模型
 cann = CANN1D(num=512)
 
+# 构建追踪任务（Iext 长度 = duration 长度 + 1）
 task = SmoothTracking1D(
     cann_instance=cann,
     Iext=(0.0, 0.5, 1.0, 1.5),
-    duration=(5.0, 5.0, 5.0, 5.0),
+    duration=(5.0, 5.0, 5.0),
     time_step=bm.get_dt(),
 )
 task.get_data()
 
+
+# 单步仿真回调
 def step(t, stimulus):
     cann(stimulus)
     return cann.u.value, cann.inp.value
 
+
+# 运行仿真循环
 us, inputs = bm.for_loop(
     step,
-    task.run_steps,
-    task.data,
+    operands=(task.run_steps, task.data),
+)
+
+# 能量景观动画可视化
+config = PlotConfigs.energy_landscape_1d_animation(
+    time_steps_per_second=int(1 / bm.get_dt()),
+    fps=20,
+    title="Smooth Tracking 1D",
+    xlabel="State",
+    ylabel="Activity",
+    show=True,
+)
+
+energy_landscape_1d_animation(
+    data_sets={"u": (cann.x, us), "Iext": (cann.x, inputs)},
+    config=config,
 )
 ```
 
-若需 ASA pipeline，推荐使用 GUI：
+## 安装
 
 ```bash
-canns-gui
-# 或
-python -m canns.pipeline.asa_gui
+# 仅 CPU
+pip install canns
+
+# 可选加速（Linux）
+pip install "canns[cuda12]"
+pip install "canns[cuda13]"
+pip install "canns[tpu]"
+
+# GUI（ASA Pipeline）
+pip install "canns[gui]"
 ```
 
-> 说明：ASA TUI（`python -m canns.pipeline.asa` / `canns-tui`）为旧版，仅作过渡使用。
-
-## 文档与示例笔记本
-
-- [快速开始指南](https://routhleck.com/canns/zh/notebooks/01_quick_start.html) – 库结构速览。
-- [设计理念](https://routhleck.com/canns/zh/notebooks/00_design_philosophy.html) – 各模块设计理念详解。
-- 教程入口：https://routhleck.com/canns
-- 交互式运行： [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/routhleck/canns/HEAD?filepath=docs%2Fzh%2Fnotebooks) [![Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/routhleck/canns/blob/master/docs/zh/notebooks/)
-
-## 开发流程
+可选（uv）：
 
 ```bash
-# 创建开发环境（基于 uv）
-make install
-
-# 格式化与静态检查（ruff, codespell 等）
-make lint
-
-# 运行测试（pytest）
-make test
+uv pip install canns
 ```
 
-更多脚本位于 `devtools/` 与 `scripts/` 目录。
+## 文档&示例
 
-## 仓库结构
+- 文档与教程：<https://routhleck.com/canns/>
+- 快速入门与设计笔记：<https://routhleck.com/canns/en/notebooks/>
+- 本地示例脚本：`examples/`
+- Sphinx 文档与 Notebook：`docs/`
+- ASA GUI 入口：`canns-gui`
 
-```
-src/canns/            核心库模块（模型、任务、分析器、训练器、流水线）
-docs/                 Sphinx 文档与笔记本
-examples/             可直接运行的模型、分析与流水线脚本
-tests/                关键行为的 Pytest 覆盖
-```
+## 贡献&许可证
 
-## 引用本项目
+欢迎提交 Issue / PR。请先阅读 [CONTRIBUTING.md](CONTRIBUTING.md)。
 
-如果您在研究中使用了 CANNs，请通过我们的 [CITATION.cff](CITATION.cff) 文件或以下信息引用本项目：
-
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.17412545.svg)](https://doi.org/10.5281/zenodo.17412545)
-
-```bibtex
-@software{he_2025_canns,
-  author       = {He, Sichao},
-  title        = {CANNs: Continuous Attractor Neural Networks Toolkit},
-  year         = 2025,
-  publisher    = {Zenodo},
-  version      = {v0.9.0},
-  doi          = {10.5281/zenodo.17412545},
-  url          = {https://github.com/Routhleck/canns}
-}
-```
-
-## 参与贡献
-
-欢迎贡献！如计划重大修改，请先发起 issue 或 discussion。Pull Request 请遵循现有工作流（`make lint && make test`）。
-
-## 许可证
-
-采用 Apache License 2.0。详见 [LICENSE](LICENSE)。
-（注：本中文翻译仅供参考，如与英文版存在差异，以英文 LICENSE 为准。）
-
-[contributors-shield]: https://img.shields.io/github/contributors/routhleck/canns.svg?style=for-the-badge
-[contributors-url]: https://github.com/routhleck/canns/graphs/contributors
-[stars-shield]: https://img.shields.io/github/stars/routhleck/canns.svg?style=for-the-badge
-[stars-url]: https://github.com/routhleck/canns/stargazers
-[issues-shield]: https://img.shields.io/github/issues/routhleck/canns.svg?style=for-the-badge
-[issues-url]: https://github.com/routhleck/canns/issues
-[license-shield]: https://img.shields.io/github/license/routhleck/canns.svg?style=for-the-badge
-[license-url]: https://github.com/routhleck/canns/blob/master/LICENSE
+Apache License 2.0。详见 [LICENSE](LICENSE)。
