@@ -46,12 +46,6 @@ CANNs 采用模块化架构，遵循两条核心原则：**关注点分离** 与
 
 ## 核心特性
 
-<p align="center">
-  <img src="docs/_static/figure2_full.png" alt="Model Analysis Overview" width="900">
-  <br>
-  <span style="color: grey; font-size: 14px;">模型集合与分析目标的整体概览。</span>
-</p>
-
 - **模型集合**：基础 CANN（1D/2D、SFA）、层级路径积分、theta-sweep 模型、类脑模型（如 Amari-Hopfield、线性/脉冲层）
 - **任务生成**：平滑追踪、群体编码、模板匹配、开/闭环导航
 - **分析器能力**：能量景观、调谐曲线、栅格/放电率图、TDA 与解码工具、细胞分类
@@ -60,6 +54,12 @@ CANNs 采用模块化架构，遵循两条核心原则：**关注点分离** 与
 - **可选加速**：`canns-lib` 覆盖部分性能敏感例程
 
 ## Analyzer 可视化
+
+<p align="center">
+  <img src="docs/_static/figure2_full.png" alt="Model Analysis Overview" width="900">
+  <br>
+  <span style="color: grey; font-size: 14px;">模型集合与分析目标的整体概览。</span>
+</p>
 
 <p align="center">
   <img src="images/analyzer-display.png" alt="Analyzer Display" width="900">

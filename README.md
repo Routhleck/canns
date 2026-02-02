@@ -46,11 +46,7 @@ seamlessly integrate with the built-in ecosystem.
 
 ## Core Features
 
-<p align="center">
-  <img src="docs/_static/figure2_full.png" alt="Model Analysis Overview" width="900">
-  <br>
-  <span style="color: grey; font-size: 14px;">Overview of model collections and analysis targets used throughout the toolkit.</span>
-</p>
+
 
 - **Model collections**: basic CANNs (1D/2D, SFA), hierarchical path integration, theta-sweep models, brain-inspired models (e.g., Amari-Hopfield, linear/spiking layers)
 - **Task generators**: smooth tracking, population coding, template matching, open/closed-loop navigation
@@ -60,6 +56,12 @@ seamlessly integrate with the built-in ecosystem.
 - **Optional acceleration**: `canns-lib` for selected performance-critical routines
 
 ## Analyzer Visuals
+
+<p align="center">
+  <img src="docs/_static/figure2_full.png" alt="Model Analysis Overview" width="900">
+  <br>
+  <span style="color: grey; font-size: 14px;">Overview of model collections and analysis targets used throughout the toolkit.</span>
+</p>
 
 <p align="center">
   <img src="images/analyzer-display.png" alt="Analyzer Display" width="900">
