@@ -37,7 +37,7 @@ base classes**. The design separates functional responsibilities into five indep
 2. **Tasks** (`canns.task`) generate experimental paradigms and input data; 
 3. **Analyzers** (`canns.analyzer`) provide visualization and analysis tools;
 4. **Trainers** (`canns.trainer`) implement learning rules for brain-inspired models; 
-5. **Pipeline** (`canns.pipeline`) orchestrates complete experimental workflows.
+5. **Pipeline** (`canns.pipeline`) orchestrates complete workflows.
 
 Each module focuses on a single responsibility—models don't generate input data, tasks don't analyze results, and analyzers don't modify
 parameters. This separation ensures maintainability, testability, and extensibility. All major components inherit from abstract base classes
