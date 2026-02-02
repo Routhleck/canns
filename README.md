@@ -4,7 +4,7 @@
   <img src="images/logo.svg" alt="CANNs Logo" width="350">
 </div>
 
-[<img src="https://badges.ws/badge/status-beta-yellow" />](https://github.com/routhleck/canns)
+[<img src="https://badges.ws/badge/status-stable-green" />](https://github.com/routhleck/canns)
 ![PyPI - Python Version](https://img.shields.io/pypi/pyversions/canns)
 [<img src="https://badges.ws/maintenance/yes/2026" />](https://github.com/routhleck/canns)
 <picture><img src="https://badges.ws/github/release/routhleck/canns" /></picture>
