@@ -117,7 +117,7 @@ seamlessly integrate with the built-in ecosystem.
 </table>
 </div>
 
-## 🚀 Quick Start
+## Quick Start
 
 1D CANN smooth tracking (imports → simulation → visualization)
 
