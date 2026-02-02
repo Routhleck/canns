@@ -60,13 +60,18 @@ seamlessly integrate with the built-in ecosystem.
 <p align="center">
   <img src="docs/_static/figure2_full.png" alt="Model Analysis Overview" width="900">
   <br>
-  <span style="color: grey; font-size: 14px;">Overview of model collections and analysis targets used throughout the toolkit.</span>
+  <span style="color: grey; font-size: 14px;">Overview of Neural Dynamics Models. Comparison of three basic models: (A) 1D CANN, (B) 2D CANN, and (C) Grid Cell Network</span>
 </p>
 
 <p align="center">
   <img src="images/analyzer-display.png" alt="Analyzer Display" width="900">
   <br>
   <span style="color: grey; font-size: 14px;">Rich Analyzer Visualization Results</span>
+</p>
+<p align="center">
+  <img src="images/asa-gui.gif" alt="ASA GUI Preview" width="720">
+  <br>
+  <span style="color: grey; font-size: 14px;">ASA GUI preview</span>
 </p>
 <p align="center">
   <a href="https://youtu.be/OoEo5Qa9f7M">

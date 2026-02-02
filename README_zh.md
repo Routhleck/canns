@@ -58,13 +58,18 @@ CANNs 采用模块化架构，遵循两条核心原则：**关注点分离** 与
 <p align="center">
   <img src="docs/_static/figure2_full.png" alt="Model Analysis Overview" width="900">
   <br>
-  <span style="color: grey; font-size: 14px;">模型集合与分析目标的整体概览。</span>
+  <span style="color: grey; font-size: 14px;">神经动力学模型对比概览。 该图比较了三种经典基础模型：(A) 一维连续吸引子网络 (CANN 1D)，(B) 二维连续吸引子网络 (CANN 2D)，以及 (C) 网格细胞网络 (Grid Cell)</span>
 </p>
 
 <p align="center">
   <img src="images/analyzer-display.png" alt="Analyzer Display" width="900">
   <br>
   <span style="color: grey; font-size: 14px;">丰富的 Analyzer 可视化结果</span>
+</p>
+<p align="center">
+  <img src="images/asa-gui.gif" alt="ASA GUI Preview" width="720">
+  <br>
+  <span style="color: grey; font-size: 14px;">ASA GUI 预览</span>
 </p>
 <p align="center">
   <a href="https://youtu.be/OoEo5Qa9f7M">
