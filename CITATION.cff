@@ -6,10 +6,58 @@ authors:
   - family-names: "He"
     given-names: "Sichao"
     email: "sichaohe@outlook.com"
-    affiliation: "PKU NIP lab"
+    affiliation:
+      - "School of Psychological and Cognitive Sciences, Peking University"
+      - "Peking-Tsinghua Center for Life Sciences, Academy for Advanced Interdisciplinary Studies, Peking University"
+      - "PKU-IDG/McGovern Institute for Brain Research, Peking University"
+      - "Center of Quantitative Biology, Peking University"
+    orcid: "https://orcid.org/0009-0009-4564-1753"
+  - family-names: "Tuerhong"
+    given-names: "Aiersi"
+    affiliation: "College of Mathematics and Statistics, Chongqing University"
+    orcid: "https://orcid.org/0009-0006-4603-4734"
+  - family-names: "She"
+    given-names: "Shangjun"
+    affiliation:
+      - "School of Psychological and Cognitive Sciences, Peking University"
+      - "Peking-Tsinghua Center for Life Sciences, Academy for Advanced Interdisciplinary Studies, Peking University"
+      - "PKU-IDG/McGovern Institute for Brain Research, Peking University"
+      - "Center of Quantitative Biology, Peking University"
+    orcid: "https://orcid.org/0009-0008-4490-7612"
+  - family-names: "Chu"
+    given-names: "Tianhao"
+    affiliation:
+      - "School of Psychological and Cognitive Sciences, Peking University"
+      - "Peking-Tsinghua Center for Life Sciences, Academy for Advanced Interdisciplinary Studies, Peking University"
+      - "PKU-IDG/McGovern Institute for Brain Research, Peking University"
+      - "Center of Quantitative Biology, Peking University"
+    orcid: "https://orcid.org/0000-0001-9910-9361"
+  - family-names: "Wu"
+    given-names: "Yuling"
+    affiliation:
+      - "School of Psychological and Cognitive Sciences, Peking University"
+      - "Peking-Tsinghua Center for Life Sciences, Academy for Advanced Interdisciplinary Studies, Peking University"
+      - "PKU-IDG/McGovern Institute for Brain Research, Peking University"
+      - "Center of Quantitative Biology, Peking University"
+    orcid: "https://orcid.org/0009-0001-5303-5413"
+  - family-names: "Zuo"
+    given-names: "Junfeng"
+    affiliation:
+      - "School of Psychological and Cognitive Sciences, Peking University"
+      - "Peking-Tsinghua Center for Life Sciences, Academy for Advanced Interdisciplinary Studies, Peking University"
+      - "PKU-IDG/McGovern Institute for Brain Research, Peking University"
+      - "Center of Quantitative Biology, Peking University"
+  - family-names: "Wu"
+    given-names: "Si"
+    affiliation:
+      - "School of Psychological and Cognitive Sciences, Peking University"
+      - "Peking-Tsinghua Center for Life Sciences, Academy for Advanced Interdisciplinary Studies, Peking University"
+      - "PKU-IDG/McGovern Institute for Brain Research, Peking University"
+      - "Center of Quantitative Biology, Peking University"
+    orcid: "https://orcid.org/0000-0001-9650-6935"
 repository-code: "https://github.com/Routhleck/canns"
 url: "https://routhleck.com/canns"
-abstract: "A Python library built on top of the Brain Simulation Ecosystem (brainstate, brainunit) that streamlines experimentation with continuous attractor neural networks and related brain-inspired models. It delivers ready-to-use models, task generators, analysis tools, and pipelines so neuroscience and AI researchers can move from ideas to reproducible simulations quickly."
+abstract: "A research toolkit built on BrainPy and JAX that bundles model collections, task generators, analyzers, and the ASA pipeline (GUI/TUI) so researchers can run simulations and analyze results in a consistent workflow."
 keywords:
   - continuous attractor neural networks
   - CANNs
@@ -19,12 +67,12 @@ keywords:
   - JAX
   - brain-inspired computing
 license: Apache-2.0
-version: "v0.9.0"
-date-released: "2025-10-22"
+version: "v1.0.0"
+date-released: "2026-02-02"
 identifiers:
   - type: doi
-    value: "10.5281/zenodo.17412546"
-    description: "The versioned DOI for version v0.9.0"
+    value: "10.5281/zenodo.18453893"
+    description: "The versioned DOI for version v1.0.0"
   - type: doi
     value: "10.5281/zenodo.17412545"
     description: "The concept DOI (always resolves to latest version)"
@@ -35,9 +83,57 @@ preferred-citation:
     - family-names: "He"
       given-names: "Sichao"
       email: "sichaohe@outlook.com"
-      affiliation: "PKU NIP lab"
-  doi: "10.5281/zenodo.17412545"
+      affiliation:
+        - "School of Psychological and Cognitive Sciences, Peking University"
+        - "Peking-Tsinghua Center for Life Sciences, Academy for Advanced Interdisciplinary Studies, Peking University"
+        - "PKU-IDG/McGovern Institute for Brain Research, Peking University"
+        - "Center of Quantitative Biology, Peking University"
+      orcid: "https://orcid.org/0009-0009-4564-1753"
+    - family-names: "Tuerhong"
+      given-names: "Aiersi"
+      affiliation: "College of Mathematics and Statistics, Chongqing University"
+      orcid: "https://orcid.org/0009-0006-4603-4734"
+    - family-names: "She"
+      given-names: "Shangjun"
+      affiliation:
+        - "School of Psychological and Cognitive Sciences, Peking University"
+        - "Peking-Tsinghua Center for Life Sciences, Academy for Advanced Interdisciplinary Studies, Peking University"
+        - "PKU-IDG/McGovern Institute for Brain Research, Peking University"
+        - "Center of Quantitative Biology, Peking University"
+      orcid: "https://orcid.org/0009-0008-4490-7612"
+    - family-names: "Chu"
+      given-names: "Tianhao"
+      affiliation:
+        - "School of Psychological and Cognitive Sciences, Peking University"
+        - "Peking-Tsinghua Center for Life Sciences, Academy for Advanced Interdisciplinary Studies, Peking University"
+        - "PKU-IDG/McGovern Institute for Brain Research, Peking University"
+        - "Center of Quantitative Biology, Peking University"
+      orcid: "https://orcid.org/0000-0001-9910-9361"
+    - family-names: "Wu"
+      given-names: "Yuling"
+      affiliation:
+        - "School of Psychological and Cognitive Sciences, Peking University"
+        - "Peking-Tsinghua Center for Life Sciences, Academy for Advanced Interdisciplinary Studies, Peking University"
+        - "PKU-IDG/McGovern Institute for Brain Research, Peking University"
+        - "Center of Quantitative Biology, Peking University"
+      orcid: "https://orcid.org/0009-0001-5303-5413"
+    - family-names: "Zuo"
+      given-names: "Junfeng"
+      affiliation:
+        - "School of Psychological and Cognitive Sciences, Peking University"
+        - "Peking-Tsinghua Center for Life Sciences, Academy for Advanced Interdisciplinary Studies, Peking University"
+        - "PKU-IDG/McGovern Institute for Brain Research, Peking University"
+        - "Center of Quantitative Biology, Peking University"
+    - family-names: "Wu"
+      given-names: "Si"
+      affiliation:
+        - "School of Psychological and Cognitive Sciences, Peking University"
+        - "Peking-Tsinghua Center for Life Sciences, Academy for Advanced Interdisciplinary Studies, Peking University"
+        - "PKU-IDG/McGovern Institute for Brain Research, Peking University"
+        - "Center of Quantitative Biology, Peking University"
+      orcid: "https://orcid.org/0000-0001-9650-6935"
+  doi: "10.5281/zenodo.18453893"
   url: "https://github.com/Routhleck/canns"
-  version: "v0.9.0"
-  year: 2025
-  month: 10
+  version: "v1.0.0"
+  year: 2026
+  month: 2
