@@ -28,7 +28,7 @@ CANNs（Continuous Attractor Neural Networks toolkit）是基于 [BrainPy](https
 <p align="center">
   <img src="images/architecture.png" alt="CANNs Architecture" width="900">
   <br>
-  <span style="color: grey; font-size: 14px;">架构概览：模型、任务、分析器、训练器与流水线基于 BrainPy/JAX，部分环节可选 Rust 加速。</span>
+  <span style="color: grey; font-size: 14px;">CANNs 库的层级结构，展示了五个层级：应用层（流水线编排）、功能层（任务、训练器、分析器、工具模块）、核心模型层（CANN 实现）、基础层（BrainPy/JAX 和 Rust FFI 后端）以及硬件层（CPU/GPU/TPU 支持）</span>
 </p>
 
 CANNs 采用模块化架构，遵循两条核心原则：**关注点分离** 与 **通过基类实现可扩展性**。
@@ -176,12 +176,12 @@ energy_landscape_1d_animation(
 pip install canns
 
 # 可选加速（Linux）
-pip install "canns[cuda12]"
-pip install "canns[cuda13]"
-pip install "canns[tpu]"
+pip install canns[cuda12]
+pip install canns[cuda13]
+pip install canns[tpu]
 
 # GUI（ASA Pipeline）
-pip install "canns[gui]"
+pip install canns[gui]
 ```
 
 可选（uv）：

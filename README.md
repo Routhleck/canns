@@ -28,7 +28,7 @@ CANNs (Continuous Attractor Neural Networks toolkit) is a research toolkit built
 <p align="center">
   <img src="images/architecture.png" alt="CANNs Architecture" width="900">
   <br>
-  <span style="color: grey; font-size: 14px;">Library architecture overview: models, tasks, analyzers, trainers, and pipeline built on BrainPy/JAX with optional Rust acceleration.</span>
+  <span style="color: grey; font-size: 14px;">Layer hierarchy of the CANNs library showing five levels: Application (Pipeline orchestration), Functional (Task, Trainer, Analyzer, Utils modules), Core Models (CANN implementations), Foundation (BrainPy/JAX and Rust FFI backends), and Hardware (CPU/GPU/TPU support)</span>
 </p>
 
 The CANNs library follows a modular architecture guided by two core principles: **separation of concerns** and **extensibility through
@@ -178,12 +178,12 @@ energy_landscape_1d_animation(
 pip install canns
 
 # Optional accelerators (Linux)
-pip install "canns[cuda12]"
-pip install "canns[cuda13]"
-pip install "canns[tpu]"
+pip install canns[cuda12]
+pip install canns[cuda13]
+pip install canns[tpu]
 
 # GUI (ASA Pipeline)
-pip install "canns[gui]"
+pip install canns[gui]
 ```
 
 Optional (uv):
