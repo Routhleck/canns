@@ -65,9 +65,7 @@ def test_downsample_indices():
     assert indices[-1] < total_length, "Last index should be within bounds"
     # Check roughly uniform spacing
     expected_ratio = total_length // target_size
-    np.testing.assert_allclose(
-        np.diff(indices), expected_ratio, rtol=0.1, atol=1
-    )
+    np.testing.assert_allclose(np.diff(indices), expected_ratio, rtol=0.1, atol=1)
 
 
 def test_downsample_activities():
@@ -90,9 +88,7 @@ def test_downsample_activities():
         for y_idx in range(resolution):
             t_idx = y_idx * downsample_ratio
             if t_idx < num_steps:
-                np.testing.assert_array_equal(
-                    downsampled[i, y_idx, :], activities[t_idx, i, :]
-                )
+                np.testing.assert_array_equal(downsampled[i, y_idx, :], activities[t_idx, i, :])
 
 
 # ============================================================================
@@ -264,5 +260,3 @@ def test_different_arena_sizes(small_model):
 # ============================================================================
 # Performance Tests (Optional)
 # ============================================================================
-
-

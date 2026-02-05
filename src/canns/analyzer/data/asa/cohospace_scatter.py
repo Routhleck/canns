@@ -10,7 +10,6 @@ from ...visualization.core import PlotConfig, finalize_figure
 from .path import _align_activity_to_coords, skew_transform
 from .utils import _ensure_parent_dir, _ensure_plot_config
 
-
 # =====================================================================
 # CohoSpace visualization and selectivity metrics (CohoScore)
 # =====================================================================

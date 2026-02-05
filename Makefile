@@ -4,7 +4,7 @@
 
 .DEFAULT_GOAL := default
 
-.PHONY: default install install-dev install-docs install-all install-cuda12 install-cuda13 install-tpu lint test upgrade upgrade-dev build clean docs docs-autoapi
+.PHONY: default install install-dev install-docs install-all install-cuda12 install-cuda13 install-tpu lint test coverage upgrade upgrade-dev build clean docs docs-autoapi
 
 default: install lint test
 
@@ -41,6 +41,9 @@ lint:
 
 test:
 	uv run pytest
+
+coverage:
+	uv run pytest --cov=canns --cov-report=term-missing:skip-covered
 
 # Upgrade all dependencies (CPU-only)
 upgrade:

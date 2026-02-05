@@ -59,9 +59,7 @@ def test_tmaze_movement_cost_and_geodesic_visualisation(tmp_path):
     assert result.distances.shape[0] == result.accessible_indices.shape[0]
     assert np.all(np.isfinite(result.distances.diagonal()))
 
-    normalised_matrix = task._prepare_geodesic_plot_matrix(
-        result.distances, normalize=True
-    )
+    normalised_matrix = task._prepare_geodesic_plot_matrix(result.distances, normalize=True)
     finite_mask = np.isfinite(result.distances)
     if finite_mask.any():
         assert pytest.approx(np.nanmax(normalised_matrix[finite_mask]), rel=1e-9) == 1.0

@@ -169,9 +169,7 @@ def test_stdp_weight_saturation():
     # Start with high initial weights
     model.W.value = jnp.array([[0.95, 0.95]])
 
-    trainer = STDPTrainer(
-        model, learning_rate=0.5, A_plus=0.5, A_minus=0.1, w_min=0.0, w_max=1.0
-    )
+    trainer = STDPTrainer(model, learning_rate=0.5, A_plus=0.5, A_minus=0.1, w_min=0.0, w_max=1.0)
 
     # Strong repeated input to drive LTP
     strong_input = [jnp.array([1.0, 1.0]) for _ in range(20)]

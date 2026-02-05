@@ -25,12 +25,8 @@ class SimpleRNN(bp.DynamicalSystem):
         key = jax.random.PRNGKey(0)
         k1, k2, k3 = jax.random.split(key, 3)
 
-        self.w_ih = bm.Variable(
-            jax.random.normal(k1, (n_inputs, n_hidden)) * 0.1
-        )
-        self.w_hh = bm.Variable(
-            jax.random.normal(k2, (n_hidden, n_hidden)) * 0.5
-        )
+        self.w_ih = bm.Variable(jax.random.normal(k1, (n_inputs, n_hidden)) * 0.1)
+        self.w_hh = bm.Variable(jax.random.normal(k2, (n_hidden, n_hidden)) * 0.5)
         self.b_h = bm.Variable(jnp.zeros(n_hidden))
 
     def __call__(self, inputs, hidden):
@@ -51,9 +47,7 @@ class SimpleRNN(bp.DynamicalSystem):
         inputs_t = inputs[:, 0, :]  # [batch_size x n_inputs]
 
         # Compute next hidden state
-        h_next = jnp.tanh(
-            inputs_t @ self.w_ih.value + hidden @ self.w_hh.value + self.b_h.value
-        )
+        h_next = jnp.tanh(inputs_t @ self.w_ih.value + hidden @ self.w_hh.value + self.b_h.value)
 
         # For compatibility, return outputs with time dimension
         outputs = h_next[:, None, :]  # [batch_size x 1 x n_hidden]
@@ -142,10 +136,8 @@ def main():
     if unique_fps.n > 0:
         print(f"\nFixed points found:")
         for i in range(min(5, unique_fps.n)):  # Show first 5
-            stability_str = (
-                "stable" if unique_fps.is_stable[i] else "unstable"
-            )
-            print(f"  FP {i+1}: q = {unique_fps.qstar[i]:.2e}, {stability_str}")
+            stability_str = "stable" if unique_fps.is_stable[i] else "unstable"
+            print(f"  FP {i + 1}: q = {unique_fps.qstar[i]:.2e}, {stability_str}")
             if unique_fps.eigval_J_xstar is not None:
                 max_eig = np.abs(unique_fps.eigval_J_xstar[i, 0])
                 print(f"    Max |eigenvalue| = {max_eig:.4f}")

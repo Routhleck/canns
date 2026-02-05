@@ -23,13 +23,15 @@ def test_get_multiprocessing_context_returns_tuple():
         assert hasattr(ctx, "Pool"), "Context should have a Pool method"
 
     # Method name should be a string or None
-    assert method_name is None or isinstance(method_name, str), \
+    assert method_name is None or isinstance(method_name, str), (
         "Method name should be a string or None"
+    )
 
     # If context is not None, method name should also not be None
     if ctx is not None:
-        assert method_name in ["spawn", "fork"], \
+        assert method_name in ["spawn", "fork"], (
             f"Method name should be 'spawn' or 'fork', got {method_name}"
+        )
 
 
 def test_get_multiprocessing_context_spawn():
@@ -41,12 +43,12 @@ def test_get_multiprocessing_context_spawn():
 
     if ctx is None:
         # When no context is available, both ctx and method_name should be None
-        assert method_name is None, \
+        assert method_name is None, (
             f"When no context is available, expected method_name to be None, got {method_name}"
+        )
     else:
         # Should return spawn on all platforms when prefer_fork=False
-        assert method_name == "spawn", \
-            f"Expected 'spawn' method, got {method_name}"
+        assert method_name == "spawn", f"Expected 'spawn' method, got {method_name}"
 
 
 def test_get_multiprocessing_context_fork_on_linux_with_jax(monkeypatch):
@@ -65,8 +67,9 @@ def test_get_multiprocessing_context_fork_on_linux_with_jax(monkeypatch):
 
     if ctx is not None:
         # With JAX present, should fall back to spawn even with prefer_fork=True
-        assert method_name == "spawn", \
+        assert method_name == "spawn", (
             "Should use 'spawn' when JAX is detected, even with prefer_fork=True"
+        )
 
 
 def test_get_multiprocessing_context_fork_on_linux_without_jax(monkeypatch):
@@ -87,8 +90,9 @@ def test_get_multiprocessing_context_fork_on_linux_without_jax(monkeypatch):
 
     if ctx is not None:
         # Without JAX, should use fork on Linux with prefer_fork=True
-        assert method_name == "fork", \
+        assert method_name == "fork", (
             "Should use 'fork' on Linux when JAX is not present and prefer_fork=True"
+        )
 
 
 def test_get_multiprocessing_context_failure_path(monkeypatch):
@@ -119,9 +123,7 @@ def test_get_multiprocessing_context_consistency():
     ctx2, method2 = get_multiprocessing_context(prefer_fork=False)
 
     # Method names should be consistent
-    assert method1 == method2, \
-        "Method name should be consistent across calls"
+    assert method1 == method2, "Method name should be consistent across calls"
 
     # Both should be None or both should be not None
-    assert (ctx1 is None) == (ctx2 is None), \
-        "Context availability should be consistent"
+    assert (ctx1 is None) == (ctx2 is None), "Context availability should be consistent"

@@ -1,4 +1,4 @@
-brainx[cpu]
+brainpy[cpu]
 canns-lib>=0.6.2
 tqdm
 matplotlib

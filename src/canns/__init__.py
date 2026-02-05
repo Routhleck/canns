@@ -11,12 +11,10 @@ Examples:
     >>> print(list(canns.data.DATASETS))
 """
 
-from . import analyzer as analyzer
-from . import data as data
-from . import models as models
-from . import pipeline as pipeline
-from . import trainer as trainer
-from . import utils as utils
+from __future__ import annotations
+
+import importlib
+from typing import TYPE_CHECKING
 
 # Version information
 try:
@@ -48,6 +46,27 @@ Examples:
     >>> import canns
     >>> print(canns.version_info)
 """
+
+_LAZY_SUBMODULES = {
+    "analyzer",
+    "data",
+    "models",
+    "pipeline",
+    "trainer",
+    "utils",
+}
+
+if TYPE_CHECKING:  # pragma: no cover
+    from . import analyzer, data, models, pipeline, trainer, utils
+
+
+def __getattr__(name: str):
+    if name in _LAZY_SUBMODULES:
+        module = importlib.import_module(f"{__name__}.{name}")
+        globals()[name] = module
+        return module
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+
 
 __all__ = [
     "analyzer",

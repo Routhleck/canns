@@ -64,11 +64,15 @@ def test_open_loop_navigation_same_seed_reproducibility():
     speed2 = task2.data.speed
 
     # Verify identical results
-    assert np.allclose(pos1, pos2, rtol=1e-10, atol=1e-10), "Positions should be identical with same seed"
-    assert np.allclose(vel1, vel2, rtol=1e-10, atol=1e-10), "Velocities should be identical with same seed"
-    assert np.allclose(
-        speed1, speed2, rtol=1e-10, atol=1e-10
-    ), "Speeds should be identical with same seed"
+    assert np.allclose(pos1, pos2, rtol=1e-10, atol=1e-10), (
+        "Positions should be identical with same seed"
+    )
+    assert np.allclose(vel1, vel2, rtol=1e-10, atol=1e-10), (
+        "Velocities should be identical with same seed"
+    )
+    assert np.allclose(speed1, speed2, rtol=1e-10, atol=1e-10), (
+        "Speeds should be identical with same seed"
+    )
 
     # Additional check: exact equality for first few steps
     assert np.array_equal(pos1[:10], pos2[:10]), "First 10 positions should be exactly equal"
@@ -168,15 +172,15 @@ def test_open_loop_navigation_rng_seed_only_reproducibility():
     task2.get_data()
 
     # Verify identical results
-    assert np.allclose(
-        task1.data.position, task2.data.position, rtol=1e-10, atol=1e-10
-    ), "rng_seed alone should produce identical positions"
-    assert np.allclose(
-        task1.data.velocity, task2.data.velocity, rtol=1e-10, atol=1e-10
-    ), "rng_seed alone should produce identical velocities"
-    assert np.allclose(
-        task1.data.speed, task2.data.speed, rtol=1e-10, atol=1e-10
-    ), "rng_seed alone should produce identical speeds"
+    assert np.allclose(task1.data.position, task2.data.position, rtol=1e-10, atol=1e-10), (
+        "rng_seed alone should produce identical positions"
+    )
+    assert np.allclose(task1.data.velocity, task2.data.velocity, rtol=1e-10, atol=1e-10), (
+        "rng_seed alone should produce identical velocities"
+    )
+    assert np.allclose(task1.data.speed, task2.data.speed, rtol=1e-10, atol=1e-10), (
+        "rng_seed alone should produce identical speeds"
+    )
 
 
 def test_open_loop_navigation_reset_reproducibility():
@@ -214,8 +218,12 @@ def test_open_loop_navigation_reset_reproducibility():
     vel2 = task.data.velocity.copy()
 
     # Verify identical results after reset
-    assert np.allclose(pos1, pos2, rtol=1e-10, atol=1e-10), "Reset should produce identical trajectories"
-    assert np.allclose(vel1, vel2, rtol=1e-10, atol=1e-10), "Reset should produce identical velocities"
+    assert np.allclose(pos1, pos2, rtol=1e-10, atol=1e-10), (
+        "Reset should produce identical trajectories"
+    )
+    assert np.allclose(vel1, vel2, rtol=1e-10, atol=1e-10), (
+        "Reset should produce identical velocities"
+    )
 
 
 def test_open_loop_navigation_no_seed_randomness():

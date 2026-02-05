@@ -6,6 +6,7 @@ import numpy as np
 from canns.models.basic import HierarchicalNetwork
 from canns.task.open_loop_navigation import OpenLoopNavigationTask
 
+
 def test_path_integration():
     bm.set_dt(dt=0.1)
     task_sn = OpenLoopNavigationTask(
@@ -19,13 +20,15 @@ def test_path_integration():
         progress_bar=False,
     )
     task_sn.get_data()
-    task_sn.show_data(show=False, save_path='trajectory_test.png')
+    task_sn.show_data(show=False, save_path="trajectory_test.png")
 
     hierarchical_net = HierarchicalNetwork(num_module=5, num_place=30)
 
     def initialize(t, input_stre):
         hierarchical_net(
-            velocity = bm.zeros(2,),
+            velocity=bm.zeros(
+                2,
+            ),
             loc=task_sn.data.position[0],
             loc_input_stre=input_stre,
         )
@@ -33,7 +36,7 @@ def test_path_integration():
     init_time = 10
     indices = np.arange(init_time)
     input_stre = np.zeros(init_time)
-    input_stre[:5] = 100.
+    input_stre[:5] = 100.0
     bm.for_loop(
         initialize,
         (
@@ -41,4 +44,3 @@ def test_path_integration():
             bm.asarray(input_stre),
         ),
     )
-

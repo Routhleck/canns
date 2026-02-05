@@ -52,9 +52,7 @@ def test_grid_cell_classification_synthetic():
 def test_head_direction_classification_deterministic():
     """Deterministic directional spiking should be classified as HD."""
     time_stamps = np.linspace(0.0, 100.0, 10000)
-    head_directions = (np.linspace(0.0, 8 * np.pi, len(time_stamps)) + np.pi) % (
-        2 * np.pi
-    ) - np.pi
+    head_directions = (np.linspace(0.0, 8 * np.pi, len(time_stamps)) + np.pi) % (2 * np.pi) - np.pi
 
     preferred_dir = 0.5
     diff = np.arctan2(

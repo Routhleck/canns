@@ -26,10 +26,10 @@ def test_energy_landscape_1d():
 
     task_pc = PopulationCoding1D(
         cann_instance=cann,
-        before_duration=10.,
-        after_duration=10.,
-        duration=20.,
-        Iext=0.,
+        before_duration=10.0,
+        after_duration=10.0,
+        duration=20.0,
+        Iext=0.0,
         time_step=bm.get_dt(),
     )
     task_pc.get_data()
@@ -38,58 +38,62 @@ def test_energy_landscape_1d():
         cann(inputs)
         return cann.u.value, cann.inp.value
 
-    us, inps = bm.for_loop(
-        run_step,
-        (
-            task_pc.run_steps,
-            task_pc.data
-        )
-    )
+    us, inps = bm.for_loop(run_step, (task_pc.run_steps, task_pc.data))
 
     # Test with new config-based approach
-    output_path_static = 'test_energy_landscape_1d_static.png'
+    output_path_static = "test_energy_landscape_1d_static.png"
     config = PlotConfigs.energy_landscape_1d_static(
-        title='Population Coding 1D (Static)',
-        xlabel='State',
-        ylabel='Activity',
+        title="Population Coding 1D (Static)",
+        xlabel="State",
+        ylabel="Activity",
         save_path=output_path_static,
-        show=False
+        show=False,
     )
     energy_landscape_1d_static(
-        data_sets={'u': (cann.x, us[int(task_pc.total_steps/2)]), 'Iext': (cann.x, inps[int(task_pc.total_steps/2)])},
-        config=config
+        data_sets={
+            "u": (cann.x, us[int(task_pc.total_steps / 2)]),
+            "Iext": (cann.x, inps[int(task_pc.total_steps / 2)]),
+        },
+        config=config,
     )
     assert os.path.isfile(output_path_static), f"Output file {output_path_static} was not created."
-    
+
     # Test backward compatibility
-    output_path_static_old = 'test_energy_landscape_1d_static_old.png'
+    output_path_static_old = "test_energy_landscape_1d_static_old.png"
     energy_landscape_1d_static(
-        {'u': (cann.x, us[int(task_pc.total_steps/2)]), 'Iext': (cann.x, inps[int(task_pc.total_steps/2)])},
-        title='Population Coding 1D (Static - Old Style)',
-        xlabel='State',
-        ylabel='Activity',
+        {
+            "u": (cann.x, us[int(task_pc.total_steps / 2)]),
+            "Iext": (cann.x, inps[int(task_pc.total_steps / 2)]),
+        },
+        title="Population Coding 1D (Static - Old Style)",
+        xlabel="State",
+        ylabel="Activity",
         save_path=output_path_static_old,
         show=False,
     )
-    assert os.path.isfile(output_path_static_old), f"Output file {output_path_static_old} was not created."
+    assert os.path.isfile(output_path_static_old), (
+        f"Output file {output_path_static_old} was not created."
+    )
 
     # Test with new config-based approach
-    output_path_animation = 'test_energy_landscape_1d_animation.gif'
+    output_path_animation = "test_energy_landscape_1d_animation.gif"
     config_anim = PlotConfigs.energy_landscape_1d_animation(
         time_steps_per_second=100,
         fps=20,
-        title='Population Coding 1D (Animation)',
-        xlabel='State',
-        ylabel='Activity',
+        title="Population Coding 1D (Animation)",
+        xlabel="State",
+        ylabel="Activity",
         repeat=True,
         save_path=output_path_animation,
-        show=False
+        show=False,
     )
     energy_landscape_1d_animation(
-        data_sets={'u': (cann.x, us), 'Iext': (cann.x, inps)},
-        config=config_anim
+        data_sets={"u": (cann.x, us), "Iext": (cann.x, inps)}, config=config_anim
     )
-    assert os.path.isfile(output_path_animation), f"Output file {output_path_animation} was not created."
+    assert os.path.isfile(output_path_animation), (
+        f"Output file {output_path_animation} was not created."
+    )
+
 
 def test_energy_landscape_2d():
     bm.set_dt(dt=0.1)
@@ -97,10 +101,10 @@ def test_energy_landscape_2d():
 
     task_pc = PopulationCoding2D(
         cann_instance=cann,
-        before_duration=10.,
-        after_duration=10.,
-        duration=20.,
-        Iext=[0., 0.],
+        before_duration=10.0,
+        after_duration=10.0,
+        duration=20.0,
+        Iext=[0.0, 0.0],
         time_step=bm.get_dt(),
     )
     task_pc.get_data()
@@ -109,48 +113,39 @@ def test_energy_landscape_2d():
         cann(inputs)
         return cann.u.value, cann.r.value, cann.inp.value
 
-    us, rs, inps = bm.for_loop(
-        run_step,
-        (
-            task_pc.run_steps,
-            task_pc.data
-        )
-    )
+    us, rs, inps = bm.for_loop(run_step, (task_pc.run_steps, task_pc.data))
 
     # Test with new config-based approach
-    output_path_static = 'test_energy_landscape_2d_static.png'
+    output_path_static = "test_energy_landscape_2d_static.png"
     config = PlotConfigs.energy_landscape_2d_static(
-        title='Population Coding 2D (Static)',
-        xlabel='State X',
-        ylabel='State Y',
-        clabel='Activity',
+        title="Population Coding 2D (Static)",
+        xlabel="State X",
+        ylabel="State Y",
+        clabel="Activity",
         save_path=output_path_static,
-        show=False
+        show=False,
     )
-    energy_landscape_2d_static(
-        z_data=us[int(task_pc.total_steps/2)],
-        config=config
-    )
+    energy_landscape_2d_static(z_data=us[int(task_pc.total_steps / 2)], config=config)
     assert os.path.isfile(output_path_static), f"Output file {output_path_static} was not created."
 
     # Test with new config-based approach
-    output_path_animation = 'test_energy_landscape_2d_animation.gif'
+    output_path_animation = "test_energy_landscape_2d_animation.gif"
     config_anim = PlotConfigs.energy_landscape_2d_animation(
         time_steps_per_second=100,
         fps=20,
-        title='Population Coding 2D (Animation)',
-        xlabel='State X',
-        ylabel='State Y',
-        clabel='Activity',
+        title="Population Coding 2D (Animation)",
+        xlabel="State X",
+        ylabel="State Y",
+        clabel="Activity",
         repeat=True,
         save_path=output_path_animation,
-        show=False
+        show=False,
     )
-    energy_landscape_2d_animation(
-        zs_data=us,
-        config=config_anim
+    energy_landscape_2d_animation(zs_data=us, config=config_anim)
+    assert os.path.isfile(output_path_animation), (
+        f"Output file {output_path_animation} was not created."
     )
-    assert os.path.isfile(output_path_animation), f"Output file {output_path_animation} was not created."
+
 
 def test_raster_plot():
     bm.set_dt(dt=0.1)
@@ -158,8 +153,8 @@ def test_raster_plot():
 
     task_st = SmoothTracking1D(
         cann_instance=cann,
-        Iext=(1., 0.75, 2., 1.75, 3.),
-        duration=(10., 10., 10., 10.),
+        Iext=(1.0, 0.75, 2.0, 1.75, 3.0),
+        duration=(10.0, 10.0, 10.0, 10.0),
         time_step=bm.get_dt(),
     )
     task_st.get_data()
@@ -170,27 +165,18 @@ def test_raster_plot():
 
     us, rs = bm.for_loop(
         run_step,
-        (
-            task_st.run_steps,
-            task_st.data
-        ),
+        (task_st.run_steps, task_st.data),
     )
     spike_trains = firing_rate_to_spike_train(normalize_firing_rates(rs), dt_rate=0.1, dt_spike=0.1)
 
     # Test with new config-based approach
-    output_path = 'test_raster_plot.png'
+    output_path = "test_raster_plot.png"
     config = PlotConfigs.raster_plot(
-        title='Raster Plot',
-        xlabel='Time',
-        ylabel='Neuron Index',
-        save_path=output_path,
-        show=False
+        title="Raster Plot", xlabel="Time", ylabel="Neuron Index", save_path=output_path, show=False
     )
-    raster_plot(
-        spike_train=spike_trains,
-        config=config
-    )
+    raster_plot(spike_train=spike_trains, config=config)
     assert os.path.isfile(output_path), f"Output file {output_path} was not created."
+
 
 def test_average_firing_rate():
     bm.set_dt(dt=0.1)
@@ -198,10 +184,10 @@ def test_average_firing_rate():
 
     task_pc = PopulationCoding1D(
         cann_instance=cann,
-        before_duration=10.,
-        after_duration=10.,
-        duration=20.,
-        Iext=0.,
+        before_duration=10.0,
+        after_duration=10.0,
+        duration=20.0,
+        Iext=0.0,
         time_step=bm.get_dt(),
     )
     task_pc.get_data()
@@ -215,36 +201,30 @@ def test_average_firing_rate():
         (
             task_pc.run_steps,
             task_pc.data,
-        )
+        ),
     )
 
     # Test with new config-based approach
-    output_path_population = 'test_average_firing_rate_population.png'
+    output_path_population = "test_average_firing_rate_population.png"
     config_pop = PlotConfigs.average_firing_rate_plot(
-        mode='population',
-        title='Average Firing Rate (Population)',
+        mode="population",
+        title="Average Firing Rate (Population)",
         save_path=output_path_population,
-        show=False
+        show=False,
     )
-    average_firing_rate_plot(
-        spike_train=rs,
-        dt=0.1,
-        config=config_pop
-    )
+    average_firing_rate_plot(spike_train=rs, dt=0.1, config=config_pop)
 
-    output_path_per_neuron = 'test_average_firing_rate_per_neuron.png'
+    output_path_per_neuron = "test_average_firing_rate_per_neuron.png"
     config_neuron = PlotConfigs.average_firing_rate_plot(
-        mode='per_neuron',
-        title='Average Firing Rate (Per Neuron)',
+        mode="per_neuron",
+        title="Average Firing Rate (Per Neuron)",
         save_path=output_path_per_neuron,
-        show=False
+        show=False,
     )
-    average_firing_rate_plot(
-        spike_train=rs,
-        dt=0.1,
-        config=config_neuron
+    average_firing_rate_plot(spike_train=rs, dt=0.1, config=config_neuron)
+    assert os.path.isfile(output_path_population), (
+        f"Output file {output_path_population} was not created."
     )
-    assert os.path.isfile(output_path_population), f"Output file {output_path_population} was not created."
 
 
 def test_tuning_curve():
@@ -253,8 +233,8 @@ def test_tuning_curve():
 
     task_st = SmoothTracking1D(
         cann_instance=cann,
-        Iext=(0., 0., np.pi, 2*np.pi),
-        duration=(2., 20., 20.),
+        Iext=(0.0, 0.0, np.pi, 2 * np.pi),
+        duration=(2.0, 20.0, 20.0),
         time_step=bm.get_dt(),
     )
     task_st.get_data()
@@ -268,26 +248,26 @@ def test_tuning_curve():
         (
             task_st.run_steps,
             task_st.data,
-        )
+        ),
     )
 
     # Test with new config-based approach
     neuron_indices_to_plot = [0, 8, 16]
-    output_path = 'test_tuning_curve.png'
+    output_path = "test_tuning_curve.png"
     config = PlotConfigs.tuning_curve(
         num_bins=50,
         pref_stim=cann.x,
-        title='Tuning Curves of Selected Neurons',
-        xlabel='Stimulus Position (rad)',
-        ylabel='Average Firing Rate',
+        title="Tuning Curves of Selected Neurons",
+        xlabel="Stimulus Position (rad)",
+        ylabel="Average Firing Rate",
         show=False,
         save_path=output_path,
-        kwargs={'linewidth': 2, 'marker': 'o', 'markersize': 4}
+        kwargs={"linewidth": 2, "marker": "o", "markersize": 4},
     )
     tuning_curve(
         stimulus=task_st.Iext_sequence.squeeze(),
         firing_rates=rs,
         neuron_indices=neuron_indices_to_plot,
-        config=config
+        config=config,
     )
     assert os.path.isfile(output_path), f"Output file {output_path} was not created."

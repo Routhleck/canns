@@ -151,7 +151,7 @@ def test_sanger_multiple_pcs():
 
     # Create model
     model = LinearLayer(input_size=6, output_size=2)
-    
+
     trainer = SangerTrainer(model, learning_rate=0.001, normalize_weights=True)
 
     # Train - more epochs for numerical stability across Python versions
@@ -171,7 +171,9 @@ def test_sanger_multiple_pcs():
     # Both should explain non-trivial variance (not converged to same PC)
     # If they converged to the same PC, second would have very low variance
     # due to orthogonalization (relaxed to 5% to account for numerical variations)
-    assert variance_per_neuron[1] > 0.05 * variance_per_neuron[0], f"variance_per_neuron: {variance_per_neuron}"
+    assert variance_per_neuron[1] > 0.05 * variance_per_neuron[0], (
+        f"variance_per_neuron: {variance_per_neuron}"
+    )
 
 
 def test_sanger_compiled_vs_uncompiled():

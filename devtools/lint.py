@@ -22,10 +22,20 @@ reconfigure(emoji=not get_console().options.legacy_windows)  # No emojis on lega
 def main():
     rprint()
 
+    ci = os.environ.get("CI", "").lower() in {"1", "true", "yes"}
+    fix = not ci
+
     errcount = 0
     errcount += run(["codespell", "--ignore-words", f"{codespell_ignore}", *SRC_PATHS, *DOC_PATHS])
-    errcount += run(["ruff", "check", "--fix", *SRC_PATHS])
-    errcount += run(["ruff", "format", *SRC_PATHS])
+    ruff_check_cmd = ["ruff", "check", *SRC_PATHS]
+    if fix:
+        ruff_check_cmd.insert(2, "--fix")
+    errcount += run(ruff_check_cmd)
+
+    ruff_format_cmd = ["ruff", "format", *SRC_PATHS]
+    if not fix:
+        ruff_format_cmd.insert(2, "--check")
+    errcount += run(ruff_format_cmd)
     # errcount += run(["basedpyright", "--stats", *SRC_PATHS])
 
     rprint()
