@@ -8,6 +8,8 @@ These tests provide basic verification of the CANN1D bump fitting and animation 
 import numpy as np
 import pytest
 
+pytestmark = pytest.mark.integration
+
 pytest.skip("deprecated", allow_module_level=True)
 
 from canns.analyzer.data.asa import (

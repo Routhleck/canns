@@ -1,6 +1,7 @@
 """Tests for cell classification metrics."""
 
 import numpy as np
+import pytest
 
 from canns.analyzer.data.cell_classification import (
     GridnessAnalyzer,
@@ -10,6 +11,8 @@ from canns.analyzer.data.cell_classification import (
 )
 from canns.analyzer.data.cell_classification import circ_r
 from canns.analyzer.data.cell_classification import fit_ellipse
+
+pytestmark = pytest.mark.integration
 
 
 def test_circular_stats_mvl():

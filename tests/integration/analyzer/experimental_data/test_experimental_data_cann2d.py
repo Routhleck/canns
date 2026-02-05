@@ -9,6 +9,8 @@ common errors like array indexing issues and parameter mismatches.
 import numpy as np
 import pytest
 
+pytestmark = pytest.mark.integration
+
 pytest.skip("deprecated", allow_module_level=True)
 
 from canns.analyzer.data.cann2d import (

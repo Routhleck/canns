@@ -6,6 +6,10 @@ import runpy
 import sys
 import types
 
+import pytest
+
+pytestmark = pytest.mark.integration
+
 
 def _import_with_fake_pyside(monkeypatch, module_name: str):
     original_find_spec = importlib.util.find_spec

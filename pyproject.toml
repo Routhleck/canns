@@ -246,7 +246,7 @@ reportOperatorIssue = false
 # skip = "foo.py,bar.py"
 
 [tool.pytest.ini_options]
-python_files = ["*.py"]
+python_files = ["test_*.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]
 testpaths = [
@@ -255,6 +255,11 @@ testpaths = [
 norecursedirs = []
 filterwarnings = []
 addopts = "--assert=plain -ra"
+markers = [
+    "integration: tests that exercise multi-module flows or external dependencies",
+    "visualization: tests that generate plots or graphics",
+    "slow: tests that are notably slower than unit tests",
+]
 
 [tool.coverage.run]
 branch = true

@@ -1,13 +1,14 @@
-import brainpy as bp
-import brainpy.math as bm
+import pytest
 import brainpy.math as bm
 import numpy as np
 
 from canns.models.basic import HierarchicalNetwork
 from canns.task.open_loop_navigation import OpenLoopNavigationTask
 
+pytestmark = pytest.mark.integration
 
-def test_path_integration():
+
+def test_path_integration(tmp_path):
     bm.set_dt(dt=0.1)
     task_sn = OpenLoopNavigationTask(
         width=5,
@@ -20,7 +21,9 @@ def test_path_integration():
         progress_bar=False,
     )
     task_sn.get_data()
-    task_sn.show_data(show=False, save_path="trajectory_test.png")
+    output_path = tmp_path / "trajectory_test.png"
+    task_sn.show_data(show=False, save_path=str(output_path))
+    assert output_path.is_file()
 
     hierarchical_net = HierarchicalNetwork(num_module=5, num_place=30)
 

@@ -3,6 +3,8 @@
 import platform
 import pytest
 
+pytestmark = pytest.mark.visualization
+
 
 def test_get_multiprocessing_context_returns_tuple():
     """Test that get_multiprocessing_context returns a tuple of (context, method_name)."""

@@ -11,6 +11,8 @@ import brainpy.math as bm
 
 from canns.task.open_loop_navigation import OpenLoopNavigationTask
 
+pytestmark = pytest.mark.integration
+
 
 def test_open_loop_navigation_same_seed_reproducibility():
     """Test that OpenLoopNavigationTask produces identical results with same seed."""

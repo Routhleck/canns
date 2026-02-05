@@ -10,6 +10,8 @@ from canns.analyzer import data
 from canns.analyzer.visualization import PlotConfig
 from canns.data.loaders import load_grid_data
 
+pytestmark = pytest.mark.integration
+
 
 def create_mock_spike_data(
     num_neurons: int = 30,
