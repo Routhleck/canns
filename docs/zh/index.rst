@@ -41,12 +41,55 @@ CANNs 文档
    :target: https://buymeacoffee.com/forrestcai6
    :alt: 请我喝咖啡
 
+.. image:: ../_static/logo.svg
+   :alt: CANNs Logo
+   :width: 350
+   :align: center
+
 欢迎使用 CANNs！
 -----------------
 
 CANNs（Continuous Attractor Neural Networks toolkit）是基于 `BrainPy <https://github.com/brainpy/BrainPy>`_ 与
 `JAX <https://github.com/jax-ml/jax>`_ 构建的研究工具库，并可选使用 Rust 加速库 ``canns-lib`` 优化部分性能敏感例程（如
 TDA/Ripser 与任务生成）。它集成模型集合、任务生成器、分析器、训练器与 ASA 流水线（GUI/TUI），以统一工作流完成仿真与分析。
+
+架构
+------------
+
+.. figure:: ../_static/architecture.png
+   :alt: CANNs Architecture
+   :width: 900
+   :align: center
+
+   CANNs 库的层级结构，展示五个层级：应用层（流水线编排）、功能层（任务/训练器/分析器/工具模块）、核心模型层（CANN 实现）、基础层
+   （BrainPy/JAX 与 Rust FFI 后端）以及硬件层（CPU/GPU/TPU 支持）。
+
+核心特性
+-------------
+
+- **模型集合**：基础 CANN（1D/2D、SFA）、层级路径积分、theta-sweep 模型、类脑模型（如 Amari-Hopfield、线性/脉冲层）
+- **任务生成**：平滑追踪、群体编码、模板匹配、开/闭环导航
+- **分析器能力**：能量景观、调谐曲线、栅格/放电率图、TDA 与解码工具、细胞分类
+- **ASA 流水线 & GUI/TUI**：端到端流程（预处理、TDA、解码与结果可视化，如 CohoMap/CohoSpace/PathCompare/FR/FRM/GridScore）
+- **训练与扩展**：HebbianTrainer 与统一基类便于扩展
+- **可选加速**：``canns-lib`` 覆盖部分性能敏感例程
+
+模型分析概览
+-----------------------
+
+.. figure:: ../_static/figure2_full.png
+   :alt: Model Analysis Overview
+   :width: 900
+   :align: center
+
+   神经动力学模型对比概览： (A) 一维 CANN，(B) 二维 CANN，(C) 网格细胞网络。
+
+.. figure:: ../_static/analyzer-display.png
+   :alt: Analyzer Display
+   :width: 900
+   :align: center
+
+   丰富的 Analyzer 可视化结果。
 
 可视化展示
 ----------
@@ -167,6 +210,16 @@ TDA/Ripser 与任务生成）。它集成模型集合、任务生成器、分析
          </div>
       </div>
    </div>
+
+ASA 流水线（GUI/TUI）
+----------------------
+
+.. figure:: ../_static/asa-gui.gif
+   :alt: ASA GUI 预览
+   :width: 720
+   :align: center
+
+   ASA GUI 预览。
 
 快速开始
 -----------

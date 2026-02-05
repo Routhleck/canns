@@ -26,7 +26,7 @@ CANNs (Continuous Attractor Neural Networks toolkit) is a research toolkit built
 ## Architecture
 
 <p align="center">
-  <img src="images/architecture.png" alt="CANNs Architecture" width="900">
+  <img src="docs/_static/architecture.png" alt="CANNs Architecture" width="900">
   <br>
   <span style="color: grey; font-size: 14px;">Layer hierarchy of the CANNs library showing five levels: Application (Pipeline orchestration), Functional (Task, Trainer, Analyzer, Utils modules), Core Models (CANN implementations), Foundation (BrainPy/JAX and Rust FFI backends), and Hardware (CPU/GPU/TPU support)</span>
 </p>
@@ -64,12 +64,12 @@ seamlessly integrate with the built-in ecosystem.
 </p>
 
 <p align="center">
-  <img src="images/analyzer-display.png" alt="Analyzer Display" width="900">
+  <img src="docs/_static/analyzer-display.png" alt="Analyzer Display" width="900">
   <br>
   <span style="color: grey; font-size: 14px;">Rich Analyzer Visualization Results</span>
 </p>
 <p align="center">
-  <img src="images/asa-gui.gif" alt="ASA GUI Preview" width="720">
+  <img src="docs/_static/asa-gui.gif" alt="ASA GUI Preview" width="720">
   <br>
   <span style="color: grey; font-size: 14px;">ASA GUI preview</span>
 </p>

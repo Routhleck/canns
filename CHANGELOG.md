@@ -8,9 +8,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.0.0] - 2026-02-02
 
 ### Added
-- Architecture diagram (`images/architecture.png`) explaining modular design principles
-- Comprehensive analyzer visualization showcase (`images/analyzer-display.png`, 4.7MB)
-- ASA GUI preview animation (`images/asa-gui.gif`, 898KB)
+- Architecture diagram (`docs/_static/architecture.png`) explaining modular design principles
+- Comprehensive analyzer visualization showcase (`docs/_static/analyzer-display.png`, 4.7MB)
+- ASA GUI preview animation (`docs/_static/asa-gui.gif`, 898KB)
 
 ### Changed
 - **Production Ready Milestone**: v1.0.0 marks API stability and production readiness
@@ -235,7 +235,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Comprehensive plotting functions for ASA analysis types
 - New example scripts: cohomap.py, cohospace.py, firing_field_map.py, path_compare.py, tda_vis.py
 - Research paper draft (paper.md) with comprehensive bibliography (paper.bib)
-- Architecture diagram (images/architecture.png)
+- Architecture diagram (docs/_static/architecture.png)
 - GitHub Actions workflow for draft PDF generation
 - CLI entry point for ASA TUI: `python -m canns.pipeline.asa`
 - Image preview and external viewer support in TUI

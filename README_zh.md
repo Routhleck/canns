@@ -26,7 +26,7 @@ CANNs（Continuous Attractor Neural Networks toolkit）是基于 [BrainPy](https
 ## 架构
 
 <p align="center">
-  <img src="images/architecture.png" alt="CANNs Architecture" width="900">
+  <img src="docs/_static/architecture.png" alt="CANNs Architecture" width="900">
   <br>
   <span style="color: grey; font-size: 14px;">CANNs 库的层级结构，展示了五个层级：应用层（流水线编排）、功能层（任务、训练器、分析器、工具模块）、核心模型层（CANN 实现）、基础层（BrainPy/JAX 和 Rust FFI 后端）以及硬件层（CPU/GPU/TPU 支持）</span>
 </p>
@@ -62,12 +62,12 @@ CANNs 采用模块化架构，遵循两条核心原则：**关注点分离** 与
 </p>
 
 <p align="center">
-  <img src="images/analyzer-display.png" alt="Analyzer Display" width="900">
+  <img src="docs/_static/analyzer-display.png" alt="Analyzer Display" width="900">
   <br>
   <span style="color: grey; font-size: 14px;">丰富的 Analyzer 可视化结果</span>
 </p>
 <p align="center">
-  <img src="images/asa-gui.gif" alt="ASA GUI Preview" width="720">
+  <img src="docs/_static/asa-gui.gif" alt="ASA GUI Preview" width="720">
   <br>
   <span style="color: grey; font-size: 14px;">ASA GUI 预览</span>
 </p>

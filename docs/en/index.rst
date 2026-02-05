@@ -41,6 +41,11 @@ CANNs Documentation
    :target: https://buymeacoffee.com/forrestcai6
    :alt: Buy Me a Coffee
 
+.. image:: ../_static/logo.svg
+   :alt: CANNs Logo
+   :width: 350
+   :align: center
+
 Welcome to CANNs!
 -----------------
 
@@ -48,6 +53,46 @@ CANNs (Continuous Attractor Neural Networks toolkit) is a research toolkit built
 `JAX <https://github.com/jax-ml/jax>`_, with optional Rust-accelerated ``canns-lib`` for selected performance-critical routines. It bundles
 model collections, task generators, analyzers, trainers, and the ASA pipeline (GUI/TUI) so you can run simulations and analyze results in a
 consistent workflow.
+
+Architecture
+------------
+
+.. figure:: ../_static/architecture.png
+   :alt: CANNs Architecture
+   :width: 900
+   :align: center
+
+   Layer hierarchy of the CANNs library showing five levels: Application (Pipeline orchestration), Functional (Task, Trainer, Analyzer, Utils
+   modules), Core Models (CANN implementations), Foundation (BrainPy/JAX and Rust FFI backends), and Hardware (CPU/GPU/TPU support).
+
+Core Features
+-------------
+
+- **Model collections**: basic CANNs (1D/2D, SFA), hierarchical path integration, theta-sweep models, brain-inspired models (e.g.,
+  Amari-Hopfield, linear/spiking layers)
+- **Task generators**: smooth tracking, population coding, template matching, open/closed-loop navigation
+- **Analyzer suite**: energy landscapes, tuning curves, raster/firing-rate plots, TDA and decoding utilities, cell classification
+- **ASA pipeline & GUI/TUI**: end-to-end workflow for preprocessing, TDA, decoding, and result visualization (e.g.,
+  CohoMap/CohoSpace/PathCompare/FR/FRM/GridScore)
+- **Training & extensibility**: HebbianTrainer plus base classes for consistent extension
+- **Optional acceleration**: ``canns-lib`` for selected performance-critical routines
+
+Model Analysis Overview
+-----------------------
+
+.. figure:: ../_static/figure2_full.png
+   :alt: Model Analysis Overview
+   :width: 900
+   :align: center
+
+   Overview of neural dynamics models. Comparison of three basic models: (A) 1D CANN, (B) 2D CANN, and (C) Grid Cell Network.
+
+.. figure:: ../_static/analyzer-display.png
+   :alt: Analyzer Display
+   :width: 900
+   :align: center
+
+   Rich analyzer visualization results.
 
 Visualizations
 --------------
@@ -168,6 +213,16 @@ Visualizations
          </div>
       </div>
    </div>
+
+ASA Pipeline (GUI/TUI)
+----------------------
+
+.. figure:: ../_static/asa-gui.gif
+   :alt: ASA GUI Preview
+   :width: 720
+   :align: center
+
+   ASA GUI preview.
 
 Quick Start
 -----------
