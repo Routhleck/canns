@@ -32,6 +32,9 @@ Classes
 
 .. autoapisummary::
 
+   canns.analyzer.data.cell_classification.BTNAnalyzer
+   canns.analyzer.data.cell_classification.BTNConfig
+   canns.analyzer.data.cell_classification.BTNResult
    canns.analyzer.data.cell_classification.GridnessAnalyzer
    canns.analyzer.data.cell_classification.GridnessResult
    canns.analyzer.data.cell_classification.HDCellResult
@@ -66,6 +69,8 @@ Functions
    canns.analyzer.data.cell_classification.normalized_xcorr2
    canns.analyzer.data.cell_classification.pearson_correlation
    canns.analyzer.data.cell_classification.plot_autocorrelogram
+   canns.analyzer.data.cell_classification.plot_btn_autocorr_summary
+   canns.analyzer.data.cell_classification.plot_btn_distance_matrix
    canns.analyzer.data.cell_classification.plot_grid_score_histogram
    canns.analyzer.data.cell_classification.plot_gridness_analysis
    canns.analyzer.data.cell_classification.plot_hd_analysis
@@ -82,6 +87,111 @@ Functions
 
 Package Contents
 ----------------
+
+.. py:class:: BTNAnalyzer(config = None)
+
+   Analyzer that clusters neurons into BTN groups using Tomato.
+
+
+   .. py:method:: classify_btn(spike_data, *, mapping = None, return_intermediates = False, plot_diagram = False)
+
+      Cluster neurons into BTN classes using ISI autocorr + Tomato.
+
+      :param spike_data: ASA-style dict with keys ``spike`` and ``t`` (and optionally x/y).
+      :type spike_data: dict
+      :param mapping: Optional mapping from cluster id to BTN label string.
+      :type mapping: dict, optional
+      :param return_intermediates: If True, include intermediate arrays in the result.
+      :type return_intermediates: bool
+      :param plot_diagram: If True, call Tomato.plot_diagram() for visual inspection.
+      :type plot_diagram: bool
+
+
+
+   .. py:attribute:: config
+
+
+.. py:class:: BTNConfig
+
+   Configuration for BTN clustering.
+
+
+   .. py:attribute:: b_log
+      :type:  bool
+      :value: False
+
+
+
+   .. py:attribute:: b_one
+      :type:  bool
+      :value: True
+
+
+
+   .. py:attribute:: maxt
+      :type:  float
+      :value: 0.2
+
+
+
+   .. py:attribute:: metric
+      :type:  str
+      :value: 'cosine'
+
+
+
+   .. py:attribute:: n_clusters
+      :type:  int
+      :value: 4
+
+
+
+   .. py:attribute:: nbs
+      :type:  int
+      :value: 80
+
+
+
+   .. py:attribute:: res
+      :type:  float
+      :value: 0.001
+
+
+
+   .. py:attribute:: smooth_sigma
+      :type:  float
+      :value: 4.0
+
+
+
+.. py:class:: BTNResult
+
+   Result container for BTN clustering.
+
+
+   .. py:attribute:: btn_labels
+      :type:  numpy.ndarray | None
+
+
+   .. py:attribute:: cluster_sizes
+      :type:  numpy.ndarray
+
+
+   .. py:attribute:: intermediates
+      :type:  dict[str, numpy.ndarray] | None
+
+
+   .. py:attribute:: labels
+      :type:  numpy.ndarray
+
+
+   .. py:attribute:: mapping
+      :type:  dict[int, str] | None
+
+
+   .. py:attribute:: n_clusters
+      :type:  int
+
 
 .. py:class:: GridnessAnalyzer(threshold = 0.2, min_orientation = 15.0, min_center_radius = 2, num_gridness_radii = 3)
 
@@ -1324,6 +1434,16 @@ Package Contents
 .. py:function:: plot_autocorrelogram(autocorr, config = None, *, gridness_score = None, center_radius = None, peak_locations = None, title = 'Spatial Autocorrelation', xlabel = 'X Lag (bins)', ylabel = 'Y Lag (bins)', figsize = (6, 6), save_path = None, show = True, ax = None, **kwargs)
 
    Plot 2D autocorrelogram with optional annotations.
+
+
+.. py:function:: plot_btn_autocorr_summary(*, acorr = None, labels = None, bin_times = None, res = None, mapping = None, colors = None, normalize = 'probability', smooth_sigma = None, long_max_ms = 200.0, short_max_ms = None, title = 'BTN temporal autocorr', figsize = (8, 3), save_path = None, show = True, config = None)
+
+   Plot class-averaged ISI autocorr curves (mean +/- SEM).
+
+
+.. py:function:: plot_btn_distance_matrix(*, dist = None, labels = None, mapping = None, sort_by_label = True, title = 'BTN distance matrix', cmap = 'afmhot', figsize = (5, 5), save_path = None, show = True, ax = None, config = None)
+
+   Plot a distance matrix heatmap sorted by BTN cluster labels.
 
 
 .. py:function:: plot_grid_score_histogram(scores, config = None, *, bins = 30, title = 'Grid Score Distribution', xlabel = 'Grid Score', ylabel = 'Count', figsize = (6, 4), save_path = None, show = True, ax = None, **kwargs)

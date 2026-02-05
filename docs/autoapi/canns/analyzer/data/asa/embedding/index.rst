@@ -32,10 +32,9 @@ Module Contents
                       ``min_speed``). Prefer ``config`` in new code.
    :type \*\*kwargs: Any
 
-   :returns: ``(spikes_bin, xx, yy, tt)`` where:
-             - ``spikes_bin`` is a (T, N) binned spike matrix.
-             - ``xx``, ``yy``, ``tt`` are position/time arrays when ``speed_filter=True``,
-               otherwise ``None``.
+   :returns: ``(spikes_bin, xx, yy, tt)``. ``spikes_bin`` is a (T, N) binned spike matrix.
+             ``xx``, ``yy``, ``tt`` are position/time arrays when ``speed_filter=True``,
+             otherwise ``None``.
    :rtype: tuple
 
    .. rubric:: Examples

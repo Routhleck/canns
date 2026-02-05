@@ -1,15 +1,15 @@
 CANNs 文档
 ====================
 
-.. image:: https://badges.ws/badge/status-beta-yellow
+.. image:: https://badges.ws/badge/status-stable-green
    :target: https://github.com/routhleck/canns
-   :alt: Status: Beta
+   :alt: 状态：稳定
 
 .. image:: https://img.shields.io/pypi/pyversions/canns
    :target: https://pypi.org/project/canns/
    :alt: Python 版本
 
-.. image:: https://badges.ws/maintenance/yes/2025
+.. image:: https://badges.ws/maintenance/yes/2026
    :target: https://github.com/routhleck/canns
    :alt: 持续维护
 
@@ -20,6 +20,10 @@ CANNs 文档
 .. image:: https://badges.ws/github/license/routhleck/canns
    :target: https://github.com/routhleck/canns/blob/master/LICENSE
    :alt: 许可证
+
+.. image:: https://zenodo.org/badge/DOI/10.5281/zenodo.18453893.svg
+   :target: https://doi.org/10.5281/zenodo.18453893
+   :alt: DOI
 
 .. image:: https://badges.ws/github/stars/routhleck/canns?logo=github
    :target: https://github.com/routhleck/canns/stargazers
@@ -40,7 +44,9 @@ CANNs 文档
 欢迎使用 CANNs！
 -----------------
 
-CANNs（连续吸引子神经网络工具包）是一个基于 BrainPy 构建的 Python 库，BrainPy 是强大的脑动力学编程框架。本工具包简化了连续吸引子神经网络和相关脑启发模型的实验流程。它提供即用型模型、任务生成器、分析工具和流水线——让神经科学和 AI 研究人员能够快速从想法转化为可复现的仿真。
+CANNs（Continuous Attractor Neural Networks toolkit）是基于 `BrainPy <https://github.com/brainpy/BrainPy>`_ 与
+`JAX <https://github.com/jax-ml/jax>`_ 构建的研究工具库，并可选使用 Rust 加速库 ``canns-lib`` 优化部分性能敏感例程（如
+TDA/Ripser 与任务生成）。它集成模型集合、任务生成器、分析器、训练器与 ASA 流水线（GUI/TUI），以统一工作流完成仿真与分析。
 
 可视化展示
 ----------
@@ -169,15 +175,74 @@ CANNs（连续吸引子神经网络工具包）是一个基于 BrainPy 构建的
 
 .. code-block:: bash
 
-   # 使用 uv（推荐，安装更快）
-   uv pip install canns
-
-   # 或用 pip
+   # 仅 CPU
    pip install canns
 
-   # 若需 GPU 支持
+   # 可选加速（Linux）
    pip install canns[cuda12]
    pip install canns[cuda13]
+   pip install canns[tpu]
+
+   # GUI（ASA Pipeline）
+   pip install canns[gui]
+
+可选（uv）：
+
+.. code-block:: bash
+
+   uv pip install canns
+
+1D CANN 平滑追踪（导入 → 仿真 → 可视化）：
+
+.. code-block:: python
+
+   import brainpy.math as bm
+   from canns.analyzer.visualization import PlotConfigs, energy_landscape_1d_animation
+   from canns.models.basic import CANN1D
+   from canns.task.tracking import SmoothTracking1D
+
+   # 模拟时间步长
+   bm.set_dt(0.1)
+
+   # 构建模型
+   cann = CANN1D(num=512)
+
+   # 构建追踪任务（Iext 长度 = duration 长度 + 1）
+   task = SmoothTracking1D(
+       cann_instance=cann,
+       Iext=(0.0, 0.5, 1.0, 1.5),
+       duration=(5.0, 5.0, 5.0),
+       time_step=bm.get_dt(),
+   )
+   task.get_data()
+
+
+   # 单步仿真回调
+   def step(t, stimulus):
+       cann(stimulus)
+       return cann.u.value, cann.inp.value
+
+
+   # 运行仿真循环
+   us, inputs = bm.for_loop(
+       step,
+       operands=(task.run_steps, task.data),
+   )
+
+   # 能量景观动画可视化
+   config = PlotConfigs.energy_landscape_1d_animation(
+       time_steps_per_second=int(1 / bm.get_dt()),
+       fps=20,
+       title="Smooth Tracking 1D",
+       xlabel="State",
+       ylabel="Activity",
+       show=True,
+   )
+
+   energy_landscape_1d_animation(
+       data_sets={"u": (cann.x, us), "Iext": (cann.x, inputs)},
+       config=config,
+   )
 
 
 文档导航
@@ -224,7 +289,7 @@ CANNs（连续吸引子神经网络工具包）是一个基于 BrainPy 构建的
 - **GitHub 仓库**: https://github.com/routhleck/canns
 - **问题追踪**: https://github.com/routhleck/canns/issues
 - **讨论区**: https://github.com/routhleck/canns/discussions
-- **文档**: https://canns.readthedocs.io/
+- **文档**: https://routhleck.com/canns/
 
 贡献
 ------------
@@ -238,12 +303,19 @@ CANNs（连续吸引子神经网络工具包）是一个基于 BrainPy 构建的
 
 .. code-block:: bibtex
 
-   @software{he_2025_canns,
-      author       = {He, Sichao},
-      title        = {CANNs: Continuous Attractor Neural Networks Toolkit},
-      year         = 2025,
-      publisher    = {Zenodo},
-      version      = {v0.9.0},
-      doi          = {10.5281/zenodo.17412545},
-      url          = {https://github.com/Routhleck/canns}
+   @software{he_2026_canns,
+     author       = {He, Sichao and
+                     Tuerhong, Aiersi and
+                     She, Shangjun and
+                     Chu, Tianhao and
+                     Wu, Yuling and
+                     Zuo, Junfeng and
+                     Wu, Si},
+     title        = {CANNs: Continuous Attractor Neural Networks Toolkit},
+     month        = feb,
+     year         = 2026,
+     publisher    = {Zenodo},
+     version      = {v1.0.0},
+     doi          = {10.5281/zenodo.18453893},
+     url          = {https://doi.org/10.5281/zenodo.18453893}
    }

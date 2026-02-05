@@ -43,6 +43,6 @@ Choose Your Language / 选择语言
 About CANNs
 -----------
 
-CANNs is a Python library for modeling and analyzing continuous attractor neural networks. It provides tools for building, training, and analyzing various types of CANN models.
+CANNs (Continuous Attractor Neural Networks toolkit) is a research toolkit built on BrainPy and JAX, with optional Rust-accelerated ``canns-lib`` for selected performance-critical routines. It bundles model collections, task generators, analyzers, trainers, and the ASA pipeline (GUI/TUI) so you can run simulations and analyze results in a consistent workflow.
 
-CANNs 是一个用于建模和分析连续吸引子神经网络的 Python 库。它提供了构建、训练和分析各种 CANN 模型的工具。
+CANNs（Continuous Attractor Neural Networks toolkit）是基于 BrainPy 与 JAX 构建的研究工具库，并可选使用 Rust 加速库 ``canns-lib`` 优化部分性能敏感例程。它集成模型集合、任务生成器、分析器、训练器与 ASA 流水线（GUI/TUI），以统一工作流完成仿真与分析。

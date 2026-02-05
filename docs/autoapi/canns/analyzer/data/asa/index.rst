@@ -10,16 +10,21 @@ Submodules
 .. toctree::
    :maxdepth: 1
 
+   /autoapi/canns/analyzer/data/asa/coho/index
+   /autoapi/canns/analyzer/data/asa/cohomap/index
+   /autoapi/canns/analyzer/data/asa/cohomap_vectors/index
    /autoapi/canns/analyzer/data/asa/cohospace/index
+   /autoapi/canns/analyzer/data/asa/cohospace_phase_centers/index
+   /autoapi/canns/analyzer/data/asa/cohospace_scatter/index
    /autoapi/canns/analyzer/data/asa/config/index
    /autoapi/canns/analyzer/data/asa/decode/index
    /autoapi/canns/analyzer/data/asa/embedding/index
-   /autoapi/canns/analyzer/data/asa/filters/index
    /autoapi/canns/analyzer/data/asa/fly_roi/index
    /autoapi/canns/analyzer/data/asa/fr/index
    /autoapi/canns/analyzer/data/asa/path/index
    /autoapi/canns/analyzer/data/asa/plotting/index
    /autoapi/canns/analyzer/data/asa/tda/index
+   /autoapi/canns/analyzer/data/asa/utils/index
 
 
 Exceptions
@@ -54,24 +59,37 @@ Functions
    canns.analyzer.data.asa.align_coords_to_position_1d
    canns.analyzer.data.asa.align_coords_to_position_2d
    canns.analyzer.data.asa.apply_angle_scale
-   canns.analyzer.data.asa.compute_cohoscore_1d
-   canns.analyzer.data.asa.compute_cohoscore_2d
+   canns.analyzer.data.asa.cohomap
+   canns.analyzer.data.asa.cohomap_vectors
+   canns.analyzer.data.asa.cohospace
+   canns.analyzer.data.asa.cohospace_phase_centers
+   canns.analyzer.data.asa.compute_cohoscore_scatter_1d
+   canns.analyzer.data.asa.compute_cohoscore_scatter_2d
    canns.analyzer.data.asa.compute_fr_heatmap_matrix
    canns.analyzer.data.asa.compute_frm
    canns.analyzer.data.asa.create_1d_bump_animation
    canns.analyzer.data.asa.decode_circular_coordinates
    canns.analyzer.data.asa.decode_circular_coordinates_multi
    canns.analyzer.data.asa.embed_spike_trains
+   canns.analyzer.data.asa.fit_cohomap_stripes
    canns.analyzer.data.asa.plot_2d_bump_on_manifold
    canns.analyzer.data.asa.plot_3d_bump_on_torus
    canns.analyzer.data.asa.plot_cohomap
-   canns.analyzer.data.asa.plot_cohomap_multi
-   canns.analyzer.data.asa.plot_cohospace_neuron_1d
-   canns.analyzer.data.asa.plot_cohospace_neuron_2d
-   canns.analyzer.data.asa.plot_cohospace_population_1d
-   canns.analyzer.data.asa.plot_cohospace_population_2d
-   canns.analyzer.data.asa.plot_cohospace_trajectory_1d
-   canns.analyzer.data.asa.plot_cohospace_trajectory_2d
+   canns.analyzer.data.asa.plot_cohomap_scatter
+   canns.analyzer.data.asa.plot_cohomap_scatter_multi
+   canns.analyzer.data.asa.plot_cohomap_stripes
+   canns.analyzer.data.asa.plot_cohomap_vectors
+   canns.analyzer.data.asa.plot_cohospace
+   canns.analyzer.data.asa.plot_cohospace_phase_centers
+   canns.analyzer.data.asa.plot_cohospace_scatter_neuron_1d
+   canns.analyzer.data.asa.plot_cohospace_scatter_neuron_2d
+   canns.analyzer.data.asa.plot_cohospace_scatter_neuron_skewed
+   canns.analyzer.data.asa.plot_cohospace_scatter_population_1d
+   canns.analyzer.data.asa.plot_cohospace_scatter_population_2d
+   canns.analyzer.data.asa.plot_cohospace_scatter_population_skewed
+   canns.analyzer.data.asa.plot_cohospace_scatter_trajectory_1d
+   canns.analyzer.data.asa.plot_cohospace_scatter_trajectory_2d
+   canns.analyzer.data.asa.plot_cohospace_skewed
    canns.analyzer.data.asa.plot_frm
    canns.analyzer.data.asa.plot_path_compare_1d
    canns.analyzer.data.asa.plot_path_compare_2d
@@ -762,31 +780,59 @@ Package Contents
    >>> apply_angle_scale([[0.25, 0.5]], "unit")  # doctest: +SKIP
 
 
-.. py:function:: compute_cohoscore_1d(coords, activity, top_percent = 2.0, times = None, auto_filter = True)
+.. py:function:: cohomap(decoding_result, position_data, *, coords_key = None, bins = 101, margin_frac = 0.0025, smooth_sigma = 1.0, fill_nan = True, fill_sigma = None, fill_min_weight = 0.001, align_torus = True, align_trim = 25, align_grid_size = None, align_min_valid_frac = None, align_max_fit_error = None)
+
+   Compute EcohoMap phase maps using circular-mean binning.
+
+   This mirrors GridCellTorus get_ang_hist: bin spatial positions and compute the
+   circular mean of each decoded angle within spatial bins, then smooth in sin/cos
+   space. Optional toroidal alignment follows the GridCellTorus stripe fit + rotation.
+   You can gate alignment by valid fraction or fit error thresholds.
+
+
+.. py:function:: cohomap_vectors(cohomap_result, *, grid_size = 151, trim = 25, angle_grid = 10, phase_grid = 10, spacing_grid = 10, spacing_range = (1.0, 6.0))
+
+   Fit CohoMap stripe parameters and compute parallelogram vectors (v, w).
+
+   Returns a dict containing the stripe fit, rotated parameters, vector components,
+   and angle (deg) following GridCellTorus conventions.
+
+
+.. py:function:: cohospace(coords, spikes, *, times = None, coords_key = None, bins = 51, coords_in_unit = False, smooth_sigma = 0.0)
+
+   Compute EcohoSpace rate maps and phase centers.
+
+   Mirrors GridCellTorus get_ratemaps: mean activity in coho-space bins and
+   a circular-mean center for each neuron. Optionally smooths the rate maps.
+
+
+.. py:function:: cohospace_phase_centers(cohospace_result)
+
+   Compute per-neuron CohoSpace phase centers and their skewed coordinates.
+
+   Input
+   -----
+   cohospace_result : dict
+       Output from `data.cohospace(...)` (must include `centers`).
+
+
+.. py:function:: compute_cohoscore_scatter_1d(coords, activity, top_percent = 2.0, times = None, auto_filter = True)
 
    Compute 1D cohomology-space selectivity score (CohoScore) for each neuron.
 
-   For each neuron:
-   - Select "active" time points:
-       - If top_percent is None: all time points with activity > 0
-       - Else: top `top_percent`%% time points by activity value
-   - Compute circular variance for theta on the selected points.
-   - CohoScore = var(theta)
+   For each neuron, select active time points (top_percent or activity > 0), compute
+   circular variance for theta on the selected points, and use it as the score.
 
 
-.. py:function:: compute_cohoscore_2d(coords, activity, top_percent = 2.0, times = None, auto_filter = True)
+.. py:function:: compute_cohoscore_scatter_2d(coords, activity, top_percent = 2.0, times = None, auto_filter = True)
 
    Compute a simple cohomology-space selectivity score (CohoScore) for each neuron.
 
-   For each neuron:
-   - Select "active" time points:
-       - If top_percent is None: all time points with activity > 0
-       - Else: top `top_percent`%% time points by activity value
-   - Compute circular variance for theta1 and theta2 on the selected points.
-   - CohoScore = 0.5 * (var(theta1) + var(theta2))
+   For each neuron, select active time points (top_percent or activity > 0), compute
+   circular variance for theta1 and theta2 on the selected points, and average them.
 
-   Interpretation:
-   - Smaller score => points are more concentrated in coho space => higher selectivity.
+   Interpretation: smaller score means points are more concentrated in coho space
+   and the neuron is more selective.
 
    :param coords: Decoded cohomology angles (theta1, theta2), in radians.
    :type coords: ndarray, shape (T, 2)
@@ -797,7 +843,7 @@ Package Contents
    :param auto_filter: If True and lengths mismatch, auto-filter activity with activity>0 to mimic decode filtering.
                        Activity matrix (FR or spikes).
    :type auto_filter: bool
-   :param top_percent: Percentage for selecting active points (e.g., 2.0 means top 2%%). If None, use activity>0.
+   :param top_percent: Percentage for selecting active points (e.g., 2.0 means top 2%). If None, use activity>0.
    :type top_percent: float | None
 
    :returns: **scores** -- CohoScore per neuron (NaN for neurons with too few points).
@@ -805,7 +851,7 @@ Package Contents
 
    .. rubric:: Examples
 
-   >>> scores = compute_cohoscore_2d(coords, spikes)  # doctest: +SKIP
+   >>> scores = compute_cohoscore_scatter_2d(coords, spikes)  # doctest: +SKIP
    >>> scores.shape[0]  # doctest: +SKIP
 
 
@@ -962,10 +1008,9 @@ Package Contents
                       ``min_speed``). Prefer ``config`` in new code.
    :type \*\*kwargs: Any
 
-   :returns: ``(spikes_bin, xx, yy, tt)`` where:
-             - ``spikes_bin`` is a (T, N) binned spike matrix.
-             - ``xx``, ``yy``, ``tt`` are position/time arrays when ``speed_filter=True``,
-               otherwise ``None``.
+   :returns: ``(spikes_bin, xx, yy, tt)``. ``spikes_bin`` is a (T, N) binned spike matrix.
+             ``xx``, ``yy``, ``tt`` are position/time arrays when ``speed_filter=True``,
+             otherwise ``None``.
    :rtype: tuple
 
    .. rubric:: Examples
@@ -975,6 +1020,11 @@ Package Contents
    >>> spikes, xx, yy, tt = embed_spike_trains(mock_data, config=cfg)  # doctest: +SKIP
    >>> spikes.ndim
    2
+
+
+.. py:function:: fit_cohomap_stripes(phase_map, *, grid_size = 151, trim = 25, angle_grid = 10, phase_grid = 10, spacing_grid = 10, spacing_range = (1.0, 6.0))
+
+   Fit a cosine stripe model to a phase map, mirroring GridCellTorus fit_sine_wave.
 
 
 .. py:function:: plot_2d_bump_on_manifold(decoding_result, spike_data, save_path = None, fps = 20, show = True, mode = 'fast', window_size = 10, frame_step = 5, numangsint = 20, figsize = (8, 6), show_progress = False, config = None, render_backend = 'auto', output_dpi = 150, render_workers = None)
@@ -1059,7 +1109,16 @@ Package Contents
    >>> ani = plot_3d_bump_on_torus(decoding, spike_data, show=False)  # doctest: +SKIP
 
 
-.. py:function:: plot_cohomap(decoding_result, position_data, config = None, save_path = None, show = False, figsize = (10, 4), dpi = 300, subsample = 10)
+.. py:function:: plot_cohomap(cohomap_result, *, config = None, save_path = None, show = False, figsize = (10, 4), cmap = 'viridis', mode = 'cos')
+
+   Plot EcohoMap phase maps (two panels: phase_map1/phase_map2).
+
+   mode:
+       "phase" to show raw phase (radians),
+       "cos" or "sin" to show cosine/sine of phase like GridCellTorus.
+
+
+.. py:function:: plot_cohomap_scatter(decoding_result, position_data, config = None, save_path = None, show = False, figsize = (10, 4), dpi = 300, subsample = 10)
 
    Visualize CohoMap 1.0: decoded circular coordinates mapped onto spatial trajectory.
 
@@ -1094,7 +1153,7 @@ Package Contents
    >>> # Decode coordinates
    >>> decoding = decode_circular_coordinates(persistence_result, spike_data)
    >>> # Visualize with trajectory data
-   >>> fig = plot_cohomap(
+   >>> fig = plot_cohomap_scatter(
    ...     decoding,
    ...     position_data={'x': xx, 'y': yy},
    ...     save_path='cohomap.png',
@@ -1102,7 +1161,7 @@ Package Contents
    ... )
 
 
-.. py:function:: plot_cohomap_multi(decoding_result, position_data, config = None, save_path = None, show = False, figsize = (10, 4), dpi = 300, subsample = 10)
+.. py:function:: plot_cohomap_scatter_multi(decoding_result, position_data, config = None, save_path = None, show = False, figsize = (10, 4), dpi = 300, subsample = 10)
 
    Visualize CohoMap with N-dimensional decoded coordinates.
 
@@ -1131,21 +1190,43 @@ Package Contents
 
    .. rubric:: Examples
 
-   >>> fig = plot_cohomap_multi(decoding, {"x": xx, "y": yy}, show=False)  # doctest: +SKIP
+   >>> fig = plot_cohomap_scatter_multi(decoding, {"x": xx, "y": yy}, show=False)  # doctest: +SKIP
 
 
-.. py:function:: plot_cohospace_neuron_1d(coords, activity, neuron_id, mode = 'fr', top_percent = 5.0, times = None, auto_filter = True, figsize = (6, 6), cmap = 'hot', save_path = None, show = True, config = None)
+.. py:function:: plot_cohomap_stripes(cohomap_result, *, cohomap_vectors_result = None, grid_size = 151, trim = 25, angle_grid = 10, phase_grid = 10, spacing_grid = 10, spacing_range = (1.0, 6.0), config = None, save_path = None, show = False, figsize = (10, 6), cmap = 'viridis')
+
+   Plot stripe fit diagnostics for CohoMap (observed vs fitted stripes).
+
+
+.. py:function:: plot_cohomap_vectors(cohomap_vectors_result, *, config = None, save_path = None, show = False, figsize = (5, 5), color = '#f28e2b')
+
+   Plot v/w vectors and the parallelogram in spatial coordinates.
+
+
+.. py:function:: plot_cohospace(cohospace_result, *, neuron_id = 0, config = None, save_path = None, show = False, figsize = (5, 5), cmap = 'viridis')
+
+   Plot a single-neuron EcohoSpace rate map.
+
+
+.. py:function:: plot_cohospace_phase_centers(cohospace_result, *, neuron_id = None, show_all = False, config = None, save_path = None, show = False, figsize = (5, 5), all_color = 'tab:blue', highlight_color = 'tab:red', alpha = 0.7, s = 12)
+
+   Plot CohoSpace phase centers on the skewed torus domain.
+
+   If neuron_id is None, plot all neurons. If neuron_id is provided, show_all controls
+   whether all neurons are drawn lightly or only the selected neuron is shown.
+
+
+.. py:function:: plot_cohospace_scatter_neuron_1d(coords, activity, neuron_id, mode = 'fr', top_percent = 5.0, times = None, auto_filter = True, figsize = (6, 6), cmap = 'hot', save_path = None, show = True, config = None)
 
    Overlay a single neuron's activity on the 1D cohomology trajectory (unit circle).
 
 
-.. py:function:: plot_cohospace_neuron_2d(coords, activity, neuron_id, mode = 'fr', top_percent = 5.0, times = None, auto_filter = True, figsize = (6, 6), cmap = 'hot', save_path = None, show = True, config = None)
+.. py:function:: plot_cohospace_scatter_neuron_2d(coords, activity, neuron_id, mode = 'fr', top_percent = 5.0, times = None, auto_filter = True, figsize = (6, 6), cmap = 'hot', save_path = None, show = True, config = None)
 
    Overlay a single neuron's activity on the cohomology-space trajectory.
 
-   This is a visualization helper:
-   - mode="fr": marks the top `top_percent`%% time points by firing rate for the given neuron.
-   - mode="spike": marks all time points where spike > 0 for the given neuron.
+   This is a visualization helper. In "fr" mode it marks the top top_percent% time points
+   by firing rate for the neuron. In "spike" mode it marks all time points where spike > 0.
 
    :param coords: Decoded cohomology angles (theta1, theta2), in radians.
    :type coords: ndarray, shape (T, 2)
@@ -1159,41 +1240,56 @@ Package Contents
    :type neuron_id: int
    :param mode:
    :type mode: {"fr", "spike"}
-   :param top_percent: Used only when mode="fr". For example, 5.0 means "top 5%%" time points.
+   :param top_percent: Used only when mode="fr". For example, 5.0 means "top 5%" time points.
    :type top_percent: float
    :param figsize:
-   :type figsize: see `plot_cohospace_trajectory_2d`.
+   :type figsize: see `plot_cohospace_scatter_trajectory_2d`.
    :param cmap:
-   :type cmap: see `plot_cohospace_trajectory_2d`.
+   :type cmap: see `plot_cohospace_scatter_trajectory_2d`.
    :param save_path:
-   :type save_path: see `plot_cohospace_trajectory_2d`.
+   :type save_path: see `plot_cohospace_scatter_trajectory_2d`.
    :param show:
-   :type show: see `plot_cohospace_trajectory_2d`.
+   :type show: see `plot_cohospace_scatter_trajectory_2d`.
 
    :returns: **ax**
    :rtype: matplotlib.axes.Axes
 
    .. rubric:: Examples
 
-   >>> plot_cohospace_neuron_2d(coords, spikes, neuron_id=0, show=False)  # doctest: +SKIP
+   >>> plot_cohospace_scatter_neuron_2d(coords, spikes, neuron_id=0, show=False)  # doctest: +SKIP
 
 
-.. py:function:: plot_cohospace_population_1d(coords, activity, neuron_ids, mode = 'fr', top_percent = 5.0, times = None, auto_filter = True, figsize = (6, 6), cmap = 'hot', save_path = None, show = True, config = None)
+.. py:function:: plot_cohospace_scatter_neuron_skewed(coords, activity, neuron_id, mode='spike', top_percent=2.0, times = None, auto_filter = True, save_path=None, show=None, ax=None, show_grid=True, n_tiles=1, s=6, alpha=0.8, config = None)
+
+   Plot single-neuron CohoSpace on skewed torus domain.
+
+   :param coords: Decoded circular coordinates (theta1, theta2), in radians.
+   :type coords: ndarray, shape (T, 2)
+   :param activity: Activity matrix aligned with coords.
+   :type activity: ndarray, shape (T, N)
+   :param neuron_id: Neuron index.
+   :type neuron_id: int
+   :param mode: spike: use activity > 0
+                fr: use top_percent threshold
+   :type mode: {"spike", "fr"}
+   :param top_percent: Percentile for FR thresholding.
+   :type top_percent: float
+   :param auto_filter: If True and lengths mismatch, auto-filter activity with activity>0 to mimic decode filtering.
+   :type auto_filter: bool
+
+
+.. py:function:: plot_cohospace_scatter_population_1d(coords, activity, neuron_ids, mode = 'fr', top_percent = 5.0, times = None, auto_filter = True, figsize = (6, 6), cmap = 'hot', save_path = None, show = True, config = None)
 
    Plot aggregated activity from multiple neurons on the 1D cohomology trajectory.
 
 
-.. py:function:: plot_cohospace_population_2d(coords, activity, neuron_ids, mode = 'fr', top_percent = 5.0, times = None, auto_filter = True, figsize = (6, 6), cmap = 'hot', save_path = None, show = True, config = None)
+.. py:function:: plot_cohospace_scatter_population_2d(coords, activity, neuron_ids, mode = 'fr', top_percent = 5.0, times = None, auto_filter = True, figsize = (6, 6), cmap = 'hot', save_path = None, show = True, config = None)
 
    Plot aggregated activity from multiple neurons in cohomology space.
 
-   For mode="fr":
-   - For each neuron, select its top `top_percent`%% time points by firing rate.
-   - Aggregate (sum) firing rates over the selected points and plot as colors.
-
-   For mode="spike":
-   - For each neuron, count spikes at each time point (spike > 0).
-   - Aggregate counts over neurons and plot as colors.
+   In "fr" mode, select each neuron's top top_percent% time points by firing rate and
+   aggregate (sum) firing rates over the selected points for coloring. In "spike" mode,
+   count spikes at each time point (spike > 0) and aggregate counts over neurons.
 
    :param coords:
    :type coords: ndarray, shape (T, 2)
@@ -1210,23 +1306,33 @@ Package Contents
    :param top_percent: Used only when mode="fr".
    :type top_percent: float
    :param figsize:
-   :type figsize: see `plot_cohospace_trajectory_2d`.
+   :type figsize: see `plot_cohospace_scatter_trajectory_2d`.
    :param cmap:
-   :type cmap: see `plot_cohospace_trajectory_2d`.
+   :type cmap: see `plot_cohospace_scatter_trajectory_2d`.
    :param save_path:
-   :type save_path: see `plot_cohospace_trajectory_2d`.
+   :type save_path: see `plot_cohospace_scatter_trajectory_2d`.
    :param show:
-   :type show: see `plot_cohospace_trajectory_2d`.
+   :type show: see `plot_cohospace_scatter_trajectory_2d`.
 
    :returns: **ax**
    :rtype: matplotlib.axes.Axes
 
    .. rubric:: Examples
 
-   >>> plot_cohospace_population_2d(coords, spikes, neuron_ids=[0, 1, 2], show=False)  # doctest: +SKIP
+   >>> plot_cohospace_scatter_population_2d(coords, spikes, neuron_ids=[0, 1, 2], show=False)  # doctest: +SKIP
 
 
-.. py:function:: plot_cohospace_trajectory_1d(coords, times = None, subsample = 1, figsize = (6, 6), cmap = 'viridis', save_path = None, show = False, config = None)
+.. py:function:: plot_cohospace_scatter_population_skewed(coords, activity, neuron_ids, mode='spike', top_percent=2.0, times = None, auto_filter = True, save_path=None, show=False, ax=None, show_grid=True, n_tiles=1, s=4, alpha=0.5, config = None)
+
+   Plot population CohoSpace on skewed torus domain.
+
+   neuron_ids : list or ndarray
+       Neurons to include (e.g. top-K by CohoScore).
+   auto_filter : bool
+       If True and lengths mismatch, auto-filter activity with activity>0 to mimic decode filtering.
+
+
+.. py:function:: plot_cohospace_scatter_trajectory_1d(coords, times = None, subsample = 1, figsize = (6, 6), cmap = 'viridis', save_path = None, show = False, config = None)
 
    Plot a 1D cohomology trajectory on the unit circle.
 
@@ -1247,7 +1353,7 @@ Package Contents
    :type show: bool
 
 
-.. py:function:: plot_cohospace_trajectory_2d(coords, times = None, subsample = 1, figsize = (6, 6), cmap = 'viridis', save_path = None, show = False, config = None)
+.. py:function:: plot_cohospace_scatter_trajectory_2d(coords, times = None, subsample = 1, figsize = (6, 6), cmap = 'viridis', save_path = None, show = False, config = None)
 
    Plot a trajectory in cohomology space.
 
@@ -1272,7 +1378,12 @@ Package Contents
 
    .. rubric:: Examples
 
-   >>> fig = plot_cohospace_trajectory_2d(coords, subsample=2, show=False)  # doctest: +SKIP
+   >>> fig = plot_cohospace_scatter_trajectory_2d(coords, subsample=2, show=False)  # doctest: +SKIP
+
+
+.. py:function:: plot_cohospace_skewed(cohospace_result, *, neuron_id = 0, config = None, save_path = None, show = False, figsize = (5, 5), cmap = 'viridis', show_grid = True)
+
+   Plot a single-neuron EcohoSpace rate map in skewed torus coordinates.
 
 
 .. py:function:: plot_frm(frm, *, title = 'Firing Rate Map', dpi = 200, show = None, config = None, **kwargs)

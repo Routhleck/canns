@@ -11,8 +11,8 @@ Functions
 
    canns.analyzer.data.asa.plotting.plot_2d_bump_on_manifold
    canns.analyzer.data.asa.plotting.plot_3d_bump_on_torus
-   canns.analyzer.data.asa.plotting.plot_cohomap
-   canns.analyzer.data.asa.plotting.plot_cohomap_multi
+   canns.analyzer.data.asa.plotting.plot_cohomap_scatter
+   canns.analyzer.data.asa.plotting.plot_cohomap_scatter_multi
    canns.analyzer.data.asa.plotting.plot_path_compare_1d
    canns.analyzer.data.asa.plotting.plot_path_compare_2d
    canns.analyzer.data.asa.plotting.plot_projection
@@ -103,7 +103,7 @@ Module Contents
    >>> ani = plot_3d_bump_on_torus(decoding, spike_data, show=False)  # doctest: +SKIP
 
 
-.. py:function:: plot_cohomap(decoding_result, position_data, config = None, save_path = None, show = False, figsize = (10, 4), dpi = 300, subsample = 10)
+.. py:function:: plot_cohomap_scatter(decoding_result, position_data, config = None, save_path = None, show = False, figsize = (10, 4), dpi = 300, subsample = 10)
 
    Visualize CohoMap 1.0: decoded circular coordinates mapped onto spatial trajectory.
 
@@ -138,7 +138,7 @@ Module Contents
    >>> # Decode coordinates
    >>> decoding = decode_circular_coordinates(persistence_result, spike_data)
    >>> # Visualize with trajectory data
-   >>> fig = plot_cohomap(
+   >>> fig = plot_cohomap_scatter(
    ...     decoding,
    ...     position_data={'x': xx, 'y': yy},
    ...     save_path='cohomap.png',
@@ -146,7 +146,7 @@ Module Contents
    ... )
 
 
-.. py:function:: plot_cohomap_multi(decoding_result, position_data, config = None, save_path = None, show = False, figsize = (10, 4), dpi = 300, subsample = 10)
+.. py:function:: plot_cohomap_scatter_multi(decoding_result, position_data, config = None, save_path = None, show = False, figsize = (10, 4), dpi = 300, subsample = 10)
 
    Visualize CohoMap with N-dimensional decoded coordinates.
 
@@ -175,7 +175,7 @@ Module Contents
 
    .. rubric:: Examples
 
-   >>> fig = plot_cohomap_multi(decoding, {"x": xx, "y": yy}, show=False)  # doctest: +SKIP
+   >>> fig = plot_cohomap_scatter_multi(decoding, {"x": xx, "y": yy}, show=False)  # doctest: +SKIP
 
 
 .. py:function:: plot_path_compare_1d(x, y, coords, config = None, *, title = 'Path Compare (1D)', figsize = (12, 5), show = True, save_path = None)

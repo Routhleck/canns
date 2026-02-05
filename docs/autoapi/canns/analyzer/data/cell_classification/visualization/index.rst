@@ -15,6 +15,7 @@ Submodules
 .. toctree::
    :maxdepth: 1
 
+   /autoapi/canns/analyzer/data/cell_classification/visualization/btn_plots/index
    /autoapi/canns/analyzer/data/cell_classification/visualization/grid_plots/index
    /autoapi/canns/analyzer/data/cell_classification/visualization/hd_plots/index
 
@@ -25,6 +26,8 @@ Functions
 .. autoapisummary::
 
    canns.analyzer.data.cell_classification.visualization.plot_autocorrelogram
+   canns.analyzer.data.cell_classification.visualization.plot_btn_autocorr_summary
+   canns.analyzer.data.cell_classification.visualization.plot_btn_distance_matrix
    canns.analyzer.data.cell_classification.visualization.plot_grid_score_histogram
    canns.analyzer.data.cell_classification.visualization.plot_gridness_analysis
    canns.analyzer.data.cell_classification.visualization.plot_hd_analysis
@@ -39,6 +42,16 @@ Package Contents
 .. py:function:: plot_autocorrelogram(autocorr, config = None, *, gridness_score = None, center_radius = None, peak_locations = None, title = 'Spatial Autocorrelation', xlabel = 'X Lag (bins)', ylabel = 'Y Lag (bins)', figsize = (6, 6), save_path = None, show = True, ax = None, **kwargs)
 
    Plot 2D autocorrelogram with optional annotations.
+
+
+.. py:function:: plot_btn_autocorr_summary(*, acorr = None, labels = None, bin_times = None, res = None, mapping = None, colors = None, normalize = 'probability', smooth_sigma = None, long_max_ms = 200.0, short_max_ms = None, title = 'BTN temporal autocorr', figsize = (8, 3), save_path = None, show = True, config = None)
+
+   Plot class-averaged ISI autocorr curves (mean +/- SEM).
+
+
+.. py:function:: plot_btn_distance_matrix(*, dist = None, labels = None, mapping = None, sort_by_label = True, title = 'BTN distance matrix', cmap = 'afmhot', figsize = (5, 5), save_path = None, show = True, ax = None, config = None)
+
+   Plot a distance matrix heatmap sorted by BTN cluster labels.
 
 
 .. py:function:: plot_grid_score_histogram(scores, config = None, *, bins = 30, title = 'Grid Score Distribution', xlabel = 'Grid Score', ylabel = 'Count', figsize = (6, 4), save_path = None, show = True, ax = None, **kwargs)

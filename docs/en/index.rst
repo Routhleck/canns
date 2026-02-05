@@ -1,15 +1,15 @@
 CANNs Documentation
 ====================
 
-.. image:: https://badges.ws/badge/status-beta-yellow
+.. image:: https://badges.ws/badge/status-stable-green
    :target: https://github.com/routhleck/canns
-   :alt: Status: Beta
+   :alt: Status: Stable
 
 .. image:: https://img.shields.io/pypi/pyversions/canns
    :target: https://pypi.org/project/canns/
    :alt: Python Versions
 
-.. image:: https://badges.ws/maintenance/yes/2025
+.. image:: https://badges.ws/maintenance/yes/2026
    :target: https://github.com/routhleck/canns
    :alt: Maintained
 
@@ -20,6 +20,10 @@ CANNs Documentation
 .. image:: https://badges.ws/github/license/routhleck/canns
    :target: https://github.com/routhleck/canns/blob/master/LICENSE
    :alt: License
+
+.. image:: https://zenodo.org/badge/DOI/10.5281/zenodo.18453893.svg
+   :target: https://doi.org/10.5281/zenodo.18453893
+   :alt: DOI
 
 .. image:: https://badges.ws/github/stars/routhleck/canns?logo=github
    :target: https://github.com/routhleck/canns/stargazers
@@ -40,7 +44,10 @@ CANNs Documentation
 Welcome to CANNs!
 -----------------
 
-CANNs (Continuous Attractor Neural Networks toolkit) is a Python library built on BrainPy, a powerful framework for brain dynamics programming. It streamlines experimentation with continuous attractor neural networks and related brain-inspired models. The library delivers ready-to-use models, task generators, analysis tools, and pipelines—enabling neuroscience and AI researchers to move quickly from ideas to reproducible simulations.
+CANNs (Continuous Attractor Neural Networks toolkit) is a research toolkit built on `BrainPy <https://github.com/brainpy/BrainPy>`_ and
+`JAX <https://github.com/jax-ml/jax>`_, with optional Rust-accelerated ``canns-lib`` for selected performance-critical routines. It bundles
+model collections, task generators, analyzers, trainers, and the ASA pipeline (GUI/TUI) so you can run simulations and analyze results in a
+consistent workflow.
 
 Visualizations
 --------------
@@ -169,15 +176,74 @@ Install CANNs:
 
 .. code-block:: bash
 
-   # Using uv (recommended for faster installs)
-   uv pip install canns
-
-   # Or use pip
+   # CPU-only
    pip install canns
 
-   # For GPU support
+   # Optional accelerators (Linux)
    pip install canns[cuda12]
    pip install canns[cuda13]
+   pip install canns[tpu]
+
+   # GUI (ASA Pipeline)
+   pip install canns[gui]
+
+Optional (uv):
+
+.. code-block:: bash
+
+   uv pip install canns
+
+1D CANN smooth tracking (imports → simulation → visualization):
+
+.. code-block:: python
+
+   import brainpy.math as bm
+   from canns.analyzer.visualization import PlotConfigs, energy_landscape_1d_animation
+   from canns.models.basic import CANN1D
+   from canns.task.tracking import SmoothTracking1D
+
+   # simulation time step
+   bm.set_dt(0.1)
+
+   # build model
+   cann = CANN1D(num=512)
+
+   # build tracking task (Iext length = duration length + 1)
+   task = SmoothTracking1D(
+       cann_instance=cann,
+       Iext=(0.0, 0.5, 1.0, 1.5),
+       duration=(5.0, 5.0, 5.0),
+       time_step=bm.get_dt(),
+   )
+   task.get_data()
+
+
+   # one-step simulation callback
+   def step(t, stimulus):
+       cann(stimulus)
+       return cann.u.value, cann.inp.value
+
+
+   # run simulation loop
+   us, inputs = bm.for_loop(
+       step,
+       operands=(task.run_steps, task.data),
+   )
+
+   # visualize with energy landscape animation
+   config = PlotConfigs.energy_landscape_1d_animation(
+       time_steps_per_second=int(1 / bm.get_dt()),
+       fps=20,
+       title="Smooth Tracking 1D",
+       xlabel="State",
+       ylabel="Activity",
+       show=True,
+   )
+
+   energy_landscape_1d_animation(
+       data_sets={"u": (cann.x, us), "Iext": (cann.x, inputs)},
+       config=config,
+   )
 
 
 Documentation Navigation
@@ -224,7 +290,7 @@ Community and Support
 - **GitHub Repository**: https://github.com/routhleck/canns
 - **Issue Tracker**: https://github.com/routhleck/canns/issues
 - **Discussions**: https://github.com/routhleck/canns/discussions
-- **Documentation**: https://canns.readthedocs.io/
+- **Documentation**: https://routhleck.com/canns/
 
 Contributing
 ------------
@@ -238,12 +304,19 @@ If you use CANNs in your research, please cite:
 
 .. code-block:: bibtex
 
-   @software{he_2025_canns,
-      author       = {He, Sichao},
-      title        = {CANNs: Continuous Attractor Neural Networks Toolkit},
-      year         = 2025,
-      publisher    = {Zenodo},
-      version      = {v0.9.0},
-      doi          = {10.5281/zenodo.17412545},
-      url          = {https://github.com/Routhleck/canns}
+   @software{he_2026_canns,
+     author       = {He, Sichao and
+                     Tuerhong, Aiersi and
+                     She, Shangjun and
+                     Chu, Tianhao and
+                     Wu, Yuling and
+                     Zuo, Junfeng and
+                     Wu, Si},
+     title        = {CANNs: Continuous Attractor Neural Networks Toolkit},
+     month        = feb,
+     year         = 2026,
+     publisher    = {Zenodo},
+     version      = {v1.0.0},
+     doi          = {10.5281/zenodo.18453893},
+     url          = {https://doi.org/10.5281/zenodo.18453893}
    }
