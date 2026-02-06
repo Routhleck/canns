@@ -10,7 +10,6 @@ Demonstrates spatial analysis of GridCell2DPosition model:
 
 import brainpy.math as bm
 import numpy as np
-from pathlib import Path
 
 from canns.models.basic import GridCell2DPosition
 from canns.task.open_loop_navigation import OpenLoopNavigationTask
@@ -30,6 +29,7 @@ from canns.analyzer.visualization import (
     PlotConfig,
     PlotConfigs,
 )
+from canns.utils.example_outputs import get_example_output_dir
 
 # Setup
 dt = 1.0
@@ -37,8 +37,7 @@ bm.set_dt(dt)
 env_size = 3.0
 spatial_bins = 80
 num_cells_to_analyze = 3
-output_dir = Path("outputs/grid_cell_2d_analysis_comprehensive")
-output_dir.mkdir(parents=True, exist_ok=True)
+output_dir = get_example_output_dir(__file__)
 
 # Generate trajectory
 task = OpenLoopNavigationTask(

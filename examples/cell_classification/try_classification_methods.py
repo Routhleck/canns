@@ -23,6 +23,9 @@ from canns.analyzer.data.cell_classification import (
     identify_grid_modules_and_stats,
 )
 from canns.data import load_grid_data, load_left_right_npz
+from canns.utils.example_outputs import get_example_output_dir
+
+OUTPUT_DIR = get_example_output_dir(__file__)
 
 
 def main() -> None:
@@ -66,7 +69,7 @@ def main() -> None:
     if out["n_modules"]:
         sizes = [m["size"] for m in out["modules"]]
         print(f"Module sizes: {sizes}")
-    np.savez_compressed("grid_modules_demo_output.npz", **out)
+    np.savez_compressed(OUTPUT_DIR / "grid_modules_demo_output.npz", **out)
 
 
 if __name__ == "__main__":

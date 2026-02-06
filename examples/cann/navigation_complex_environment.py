@@ -2,7 +2,7 @@
 
 This script constructs a moderately complex environment, overlays the
 movement-cost grid on the agent view, and renders the geodesic distance
-matrix.  The resulting figures are written to ``figures/closed_loop_complex``.
+matrix.  The resulting figures are written to the example outputs folder.
 
 Usage (from repository root)::
 
@@ -16,6 +16,9 @@ from pathlib import Path
 import matplotlib
 
 from canns.task.closed_loop_navigation import ClosedLoopNavigationTask
+from canns.utils.example_outputs import get_example_output_dir
+
+DEFAULT_OUTPUT_DIR = get_example_output_dir(__file__)
 
 
 def build_demo_task() -> ClosedLoopNavigationTask:
@@ -59,7 +62,7 @@ def build_demo_task() -> ClosedLoopNavigationTask:
     )
 
 
-def main(output_dir: str = "figures/closed_loop_complex", dx: float = 0.1, dy: float = 0.1) -> None:
+def main(output_dir: str | Path = DEFAULT_OUTPUT_DIR, dx: float = 0.1, dy: float = 0.1) -> None:
     matplotlib.use("Agg")
 
     task = build_demo_task()

@@ -14,8 +14,11 @@ from matplotlib import pyplot as plt
 from canns.analyzer.model_specific.hopfield import HopfieldAnalyzer
 from canns.models.brain_inspired import AmariHopfieldNetwork
 from canns.trainer import HebbianTrainer
+from canns.utils.example_outputs import get_example_output_dir
 
 np.random.seed(42)
+
+OUTPUT_DIR = get_example_output_dir(__file__)
 
 
 def generate_random_patterns(n_patterns, n_neurons):
@@ -171,8 +174,9 @@ for plot_idx, pattern_idx in enumerate(example_indices):
     ax.axis("off")
 
 plt.tight_layout()
-plt.savefig("hopfield_energy_diagnostics.png")
-print("\nPlot saved as 'hopfield_energy_diagnostics.png'")
+energy_path = OUTPUT_DIR / "hopfield_energy_diagnostics.png"
+plt.savefig(energy_path)
+print(f"\nPlot saved as '{energy_path}'")
 plt.show()
 
 # Test capacity limit
@@ -227,6 +231,7 @@ ax.set_ylim([0, 1.1])
 ax.grid(True, alpha=0.3)
 ax.legend()
 plt.tight_layout()
-plt.savefig("hopfield_capacity_test.png")
-print("\nCapacity test plot saved as 'hopfield_capacity_test.png'")
+capacity_path = OUTPUT_DIR / "hopfield_capacity_test.png"
+plt.savefig(capacity_path)
+print(f"\nCapacity test plot saved as '{capacity_path}'")
 plt.show()

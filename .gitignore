@@ -187,6 +187,7 @@ cython_debug/
 *.png
 !docs/_static/*.png
 !docs/_static/*.gif
+examples/outputs/
 /.ref
 
 # Model checkpoints

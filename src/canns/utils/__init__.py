@@ -14,7 +14,9 @@ Examples:
 """
 
 from .benchmark import benchmark
+from .example_outputs import get_example_output_dir
 
 __all__ = [
     "benchmark",
+    "get_example_output_dir",
 ]

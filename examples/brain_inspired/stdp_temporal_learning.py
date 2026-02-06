@@ -15,9 +15,12 @@ from matplotlib import pyplot as plt
 
 from canns.models.brain_inspired import SpikingLayer
 from canns.trainer import STDPTrainer
+from canns.utils.example_outputs import get_example_output_dir
 
 np.random.seed(42)
 bm.random.seed(42)
+
+OUTPUT_DIR = get_example_output_dir(__file__)
 
 # ========================================================================
 # Generate temporal spike patterns
@@ -268,8 +271,9 @@ ax7.set_title("Weight Evolution by Input Group")
 ax7.legend()
 ax7.grid(True, alpha=0.3)
 
-plt.savefig("stdp_temporal_learning.png", dpi=150, bbox_inches='tight')
-print("\nPlot saved as 'stdp_temporal_learning.png'")
+out_path = OUTPUT_DIR / "stdp_temporal_learning.png"
+plt.savefig(out_path, dpi=150, bbox_inches='tight')
+print(f"\nPlot saved as '{out_path}'")
 plt.show()
 
 # ========================================================================

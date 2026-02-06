@@ -7,12 +7,12 @@ Burak & Fiete (2009). Uses robust blob tracking to achieve R² > 0.99.
 
 import brainpy.math as bm
 import numpy as np
-from pathlib import Path
 from matplotlib import pyplot as plt
 from sklearn.linear_model import LinearRegression
 
 from canns.models.basic import GridCell2DVelocity
 from canns.task.open_loop_navigation import OpenLoopNavigationTask
+from canns.utils.example_outputs import get_example_output_dir
 
 # Setup
 dt = 5e-4
@@ -22,8 +22,7 @@ bm.set_dt(dt)
 box_size = 2.2
 duration = 10.0
 
-output_dir = Path("outputs/velocity_path_integration")
-output_dir.mkdir(parents=True, exist_ok=True)
+output_dir = get_example_output_dir(__file__)
 
 print("=" * 70)
 print("Grid Cell Velocity Model - Path Integration Verification")

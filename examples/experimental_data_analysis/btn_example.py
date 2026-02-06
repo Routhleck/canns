@@ -32,6 +32,10 @@ from sklearn.metrics import silhouette_score
 root = Path(__file__).resolve().parents[2]
 sys.path.append(str(root))
 
+from canns.utils.example_outputs import get_example_output_dir
+
+OUTPUT_DIR = get_example_output_dir(__file__)
+
 from canns.analyzer.data.cell_classification import (
     BTNAnalyzer,
     BTNConfig,
@@ -134,7 +138,7 @@ plot_btn_distance_matrix(
     labels=result.labels,
     mapping=mapping,
     sort_by_label=True,
-    save_path="btn_distance.png",
+    save_path=str(OUTPUT_DIR / "btn_distance.png"),
     show=False,
 )
 
@@ -146,8 +150,8 @@ plot_btn_autocorr_summary(
     mapping=mapping,
     normalize="probability",
     smooth_sigma=SMOOTH_SIGMA,
-    save_path="btn_autocorr.png",
+    save_path=str(OUTPUT_DIR / "btn_autocorr.png"),
     show=False,
 )
 
-print("Saved: btn_distance.png, btn_autocorr.png")
+print(f"Saved: {OUTPUT_DIR / 'btn_distance.png'}, {OUTPUT_DIR / 'btn_autocorr.png'}")

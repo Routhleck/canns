@@ -134,7 +134,7 @@ eigendecomposition.
 
 **Trainer**: `OjaTrainer`
 **Model**: `LinearLayer`
-**Output**: `oja_pca_extraction.png`
+**Output**: `examples/outputs/brain_inspired/oja_pca_extraction/oja_pca_extraction.png`
 
 ### BCM Plasticity
 
@@ -233,7 +233,7 @@ BCM Rule explains how **selectivity emerges** in sensory cortex during developme
 
 **Trainer**: `BCMTrainer`
 **Model**: `LinearLayer` (with `use_bcm_threshold=True`)
-**Outputs**: `bcm_receptive_fields.png`, `bcm_orientation_tuning.png`
+**Outputs**: `examples/outputs/brain_inspired/bcm_receptive_fields/bcm_receptive_fields.png`, `examples/outputs/brain_inspired/bcm_receptive_fields/bcm_orientation_tuning.png`
 
 ### STDP (Spike-Timing-Dependent Plasticity)
 
@@ -398,7 +398,7 @@ STDP explains:
 
 **Trainer**: `STDPTrainer`
 **Model**: `SpikingLayer` (LIF neurons with spike traces)
-**Output**: `stdp_temporal_learning.png`
+**Output**: `examples/outputs/brain_inspired/stdp_temporal_learning/stdp_temporal_learning.png`
 
 ## Running Examples
 

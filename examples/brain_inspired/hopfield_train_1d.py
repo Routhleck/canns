@@ -13,8 +13,11 @@ from matplotlib import pyplot as plt
 
 from canns.models.brain_inspired import AmariHopfieldNetwork
 from canns.trainer import HebbianTrainer
+from canns.utils.example_outputs import get_example_output_dir
 
 np.random.seed(42)
+
+OUTPUT_DIR = get_example_output_dir(__file__)
 
 # Create continuous-valued 1D patterns (values in [-1, +1])
 # Increase dimension for better storage capacity
@@ -103,8 +106,9 @@ def plot_1d_patterns(data, test, predicted, figsize=(12, 8)):
             axes[i, 2].set_xlabel('Neuron index')
 
     plt.tight_layout()
-    plt.savefig("continuous_hopfield_train_1d.png", dpi=150)
-    print("Figure saved to continuous_hopfield_train_1d.png")
+    out_path = OUTPUT_DIR / "continuous_hopfield_train_1d.png"
+    plt.savefig(out_path, dpi=150)
+    print(f"Figure saved to {out_path}")
     plt.show()
 
 

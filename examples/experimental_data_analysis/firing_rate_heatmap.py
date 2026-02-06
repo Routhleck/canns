@@ -3,11 +3,12 @@
 Simple firing-rate heatmap example using the built-in grid dataset.
 """
 
-from pathlib import Path
-
 from canns.analyzer import data
 from canns.analyzer.visualization import PlotConfigs
 from canns.data.loaders import load_grid_data
+from canns.utils.example_outputs import get_example_output_dir
+
+OUTPUT_DIR = get_example_output_dir(__file__)
 
 grid_data = load_grid_data()
 
@@ -16,8 +17,7 @@ spikes, *_ = data.embed_spike_trains(grid_data, config=spike_cfg)
 
 mat = data.compute_fr_heatmap_matrix(spikes, transpose=True, normalize=None)
 
-out_dir = Path("Results/examples/fr")
-out_dir.mkdir(parents=True, exist_ok=True)
+out_dir = OUTPUT_DIR
 
 config = PlotConfigs.fr_heatmap(
     show=True,

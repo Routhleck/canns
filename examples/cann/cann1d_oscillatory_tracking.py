@@ -3,6 +3,9 @@ import brainpy.math as bm
 from canns.analyzer.visualization import PlotConfigs, energy_landscape_1d_animation
 from canns.models.basic import CANN1D
 from canns.task.tracking import SmoothTracking1D
+from canns.utils.example_outputs import get_example_output_dir
+
+OUTPUT_DIR = get_example_output_dir(__file__)
 
 bm.set_dt(dt=0.1)
 cann = CANN1D(num=512)
@@ -34,7 +37,7 @@ config = PlotConfigs.energy_landscape_1d_animation(
     xlabel='State',
     ylabel='Activity',
     repeat=True,
-    save_path='test_smooth_tracking_1d.mp4',
+    save_path=str(OUTPUT_DIR / "test_smooth_tracking_1d.mp4"),
     show=False
 )
 
