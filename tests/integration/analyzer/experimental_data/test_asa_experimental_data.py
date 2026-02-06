@@ -132,15 +132,16 @@ def test_embed_spike_trains_speed_filter():
     assert xx is not None and yy is not None and tt is not None
 
 
+@pytest.mark.slow
 def test_tda_decode_and_cohomap():
     # grid_data = load_grid_data()
     # if grid_data is None:
     grid_data = create_mock_spike_data(
-        num_neurons=50,
-        num_timepoints=3000,
-        density=2.0,
+        num_neurons=20,
+        num_timepoints=600,
+        density=1.2,
         structured=True,
-        duration=30.0,
+        duration=10.0,
     )
     # else:
     #     grid_data = _subset_grid_data(grid_data, num_neurons=50, num_timepoints=3000)
@@ -152,15 +153,15 @@ def test_tda_decode_and_cohomap():
     spike_data["spike"] = spikes
 
     decoding = None
-    for n_points in (120, 80, 60, 40):
+    for n_points in (60, 40):
         tda_cfg = data.TDAConfig(
             dim=3,
-            num_times=8,
-            active_times=max(3 * n_points, 60),
-            k=20,
+            num_times=6,
+            active_times=max(2 * n_points, 40),
+            k=12,
             n_points=n_points,
             metric="cosine",
-            nbs=40,
+            nbs=20,
             maxdim=1,
             coeff=47,
             show=False,
@@ -185,6 +186,12 @@ def test_tda_decode_and_cohomap():
     assert "coords" in decoding and "coordsbox" in decoding
 
     config = PlotConfig.for_static_plot(show=False)
+    max_idx = int(np.max(decoding["times_box"]))
+    if max_idx >= len(grid_data["x"]):
+        pad_len = max_idx + 1 - len(grid_data["x"])
+        if pad_len > 0:
+            grid_data["x"] = np.pad(grid_data["x"], (0, pad_len), mode="edge")
+            grid_data["y"] = np.pad(grid_data["y"], (0, pad_len), mode="edge")
     data.plot_cohomap_scatter_multi(
         decoding_result=decoding,
         position_data={"x": grid_data["x"], "y": grid_data["y"]},

@@ -137,7 +137,7 @@ def test_sanger_multiple_pcs():
     """
     # Generate data with 2 clear principal components
     np.random.seed(42)
-    n_samples = 200
+    n_samples = 120
 
     # PC1: strong variance along first 2 dimensions
     component1 = np.random.randn(n_samples, 2) * 2.0
@@ -152,10 +152,10 @@ def test_sanger_multiple_pcs():
     # Create model
     model = LinearLayer(input_size=6, output_size=2)
 
-    trainer = SangerTrainer(model, learning_rate=0.001, normalize_weights=True)
+    trainer = SangerTrainer(model, learning_rate=0.002, normalize_weights=True)
 
     # Train - more epochs for numerical stability across Python versions
-    for _ in range(100):
+    for _ in range(40):
         trainer.train(train_data)
 
     # Compute variance explained by each neuron

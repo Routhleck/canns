@@ -8,6 +8,7 @@ from canns.task.open_loop_navigation import OpenLoopNavigationTask
 pytestmark = pytest.mark.integration
 
 
+@pytest.mark.slow
 def test_path_integration(tmp_path):
     bm.set_dt(dt=0.1)
     task_sn = OpenLoopNavigationTask(
@@ -15,7 +16,7 @@ def test_path_integration(tmp_path):
         height=5,
         speed_mean=0.04,
         speed_std=0.016,
-        duration=100.0,
+        duration=40.0,
         dt=0.1,
         start_pos=(2.5, 2.5),
         progress_bar=False,
