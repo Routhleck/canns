@@ -5,6 +5,31 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.1] - 2026-02-06
+
+### Added
+- CLI module (`src/canns/__main__.py`) for command-line interface support
+- Comprehensive test coverage for CLI, lazy imports, data loaders, and utilities
+- Integration tests for pipeline launcher
+- Unit tests for task base classes and benchmarking utilities
+- 1D CANN smooth-tracking example in documentation
+
+### Changed
+- Restructured test suite into `unit/` and `integration/` directories (PR #96)
+- Optimized CI pipeline for faster test execution (PR #96)
+- Relocated documentation images from `images/` to `docs/_static/`
+- Updated status badge to "stable" and maintenance year to 2026
+- Enhanced installation instructions with accelerator options (cuda12, cuda13, tpu, gui)
+- Expanded architecture diagram caption with five-layer hierarchy description
+- Normalized pip install examples by removing unnecessary quotes
+- Updated documentation URL to https://routhleck.com/canns
+- Added Zenodo DOI badge for v1.0.0 release
+- Updated citation information with expanded author list and affiliations
+
+### Fixed
+- Improved test organization and maintainability
+- Updated all documentation image references to new paths
+
 ## [1.0.0] - 2026-02-02
 
 ### Added
@@ -602,6 +627,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Basic structure template
 - Core application structure
 
+[1.0.1]: https://github.com/routhleck/canns/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/routhleck/canns/compare/v0.15.1...v1.0.0
 [0.15.1]: https://github.com/routhleck/canns/compare/v0.15.0...v0.15.1
 [0.15.0]: https://github.com/routhleck/canns/compare/v0.14.3...v0.15.0
