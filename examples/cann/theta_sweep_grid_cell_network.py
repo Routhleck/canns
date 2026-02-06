@@ -24,6 +24,9 @@ from canns.models.basic.theta_sweep_model import (
     calculate_theta_modulation,
 )
 from canns.task.open_loop_navigation import OpenLoopNavigationTask
+from canns.utils.example_outputs import get_example_output_dir
+
+OUTPUT_DIR = get_example_output_dir(__file__)
 
 
 def main() -> None:
@@ -61,7 +64,10 @@ def main() -> None:
 
     # Show trajectory analysis
     print("Displaying trajectory analysis...")
-    snt.show_trajectory_analysis(save_path="open_loop_trajectory_analysis.png", show=False)
+    snt.show_trajectory_analysis(
+        save_path=OUTPUT_DIR / "open_loop_trajectory_analysis.png",
+        show=False,
+    )
 
     # Create networks
     dc_net = DirectionCellNetwork(
@@ -136,7 +142,7 @@ def main() -> None:
         ylabel="Direction (°)",
         figsize=(10, 4),
         show=False,
-        save_path="theta_population_activity.png",
+        save_path=str(OUTPUT_DIR / "theta_population_activity.png"),
     )
 
     plot_population_activity_with_theta(
@@ -158,7 +164,7 @@ def main() -> None:
         title="Grid Cell Activity on Twisted Torus Manifold",
         figsize=(6, 5),
         show=False,
-        save_path="grid_cell_manifold.png",
+        save_path=str(OUTPUT_DIR / "grid_cell_manifold.png"),
     )
 
     plot_grid_cell_manifold(
@@ -173,7 +179,7 @@ def main() -> None:
         title="Internal Position (GC bump) vs. Real Trajectory",
         figsize=(5, 4),
         show=False,
-        save_path="grid_cell_internal_position.png",
+        save_path=str(OUTPUT_DIR / "grid_cell_internal_position.png"),
     )
     plot_internal_position_trajectory(
         internal_position=internal_position,
@@ -187,7 +193,7 @@ def main() -> None:
     config_animation = PlotConfigs.theta_sweep_animation(
         figsize=(12, 3),
         fps=10,
-        save_path="theta_sweep_animation.mp4",
+        save_path=str(OUTPUT_DIR / "theta_sweep_animation.mp4"),
         show=False,
     )
 

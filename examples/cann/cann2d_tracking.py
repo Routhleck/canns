@@ -3,6 +3,9 @@ import brainpy.math as bm
 from canns.analyzer.visualization import PlotConfigs, energy_landscape_2d_animation
 from canns.models.basic import CANN2D
 from canns.task.tracking import SmoothTracking2D
+from canns.utils.example_outputs import get_example_output_dir
+
+OUTPUT_DIR = get_example_output_dir(__file__)
 
 bm.set(dt=0.1)
 
@@ -39,7 +42,7 @@ config = PlotConfigs.energy_landscape_2d_animation(
     ylabel='State Y',
     clabel='Activity',
     repeat=True,
-    save_path='CANN2D_encoding.mp4',
+    save_path=str(OUTPUT_DIR / "CANN2D_encoding.mp4"),
     show=False
 )
 

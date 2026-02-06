@@ -17,9 +17,12 @@ from matplotlib import pyplot as plt
 
 from canns.models.brain_inspired import LinearLayer
 from canns.trainer import OjaTrainer, SangerTrainer
+from canns.utils.example_outputs import get_example_output_dir
 
 np.random.seed(42)
 bm.random.seed(42)
+
+OUTPUT_DIR = get_example_output_dir(__file__)
 
 # Generate synthetic data with 3 clear principal components
 n_samples = 500
@@ -230,8 +233,9 @@ for i, v in enumerate(sanger_ortho):
 ax.legend()
 
 plt.tight_layout()
-plt.savefig("oja_vs_sanger_comparison.png")
-print("\nPlot saved as 'oja_vs_sanger_comparison.png'")
+out_path = OUTPUT_DIR / "oja_vs_sanger_comparison.png"
+plt.savefig(out_path)
+print(f"\nPlot saved as '{out_path}'")
 plt.show()
 
 # ========================================================================

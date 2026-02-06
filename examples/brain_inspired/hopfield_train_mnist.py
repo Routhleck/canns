@@ -32,6 +32,9 @@ except Exception:  # pragma: no cover - best effort optional dep
 
 from canns.models.brain_inspired import AmariHopfieldNetwork
 from canns.trainer import HebbianTrainer
+from canns.utils.example_outputs import get_example_output_dir
+
+OUTPUT_DIR = get_example_output_dir(__file__)
 
 
 # -------------------------
@@ -217,7 +220,12 @@ def main():
     predicted = trainer.predict_batch(test_pm1, show_sample_progress=True)
 
     # Plot results: Train vs Input (corrupted) vs Output (recovered)
-    _plot_triplets(train_pm1, test_pm1, predicted, save_path="result_mnist.png")
+    _plot_triplets(
+        train_pm1,
+        test_pm1,
+        predicted,
+        save_path=str(OUTPUT_DIR / "result_mnist.png"),
+    )
 
 
 def _plot_triplets(

@@ -10,12 +10,14 @@ Example:
 """
 
 import argparse
-import os
 
 import numpy as np
 
 from canns.analyzer import data
 from canns.analyzer.data.asa.path import load_npz_any
+from canns.utils.example_outputs import get_example_output_dir
+
+DEFAULT_OUT_DIR = get_example_output_dir(__file__)
 
 
 def _ensure_2d(arr: np.ndarray) -> np.ndarray:
@@ -34,7 +36,7 @@ def main() -> int:
         required=True,
         help="ASA .npz with at least spike/x/y/t.",
     )
-    parser.add_argument("--out-dir", default=".", help="Output directory.")
+    parser.add_argument("--out-dir", default=str(DEFAULT_OUT_DIR), help="Output directory.")
     parser.add_argument("--num-circ", type=int, default=2, help="Number of H1 coords to decode.")
     parser.add_argument("--maxdim", type=int, default=1, help="Max homology dim for TDA.")
     parser.add_argument("--n-points", type=int, default=1200, help="TDA n_points.")

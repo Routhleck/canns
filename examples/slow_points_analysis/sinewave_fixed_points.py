@@ -22,6 +22,9 @@ import numpy as np
 
 from canns.analyzer.visualization import PlotConfig
 from canns.analyzer.slow_points import FixedPointFinder, plot_fixed_points_2d
+from canns.utils.example_outputs import get_example_output_dir
+
+OUTPUT_DIR = get_example_output_dir(__file__)
 
 
 def generate_sine_wave_data(n_trials=128, n_steps=100):
@@ -319,11 +322,12 @@ if __name__ == '__main__':
                 f"{i + 1:<4} {unique_fps.qstar[i]:<12.2e} {stability_str:<12} {max_eig:<12.4f}"
             )
 
-        save_path_2d = "sine_wave_predictor_fixed_points_2d.png"
+        save_path_2d = OUTPUT_DIR / "sine_wave_predictor_fixed_points_2d.png"
         config_2d = PlotConfig(
             title="Sine Wave Predictor Fixed Points (2D PCA)",
             xlabel="PC 1", ylabel="PC 2", figsize=(10, 8),
-            save_path=save_path_2d, show=False
+            save_path=str(save_path_2d),
+            show=False,
         )
         plot_fixed_points_2d(unique_fps, plot_hiddens_np, config=config_2d, plot_start_time=10)  # 忽略前 10 个时间步
         print(f"\nSaved 2D plot to: {save_path_2d}")

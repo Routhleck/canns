@@ -13,6 +13,9 @@ from canns.analyzer.data.asa import (
     roi_bump_fits,
 )
 from canns.data.loaders import load_roi_data
+from canns.utils.example_outputs import get_example_output_dir
+
+OUTPUT_DIR = get_example_output_dir(__file__)
 
 # Load sample ROI data (replace with your experimental data in practice)
 data = load_roi_data()
@@ -34,7 +37,7 @@ print("Creating bump animation...")
 
 config = CANN1DPlotConfig.for_bump_animation(
     show=False,
-    save_path="bump_analysis_demo.mp4",
+    save_path=str(OUTPUT_DIR / "bump_analysis_demo.mp4"),
     nframes=100,
     fps=10,
     title="1D CANN Bump Analysis Demo",

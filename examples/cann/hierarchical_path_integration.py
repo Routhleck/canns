@@ -1,4 +1,3 @@
-import os
 import time
 
 import brainpy.math as bm
@@ -6,8 +5,9 @@ import numpy as np
 
 from canns.models.basic import HierarchicalNetwork
 from canns.task.open_loop_navigation import OpenLoopNavigationTask
+from canns.utils.example_outputs import get_example_output_dir
 
-PATH = os.path.dirname(os.path.abspath(__file__))
+OUTPUT_DIR = get_example_output_dir(__file__)
 
 bm.set_dt(dt=0.05)
 task_sn = OpenLoopNavigationTask(
@@ -21,8 +21,8 @@ task_sn = OpenLoopNavigationTask(
     progress_bar=True,
 )
 
-trajectory_file_path = os.path.join(PATH, 'trajectory_test.npz')
-trajectory_graph_file_path = os.path.join(PATH, 'trajectory_graph.png')
+trajectory_file_path = OUTPUT_DIR / "trajectory_test.npz"
+trajectory_graph_file_path = OUTPUT_DIR / "trajectory_graph.png"
 
 # if os.path.exists(trajectory_file_path):
 #     print(f"Loading trajectory from {trajectory_file_path}")
@@ -79,7 +79,7 @@ band_x_r, band_y_r, grid_r, place_r = bm.for_loop(
     progress_bar=10000
 )
 
-# activity_file_path = os.path.join(PATH, 'band_grid_place_activity.npz')
+# activity_file_path = OUTPUT_DIR / "band_grid_place_activity.npz"
 #
 # np.savez(
 #     activity_file_path,
@@ -130,7 +130,7 @@ heatmaps_band_x = compute_firing_field(np.array(band_x_r), loc, width, height, M
 heatmaps_band_y = compute_firing_field(np.array(band_y_r), loc, width, height, M, K)
 heatmaps_place = compute_firing_field(np.array(place_r), loc, width, height, M, K)
 
-# heatmap_file_path = os.path.join(PATH, 'band_grid_place_heatmap.npz')
+# heatmap_file_path = OUTPUT_DIR / "band_grid_place_heatmap.npz"
 # np.savez(
 #     heatmap_file_path,
 #     heatmaps_grid=heatmaps_grid,
@@ -152,8 +152,8 @@ heatmaps_band_x = heatmaps_band_x.reshape(5, -1, M, K)
 heatmaps_band_y = heatmaps_band_y.reshape(5, -1, M, K)
 heatmaps_grid = heatmaps_grid.reshape(5, -1, M, K)
 
-output_dir = os.path.join(PATH, 'heatmap_figures')
-os.makedirs(output_dir, exist_ok=True)
+heatmap_dir = OUTPUT_DIR / "heatmap_figures"
+heatmap_dir.mkdir(parents=True, exist_ok=True)
 
 # ============================================================================
 # Configuration for selective saving of heatmaps
@@ -189,8 +189,8 @@ for heatmaps, prefix in [(heatmaps_band_x, 'heatmap_band_x'),
         for module_idx in modules_to_save:
             for cell_idx in cells_to_save:
                 filename = f'{prefix}_module_{module_idx}_cell_{cell_idx}.png'
-                save_path = os.path.join(output_dir, filename)
-                config = PlotConfig(figsize=(5, 5), save_path=save_path, show=False)
+                save_path = heatmap_dir / filename
+                config = PlotConfig(figsize=(5, 5), save_path=str(save_path), show=False)
                 plot_firing_field_heatmap(heatmaps[module_idx, cell_idx], config=config)
                 pbar.update(1)
 
@@ -198,6 +198,6 @@ for heatmaps, prefix in [(heatmaps_band_x, 'heatmap_band_x'),
 place_cells_to_save = SAVE_PLACE_CELLS if SAVE_PLACE_CELLS is not None else range(heatmaps_place.shape[0])
 for cell_idx in tqdm(place_cells_to_save, desc='Saving place cell heatmaps'):
     filename = f'heatmap_place_cell_{cell_idx}.png'
-    save_path = os.path.join(output_dir, filename)
-    config = PlotConfig(figsize=(5, 5), save_path=save_path, show=False)
+    save_path = heatmap_dir / filename
+    config = PlotConfig(figsize=(5, 5), save_path=str(save_path), show=False)
     plot_firing_field_heatmap(heatmaps_place[cell_idx], config=config)

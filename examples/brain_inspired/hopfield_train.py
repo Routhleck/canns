@@ -16,8 +16,11 @@ from skimage.transform import resize
 
 from canns.models.brain_inspired import AmariHopfieldNetwork
 from canns.trainer import HebbianTrainer
+from canns.utils.example_outputs import get_example_output_dir
 
 np.random.seed(42)
+
+OUTPUT_DIR = get_example_output_dir(__file__)
 
 
 def preprocess_image(img, w=128, h=128) -> np.ndarray:
@@ -88,7 +91,7 @@ def plot(data, test, predicted, figsize=(5, 6)):
         axarr[i, 2].axis('off')
 
     plt.tight_layout()
-    plt.savefig("discrete_hopfield_train.png")
+    plt.savefig(OUTPUT_DIR / "discrete_hopfield_train.png")
     plt.show()
 
 

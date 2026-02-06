@@ -9,7 +9,6 @@ Based on Burak & Fiete (2009) grid cell model with velocity-based path integrati
 
 import brainpy.math as bm
 import numpy as np
-from pathlib import Path
 from matplotlib import pyplot as plt
 
 from canns.models.basic import GridCell2DVelocity
@@ -26,13 +25,13 @@ from canns.analyzer.visualization import (
     PlotConfigs,
 )
 from canns.analyzer.metrics.systematic_ratemap import compute_systematic_ratemap
+from canns.utils.example_outputs import get_example_output_dir
 
 # Setup
 dt_sim = 5e-4
 bm.set_dt(dt_sim)
 
-output_dir = Path("outputs/burak_spatial_analysis")
-output_dir.mkdir(parents=True, exist_ok=True)
+output_dir = get_example_output_dir(__file__)
 
 num_cells_to_analyze = 5
 spatial_resolution = 100

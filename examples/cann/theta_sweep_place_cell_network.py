@@ -15,6 +15,9 @@ from canns.analyzer.visualization.spike_plots import population_activity_heatmap
 from canns.analyzer.visualization.theta_sweep_plots import create_theta_sweep_place_cell_animation
 from canns.models.basic.theta_sweep_model import PlaceCellNetwork
 from canns.task.open_loop_navigation import TMazeRecessOpenLoopNavigationTask
+from canns.utils.example_outputs import get_example_output_dir
+
+OUTPUT_DIR = get_example_output_dir(__file__)
 
 
 def main() -> None:
@@ -56,8 +59,15 @@ def main() -> None:
 
     # Show trajectory analysis
     print("Displaying trajectory analysis...")
-    tmazet.show_data(show=False, overlay_movement_cost=True, save_path="tmaze_trajectory_analysis.png")
-    tmazet.show_geodesic_distance_matrix(show=False, save_path="tmaze_geodesic_distance_matrix.png")
+    tmazet.show_data(
+        show=False,
+        overlay_movement_cost=True,
+        save_path=OUTPUT_DIR / "tmaze_trajectory_analysis.png",
+    )
+    tmazet.show_geodesic_distance_matrix(
+        show=False,
+        save_path=OUTPUT_DIR / "tmaze_geodesic_distance_matrix.png",
+    )
 
     # Create networks with T-maze parameters from Chu et al. 2024 Table 3
     pc_net = PlaceCellNetwork(
@@ -130,7 +140,7 @@ def main() -> None:
         n_step=20,
         fps=10,
         figsize=(14, 5),
-        save_path="place_cell_theta_sweep.mp4",
+        save_path=OUTPUT_DIR / "place_cell_theta_sweep.mp4",
         show=False,  # Don't show to avoid display errors after saving
     )
 
@@ -142,7 +152,7 @@ def main() -> None:
         title="Place Cell Population Activity",
         figsize=(10, 6),
         cmap="viridis",
-        save_path="place_cell_population_activity.png",
+        save_path=OUTPUT_DIR / "place_cell_population_activity.png",
         show=False,
     )
 

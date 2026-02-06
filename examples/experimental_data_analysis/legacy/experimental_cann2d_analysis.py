@@ -12,6 +12,9 @@ from canns.analyzer.data import (
 )
 
 from canns.data.loaders import load_grid_data
+from canns.utils.example_outputs import get_example_output_dir
+
+OUTPUT_DIR = get_example_output_dir(__file__)
 
 data = load_grid_data()
 
@@ -87,7 +90,7 @@ decode = decode_circular_coordinates(
 # Using config-based approach for torus animation
 torus_config = CANN2DPlotConfig.for_torus_animation(
     show=True,
-    save_path='../experimental_cann2d_analysis_torus.mp4',
+    save_path=str(OUTPUT_DIR / "experimental_cann2d_analysis_torus.mp4"),
     n_frames=20,
     fps=5,
     title="3D Bump Movement on Torus",

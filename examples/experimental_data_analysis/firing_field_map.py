@@ -3,11 +3,12 @@
 Simple firing-rate map example using the built-in grid dataset.
 """
 
-from pathlib import Path
-
 from canns.analyzer import data
 from canns.analyzer.visualization import PlotConfigs
 from canns.data.loaders import load_grid_data
+from canns.utils.example_outputs import get_example_output_dir
+
+OUTPUT_DIR = get_example_output_dir(__file__)
 
 grid_data = load_grid_data()
 
@@ -30,12 +31,11 @@ frm_res = data.compute_frm(
     nan_for_empty=True,
 )
 
-out_dir = Path("Results/examples/frm")
-out_dir.mkdir(parents=True, exist_ok=True)
+out_dir = OUTPUT_DIR
 
 config = PlotConfigs.frm(
     show=True,
-    save_path=f"{out_dir}/frm.png",
+    save_path=str(out_dir / "frm.png"),
 )
 
 data.plot_frm(

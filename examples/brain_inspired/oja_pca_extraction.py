@@ -14,9 +14,12 @@ from matplotlib import pyplot as plt
 
 from canns.models.brain_inspired import LinearLayer
 from canns.trainer import OjaTrainer
+from canns.utils.example_outputs import get_example_output_dir
 
 np.random.seed(42)
 bm.random.seed(42)
+
+OUTPUT_DIR = get_example_output_dir(__file__)
 
 # Generate synthetic data with clear principal components
 n_samples = 500
@@ -146,6 +149,7 @@ for i, v in enumerate(similarities):
     ax.text(i, v + 0.02, f"{v:.3f}", ha="center")
 
 plt.tight_layout()
-plt.savefig("oja_pca_extraction.png")
-print("\nPlot saved as 'oja_pca_extraction.png'")
+out_path = OUTPUT_DIR / "oja_pca_extraction.png"
+plt.savefig(out_path)
+print(f"\nPlot saved as '{out_path}'")
 plt.show()

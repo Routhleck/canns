@@ -17,8 +17,11 @@ from skimage.transform import resize
 
 from canns.models.brain_inspired import AmariHopfieldNetwork
 from canns.trainer import AntiHebbianTrainer, HebbianTrainer
+from canns.utils.example_outputs import get_example_output_dir
 
 np.random.seed(42)
+
+OUTPUT_DIR = get_example_output_dir(__file__)
 
 
 def preprocess_image(img, w=128, h=128) -> np.ndarray:
@@ -164,8 +167,9 @@ def plot_comparison(data, test, pred_hebb, pred_anti, names, figsize=(12, 10)):
                         bbox=dict(boxstyle='round', facecolor=facecolor, alpha=0.7))
 
     plt.tight_layout()
-    plt.savefig("hopfield_hebbian_vs_antihebbian.png", dpi=150, bbox_inches='tight')
-    print("\nFigure saved to hopfield_hebbian_vs_antihebbian.png")
+    out_path = OUTPUT_DIR / "hopfield_hebbian_vs_antihebbian.png"
+    plt.savefig(out_path, dpi=150, bbox_inches='tight')
+    print(f"\nFigure saved to {out_path}")
     plt.show()
 
 

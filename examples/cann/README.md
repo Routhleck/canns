@@ -83,7 +83,7 @@ python grid_cell_velocity_path_integration.py
 python grid_cell_velocity_spatial_analysis.py
 ```
 
-Each example generates visualizations in `outputs/` directory.
+Each example generates visualizations under `examples/outputs/cann/<script_name>/`.
 
 ---
 

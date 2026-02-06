@@ -8,6 +8,9 @@ into OpenLoopNavigationTask instead of using the built-in random motion model.
 import numpy as np
 
 from canns.task.open_loop_navigation import OpenLoopNavigationTask
+from canns.utils.example_outputs import get_example_output_dir
+
+OUTPUT_DIR = get_example_output_dir(__file__)
 
 # Environment parameters
 Env_size = 2.2
@@ -98,7 +101,11 @@ ang_speed_gains = snt_data.ang_speed_gains
 
 # Show trajectory analysis with smoothing
 print("Displaying trajectory analysis...")
-snt.show_trajectory_analysis(save_path="import_external_trajectory.png", show=False, smooth_window=50)
+snt.show_trajectory_analysis(
+    save_path=OUTPUT_DIR / "import_external_trajectory.png",
+    show=False,
+    smooth_window=50,
+)
 
 # Also plot our calculated data directly for comparison
 import matplotlib.pyplot as plt
@@ -126,7 +133,7 @@ axs[2].set_xlabel('Time (s)')
 axs[2].set_ylabel('Direction (rad)')
 
 plt.tight_layout()
-plt.savefig('our_data_comparison.png')
+plt.savefig(OUTPUT_DIR / "our_data_comparison.png")
 plt.close()
 
 print(f"Imported {time_steps} time steps")

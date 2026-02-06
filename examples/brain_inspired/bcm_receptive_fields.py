@@ -16,9 +16,12 @@ from matplotlib import pyplot as plt
 from canns.analyzer.visualization import PlotConfigs, tuning_curve
 from canns.models.brain_inspired import LinearLayer
 from canns.trainer import BCMTrainer
+from canns.utils.example_outputs import get_example_output_dir
 
 np.random.seed(42)
 bm.random.seed(42)
+
+OUTPUT_DIR = get_example_output_dir(__file__)
 
 
 def create_oriented_bar(angle, size=16):
@@ -135,8 +138,9 @@ for i in range(n_neurons):
     plt.colorbar(im, ax=ax, fraction=0.046)
 
 plt.tight_layout()
-plt.savefig("bcm_receptive_fields.png")
-print("\nPlot saved as 'bcm_receptive_fields.png'")
+rf_path = OUTPUT_DIR / "bcm_receptive_fields.png"
+plt.savefig(rf_path)
+print(f"\nPlot saved as '{rf_path}'")
 plt.show()
 
 # Test neuron selectivity to different orientations using tuning_curve analyzer
@@ -163,7 +167,7 @@ config = PlotConfigs.tuning_curve(
     xlabel="Orientation (radians)",
     ylabel="Neuron Response",
     figsize=(10, 6),
-    save_path="bcm_orientation_tuning.png",
+    save_path=str(OUTPUT_DIR / "bcm_orientation_tuning.png"),
     show=True,
     kwargs={"linewidth": 2, "marker": "o", "markersize": 6}
 )
@@ -175,7 +179,7 @@ tuning_curve(
     config=config
 )
 
-print("Tuning curve plot saved as 'bcm_orientation_tuning.png'")
+print(f"Tuning curve plot saved as '{OUTPUT_DIR / 'bcm_orientation_tuning.png'}'")
 
 # Find preferred orientation for each neuron
 for i in range(n_neurons):

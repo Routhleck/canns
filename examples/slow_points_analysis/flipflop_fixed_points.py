@@ -17,8 +17,15 @@ import jax.numpy as jnp
 import numpy as np
 
 from canns.analyzer.visualization import PlotConfig
-from canns.analyzer.slow_points import FixedPointFinder, load_checkpoint, plot_fixed_points_2d, \
-    plot_fixed_points_3d
+from canns.analyzer.slow_points import (
+    FixedPointFinder,
+    load_checkpoint,
+    plot_fixed_points_2d,
+    plot_fixed_points_3d,
+)
+from canns.utils.example_outputs import get_example_output_dir
+
+OUTPUT_DIR = get_example_output_dir(__file__)
 
 
 class FlipFlopData:
@@ -450,19 +457,22 @@ def main(config_name="4_bit", seed=np.random.randint(1, 10000)):
             )
 
         # Visualize fixed points
-        save_path_2d = f"flipflop_{config_name}_fixed_points_2d.png"
+        save_path_2d = OUTPUT_DIR / f"flipflop_{config_name}_fixed_points_2d.png"
         config_2d = PlotConfig(
             title=f"FlipFlop Fixed Points ({config_name} - 2D PCA)",
             xlabel="PC 1", ylabel="PC 2", figsize=(10, 8),
-            save_path=save_path_2d, show=False
+            save_path=str(save_path_2d),
+            show=False,
         )
         plot_fixed_points_2d(unique_fps, hiddens_np, config=config_2d)
         print(f"\nSaved 2D plot to: {save_path_2d}")
 
-        save_path_3d = f"flipflop_{config_name}_fixed_points_3d.png"
+        save_path_3d = OUTPUT_DIR / f"flipflop_{config_name}_fixed_points_3d.png"
         config_3d = PlotConfig(
             title=f"FlipFlop Fixed Points ({config_name} - 3D PCA)",
-            figsize=(12, 10), save_path=save_path_3d, show=False
+            figsize=(12, 10),
+            save_path=str(save_path_3d),
+            show=False,
         )
         plot_fixed_points_3d(
             unique_fps, hiddens_np, config=config_3d,
