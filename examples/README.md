@@ -10,7 +10,7 @@ location: `examples/outputs/`.
   (Hopfield, Oja, BCM, STDP, etc.)
 - `cann/`: continuous attractor neural network (CANN) models and navigation
   demos
-- `cell_classification/`: grid / cell classification examples
+- `cell_classification/`: grid-cell classification examples
 - `experimental_data_analysis/`: ASA pipeline utilities (TDA, decoding,
   CohoMap/CohoSpace, path compare, firing-rate maps)
 - `slow_points_analysis/`: dynamical system fixed/slow point analysis

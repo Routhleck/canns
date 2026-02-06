@@ -22,7 +22,7 @@ def get_example_output_dir(
 def _resolve_base_output_dir(script_path: Path, base_env_var: str) -> Path:
     base_env = os.environ.get(base_env_var)
     if base_env:
-        return Path(base_env).expanduser()
+        return Path(base_env).expanduser().resolve()
     for parent in script_path.parents:
         if parent.name == "examples":
             return parent / "outputs"
