@@ -118,55 +118,55 @@ Analysis Page
    :alt: ASA GUI TDA Mode
    :width: 85%
 
-   TDA mode example (placeholder image)
+   TDA mode example
 
 .. figure:: /_static/asa_gui_cohomap.png
    :alt: ASA GUI CohoMap Mode
    :width: 85%
 
-   CohoMap mode example (placeholder image)
+   CohoMap mode example
 
 .. figure:: /_static/asa_gui_path_compare.png
    :alt: ASA GUI Path Compare Mode
    :width: 85%
 
-   Path Compare mode example (placeholder image)
+   Path Compare mode example
 
 .. figure:: /_static/asa_gui_cohospace.png
    :alt: ASA GUI CohoSpace Mode
    :width: 85%
 
-   CohoSpace mode example (placeholder image)
+   CohoSpace mode example
 
 .. figure:: /_static/asa_gui_fr.png
    :alt: ASA GUI FR Mode
    :width: 85%
 
-   FR mode example (placeholder image)
+   FR mode example
 
 .. figure:: /_static/asa_gui_frm.png
    :alt: ASA GUI FRM Mode
    :width: 85%
 
-   FRM mode example (placeholder image)
+   FRM mode example
 
 .. figure:: /_static/asa_gui_gridscore.png
    :alt: ASA GUI GridScore Mode
    :width: 85%
 
-   GridScore mode example (placeholder image)
+   GridScore mode example
 
 .. figure:: /_static/asa_gui_help_preprocess.png
    :alt: ASA GUI Preprocess Help
    :width: 60%
 
-   Preprocess help panel (placeholder image)
+   Preprocess help panel
 
 .. figure:: /_static/asa_gui_help_tda.png
    :alt: ASA GUI TDA Help
    :width: 60%
 
-   TDA help panel (placeholder image)
+   TDA help panel
 
 Workflow Overview
 -----------------

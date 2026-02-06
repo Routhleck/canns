@@ -26,8 +26,8 @@ TDA、解码与可视化整合为图形化工作流。你将学会用窗口界�
 --------
 
 - 已安装 CANNs（建议 ``pip install -e .`` 或 ``pip install canns``）
-- 安装 GUI 依赖：``pip install canns[gui]``（包含 PySide6）
-- 可选：``pip install qtawesome``（用于导航栏图标）
+- 安装 GUI 依赖：``pip install canns[gui]`` （包含 PySide6）
+- 可选：``pip install qtawesome`` （用于导航栏图标）
 - 准备好 ASA ``.npz`` 数据
 
 .. note::
@@ -119,55 +119,55 @@ Analysis 页面
    :alt: ASA GUI TDA 模式
    :width: 85%
 
-   TDA 模式示例（占位图）
+   TDA 模式示例
 
 .. figure:: /_static/asa_gui_cohomap.png
    :alt: ASA GUI CohoMap 模式
    :width: 85%
 
-   CohoMap 模式示例（占位图）
+   CohoMap 模式示例
 
 .. figure:: /_static/asa_gui_path_compare.png
    :alt: ASA GUI Path Compare 模式
    :width: 85%
 
-   Path Compare 模式示例（占位图）
+   Path Compare 模式示例
 
 .. figure:: /_static/asa_gui_cohospace.png
    :alt: ASA GUI CohoSpace 模式
    :width: 85%
 
-   CohoSpace 模式示例（占位图）
+   CohoSpace 模式示例
 
 .. figure:: /_static/asa_gui_fr.png
    :alt: ASA GUI FR 模式
    :width: 85%
 
-   FR 模式示例（占位图）
+   FR 模式示例
 
 .. figure:: /_static/asa_gui_frm.png
    :alt: ASA GUI FRM 模式
    :width: 85%
 
-   FRM 模式示例（占位图）
+   FRM 模式示例
 
 .. figure:: /_static/asa_gui_gridscore.png
    :alt: ASA GUI GridScore 模式
    :width: 85%
 
-   GridScore 模式示例（占位图）
+   GridScore 模式示例
 
 .. figure:: /_static/asa_gui_help_preprocess.png
    :alt: ASA GUI 预处理帮助
    :width: 60%
 
-   Preprocess 帮助面板（占位图）
+   Preprocess 帮助面板
 
 .. figure:: /_static/asa_gui_help_tda.png
    :alt: ASA GUI TDA 帮助
    :width: 60%
 
-   TDA 帮助面板（占位图）
+   TDA 帮助面板
 
 工作流程概览
 ------------
