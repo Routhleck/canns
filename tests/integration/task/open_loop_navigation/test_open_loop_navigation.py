@@ -1,0 +1,50 @@
+import pytest
+import brainpy.math as bm
+import numpy as np
+
+from canns.models.basic import HierarchicalNetwork
+from canns.task.open_loop_navigation import OpenLoopNavigationTask
+
+pytestmark = pytest.mark.integration
+
+
+@pytest.mark.slow
+def test_path_integration(tmp_path):
+    bm.set_dt(dt=0.1)
+    task_sn = OpenLoopNavigationTask(
+        width=5,
+        height=5,
+        speed_mean=0.04,
+        speed_std=0.016,
+        duration=40.0,
+        dt=0.1,
+        start_pos=(2.5, 2.5),
+        progress_bar=False,
+    )
+    task_sn.get_data()
+    output_path = tmp_path / "trajectory_test.png"
+    task_sn.show_data(show=False, save_path=str(output_path))
+    assert output_path.is_file()
+
+    hierarchical_net = HierarchicalNetwork(num_module=5, num_place=30)
+
+    def initialize(t, input_stre):
+        hierarchical_net(
+            velocity=bm.zeros(
+                2,
+            ),
+            loc=task_sn.data.position[0],
+            loc_input_stre=input_stre,
+        )
+
+    init_time = 10
+    indices = np.arange(init_time)
+    input_stre = np.zeros(init_time)
+    input_stre[:5] = 100.0
+    bm.for_loop(
+        initialize,
+        (
+            bm.asarray(indices),
+            bm.asarray(input_stre),
+        ),
+    )

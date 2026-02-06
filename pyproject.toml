@@ -64,6 +64,7 @@ dependencies = [
 dev = [
     "pytest>=8.3.5",
     "pytest-sugar>=1.0.0",
+    "pytest-cov>=6.0.0",
     "ruff>=0.11.9",
     "codespell>=2.4.1",
     "rich>=14.0.0",
@@ -116,7 +117,7 @@ gui = [
 
 [project.scripts]
 # Add script entry points here:
-canns = "canns:master"
+canns = "canns.__main__:main"
 canns-tui = "canns.pipeline.launcher:main"
 canns-gallery = "canns.pipeline.gallery:main"
 canns-gui = "canns.pipeline.asa_gui:main"
@@ -245,13 +246,31 @@ reportOperatorIssue = false
 # skip = "foo.py,bar.py"
 
 [tool.pytest.ini_options]
-python_files = ["*.py"]
+python_files = ["test_*.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]
 testpaths = [
-    "src",
     "tests",
 ]
 norecursedirs = []
 filterwarnings = []
-addopts = "--assert=plain"
+addopts = "--assert=plain -ra"
+markers = [
+    "integration: tests that exercise multi-module flows or external dependencies",
+    "visualization: tests that generate plots or graphics",
+    "slow: tests that are notably slower than unit tests",
+]
+
+[tool.coverage.run]
+branch = true
+source = ["canns"]
+
+[tool.coverage.report]
+skip_covered = true
+show_missing = true
+exclude_lines = [
+    "pragma: no cover",
+    "if TYPE_CHECKING:",
+    "if __name__ == .__main__.:",
+    "raise NotImplementedError",
+]

@@ -792,9 +792,7 @@ def plot_internal_position_trajectory(
         tuple: ``(figure, axis)`` objects.
     """
     if internal_position.ndim != 2 or internal_position.shape[1] != 2:
-        raise ValueError(
-            f"internal_position must be (T, 2), got shape {internal_position.shape}"
-        )
+        raise ValueError(f"internal_position must be (T, 2), got shape {internal_position.shape}")
     if position.ndim != 2 or position.shape[1] != 2:
         raise ValueError(f"position must be (T, 2), got shape {position.shape}")
     if internal_position.shape[0] != position.shape[0]:
