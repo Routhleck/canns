@@ -95,10 +95,9 @@ CANNs builds upon BrainPy [@wang2023brainpy; @wang2025integrating], a powerful b
 
 # Research impact statement
 
-CANNs provides full-detail, runnable modeling tutorials that reproduce recent CANN-related studies, packaged as standardized pipelines
-with consistent inputs, analysis steps, and visualizations. This allows researchers to verify published results and compare alternative
-mechanisms under a shared experimental setup, reducing the need for lab-specific reimplementations. The reproduced workflows include
-spike-frequency adaptation [@mi2014spike; @li2025dynamics] and theta-sweep dynamics in head-direction/grid and place-cell systems [@ji2025phase; @ji2025systems; @chu2024firing], offering trusted baselines for new modeling and benchmarking studies.
+The toolkit is currently used in ongoing internal and collaborative research projects. In our group, we use CANNs to generate spatial navigation task data and run related modeling analyses. In collaboration with an experimental neuroscience lab, we use the ASA (Attractor Structure Analyzer) GUI to evaluate whether experimental recordings show attractor-structure signatures, including TDA-based analyses. These projects are ongoing and not yet public.
+
+Beyond these ongoing uses, CANNs provides full-detail, runnable modeling tutorials that reproduce recent CANN-related studies, packaged as standardized pipelines with consistent inputs, analysis steps, and visualizations. This allows researchers to verify published results and compare alternative mechanisms under a shared experimental setup, reducing the need for lab-specific reimplementations. The reproduced workflows include spike-frequency adaptation [@mi2014spike; @li2025dynamics] and theta-sweep dynamics in head-direction/grid and place-cell systems [@ji2025phase; @ji2025systems; @chu2024firing], offering trusted baselines for new modeling and benchmarking studies.
 
 # AI usage disclosure
 

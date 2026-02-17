@@ -194,3 +194,5 @@ examples/outputs/
 *.pkl
 /Results
 *.mp4
+CLAUDE.md
+AGENTS.md
