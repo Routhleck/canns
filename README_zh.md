@@ -68,13 +68,6 @@
   <br>
   <span style="color: grey; font-size: 14px;">ASA GUI 预览</span>
 </p>
-<p align="center">
-  <a href="https://youtu.be/OoEo5Qa9f7M">
-    <img src="https://img.youtube.com/vi/OoEo5Qa9f7M/hqdefault.jpg" alt="ASA GUI Demo (YouTube)" width="720">
-  </a>
-  <br>
-  <span style="color: grey; font-size: 14px;">ASA GUI 演示视频</span>
-</p>
 
 <div align="center">
 <table>

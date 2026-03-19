@@ -70,13 +70,6 @@ seamlessly integrate with the built-in ecosystem.
   <br>
   <span style="color: grey; font-size: 14px;">ASA GUI preview</span>
 </p>
-<p align="center">
-  <a href="https://youtu.be/OoEo5Qa9f7M">
-    <img src="https://img.youtube.com/vi/OoEo5Qa9f7M/hqdefault.jpg" alt="ASA GUI Demo (YouTube)" width="720">
-  </a>
-  <br>
-  <span style="color: grey; font-size: 14px;">ASA GUI demo video</span>
-</p>
 
 <div align="center">
 <table>
