@@ -1,7 +1,7 @@
-canns.analyzer.data.asa.path
+[ANONYMOUS_PROJECT].analyzer.data.asa.path
 ============================
 
-.. py:module:: canns.analyzer.data.asa.path
+.. py:module:: [ANONYMOUS_PROJECT].analyzer.data.asa.path
 
 
 Functions
@@ -9,21 +9,21 @@ Functions
 
 .. autoapisummary::
 
-   canns.analyzer.data.asa.path.align_coords_to_position_1d
-   canns.analyzer.data.asa.path.align_coords_to_position_2d
-   canns.analyzer.data.asa.path.apply_angle_scale
-   canns.analyzer.data.asa.path.as_1d
-   canns.analyzer.data.asa.path.draw_base_parallelogram
-   canns.analyzer.data.asa.path.find_coords_matrix
-   canns.analyzer.data.asa.path.find_times_box
-   canns.analyzer.data.asa.path.interp_coords_to_full
-   canns.analyzer.data.asa.path.interp_coords_to_full_1d
-   canns.analyzer.data.asa.path.load_npz_any
-   canns.analyzer.data.asa.path.parse_times_box_to_indices
-   canns.analyzer.data.asa.path.resolve_time_slice
-   canns.analyzer.data.asa.path.skew_transform
-   canns.analyzer.data.asa.path.snake_wrap_trail_in_parallelogram
-   canns.analyzer.data.asa.path.unwrap_container
+   [ANONYMOUS_PROJECT].analyzer.data.asa.path.align_coords_to_position_1d
+   [ANONYMOUS_PROJECT].analyzer.data.asa.path.align_coords_to_position_2d
+   [ANONYMOUS_PROJECT].analyzer.data.asa.path.apply_angle_scale
+   [ANONYMOUS_PROJECT].analyzer.data.asa.path.as_1d
+   [ANONYMOUS_PROJECT].analyzer.data.asa.path.draw_base_parallelogram
+   [ANONYMOUS_PROJECT].analyzer.data.asa.path.find_coords_matrix
+   [ANONYMOUS_PROJECT].analyzer.data.asa.path.find_times_box
+   [ANONYMOUS_PROJECT].analyzer.data.asa.path.interp_coords_to_full
+   [ANONYMOUS_PROJECT].analyzer.data.asa.path.interp_coords_to_full_1d
+   [ANONYMOUS_PROJECT].analyzer.data.asa.path.load_npz_any
+   [ANONYMOUS_PROJECT].analyzer.data.asa.path.parse_times_box_to_indices
+   [ANONYMOUS_PROJECT].analyzer.data.asa.path.resolve_time_slice
+   [ANONYMOUS_PROJECT].analyzer.data.asa.path.skew_transform
+   [ANONYMOUS_PROJECT].analyzer.data.asa.path.snake_wrap_trail_in_parallelogram
+   [ANONYMOUS_PROJECT].analyzer.data.asa.path.unwrap_container
 
 
 Module Contents

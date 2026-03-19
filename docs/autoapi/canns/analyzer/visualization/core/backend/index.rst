@@ -1,7 +1,7 @@
-canns.analyzer.visualization.core.backend
+[ANONYMOUS_PROJECT].analyzer.visualization.core.backend
 =========================================
 
-.. py:module:: canns.analyzer.visualization.core.backend
+.. py:module:: [ANONYMOUS_PROJECT].analyzer.visualization.core.backend
 
 .. autoapi-nested-parse::
 
@@ -17,8 +17,8 @@ Classes
 
 .. autoapisummary::
 
-   canns.analyzer.visualization.core.backend.AnimationBackend
-   canns.analyzer.visualization.core.backend.BackendSelection
+   [ANONYMOUS_PROJECT].analyzer.visualization.core.backend.AnimationBackend
+   [ANONYMOUS_PROJECT].analyzer.visualization.core.backend.BackendSelection
 
 
 Functions
@@ -26,11 +26,11 @@ Functions
 
 .. autoapisummary::
 
-   canns.analyzer.visualization.core.backend.emit_backend_warnings
-   canns.analyzer.visualization.core.backend.get_imageio_writer_kwargs
-   canns.analyzer.visualization.core.backend.get_multiprocessing_context
-   canns.analyzer.visualization.core.backend.get_optimal_worker_count
-   canns.analyzer.visualization.core.backend.select_animation_backend
+   [ANONYMOUS_PROJECT].analyzer.visualization.core.backend.emit_backend_warnings
+   [ANONYMOUS_PROJECT].analyzer.visualization.core.backend.get_imageio_writer_kwargs
+   [ANONYMOUS_PROJECT].analyzer.visualization.core.backend.get_multiprocessing_context
+   [ANONYMOUS_PROJECT].analyzer.visualization.core.backend.get_optimal_worker_count
+   [ANONYMOUS_PROJECT].analyzer.visualization.core.backend.select_animation_backend
 
 
 Module Contents
@@ -136,7 +136,7 @@ Module Contents
 
    .. rubric:: Examples
 
-   >>> from canns.analyzer.visualization.core.backend import select_animation_backend
+   >>> from [ANONYMOUS_PROJECT].analyzer.visualization.core.backend import select_animation_backend
    >>> selection = select_animation_backend("output.mp4")
    >>> print(selection.backend in {"imageio", "matplotlib"})
    True

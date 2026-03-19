@@ -1,7 +1,7 @@
-canns.analyzer.visualization.spatial_plots
+[ANONYMOUS_PROJECT].analyzer.visualization.spatial_plots
 ==========================================
 
-.. py:module:: canns.analyzer.visualization.spatial_plots
+.. py:module:: [ANONYMOUS_PROJECT].analyzer.visualization.spatial_plots
 
 .. autoapi-nested-parse::
 
@@ -19,11 +19,11 @@ Functions
 
 .. autoapisummary::
 
-   canns.analyzer.visualization.spatial_plots.create_grid_cell_tracking_animation
-   canns.analyzer.visualization.spatial_plots.plot_autocorrelation
-   canns.analyzer.visualization.spatial_plots.plot_firing_field_heatmap
-   canns.analyzer.visualization.spatial_plots.plot_grid_score
-   canns.analyzer.visualization.spatial_plots.plot_grid_spacing_analysis
+   [ANONYMOUS_PROJECT].analyzer.visualization.spatial_plots.create_grid_cell_tracking_animation
+   [ANONYMOUS_PROJECT].analyzer.visualization.spatial_plots.plot_autocorrelation
+   [ANONYMOUS_PROJECT].analyzer.visualization.spatial_plots.plot_firing_field_heatmap
+   [ANONYMOUS_PROJECT].analyzer.visualization.spatial_plots.plot_grid_score
+   [ANONYMOUS_PROJECT].analyzer.visualization.spatial_plots.plot_grid_spacing_analysis
 
 
 Module Contents
@@ -83,7 +83,7 @@ Module Contents
    .. rubric:: Example
 
    >>> import numpy as np
-   >>> from canns.analyzer.visualization import (
+   >>> from [ANONYMOUS_PROJECT].analyzer.visualization import (
    ...     create_grid_cell_tracking_animation,
    ...     PlotConfigs,
    ... )
@@ -141,8 +141,8 @@ Module Contents
    .. rubric:: Example
 
    >>> import numpy as np
-   >>> from canns.analyzer.metrics.spatial_metrics import compute_spatial_autocorrelation
-   >>> from canns.analyzer.visualization import plot_autocorrelation, PlotConfigs
+   >>> from [ANONYMOUS_PROJECT].analyzer.metrics.spatial_metrics import compute_spatial_autocorrelation
+   >>> from [ANONYMOUS_PROJECT].analyzer.visualization import plot_autocorrelation, PlotConfigs
    >>>
    >>> rate_map = np.random.rand(10, 10)
    >>> autocorr = compute_spatial_autocorrelation(rate_map)
@@ -199,7 +199,7 @@ Module Contents
    .. rubric:: Example
 
    >>> import numpy as np
-   >>> from canns.analyzer.visualization import plot_firing_field_heatmap, PlotConfig
+   >>> from [ANONYMOUS_PROJECT].analyzer.visualization import plot_firing_field_heatmap, PlotConfig
    >>>
    >>> # Dummy input heatmap (M x K)
    >>> heatmap = np.random.rand(6, 6)
@@ -246,8 +246,8 @@ Module Contents
    .. rubric:: Example
 
    >>> import numpy as np
-   >>> from canns.analyzer.metrics.spatial_metrics import compute_grid_score
-   >>> from canns.analyzer.visualization import plot_grid_score
+   >>> from [ANONYMOUS_PROJECT].analyzer.metrics.spatial_metrics import compute_grid_score
+   >>> from [ANONYMOUS_PROJECT].analyzer.visualization import plot_grid_score
    >>>
    >>> autocorr = np.random.rand(10, 10)
    >>> grid_score, rotated_corrs = compute_grid_score(autocorr)
@@ -295,8 +295,8 @@ Module Contents
    .. rubric:: Example
 
    >>> import numpy as np
-   >>> from canns.analyzer.metrics.spatial_metrics import find_grid_spacing
-   >>> from canns.analyzer.visualization import plot_grid_spacing_analysis
+   >>> from [ANONYMOUS_PROJECT].analyzer.metrics.spatial_metrics import find_grid_spacing
+   >>> from [ANONYMOUS_PROJECT].analyzer.visualization import plot_grid_spacing_analysis
    >>>
    >>> autocorr = np.random.rand(12, 12)
    >>> spacing_bins, spacing_m = find_grid_spacing(autocorr, bin_size=0.05)

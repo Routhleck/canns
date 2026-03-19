@@ -1,7 +1,7 @@
-canns.analyzer.data.cell_classification.utils.image_processing
+[ANONYMOUS_PROJECT].analyzer.data.cell_classification.utils.image_processing
 ==============================================================
 
-.. py:module:: canns.analyzer.data.cell_classification.utils.image_processing
+.. py:module:: [ANONYMOUS_PROJECT].analyzer.data.cell_classification.utils.image_processing
 
 .. autoapi-nested-parse::
 
@@ -16,7 +16,7 @@ Attributes
 
 .. autoapisummary::
 
-   canns.analyzer.data.cell_classification.utils.image_processing.image
+   [ANONYMOUS_PROJECT].analyzer.data.cell_classification.utils.image_processing.image
 
 
 Functions
@@ -24,13 +24,13 @@ Functions
 
 .. autoapisummary::
 
-   canns.analyzer.data.cell_classification.utils.image_processing.dilate_image
-   canns.analyzer.data.cell_classification.utils.image_processing.find_contours_at_level
-   canns.analyzer.data.cell_classification.utils.image_processing.find_regional_maxima
-   canns.analyzer.data.cell_classification.utils.image_processing.gaussian_filter_2d
-   canns.analyzer.data.cell_classification.utils.image_processing.label_connected_components
-   canns.analyzer.data.cell_classification.utils.image_processing.regionprops
-   canns.analyzer.data.cell_classification.utils.image_processing.rotate_image
+   [ANONYMOUS_PROJECT].analyzer.data.cell_classification.utils.image_processing.dilate_image
+   [ANONYMOUS_PROJECT].analyzer.data.cell_classification.utils.image_processing.find_contours_at_level
+   [ANONYMOUS_PROJECT].analyzer.data.cell_classification.utils.image_processing.find_regional_maxima
+   [ANONYMOUS_PROJECT].analyzer.data.cell_classification.utils.image_processing.gaussian_filter_2d
+   [ANONYMOUS_PROJECT].analyzer.data.cell_classification.utils.image_processing.label_connected_components
+   [ANONYMOUS_PROJECT].analyzer.data.cell_classification.utils.image_processing.regionprops
+   [ANONYMOUS_PROJECT].analyzer.data.cell_classification.utils.image_processing.rotate_image
 
 
 Module Contents

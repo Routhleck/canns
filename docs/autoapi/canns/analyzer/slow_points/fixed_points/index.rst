@@ -1,7 +1,7 @@
-canns.analyzer.slow_points.fixed_points
+[ANONYMOUS_PROJECT].analyzer.slow_points.fixed_points
 =======================================
 
-.. py:module:: canns.analyzer.slow_points.fixed_points
+.. py:module:: [ANONYMOUS_PROJECT].analyzer.slow_points.fixed_points
 
 .. autoapi-nested-parse::
 
@@ -14,7 +14,7 @@ Classes
 
 .. autoapisummary::
 
-   canns.analyzer.slow_points.fixed_points.FixedPoints
+   [ANONYMOUS_PROJECT].analyzer.slow_points.fixed_points.FixedPoints
 
 
 Module Contents
@@ -30,7 +30,7 @@ Module Contents
    .. rubric:: Examples
 
    >>> import numpy as np
-   >>> from canns.analyzer.slow_points import FixedPoints
+   >>> from [ANONYMOUS_PROJECT].analyzer.slow_points import FixedPoints
    >>>
    >>> # Dummy fixed point batch (n=2, n_states=3)
    >>> xstar = np.array([[0.0, 0.1, -0.1], [0.2, 0.0, -0.2]], dtype=np.float32)

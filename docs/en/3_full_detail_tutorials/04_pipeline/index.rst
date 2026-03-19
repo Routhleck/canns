@@ -37,7 +37,7 @@ This scenario demonstrates an end-to-end analysis pipeline based on both the ASA
 
 **Tutorial 3: Model Gallery TUI**
 
-- Replicates the 5×3 analysis layout from ``canns-experiments/figure2``
+- Replicates the 5×3 analysis layout from ``[ANONYMOUS_PROJECT]-experiments/figure2``
 - One-click generation of canonical visualizations for CANN1D / CANN2D / GridCell
 - Unified management of result previews and output directories
 
@@ -117,5 +117,5 @@ After completing this scenario:
 
 - Apply ASA GUI to your real experimental data
 - Build custom analyses on top of generated intermediate results
-- Extend functionality by referencing ``canns.pipeline.asa_gui`` (GUI) or ``canns.pipeline.asa`` (legacy TUI)
+- Extend functionality by referencing ``[ANONYMOUS_PROJECT].pipeline.asa_gui`` (GUI) or ``[ANONYMOUS_PROJECT].pipeline.asa`` (legacy TUI)
 - Contribute new analysis modules to the library

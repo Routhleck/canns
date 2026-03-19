@@ -1,12 +1,12 @@
 Full Detail Tutorials
 =====================
 
-Comprehensive tutorials covering all aspects of the CANNs library, organized by research scenarios.
+Comprehensive tutorials covering all aspects of the [ANONYMOUS_PROJECT] library, organized by research scenarios.
 
 Overview
 --------
 
-These tutorials provide in-depth, hands-on guidance for using the CANNs library across different research scenarios. Each tutorial is a complete Jupyter notebook that you can run and modify.
+These tutorials provide in-depth, hands-on guidance for using the [ANONYMOUS_PROJECT] library across different research scenarios. Each tutorial is a complete Jupyter notebook that you can run and modify.
 
 Scenarios
 ---------
@@ -85,7 +85,7 @@ Total estimated time: 6.5 hours for all available tutorials
 Getting Started
 ---------------
 
-**New to CANNs?**
+**New to [ANONYMOUS_PROJECT]?**
 
 1. Complete the :doc:`../1_quick_starts/index` first
 2. Read :doc:`../2_core_concepts/index` for background
@@ -105,8 +105,8 @@ All tutorials are provided as Jupyter notebooks (`.ipynb` files).
 .. code-block:: bash
 
    # Clone the repository
-   git clone https://github.com/routhleck/canns.git
-   cd canns
+   git clone [ANONYMOUS_REPO].git
+   cd [ANONYMOUS_PROJECT]
 
    # Install dependencies
    pip install -e .[dev]
@@ -125,7 +125,7 @@ Support and Feedback
 
 - **Documentation**: Full API reference available
 - **Examples**: Additional examples in the `examples/` directory
-- **Issues**: Report problems on `GitHub Issues <https://github.com/routhleck/canns/issues>`_
+- **Issues**: Report problems on `GitHub Issues <[ANONYMOUS_REPO]/issues>`_
 - **Discussions**: Ask questions in GitHub Discussions
 
 Contributing

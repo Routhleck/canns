@@ -1,7 +1,7 @@
-canns.pipeline.asa_gui.views.pages
+[ANONYMOUS_PROJECT].pipeline.asa_gui.views.pages
 ==================================
 
-.. py:module:: canns.pipeline.asa_gui.views.pages
+.. py:module:: [ANONYMOUS_PROJECT].pipeline.asa_gui.views.pages
 
 .. autoapi-nested-parse::
 
@@ -15,8 +15,8 @@ Submodules
 .. toctree::
    :maxdepth: 1
 
-   /autoapi/canns/pipeline/asa_gui/views/pages/analysis_page/index
-   /autoapi/canns/pipeline/asa_gui/views/pages/preprocess_page/index
+   /autoapi/[ANONYMOUS_PROJECT]/pipeline/asa_gui/views/pages/analysis_page/index
+   /autoapi/[ANONYMOUS_PROJECT]/pipeline/asa_gui/views/pages/preprocess_page/index
 
 
 Classes
@@ -24,8 +24,8 @@ Classes
 
 .. autoapisummary::
 
-   canns.pipeline.asa_gui.views.pages.AnalysisPage
-   canns.pipeline.asa_gui.views.pages.PreprocessPage
+   [ANONYMOUS_PROJECT].pipeline.asa_gui.views.pages.AnalysisPage
+   [ANONYMOUS_PROJECT].pipeline.asa_gui.views.pages.PreprocessPage
 
 
 Package Contents

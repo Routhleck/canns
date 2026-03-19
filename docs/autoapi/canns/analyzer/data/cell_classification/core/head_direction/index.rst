@@ -1,7 +1,7 @@
-canns.analyzer.data.cell_classification.core.head_direction
+[ANONYMOUS_PROJECT].analyzer.data.cell_classification.core.head_direction
 ===========================================================
 
-.. py:module:: canns.analyzer.data.cell_classification.core.head_direction
+.. py:module:: [ANONYMOUS_PROJECT].analyzer.data.cell_classification.core.head_direction
 
 .. autoapi-nested-parse::
 
@@ -18,7 +18,7 @@ Attributes
 
 .. autoapisummary::
 
-   canns.analyzer.data.cell_classification.core.head_direction.time_stamps
+   [ANONYMOUS_PROJECT].analyzer.data.cell_classification.core.head_direction.time_stamps
 
 
 Classes
@@ -26,8 +26,8 @@ Classes
 
 .. autoapisummary::
 
-   canns.analyzer.data.cell_classification.core.head_direction.HDCellResult
-   canns.analyzer.data.cell_classification.core.head_direction.HeadDirectionAnalyzer
+   [ANONYMOUS_PROJECT].analyzer.data.cell_classification.core.head_direction.HDCellResult
+   [ANONYMOUS_PROJECT].analyzer.data.cell_classification.core.head_direction.HeadDirectionAnalyzer
 
 
 Module Contents

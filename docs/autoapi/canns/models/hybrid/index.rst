@@ -1,6 +1,6 @@
-canns.models.hybrid
+[ANONYMOUS_PROJECT].models.hybrid
 ===================
 
-.. py:module:: canns.models.hybrid
+.. py:module:: [ANONYMOUS_PROJECT].models.hybrid
 
 

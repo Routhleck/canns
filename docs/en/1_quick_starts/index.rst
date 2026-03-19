@@ -1,7 +1,7 @@
 Quick Starts
 ============
 
-Step-by-step guides to help you get started with CANNs quickly.
+Step-by-step guides to help you get started with [ANONYMOUS_PROJECT] quickly.
 
 .. toctree::
    :maxdepth: 1
@@ -19,7 +19,7 @@ Overview
 
 These guides cover the essential workflows:
 
-1. **Installation** - Set up your CANNs environment
+1. **Installation** - Set up your [ANONYMOUS_PROJECT] environment
 2. **Build Models** - Create your first CANN model
 3. **Generate Tasks** - Define tracking and navigation tasks
 4. **Analyze Models** - Visualize and understand model dynamics

@@ -1,7 +1,7 @@
-canns.models.brain_inspired.linear
+[ANONYMOUS_PROJECT].models.brain_inspired.linear
 ==================================
 
-.. py:module:: canns.models.brain_inspired.linear
+.. py:module:: [ANONYMOUS_PROJECT].models.brain_inspired.linear
 
 .. autoapi-nested-parse::
 
@@ -14,7 +14,7 @@ Classes
 
 .. autoapisummary::
 
-   canns.models.brain_inspired.linear.LinearLayer
+   [ANONYMOUS_PROJECT].models.brain_inspired.linear.LinearLayer
 
 
 Module Contents
@@ -22,7 +22,7 @@ Module Contents
 
 .. py:class:: LinearLayer(input_size, output_size, use_bcm_threshold = False, threshold_tau = 100.0, **kwargs)
 
-   Bases: :py:obj:`canns.models.brain_inspired._base.BrainInspiredModel`
+   Bases: :py:obj:`[ANONYMOUS_PROJECT].models.brain_inspired._base.BrainInspiredModel`
 
 
    Generic linear feedforward layer for brain-inspired learning rules.
@@ -36,7 +36,7 @@ Module Contents
    .. rubric:: Examples
 
    >>> import jax.numpy as jnp
-   >>> from canns.models.brain_inspired import LinearLayer
+   >>> from [ANONYMOUS_PROJECT].models.brain_inspired import LinearLayer
    >>>
    >>> layer = LinearLayer(input_size=3, output_size=2)
    >>> y = layer.forward(jnp.array([1.0, 0.5, -1.0], dtype=jnp.float32))

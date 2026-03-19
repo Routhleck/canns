@@ -1,11 +1,11 @@
-canns.pipeline
+[ANONYMOUS_PROJECT].pipeline
 ==============
 
-.. py:module:: canns.pipeline
+.. py:module:: [ANONYMOUS_PROJECT].pipeline
 
 .. autoapi-nested-parse::
 
-   CANNs pipeline entrypoints.
+   [ANONYMOUS_PROJECT] pipeline entrypoints.
 
 
 
@@ -15,11 +15,11 @@ Submodules
 .. toctree::
    :maxdepth: 1
 
-   /autoapi/canns/pipeline/__main__/index
-   /autoapi/canns/pipeline/asa/index
-   /autoapi/canns/pipeline/asa_gui/index
-   /autoapi/canns/pipeline/gallery/index
-   /autoapi/canns/pipeline/launcher/index
+   /autoapi/[ANONYMOUS_PROJECT]/pipeline/__main__/index
+   /autoapi/[ANONYMOUS_PROJECT]/pipeline/asa/index
+   /autoapi/[ANONYMOUS_PROJECT]/pipeline/asa_gui/index
+   /autoapi/[ANONYMOUS_PROJECT]/pipeline/gallery/index
+   /autoapi/[ANONYMOUS_PROJECT]/pipeline/launcher/index
 
 
 Attributes
@@ -27,7 +27,7 @@ Attributes
 
 .. autoapisummary::
 
-   canns.pipeline.ASAGuiApp
+   [ANONYMOUS_PROJECT].pipeline.ASAGuiApp
 
 
 Classes
@@ -35,8 +35,8 @@ Classes
 
 .. autoapisummary::
 
-   canns.pipeline.ASAApp
-   canns.pipeline.GalleryApp
+   [ANONYMOUS_PROJECT].pipeline.ASAApp
+   [ANONYMOUS_PROJECT].pipeline.GalleryApp
 
 
 Functions
@@ -44,9 +44,9 @@ Functions
 
 .. autoapisummary::
 
-   canns.pipeline.asa_main
-   canns.pipeline.gallery_main
-   canns.pipeline.launcher_main
+   [ANONYMOUS_PROJECT].pipeline.asa_main
+   [ANONYMOUS_PROJECT].pipeline.gallery_main
+   [ANONYMOUS_PROJECT].pipeline.launcher_main
 
 
 Package Contents
@@ -419,7 +419,7 @@ Package Contents
 
 
    .. py:attribute:: TITLE
-      :value: 'CANNs Model Gallery'
+      :value: '[ANONYMOUS_PROJECT] Model Gallery'
 
 
       A class variable to set the *default* title for the application.
@@ -442,7 +442,7 @@ Package Contents
 
 .. py:function:: asa_main()
 
-   Entry point for canns-tui command.
+   Entry point for [ANONYMOUS_PROJECT]-tui command.
 
 
 .. py:function:: gallery_main()
@@ -452,7 +452,7 @@ Package Contents
 
 .. py:function:: launcher_main()
 
-   Entry point for the unified canns-tui launcher.
+   Entry point for the unified [ANONYMOUS_PROJECT]-tui launcher.
 
 
 .. py:data:: ASAGuiApp

@@ -1,11 +1,11 @@
-canns.trainer
+[ANONYMOUS_PROJECT].trainer
 =============
 
-.. py:module:: canns.trainer
+.. py:module:: [ANONYMOUS_PROJECT].trainer
 
 .. autoapi-nested-parse::
 
-   Training utilities for CANNs models.
+   Training utilities for [ANONYMOUS_PROJECT] models.
 
    This namespace exposes the abstract ``Trainer`` base class and concrete
    implementations of classic brain-inspired learning algorithms such as
@@ -13,7 +13,7 @@ canns.trainer
 
    .. rubric:: Examples
 
-   >>> from canns import trainer
+   >>> from [ANONYMOUS_PROJECT] import trainer
    >>> print(trainer.Trainer)
 
 
@@ -24,12 +24,12 @@ Submodules
 .. toctree::
    :maxdepth: 1
 
-   /autoapi/canns/trainer/bcm/index
-   /autoapi/canns/trainer/hebbian/index
-   /autoapi/canns/trainer/oja/index
-   /autoapi/canns/trainer/sanger/index
-   /autoapi/canns/trainer/stdp/index
-   /autoapi/canns/trainer/utils/index
+   /autoapi/[ANONYMOUS_PROJECT]/trainer/bcm/index
+   /autoapi/[ANONYMOUS_PROJECT]/trainer/hebbian/index
+   /autoapi/[ANONYMOUS_PROJECT]/trainer/oja/index
+   /autoapi/[ANONYMOUS_PROJECT]/trainer/sanger/index
+   /autoapi/[ANONYMOUS_PROJECT]/trainer/stdp/index
+   /autoapi/[ANONYMOUS_PROJECT]/trainer/utils/index
 
 
 Classes
@@ -37,13 +37,13 @@ Classes
 
 .. autoapisummary::
 
-   canns.trainer.AntiHebbianTrainer
-   canns.trainer.BCMTrainer
-   canns.trainer.HebbianTrainer
-   canns.trainer.OjaTrainer
-   canns.trainer.STDPTrainer
-   canns.trainer.SangerTrainer
-   canns.trainer.Trainer
+   [ANONYMOUS_PROJECT].trainer.AntiHebbianTrainer
+   [ANONYMOUS_PROJECT].trainer.BCMTrainer
+   [ANONYMOUS_PROJECT].trainer.HebbianTrainer
+   [ANONYMOUS_PROJECT].trainer.OjaTrainer
+   [ANONYMOUS_PROJECT].trainer.STDPTrainer
+   [ANONYMOUS_PROJECT].trainer.SangerTrainer
+   [ANONYMOUS_PROJECT].trainer.Trainer
 
 
 Package Contents
@@ -92,7 +92,7 @@ Package Contents
 
 .. py:class:: BCMTrainer(model, learning_rate = 0.01, weight_attr = 'W', compiled = True, **kwargs)
 
-   Bases: :py:obj:`canns.trainer._base.Trainer`
+   Bases: :py:obj:`[ANONYMOUS_PROJECT].trainer._base.Trainer`
 
 
    BCM (Bienenstock-Cooper-Munro) sliding-threshold plasticity trainer.
@@ -165,7 +165,7 @@ Package Contents
 
 .. py:class:: HebbianTrainer(model, show_iteration_progress = False, compiled_prediction = True, *, weight_attr = 'W', subtract_mean = True, zero_diagonal = True, normalize_by_patterns = True, prefer_generic = True, state_attr = None, prefer_generic_predict = True, preserve_on_resize = True)
 
-   Bases: :py:obj:`canns.trainer._base.Trainer`
+   Bases: :py:obj:`[ANONYMOUS_PROJECT].trainer._base.Trainer`
 
 
    Generic Hebbian trainer with progress reporting.
@@ -293,7 +293,7 @@ Package Contents
 
 .. py:class:: OjaTrainer(model, learning_rate = 0.01, normalize_weights = True, weight_attr = 'W', compiled = True, **kwargs)
 
-   Bases: :py:obj:`canns.trainer._base.Trainer`
+   Bases: :py:obj:`[ANONYMOUS_PROJECT].trainer._base.Trainer`
 
 
    Oja's normalized Hebbian learning trainer.
@@ -370,7 +370,7 @@ Package Contents
 
 .. py:class:: STDPTrainer(model, learning_rate = 0.01, A_plus = 0.005, A_minus = 0.00525, weight_attr = 'W', w_min = 0.0, w_max = 1.0, compiled = True, **kwargs)
 
-   Bases: :py:obj:`canns.trainer._base.Trainer`
+   Bases: :py:obj:`[ANONYMOUS_PROJECT].trainer._base.Trainer`
 
 
    STDP (Spike-Timing-Dependent Plasticity) trainer.
@@ -472,7 +472,7 @@ Package Contents
 
 .. py:class:: SangerTrainer(model, learning_rate = 0.01, normalize_weights = True, weight_attr = 'W', compiled = True, **kwargs)
 
-   Bases: :py:obj:`canns.trainer._base.Trainer`
+   Bases: :py:obj:`[ANONYMOUS_PROJECT].trainer._base.Trainer`
 
 
    Sanger's rule (Generalized Hebbian Algorithm) for multiple PC extraction.
@@ -548,7 +548,7 @@ Package Contents
    Bases: :py:obj:`abc.ABC`
 
 
-   Abstract base class for training utilities in CANNs.
+   Abstract base class for training utilities in [ANONYMOUS_PROJECT].
 
 
    .. py:method:: configure_progress(*, show_iteration_progress = None, compiled_prediction = None)

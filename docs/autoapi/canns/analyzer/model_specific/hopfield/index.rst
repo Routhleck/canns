@@ -1,7 +1,7 @@
-canns.analyzer.model_specific.hopfield
+[ANONYMOUS_PROJECT].analyzer.model_specific.hopfield
 ======================================
 
-.. py:module:: canns.analyzer.model_specific.hopfield
+.. py:module:: [ANONYMOUS_PROJECT].analyzer.model_specific.hopfield
 
 .. autoapi-nested-parse::
 
@@ -14,7 +14,7 @@ Classes
 
 .. autoapisummary::
 
-   canns.analyzer.model_specific.hopfield.HopfieldAnalyzer
+   [ANONYMOUS_PROJECT].analyzer.model_specific.hopfield.HopfieldAnalyzer
 
 
 Module Contents
@@ -29,8 +29,8 @@ Module Contents
    .. rubric:: Examples
 
    >>> import jax.numpy as jnp
-   >>> from canns.models.brain_inspired import AmariHopfieldNetwork
-   >>> from canns.analyzer.model_specific.hopfield import HopfieldAnalyzer
+   >>> from [ANONYMOUS_PROJECT].models.brain_inspired import AmariHopfieldNetwork
+   >>> from [ANONYMOUS_PROJECT].analyzer.model_specific.hopfield import HopfieldAnalyzer
    >>>
    >>> # Dummy inputs (patterns) based on analyzer tests
    >>> patterns = [

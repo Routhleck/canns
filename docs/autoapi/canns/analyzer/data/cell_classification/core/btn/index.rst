@@ -1,7 +1,7 @@
-canns.analyzer.data.cell_classification.core.btn
+[ANONYMOUS_PROJECT].analyzer.data.cell_classification.core.btn
 ================================================
 
-.. py:module:: canns.analyzer.data.cell_classification.core.btn
+.. py:module:: [ANONYMOUS_PROJECT].analyzer.data.cell_classification.core.btn
 
 .. autoapi-nested-parse::
 
@@ -20,7 +20,7 @@ Attributes
 
 .. autoapisummary::
 
-   canns.analyzer.data.cell_classification.core.btn.Tomato
+   [ANONYMOUS_PROJECT].analyzer.data.cell_classification.core.btn.Tomato
 
 
 Classes
@@ -28,9 +28,9 @@ Classes
 
 .. autoapisummary::
 
-   canns.analyzer.data.cell_classification.core.btn.BTNAnalyzer
-   canns.analyzer.data.cell_classification.core.btn.BTNConfig
-   canns.analyzer.data.cell_classification.core.btn.BTNResult
+   [ANONYMOUS_PROJECT].analyzer.data.cell_classification.core.btn.BTNAnalyzer
+   [ANONYMOUS_PROJECT].analyzer.data.cell_classification.core.btn.BTNConfig
+   [ANONYMOUS_PROJECT].analyzer.data.cell_classification.core.btn.BTNResult
 
 
 Module Contents

@@ -1,13 +1,13 @@
-canns.pipeline.asa_gui.core.runner
+[ANONYMOUS_PROJECT].pipeline.asa_gui.core.runner
 ==================================
 
-.. py:module:: canns.pipeline.asa_gui.core.runner
+.. py:module:: [ANONYMOUS_PROJECT].pipeline.asa_gui.core.runner
 
 .. autoapi-nested-parse::
 
    Pipeline execution wrapper for ASA GUI.
 
-   Provides synchronous pipeline execution that wraps canns.analyzer.data.asa APIs
+   Provides synchronous pipeline execution that wraps [ANONYMOUS_PROJECT].analyzer.data.asa APIs
    and mirrors the TUI runner behavior for caching and artifacts.
 
 
@@ -17,7 +17,7 @@ Exceptions
 
 .. autoapisummary::
 
-   canns.pipeline.asa_gui.core.runner.ProcessingError
+   [ANONYMOUS_PROJECT].pipeline.asa_gui.core.runner.ProcessingError
 
 
 Classes
@@ -25,8 +25,8 @@ Classes
 
 .. autoapisummary::
 
-   canns.pipeline.asa_gui.core.runner.PipelineResult
-   canns.pipeline.asa_gui.core.runner.PipelineRunner
+   [ANONYMOUS_PROJECT].pipeline.asa_gui.core.runner.PipelineResult
+   [ANONYMOUS_PROJECT].pipeline.asa_gui.core.runner.PipelineRunner
 
 
 Module Contents

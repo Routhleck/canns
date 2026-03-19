@@ -1,7 +1,7 @@
-canns.analyzer.slow_points.finder
+[ANONYMOUS_PROJECT].analyzer.slow_points.finder
 =================================
 
-.. py:module:: canns.analyzer.slow_points.finder
+.. py:module:: [ANONYMOUS_PROJECT].analyzer.slow_points.finder
 
 .. autoapi-nested-parse::
 
@@ -14,7 +14,7 @@ Classes
 
 .. autoapisummary::
 
-   canns.analyzer.slow_points.finder.FixedPointFinder
+   [ANONYMOUS_PROJECT].analyzer.slow_points.finder.FixedPointFinder
 
 
 Module Contents
@@ -34,7 +34,7 @@ Module Contents
    >>> import jax.numpy as jnp
    >>> import brainpy as bp
    >>> import brainpy.math as bm
-   >>> from canns.analyzer.slow_points import FixedPointFinder
+   >>> from [ANONYMOUS_PROJECT].analyzer.slow_points import FixedPointFinder
    >>>
    >>> class SimpleRNN(bp.DynamicalSystem):
    ...     def __init__(self, n_inputs, n_hidden):

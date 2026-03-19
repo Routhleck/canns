@@ -1,7 +1,7 @@
-canns.pipeline.gallery.__main__
+[ANONYMOUS_PROJECT].pipeline.gallery.__main__
 ===============================
 
-.. py:module:: canns.pipeline.gallery.__main__
+.. py:module:: [ANONYMOUS_PROJECT].pipeline.gallery.__main__
 
 .. autoapi-nested-parse::
 
@@ -14,7 +14,7 @@ Attributes
 
 .. autoapisummary::
 
-   canns.pipeline.gallery.__main__.app
+   [ANONYMOUS_PROJECT].pipeline.gallery.__main__.app
 
 
 Module Contents

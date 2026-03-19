@@ -1,7 +1,7 @@
-canns.models.basic
+[ANONYMOUS_PROJECT].models.basic
 ==================
 
-.. py:module:: canns.models.basic
+.. py:module:: [ANONYMOUS_PROJECT].models.basic
 
 
 Submodules
@@ -10,10 +10,10 @@ Submodules
 .. toctree::
    :maxdepth: 1
 
-   /autoapi/canns/models/basic/cann/index
-   /autoapi/canns/models/basic/grid_cell/index
-   /autoapi/canns/models/basic/hierarchical_model/index
-   /autoapi/canns/models/basic/theta_sweep_model/index
+   /autoapi/[ANONYMOUS_PROJECT]/models/basic/cann/index
+   /autoapi/[ANONYMOUS_PROJECT]/models/basic/grid_cell/index
+   /autoapi/[ANONYMOUS_PROJECT]/models/basic/hierarchical_model/index
+   /autoapi/[ANONYMOUS_PROJECT]/models/basic/theta_sweep_model/index
 
 
 Classes
@@ -21,13 +21,13 @@ Classes
 
 .. autoapisummary::
 
-   canns.models.basic.CANN1D
-   canns.models.basic.CANN1D_SFA
-   canns.models.basic.CANN2D
-   canns.models.basic.CANN2D_SFA
-   canns.models.basic.GridCell2DPosition
-   canns.models.basic.GridCell2DVelocity
-   canns.models.basic.HierarchicalNetwork
+   [ANONYMOUS_PROJECT].models.basic.CANN1D
+   [ANONYMOUS_PROJECT].models.basic.CANN1D_SFA
+   [ANONYMOUS_PROJECT].models.basic.CANN2D
+   [ANONYMOUS_PROJECT].models.basic.CANN2D_SFA
+   [ANONYMOUS_PROJECT].models.basic.GridCell2DPosition
+   [ANONYMOUS_PROJECT].models.basic.GridCell2DVelocity
+   [ANONYMOUS_PROJECT].models.basic.HierarchicalNetwork
 
 
 Package Contents
@@ -46,7 +46,7 @@ Package Contents
    .. rubric:: Examples
 
    >>> import brainpy.math as bm
-   >>> from canns.models.basic import CANN1D
+   >>> from [ANONYMOUS_PROJECT].models.basic import CANN1D
    >>>
    >>> bm.set_dt(0.1)
    >>> model = CANN1D(num=64)
@@ -97,7 +97,7 @@ Package Contents
    .. rubric:: Examples
 
    >>> import brainpy.math as bm
-   >>> from canns.models.basic import CANN1D_SFA
+   >>> from [ANONYMOUS_PROJECT].models.basic import CANN1D_SFA
    >>>
    >>> bm.set_dt(0.1)
    >>> model = CANN1D_SFA(num=64)
@@ -163,7 +163,7 @@ Package Contents
    .. rubric:: Examples
 
    >>> import brainpy.math as bm
-   >>> from canns.models.basic import CANN2D
+   >>> from [ANONYMOUS_PROJECT].models.basic import CANN2D
    >>>
    >>> bm.set_dt(0.1)
    >>> model = CANN2D(length=16)
@@ -211,7 +211,7 @@ Package Contents
    .. rubric:: Examples
 
    >>> import brainpy.math as bm
-   >>> from canns.models.basic import CANN2D_SFA
+   >>> from [ANONYMOUS_PROJECT].models.basic import CANN2D_SFA
    >>>
    >>> bm.set_dt(0.1)
    >>> model = CANN2D_SFA(length=16)
@@ -258,7 +258,7 @@ Package Contents
 
 .. py:class:: GridCell2DPosition(length = 30, tau = 10.0, k = 1.0, a = 0.8, A = 3.0, J0 = 5.0, mapping_ratio = 1.5, noise_strength = 0.1, conn_noise = 0.0, g = 1.0)
 
-   Bases: :py:obj:`canns.models.basic._base.BasicModel`
+   Bases: :py:obj:`[ANONYMOUS_PROJECT].models.basic._base.BasicModel`
 
 
    Position-based 2D continuous-attractor grid cell network with hexagonal lattice structure.
@@ -368,7 +368,7 @@ Package Contents
    .. rubric:: Example
 
    >>> import brainpy.math as bm
-   >>> from canns.models.basic import GridCell2DPosition
+   >>> from [ANONYMOUS_PROJECT].models.basic import GridCell2DPosition
    >>>
    >>> bm.set_dt(1.0)
    >>> model = GridCell2DPosition(length=16, mapping_ratio=1.5)
@@ -600,7 +600,7 @@ Package Contents
 
 .. py:class:: GridCell2DVelocity(length = 40, tau = 0.01, alpha = 0.2, A = 1.0, W_a = 1.5, W_l = 2.0, lambda_net = 15.0, e = 1.15, use_sparse = False)
 
-   Bases: :py:obj:`canns.models.basic._base.BasicModel`
+   Bases: :py:obj:`[ANONYMOUS_PROJECT].models.basic._base.BasicModel`
 
 
    Velocity-based grid cell network (Burak & Fiete 2009).
@@ -670,7 +670,7 @@ Package Contents
    .. rubric:: Example
 
    >>> import brainpy.math as bm
-   >>> from canns.models.basic import GridCell2DVelocity
+   >>> from [ANONYMOUS_PROJECT].models.basic import GridCell2DVelocity
    >>>
    >>> bm.set_dt(5e-4)  # Small timestep for accurate integration
    >>> model = GridCell2DVelocity(length=40)
@@ -912,7 +912,7 @@ Package Contents
 
 .. py:class:: HierarchicalNetwork(num_module, num_place, spacing_min=2.0, spacing_max=5.0, module_angle=0.0, band_size=180, band_noise=0.0, band_w_L2S=0.2, band_w_S2L=1.0, band_gain=0.2, grid_num=20, grid_tau=0.1, grid_tau_v=10.0, grid_k=0.005, grid_a=bm.pi / 9, grid_A=1.0, grid_J0=1.0, grid_mbar=1.0, gauss_tau=1.0, gauss_J0=1.1, gauss_k=0.0005, gauss_a=2 / 9 * bm.pi, nonrec_tau=0.1)
 
-   Bases: :py:obj:`canns.models.basic._base.BasicModelGroup`
+   Bases: :py:obj:`[ANONYMOUS_PROJECT].models.basic._base.BasicModelGroup`
 
 
    A full hierarchical network composed of multiple grid modules.
@@ -923,7 +923,7 @@ Package Contents
    .. rubric:: Examples
 
    >>> import brainpy.math as bm
-   >>> from canns.models.basic import HierarchicalNetwork
+   >>> from [ANONYMOUS_PROJECT].models.basic import HierarchicalNetwork
    >>>
    >>> bm.set_dt(0.1)
    >>> model = HierarchicalNetwork(num_module=1, num_place=3)

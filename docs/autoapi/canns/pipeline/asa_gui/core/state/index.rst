@@ -1,7 +1,7 @@
-canns.pipeline.asa_gui.core.state
+[ANONYMOUS_PROJECT].pipeline.asa_gui.core.state
 =================================
 
-.. py:module:: canns.pipeline.asa_gui.core.state
+.. py:module:: [ANONYMOUS_PROJECT].pipeline.asa_gui.core.state
 
 .. autoapi-nested-parse::
 
@@ -18,8 +18,8 @@ Classes
 
 .. autoapisummary::
 
-   canns.pipeline.asa_gui.core.state.StateManager
-   canns.pipeline.asa_gui.core.state.WorkflowState
+   [ANONYMOUS_PROJECT].pipeline.asa_gui.core.state.StateManager
+   [ANONYMOUS_PROJECT].pipeline.asa_gui.core.state.WorkflowState
 
 
 Functions
@@ -27,10 +27,10 @@ Functions
 
 .. autoapisummary::
 
-   canns.pipeline.asa_gui.core.state.relative_path
-   canns.pipeline.asa_gui.core.state.resolve_path
-   canns.pipeline.asa_gui.core.state.validate_files
-   canns.pipeline.asa_gui.core.state.validate_preprocessing
+   [ANONYMOUS_PROJECT].pipeline.asa_gui.core.state.relative_path
+   [ANONYMOUS_PROJECT].pipeline.asa_gui.core.state.resolve_path
+   [ANONYMOUS_PROJECT].pipeline.asa_gui.core.state.validate_files
+   [ANONYMOUS_PROJECT].pipeline.asa_gui.core.state.validate_preprocessing
 
 
 Module Contents

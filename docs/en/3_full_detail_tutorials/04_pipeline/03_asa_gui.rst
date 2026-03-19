@@ -24,8 +24,8 @@ Target Audience
 Prerequisites
 -------------
 
-- CANNs installed (recommended via ``pip install -e .`` or ``pip install canns``)
-- GUI dependencies installed: ``pip install canns[gui]`` (includes PySide6)
+- [ANONYMOUS_PROJECT] installed (recommended via ``pip install -e .`` or ``pip install [ANONYMOUS_PROJECT]``)
+- GUI dependencies installed: ``pip install [ANONYMOUS_PROJECT][gui]`` (includes PySide6)
 - Optional: ``pip install qtawesome`` (for navigation icons)
 - Prepared ASA ``.npz`` data file
 
@@ -40,9 +40,9 @@ Execute in your project environment:
 
 .. code-block:: bash
 
-   canns-gui
+   [ANONYMOUS_PROJECT]-gui
    # or
-   python -m canns.pipeline.asa_gui
+   python -m [ANONYMOUS_PROJECT].pipeline.asa_gui
 
 Upon launch, the main window appears with a default size of approximately 1200×800, which can be resized according to your screen.
 

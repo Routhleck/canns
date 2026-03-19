@@ -1,7 +1,7 @@
-canns.analyzer.slow_points
+[ANONYMOUS_PROJECT].analyzer.slow_points
 ==========================
 
-.. py:module:: canns.analyzer.slow_points
+.. py:module:: [ANONYMOUS_PROJECT].analyzer.slow_points
 
 .. autoapi-nested-parse::
 
@@ -18,10 +18,10 @@ Submodules
 .. toctree::
    :maxdepth: 1
 
-   /autoapi/canns/analyzer/slow_points/checkpoint/index
-   /autoapi/canns/analyzer/slow_points/finder/index
-   /autoapi/canns/analyzer/slow_points/fixed_points/index
-   /autoapi/canns/analyzer/slow_points/visualization/index
+   /autoapi/[ANONYMOUS_PROJECT]/analyzer/slow_points/checkpoint/index
+   /autoapi/[ANONYMOUS_PROJECT]/analyzer/slow_points/finder/index
+   /autoapi/[ANONYMOUS_PROJECT]/analyzer/slow_points/fixed_points/index
+   /autoapi/[ANONYMOUS_PROJECT]/analyzer/slow_points/visualization/index
 
 
 Classes
@@ -29,8 +29,8 @@ Classes
 
 .. autoapisummary::
 
-   canns.analyzer.slow_points.FixedPointFinder
-   canns.analyzer.slow_points.FixedPoints
+   [ANONYMOUS_PROJECT].analyzer.slow_points.FixedPointFinder
+   [ANONYMOUS_PROJECT].analyzer.slow_points.FixedPoints
 
 
 Functions
@@ -38,10 +38,10 @@ Functions
 
 .. autoapisummary::
 
-   canns.analyzer.slow_points.load_checkpoint
-   canns.analyzer.slow_points.plot_fixed_points_2d
-   canns.analyzer.slow_points.plot_fixed_points_3d
-   canns.analyzer.slow_points.save_checkpoint
+   [ANONYMOUS_PROJECT].analyzer.slow_points.load_checkpoint
+   [ANONYMOUS_PROJECT].analyzer.slow_points.plot_fixed_points_2d
+   [ANONYMOUS_PROJECT].analyzer.slow_points.plot_fixed_points_3d
+   [ANONYMOUS_PROJECT].analyzer.slow_points.save_checkpoint
 
 
 Package Contents
@@ -61,7 +61,7 @@ Package Contents
    >>> import jax.numpy as jnp
    >>> import brainpy as bp
    >>> import brainpy.math as bm
-   >>> from canns.analyzer.slow_points import FixedPointFinder
+   >>> from [ANONYMOUS_PROJECT].analyzer.slow_points import FixedPointFinder
    >>>
    >>> class SimpleRNN(bp.DynamicalSystem):
    ...     def __init__(self, n_inputs, n_hidden):
@@ -226,7 +226,7 @@ Package Contents
    .. rubric:: Examples
 
    >>> import numpy as np
-   >>> from canns.analyzer.slow_points import FixedPoints
+   >>> from [ANONYMOUS_PROJECT].analyzer.slow_points import FixedPoints
    >>>
    >>> # Dummy fixed point batch (n=2, n_states=3)
    >>> xstar = np.array([[0.0, 0.1, -0.1], [0.2, 0.0, -0.2]], dtype=np.float32)
@@ -451,7 +451,7 @@ Package Contents
    >>> import tempfile
    >>> import brainpy as bp
    >>> import brainpy.math as bm
-   >>> from canns.analyzer.slow_points import save_checkpoint, load_checkpoint
+   >>> from [ANONYMOUS_PROJECT].analyzer.slow_points import save_checkpoint, load_checkpoint
    >>>
    >>> class DummyModel(bp.DynamicalSystem):
    ...     def __init__(self):
@@ -482,8 +482,8 @@ Package Contents
    .. rubric:: Example
 
    >>> import numpy as np
-   >>> from canns.analyzer.slow_points import plot_fixed_points_2d, FixedPoints
-   >>> from canns.analyzer.visualization import PlotConfig
+   >>> from [ANONYMOUS_PROJECT].analyzer.slow_points import plot_fixed_points_2d, FixedPoints
+   >>> from [ANONYMOUS_PROJECT].analyzer.visualization import PlotConfig
    >>>
    >>> # Dummy inputs based on fixed-point tests
    >>> state_traj = np.random.rand(4, 10, 3).astype(np.float32)
@@ -512,8 +512,8 @@ Package Contents
    .. rubric:: Example
 
    >>> import numpy as np
-   >>> from canns.analyzer.slow_points import plot_fixed_points_3d, FixedPoints
-   >>> from canns.analyzer.visualization import PlotConfig
+   >>> from [ANONYMOUS_PROJECT].analyzer.slow_points import plot_fixed_points_3d, FixedPoints
+   >>> from [ANONYMOUS_PROJECT].analyzer.visualization import PlotConfig
    >>>
    >>> # Dummy inputs based on fixed-point tests
    >>> state_traj = np.random.rand(3, 8, 4).astype(np.float32)
@@ -539,7 +539,7 @@ Package Contents
    >>> import tempfile
    >>> import brainpy as bp
    >>> import brainpy.math as bm
-   >>> from canns.analyzer.slow_points import save_checkpoint
+   >>> from [ANONYMOUS_PROJECT].analyzer.slow_points import save_checkpoint
    >>>
    >>> class DummyModel(bp.DynamicalSystem):
    ...     def __init__(self):

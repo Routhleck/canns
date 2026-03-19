@@ -1,7 +1,7 @@
-canns.analyzer.data.cell_classification.core
+[ANONYMOUS_PROJECT].analyzer.data.cell_classification.core
 ============================================
 
-.. py:module:: canns.analyzer.data.cell_classification.core
+.. py:module:: [ANONYMOUS_PROJECT].analyzer.data.cell_classification.core
 
 .. autoapi-nested-parse::
 
@@ -15,11 +15,11 @@ Submodules
 .. toctree::
    :maxdepth: 1
 
-   /autoapi/canns/analyzer/data/cell_classification/core/btn/index
-   /autoapi/canns/analyzer/data/cell_classification/core/grid_cells/index
-   /autoapi/canns/analyzer/data/cell_classification/core/grid_modules_leiden/index
-   /autoapi/canns/analyzer/data/cell_classification/core/head_direction/index
-   /autoapi/canns/analyzer/data/cell_classification/core/spatial_analysis/index
+   /autoapi/[ANONYMOUS_PROJECT]/analyzer/data/cell_classification/core/btn/index
+   /autoapi/[ANONYMOUS_PROJECT]/analyzer/data/cell_classification/core/grid_cells/index
+   /autoapi/[ANONYMOUS_PROJECT]/analyzer/data/cell_classification/core/grid_modules_leiden/index
+   /autoapi/[ANONYMOUS_PROJECT]/analyzer/data/cell_classification/core/head_direction/index
+   /autoapi/[ANONYMOUS_PROJECT]/analyzer/data/cell_classification/core/spatial_analysis/index
 
 
 Classes
@@ -27,13 +27,13 @@ Classes
 
 .. autoapisummary::
 
-   canns.analyzer.data.cell_classification.core.BTNAnalyzer
-   canns.analyzer.data.cell_classification.core.BTNConfig
-   canns.analyzer.data.cell_classification.core.BTNResult
-   canns.analyzer.data.cell_classification.core.GridnessAnalyzer
-   canns.analyzer.data.cell_classification.core.GridnessResult
-   canns.analyzer.data.cell_classification.core.HDCellResult
-   canns.analyzer.data.cell_classification.core.HeadDirectionAnalyzer
+   [ANONYMOUS_PROJECT].analyzer.data.cell_classification.core.BTNAnalyzer
+   [ANONYMOUS_PROJECT].analyzer.data.cell_classification.core.BTNConfig
+   [ANONYMOUS_PROJECT].analyzer.data.cell_classification.core.BTNResult
+   [ANONYMOUS_PROJECT].analyzer.data.cell_classification.core.GridnessAnalyzer
+   [ANONYMOUS_PROJECT].analyzer.data.cell_classification.core.GridnessResult
+   [ANONYMOUS_PROJECT].analyzer.data.cell_classification.core.HDCellResult
+   [ANONYMOUS_PROJECT].analyzer.data.cell_classification.core.HeadDirectionAnalyzer
 
 
 Functions
@@ -41,13 +41,13 @@ Functions
 
 .. autoapisummary::
 
-   canns.analyzer.data.cell_classification.core.compute_2d_autocorrelation
-   canns.analyzer.data.cell_classification.core.compute_field_statistics
-   canns.analyzer.data.cell_classification.core.compute_grid_spacing
-   canns.analyzer.data.cell_classification.core.compute_rate_map
-   canns.analyzer.data.cell_classification.core.compute_rate_map_from_binned
-   canns.analyzer.data.cell_classification.core.compute_spatial_information
-   canns.analyzer.data.cell_classification.core.identify_grid_modules_and_stats
+   [ANONYMOUS_PROJECT].analyzer.data.cell_classification.core.compute_2d_autocorrelation
+   [ANONYMOUS_PROJECT].analyzer.data.cell_classification.core.compute_field_statistics
+   [ANONYMOUS_PROJECT].analyzer.data.cell_classification.core.compute_grid_spacing
+   [ANONYMOUS_PROJECT].analyzer.data.cell_classification.core.compute_rate_map
+   [ANONYMOUS_PROJECT].analyzer.data.cell_classification.core.compute_rate_map_from_binned
+   [ANONYMOUS_PROJECT].analyzer.data.cell_classification.core.compute_spatial_information
+   [ANONYMOUS_PROJECT].analyzer.data.cell_classification.core.identify_grid_modules_and_stats
 
 
 Package Contents

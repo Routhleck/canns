@@ -1,7 +1,7 @@
-canns.analyzer.metrics
+[ANONYMOUS_PROJECT].analyzer.metrics
 ======================
 
-.. py:module:: canns.analyzer.metrics
+.. py:module:: [ANONYMOUS_PROJECT].analyzer.metrics
 
 .. autoapi-nested-parse::
 
@@ -15,8 +15,8 @@ Submodules
 .. toctree::
    :maxdepth: 1
 
-   /autoapi/canns/analyzer/metrics/spatial_metrics/index
-   /autoapi/canns/analyzer/metrics/systematic_ratemap/index
-   /autoapi/canns/analyzer/metrics/utils/index
+   /autoapi/[ANONYMOUS_PROJECT]/analyzer/metrics/spatial_metrics/index
+   /autoapi/[ANONYMOUS_PROJECT]/analyzer/metrics/systematic_ratemap/index
+   /autoapi/[ANONYMOUS_PROJECT]/analyzer/metrics/utils/index
 
 

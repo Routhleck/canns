@@ -1,7 +1,7 @@
-canns.analyzer.visualization.core.jupyter_utils
+[ANONYMOUS_PROJECT].analyzer.visualization.core.jupyter_utils
 ===============================================
 
-.. py:module:: canns.analyzer.visualization.core.jupyter_utils
+.. py:module:: [ANONYMOUS_PROJECT].analyzer.visualization.core.jupyter_utils
 
 .. autoapi-nested-parse::
 
@@ -14,8 +14,8 @@ Functions
 
 .. autoapisummary::
 
-   canns.analyzer.visualization.core.jupyter_utils.display_animation_in_jupyter
-   canns.analyzer.visualization.core.jupyter_utils.is_jupyter_environment
+   [ANONYMOUS_PROJECT].analyzer.visualization.core.jupyter_utils.display_animation_in_jupyter
+   [ANONYMOUS_PROJECT].analyzer.visualization.core.jupyter_utils.is_jupyter_environment
 
 
 Module Contents
@@ -35,7 +35,7 @@ Module Contents
    >>> import numpy as np
    >>> from matplotlib import pyplot as plt
    >>> from matplotlib.animation import FuncAnimation
-   >>> from canns.analyzer.visualization.core.jupyter_utils import (
+   >>> from [ANONYMOUS_PROJECT].analyzer.visualization.core.jupyter_utils import (
    ...     display_animation_in_jupyter,
    ...     is_jupyter_environment,
    ... )
@@ -64,7 +64,7 @@ Module Contents
 
    .. rubric:: Examples
 
-   >>> from canns.analyzer.visualization.core.jupyter_utils import is_jupyter_environment
+   >>> from [ANONYMOUS_PROJECT].analyzer.visualization.core.jupyter_utils import is_jupyter_environment
    >>> print(is_jupyter_environment() in {True, False})
    True
 

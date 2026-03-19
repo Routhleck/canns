@@ -1,7 +1,7 @@
-canns.pipeline.asa_gui.core.cache
+[ANONYMOUS_PROJECT].pipeline.asa_gui.core.cache
 =================================
 
-.. py:module:: canns.pipeline.asa_gui.core.cache
+.. py:module:: [ANONYMOUS_PROJECT].pipeline.asa_gui.core.cache
 
 .. autoapi-nested-parse::
 
@@ -14,7 +14,7 @@ Functions
 
 .. autoapisummary::
 
-   canns.pipeline.asa_gui.core.cache.md5_file
+   [ANONYMOUS_PROJECT].pipeline.asa_gui.core.cache.md5_file
 
 
 Module Contents

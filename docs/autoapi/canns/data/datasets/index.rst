@@ -1,14 +1,14 @@
-canns.data.datasets
+[ANONYMOUS_PROJECT].data.datasets
 ===================
 
-.. py:module:: canns.data.datasets
+.. py:module:: [ANONYMOUS_PROJECT].data.datasets
 
 .. autoapi-nested-parse::
 
-   Universal data loading utilities for CANNs.
+   Universal data loading utilities for [ANONYMOUS_PROJECT].
 
    This module provides generic functions to download and load data from URLs,
-   with specialized support for CANNs example datasets.
+   with specialized support for [ANONYMOUS_PROJECT] example datasets.
 
 
 
@@ -17,13 +17,13 @@ Attributes
 
 .. autoapisummary::
 
-   canns.data.datasets.BASE_URL
-   canns.data.datasets.DATASETS
-   canns.data.datasets.DEFAULT_DATA_DIR
-   canns.data.datasets.HAS_DOWNLOAD_DEPS
-   canns.data.datasets.HAS_NUMPY
-   canns.data.datasets.HUGGINGFACE_REPO
-   canns.data.datasets.LEFT_RIGHT_DATASET_DIR
+   [ANONYMOUS_PROJECT].data.datasets.BASE_URL
+   [ANONYMOUS_PROJECT].data.datasets.DATASETS
+   [ANONYMOUS_PROJECT].data.datasets.DEFAULT_DATA_DIR
+   [ANONYMOUS_PROJECT].data.datasets.HAS_DOWNLOAD_DEPS
+   [ANONYMOUS_PROJECT].data.datasets.HAS_NUMPY
+   [ANONYMOUS_PROJECT].data.datasets.HUGGINGFACE_REPO
+   [ANONYMOUS_PROJECT].data.datasets.LEFT_RIGHT_DATASET_DIR
 
 
 Functions
@@ -31,19 +31,19 @@ Functions
 
 .. autoapisummary::
 
-   canns.data.datasets.compute_file_hash
-   canns.data.datasets.detect_file_type
-   canns.data.datasets.download_dataset
-   canns.data.datasets.download_file_with_progress
-   canns.data.datasets.get_data_dir
-   canns.data.datasets.get_dataset_path
-   canns.data.datasets.get_huggingface_upload_guide
-   canns.data.datasets.get_left_right_data_session
-   canns.data.datasets.get_left_right_npz
-   canns.data.datasets.list_datasets
-   canns.data.datasets.load
-   canns.data.datasets.load_file
-   canns.data.datasets.quick_setup
+   [ANONYMOUS_PROJECT].data.datasets.compute_file_hash
+   [ANONYMOUS_PROJECT].data.datasets.detect_file_type
+   [ANONYMOUS_PROJECT].data.datasets.download_dataset
+   [ANONYMOUS_PROJECT].data.datasets.download_file_with_progress
+   [ANONYMOUS_PROJECT].data.datasets.get_data_dir
+   [ANONYMOUS_PROJECT].data.datasets.get_dataset_path
+   [ANONYMOUS_PROJECT].data.datasets.get_huggingface_upload_guide
+   [ANONYMOUS_PROJECT].data.datasets.get_left_right_data_session
+   [ANONYMOUS_PROJECT].data.datasets.get_left_right_npz
+   [ANONYMOUS_PROJECT].data.datasets.list_datasets
+   [ANONYMOUS_PROJECT].data.datasets.load
+   [ANONYMOUS_PROJECT].data.datasets.load_file
+   [ANONYMOUS_PROJECT].data.datasets.quick_setup
 
 
 Module Contents
@@ -192,7 +192,7 @@ Module Contents
 
 
 .. py:data:: BASE_URL
-   :value: 'https://huggingface.co/datasets/canns-team/data-analysis-datasets/resolve/main/'
+   :value: 'https://huggingface.co/datasets/[ANONYMOUS_PROJECT]-team/data-analysis-datasets/resolve/main/'
 
 
 .. py:data:: DATASETS
@@ -208,7 +208,7 @@ Module Contents
 
 
 .. py:data:: HUGGINGFACE_REPO
-   :value: 'canns-team/data-analysis-datasets'
+   :value: '[ANONYMOUS_PROJECT]-team/data-analysis-datasets'
 
 
 .. py:data:: LEFT_RIGHT_DATASET_DIR

@@ -1,6 +1,6 @@
 # Brain-Inspired Learning Algorithms Examples
 
-This directory demonstrates **classic brain-inspired learning algorithms** implemented as trainers in CANNs. The focus
+This directory demonstrates **classic brain-inspired learning algorithms** implemented as trainers in [ANONYMOUS_PROJECT]. The focus
 is on the algorithms themselves, not model complexity.
 
 ## Philosophy
@@ -52,7 +52,7 @@ Comparison of Hebbian vs Anti-Hebbian learning.
 Advanced Hopfield network with comprehensive diagnostics.
 
 - **Trainer**: `HebbianTrainer`
-- **Analyzer**: `HopfieldAnalyzer` (from `canns.analyzer.brain_inspired`)
+- **Analyzer**: `HopfieldAnalyzer` (from `[ANONYMOUS_PROJECT].analyzer.brain_inspired`)
 - **Model**: `AmariHopfieldNetwork`
 - **Features**: Energy landscape, capacity analysis (N/4ln(N)), overlap metrics, recall quality diagnostics
 

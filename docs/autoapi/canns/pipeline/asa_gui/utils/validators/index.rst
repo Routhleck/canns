@@ -1,7 +1,7 @@
-canns.pipeline.asa_gui.utils.validators
+[ANONYMOUS_PROJECT].pipeline.asa_gui.utils.validators
 =======================================
 
-.. py:module:: canns.pipeline.asa_gui.utils.validators
+.. py:module:: [ANONYMOUS_PROJECT].pipeline.asa_gui.utils.validators
 
 .. autoapi-nested-parse::
 
@@ -14,8 +14,8 @@ Functions
 
 .. autoapisummary::
 
-   canns.pipeline.asa_gui.utils.validators.validate_asa_npz
-   canns.pipeline.asa_gui.utils.validators.validate_neuron_traj
+   [ANONYMOUS_PROJECT].pipeline.asa_gui.utils.validators.validate_asa_npz
+   [ANONYMOUS_PROJECT].pipeline.asa_gui.utils.validators.validate_neuron_traj
 
 
 Module Contents

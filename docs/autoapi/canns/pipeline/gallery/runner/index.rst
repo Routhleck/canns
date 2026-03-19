@@ -1,7 +1,7 @@
-canns.pipeline.gallery.runner
+[ANONYMOUS_PROJECT].pipeline.gallery.runner
 =============================
 
-.. py:module:: canns.pipeline.gallery.runner
+.. py:module:: [ANONYMOUS_PROJECT].pipeline.gallery.runner
 
 .. autoapi-nested-parse::
 
@@ -14,8 +14,8 @@ Classes
 
 .. autoapisummary::
 
-   canns.pipeline.gallery.runner.GalleryResult
-   canns.pipeline.gallery.runner.GalleryRunner
+   [ANONYMOUS_PROJECT].pipeline.gallery.runner.GalleryResult
+   [ANONYMOUS_PROJECT].pipeline.gallery.runner.GalleryRunner
 
 
 Module Contents

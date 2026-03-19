@@ -37,7 +37,7 @@ Examples:
 
 ```python
 # Code example showing usage
-from canns.module import Component
+from [ANONYMOUS_PROJECT].module import Component
 
 # Demonstrative code
 component = Component(param=value)
@@ -89,7 +89,7 @@ result = component.method()
 
 ---
 
-**Full Changelog**: https://github.com/Routhleck/canns/compare/v[PREV]...v[CURRENT]
+**Full Changelog**: [ANONYMOUS_REPO]/compare/v[PREV]...v[CURRENT]
 ```
 
 ---

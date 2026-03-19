@@ -1,11 +1,11 @@
-canns.data.loaders
+[ANONYMOUS_PROJECT].data.loaders
 ==================
 
-.. py:module:: canns.data.loaders
+.. py:module:: [ANONYMOUS_PROJECT].data.loaders
 
 .. autoapi-nested-parse::
 
-   Experimental data processing utilities for CANNs.
+   Experimental data processing utilities for [ANONYMOUS_PROJECT].
 
    This module provides specialized functions for processing experimental data
    typically used in CANN analyses, including ROI data, grid cell data, and
@@ -18,13 +18,13 @@ Functions
 
 .. autoapisummary::
 
-   canns.data.loaders.get_data_summary
-   canns.data.loaders.load_grid_data
-   canns.data.loaders.load_left_right_npz
-   canns.data.loaders.load_roi_data
-   canns.data.loaders.preprocess_spike_data
-   canns.data.loaders.validate_grid_data
-   canns.data.loaders.validate_roi_data
+   [ANONYMOUS_PROJECT].data.loaders.get_data_summary
+   [ANONYMOUS_PROJECT].data.loaders.load_grid_data
+   [ANONYMOUS_PROJECT].data.loaders.load_left_right_npz
+   [ANONYMOUS_PROJECT].data.loaders.load_roi_data
+   [ANONYMOUS_PROJECT].data.loaders.preprocess_spike_data
+   [ANONYMOUS_PROJECT].data.loaders.validate_grid_data
+   [ANONYMOUS_PROJECT].data.loaders.validate_roi_data
 
 
 Module Contents
@@ -48,7 +48,7 @@ Module Contents
    :param source: Data source. Can be:
                   - URL string: downloads and loads from URL
                   - Path: loads from local file
-                  - None: uses default CANNs dataset
+                  - None: uses default [ANONYMOUS_PROJECT] dataset
    :type source: str, Path, or None
    :param dataset_key: Which default dataset to use ('grid_1' or 'grid_2') when source is None.
    :type dataset_key: str
@@ -93,7 +93,7 @@ Module Contents
    :param source: Data source. Can be:
                   - URL string: downloads and loads from URL
                   - Path: loads from local file
-                  - None: uses default CANNs dataset
+                  - None: uses default [ANONYMOUS_PROJECT] dataset
    :type source: str, Path, or None
 
    :returns: ROI data array if successful, None otherwise.

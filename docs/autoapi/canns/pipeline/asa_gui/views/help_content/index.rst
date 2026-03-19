@@ -1,7 +1,7 @@
-canns.pipeline.asa_gui.views.help_content
+[ANONYMOUS_PROJECT].pipeline.asa_gui.views.help_content
 =========================================
 
-.. py:module:: canns.pipeline.asa_gui.views.help_content
+.. py:module:: [ANONYMOUS_PROJECT].pipeline.asa_gui.views.help_content
 
 .. autoapi-nested-parse::
 
@@ -14,8 +14,8 @@ Functions
 
 .. autoapisummary::
 
-   canns.pipeline.asa_gui.views.help_content.analysis_help_markdown
-   canns.pipeline.asa_gui.views.help_content.preprocess_help_markdown
+   [ANONYMOUS_PROJECT].pipeline.asa_gui.views.help_content.analysis_help_markdown
+   [ANONYMOUS_PROJECT].pipeline.asa_gui.views.help_content.preprocess_help_markdown
 
 
 Module Contents

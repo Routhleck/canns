@@ -1,7 +1,7 @@
-canns.task.closed_loop_navigation
+[ANONYMOUS_PROJECT].task.closed_loop_navigation
 =================================
 
-.. py:module:: canns.task.closed_loop_navigation
+.. py:module:: [ANONYMOUS_PROJECT].task.closed_loop_navigation
 
 
 Classes
@@ -9,9 +9,9 @@ Classes
 
 .. autoapisummary::
 
-   canns.task.closed_loop_navigation.ClosedLoopNavigationTask
-   canns.task.closed_loop_navigation.TMazeClosedLoopNavigationTask
-   canns.task.closed_loop_navigation.TMazeRecessClosedLoopNavigationTask
+   [ANONYMOUS_PROJECT].task.closed_loop_navigation.ClosedLoopNavigationTask
+   [ANONYMOUS_PROJECT].task.closed_loop_navigation.TMazeClosedLoopNavigationTask
+   [ANONYMOUS_PROJECT].task.closed_loop_navigation.TMazeRecessClosedLoopNavigationTask
 
 
 Module Contents
@@ -19,7 +19,7 @@ Module Contents
 
 .. py:class:: ClosedLoopNavigationTask(start_pos=(2.5, 2.5), width=5, height=5, dimensionality='2D', boundary_conditions='solid', scale=None, dx=0.01, grid_dx = None, grid_dy = None, boundary=None, walls=None, holes=None, objects=None, dt=None, speed_mean=0.04, speed_std=0.016, speed_coherence_time=0.7, rotational_velocity_coherence_time=0.08, rotational_velocity_std=120 * np.pi / 180, head_direction_smoothing_timescale=0.15, thigmotaxis=0.5, wall_repel_distance=0.1, wall_repel_strength=1.0)
 
-   Bases: :py:obj:`canns.task.navigation_base.BaseNavigationTask`
+   Bases: :py:obj:`[ANONYMOUS_PROJECT].task.navigation_base.BaseNavigationTask`
 
 
    Closed-loop navigation task driven by external control.
@@ -34,7 +34,7 @@ Module Contents
 
    .. rubric:: Examples
 
-   >>> from canns.task.closed_loop_navigation import ClosedLoopNavigationTask
+   >>> from [ANONYMOUS_PROJECT].task.closed_loop_navigation import ClosedLoopNavigationTask
    >>>
    >>> task = ClosedLoopNavigationTask(
    ...     boundary=[[0.0, 0.0], [1.0, 0.0], [1.0, 1.0], [0.0, 1.0]],
@@ -96,7 +96,7 @@ Module Contents
 
    .. rubric:: Examples
 
-   >>> from canns.task.closed_loop_navigation import TMazeClosedLoopNavigationTask
+   >>> from [ANONYMOUS_PROJECT].task.closed_loop_navigation import TMazeClosedLoopNavigationTask
    >>>
    >>> task = TMazeClosedLoopNavigationTask(dt=0.1)
    >>> task.step_by_pos(task.start_pos)
@@ -130,7 +130,7 @@ Module Contents
 
    .. rubric:: Examples
 
-   >>> from canns.task.closed_loop_navigation import TMazeRecessClosedLoopNavigationTask
+   >>> from [ANONYMOUS_PROJECT].task.closed_loop_navigation import TMazeRecessClosedLoopNavigationTask
    >>>
    >>> task = TMazeRecessClosedLoopNavigationTask(dt=0.1)
    >>> task.step_by_pos(task.start_pos)

@@ -1,7 +1,7 @@
-canns.pipeline.asa_gui.views.pages.analysis_page
+[ANONYMOUS_PROJECT].pipeline.asa_gui.views.pages.analysis_page
 ================================================
 
-.. py:module:: canns.pipeline.asa_gui.views.pages.analysis_page
+.. py:module:: [ANONYMOUS_PROJECT].pipeline.asa_gui.views.pages.analysis_page
 
 .. autoapi-nested-parse::
 
@@ -14,7 +14,7 @@ Classes
 
 .. autoapisummary::
 
-   canns.pipeline.asa_gui.views.pages.analysis_page.AnalysisPage
+   [ANONYMOUS_PROJECT].pipeline.asa_gui.views.pages.analysis_page.AnalysisPage
 
 
 Module Contents

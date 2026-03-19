@@ -1,7 +1,7 @@
-canns.task.open_loop_navigation
+[ANONYMOUS_PROJECT].task.open_loop_navigation
 ===============================
 
-.. py:module:: canns.task.open_loop_navigation
+.. py:module:: [ANONYMOUS_PROJECT].task.open_loop_navigation
 
 
 Classes
@@ -9,14 +9,14 @@ Classes
 
 .. autoapisummary::
 
-   canns.task.open_loop_navigation.ActionPolicy
-   canns.task.open_loop_navigation.CustomOpenLoopNavigationTask
-   canns.task.open_loop_navigation.OpenLoopNavigationData
-   canns.task.open_loop_navigation.OpenLoopNavigationTask
-   canns.task.open_loop_navigation.RasterScanNavigationTask
-   canns.task.open_loop_navigation.StateAwareRasterScanPolicy
-   canns.task.open_loop_navigation.TMazeOpenLoopNavigationTask
-   canns.task.open_loop_navigation.TMazeRecessOpenLoopNavigationTask
+   [ANONYMOUS_PROJECT].task.open_loop_navigation.ActionPolicy
+   [ANONYMOUS_PROJECT].task.open_loop_navigation.CustomOpenLoopNavigationTask
+   [ANONYMOUS_PROJECT].task.open_loop_navigation.OpenLoopNavigationData
+   [ANONYMOUS_PROJECT].task.open_loop_navigation.OpenLoopNavigationTask
+   [ANONYMOUS_PROJECT].task.open_loop_navigation.RasterScanNavigationTask
+   [ANONYMOUS_PROJECT].task.open_loop_navigation.StateAwareRasterScanPolicy
+   [ANONYMOUS_PROJECT].task.open_loop_navigation.TMazeOpenLoopNavigationTask
+   [ANONYMOUS_PROJECT].task.open_loop_navigation.TMazeRecessOpenLoopNavigationTask
 
 
 Functions
@@ -24,7 +24,7 @@ Functions
 
 .. autoapisummary::
 
-   canns.task.open_loop_navigation.map2pi
+   [ANONYMOUS_PROJECT].task.open_loop_navigation.map2pi
 
 
 Module Contents
@@ -49,7 +49,7 @@ Module Contents
 
    >>> import numpy as np
    >>> import brainpy.math as bm
-   >>> from canns.task.open_loop_navigation import ActionPolicy, CustomOpenLoopNavigationTask
+   >>> from [ANONYMOUS_PROJECT].task.open_loop_navigation import ActionPolicy, CustomOpenLoopNavigationTask
    >>>
    >>> class ConstantDriftPolicy(ActionPolicy):
    ...     def __init__(self, drift_direction):
@@ -110,7 +110,7 @@ Module Contents
 
    >>> import numpy as np
    >>> import brainpy.math as bm
-   >>> from canns.task.open_loop_navigation import ActionPolicy, CustomOpenLoopNavigationTask
+   >>> from [ANONYMOUS_PROJECT].task.open_loop_navigation import ActionPolicy, CustomOpenLoopNavigationTask
    >>>
    >>> class MyPolicy(ActionPolicy):
    ...     def compute_action(self, step_idx, agent):
@@ -158,7 +158,7 @@ Module Contents
    .. rubric:: Examples
 
    >>> import brainpy.math as bm
-   >>> from canns.task.open_loop_navigation import OpenLoopNavigationTask
+   >>> from [ANONYMOUS_PROJECT].task.open_loop_navigation import OpenLoopNavigationTask
    >>>
    >>> bm.set_dt(0.1)
    >>> task = OpenLoopNavigationTask(
@@ -217,7 +217,7 @@ Module Contents
 
 .. py:class:: OpenLoopNavigationTask(duration=20.0, start_pos=(2.5, 2.5), initial_head_direction=None, progress_bar=True, width=5, height=5, dimensionality='2D', boundary_conditions='solid', scale=None, dx=0.01, grid_dx = None, grid_dy = None, boundary=None, walls=None, holes=None, objects=None, dt=None, speed_mean=0.04, speed_std=0.016, speed_coherence_time=0.7, rotational_velocity_coherence_time=0.08, rotational_velocity_std=120 * np.pi / 180, head_direction_smoothing_timescale=0.15, thigmotaxis=0.5, wall_repel_distance=0.1, wall_repel_strength=1.0, rng_seed = None)
 
-   Bases: :py:obj:`canns.task.navigation_base.BaseNavigationTask`
+   Bases: :py:obj:`[ANONYMOUS_PROJECT].task.navigation_base.BaseNavigationTask`
 
 
    Open-loop navigation task that synthesizes trajectories.
@@ -233,7 +233,7 @@ Module Contents
    .. rubric:: Examples
 
    >>> import brainpy.math as bm
-   >>> from canns.task.open_loop_navigation import OpenLoopNavigationTask
+   >>> from [ANONYMOUS_PROJECT].task.open_loop_navigation import OpenLoopNavigationTask
    >>>
    >>> bm.set_dt(0.1)
    >>> task = OpenLoopNavigationTask(
@@ -375,7 +375,7 @@ Module Contents
    .. rubric:: Examples
 
    >>> import brainpy.math as bm
-   >>> from canns.task.open_loop_navigation import RasterScanNavigationTask
+   >>> from [ANONYMOUS_PROJECT].task.open_loop_navigation import RasterScanNavigationTask
    >>>
    >>> bm.set_dt(0.1)
    >>> task = RasterScanNavigationTask(
@@ -419,7 +419,7 @@ Module Contents
    .. rubric:: Examples
 
    >>> import brainpy.math as bm
-   >>> from canns.task.open_loop_navigation import (
+   >>> from [ANONYMOUS_PROJECT].task.open_loop_navigation import (
    ...     StateAwareRasterScanPolicy,
    ...     CustomOpenLoopNavigationTask,
    ... )
@@ -513,7 +513,7 @@ Module Contents
    .. rubric:: Examples
 
    >>> import brainpy.math as bm
-   >>> from canns.task.open_loop_navigation import TMazeOpenLoopNavigationTask
+   >>> from [ANONYMOUS_PROJECT].task.open_loop_navigation import TMazeOpenLoopNavigationTask
    >>>
    >>> bm.set_dt(0.1)
    >>> task = TMazeOpenLoopNavigationTask(duration=0.5, dt=bm.get_dt(), progress_bar=False)
@@ -551,7 +551,7 @@ Module Contents
    .. rubric:: Examples
 
    >>> import brainpy.math as bm
-   >>> from canns.task.open_loop_navigation import TMazeRecessOpenLoopNavigationTask
+   >>> from [ANONYMOUS_PROJECT].task.open_loop_navigation import TMazeRecessOpenLoopNavigationTask
    >>>
    >>> bm.set_dt(0.1)
    >>> task = TMazeRecessOpenLoopNavigationTask(duration=0.5, dt=bm.get_dt(), progress_bar=False)
@@ -586,7 +586,7 @@ Module Contents
 
    >>> import numpy as np
    >>> import brainpy.math as bm
-   >>> from canns.task.open_loop_navigation import map2pi
+   >>> from [ANONYMOUS_PROJECT].task.open_loop_navigation import map2pi
    >>>
    >>> angles = bm.array([3.5, -4.0])
    >>> wrapped = map2pi(angles)

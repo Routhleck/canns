@@ -1,18 +1,18 @@
-canns.utils
+[ANONYMOUS_PROJECT].utils
 ===========
 
-.. py:module:: canns.utils
+.. py:module:: [ANONYMOUS_PROJECT].utils
 
 .. autoapi-nested-parse::
 
-   General utilities for CANNs.
+   General utilities for [ANONYMOUS_PROJECT].
 
    This namespace provides small helpers that don't fit into a specific domain,
    such as benchmarking utilities.
 
    .. rubric:: Examples
 
-   >>> from canns.utils import benchmark
+   >>> from [ANONYMOUS_PROJECT].utils import benchmark
    >>>
    >>> @benchmark(runs=3)
    ... def add():
@@ -28,7 +28,7 @@ Submodules
 .. toctree::
    :maxdepth: 1
 
-   /autoapi/canns/utils/benchmark/index
+   /autoapi/[ANONYMOUS_PROJECT]/utils/benchmark/index
 
 
 Functions
@@ -36,7 +36,7 @@ Functions
 
 .. autoapisummary::
 
-   canns.utils.benchmark
+   [ANONYMOUS_PROJECT].utils.benchmark
 
 
 Package Contents

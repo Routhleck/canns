@@ -1,7 +1,7 @@
-canns.analyzer.slow_points.visualization
+[ANONYMOUS_PROJECT].analyzer.slow_points.visualization
 ========================================
 
-.. py:module:: canns.analyzer.slow_points.visualization
+.. py:module:: [ANONYMOUS_PROJECT].analyzer.slow_points.visualization
 
 .. autoapi-nested-parse::
 
@@ -14,8 +14,8 @@ Functions
 
 .. autoapisummary::
 
-   canns.analyzer.slow_points.visualization.plot_fixed_points_2d
-   canns.analyzer.slow_points.visualization.plot_fixed_points_3d
+   [ANONYMOUS_PROJECT].analyzer.slow_points.visualization.plot_fixed_points_2d
+   [ANONYMOUS_PROJECT].analyzer.slow_points.visualization.plot_fixed_points_3d
 
 
 Module Contents
@@ -36,8 +36,8 @@ Module Contents
    .. rubric:: Example
 
    >>> import numpy as np
-   >>> from canns.analyzer.slow_points import plot_fixed_points_2d, FixedPoints
-   >>> from canns.analyzer.visualization import PlotConfig
+   >>> from [ANONYMOUS_PROJECT].analyzer.slow_points import plot_fixed_points_2d, FixedPoints
+   >>> from [ANONYMOUS_PROJECT].analyzer.visualization import PlotConfig
    >>>
    >>> # Dummy inputs based on fixed-point tests
    >>> state_traj = np.random.rand(4, 10, 3).astype(np.float32)
@@ -66,8 +66,8 @@ Module Contents
    .. rubric:: Example
 
    >>> import numpy as np
-   >>> from canns.analyzer.slow_points import plot_fixed_points_3d, FixedPoints
-   >>> from canns.analyzer.visualization import PlotConfig
+   >>> from [ANONYMOUS_PROJECT].analyzer.slow_points import plot_fixed_points_3d, FixedPoints
+   >>> from [ANONYMOUS_PROJECT].analyzer.visualization import PlotConfig
    >>>
    >>> # Dummy inputs based on fixed-point tests
    >>> state_traj = np.random.rand(3, 8, 4).astype(np.float32)

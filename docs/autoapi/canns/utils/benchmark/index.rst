@@ -1,7 +1,7 @@
-canns.utils.benchmark
+[ANONYMOUS_PROJECT].utils.benchmark
 =====================
 
-.. py:module:: canns.utils.benchmark
+.. py:module:: [ANONYMOUS_PROJECT].utils.benchmark
 
 
 Functions
@@ -9,7 +9,7 @@ Functions
 
 .. autoapisummary::
 
-   canns.utils.benchmark.benchmark
+   [ANONYMOUS_PROJECT].utils.benchmark.benchmark
 
 
 Module Contents

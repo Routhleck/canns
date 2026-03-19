@@ -1,7 +1,7 @@
-canns.pipeline.gallery.state
+[ANONYMOUS_PROJECT].pipeline.gallery.state
 ============================
 
-.. py:module:: canns.pipeline.gallery.state
+.. py:module:: [ANONYMOUS_PROJECT].pipeline.gallery.state
 
 .. autoapi-nested-parse::
 
@@ -14,7 +14,7 @@ Attributes
 
 .. autoapisummary::
 
-   canns.pipeline.gallery.state.MODEL_ANALYSIS_OPTIONS
+   [ANONYMOUS_PROJECT].pipeline.gallery.state.MODEL_ANALYSIS_OPTIONS
 
 
 Classes
@@ -22,7 +22,7 @@ Classes
 
 .. autoapisummary::
 
-   canns.pipeline.gallery.state.GalleryState
+   [ANONYMOUS_PROJECT].pipeline.gallery.state.GalleryState
 
 
 Functions
@@ -30,8 +30,8 @@ Functions
 
 .. autoapisummary::
 
-   canns.pipeline.gallery.state.get_analysis_options
-   canns.pipeline.gallery.state.get_default_analysis
+   [ANONYMOUS_PROJECT].pipeline.gallery.state.get_analysis_options
+   [ANONYMOUS_PROJECT].pipeline.gallery.state.get_default_analysis
 
 
 Module Contents

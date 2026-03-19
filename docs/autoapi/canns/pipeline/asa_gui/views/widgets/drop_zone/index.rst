@@ -1,7 +1,7 @@
-canns.pipeline.asa_gui.views.widgets.drop_zone
+[ANONYMOUS_PROJECT].pipeline.asa_gui.views.widgets.drop_zone
 ==============================================
 
-.. py:module:: canns.pipeline.asa_gui.views.widgets.drop_zone
+.. py:module:: [ANONYMOUS_PROJECT].pipeline.asa_gui.views.widgets.drop_zone
 
 .. autoapi-nested-parse::
 
@@ -14,7 +14,7 @@ Classes
 
 .. autoapisummary::
 
-   canns.pipeline.asa_gui.views.widgets.drop_zone.DropZone
+   [ANONYMOUS_PROJECT].pipeline.asa_gui.views.widgets.drop_zone.DropZone
 
 
 Module Contents

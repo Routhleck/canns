@@ -1,7 +1,7 @@
-canns.analyzer.data.cell_classification.visualization.grid_plots
+[ANONYMOUS_PROJECT].analyzer.data.cell_classification.visualization.grid_plots
 ================================================================
 
-.. py:module:: canns.analyzer.data.cell_classification.visualization.grid_plots
+.. py:module:: [ANONYMOUS_PROJECT].analyzer.data.cell_classification.visualization.grid_plots
 
 .. autoapi-nested-parse::
 
@@ -14,10 +14,10 @@ Functions
 
 .. autoapisummary::
 
-   canns.analyzer.data.cell_classification.visualization.grid_plots.plot_autocorrelogram
-   canns.analyzer.data.cell_classification.visualization.grid_plots.plot_grid_score_histogram
-   canns.analyzer.data.cell_classification.visualization.grid_plots.plot_gridness_analysis
-   canns.analyzer.data.cell_classification.visualization.grid_plots.plot_rate_map
+   [ANONYMOUS_PROJECT].analyzer.data.cell_classification.visualization.grid_plots.plot_autocorrelogram
+   [ANONYMOUS_PROJECT].analyzer.data.cell_classification.visualization.grid_plots.plot_grid_score_histogram
+   [ANONYMOUS_PROJECT].analyzer.data.cell_classification.visualization.grid_plots.plot_gridness_analysis
+   [ANONYMOUS_PROJECT].analyzer.data.cell_classification.visualization.grid_plots.plot_rate_map
 
 
 Module Contents

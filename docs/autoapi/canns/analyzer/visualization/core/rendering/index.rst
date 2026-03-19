@@ -1,7 +1,7 @@
-canns.analyzer.visualization.core.rendering
+[ANONYMOUS_PROJECT].analyzer.visualization.core.rendering
 ===========================================
 
-.. py:module:: canns.analyzer.visualization.core.rendering
+.. py:module:: [ANONYMOUS_PROJECT].analyzer.visualization.core.rendering
 
 .. autoapi-nested-parse::
 
@@ -17,7 +17,7 @@ Attributes
 
 .. autoapisummary::
 
-   canns.analyzer.visualization.core.rendering.IMAGEIO_AVAILABLE
+   [ANONYMOUS_PROJECT].analyzer.visualization.core.rendering.IMAGEIO_AVAILABLE
 
 
 Classes
@@ -25,7 +25,7 @@ Classes
 
 .. autoapisummary::
 
-   canns.analyzer.visualization.core.rendering.ParallelAnimationRenderer
+   [ANONYMOUS_PROJECT].analyzer.visualization.core.rendering.ParallelAnimationRenderer
 
 
 Functions
@@ -33,9 +33,9 @@ Functions
 
 .. autoapisummary::
 
-   canns.analyzer.visualization.core.rendering.estimate_parallel_speedup
-   canns.analyzer.visualization.core.rendering.render_animation_parallel
-   canns.analyzer.visualization.core.rendering.should_use_parallel
+   [ANONYMOUS_PROJECT].analyzer.visualization.core.rendering.estimate_parallel_speedup
+   [ANONYMOUS_PROJECT].analyzer.visualization.core.rendering.render_animation_parallel
+   [ANONYMOUS_PROJECT].analyzer.visualization.core.rendering.should_use_parallel
 
 
 Module Contents
@@ -105,8 +105,8 @@ Module Contents
    >>> import numpy as np
    >>> import tempfile
    >>> from pathlib import Path
-   >>> from canns.analyzer.visualization.core.rendering import render_animation_parallel
-   >>> from canns.analyzer.visualization.core import rendering
+   >>> from [ANONYMOUS_PROJECT].analyzer.visualization.core.rendering import render_animation_parallel
+   >>> from [ANONYMOUS_PROJECT].analyzer.visualization.core import rendering
    >>>
    >>> def render_frame(idx, data):
    ...     frame = data[idx]

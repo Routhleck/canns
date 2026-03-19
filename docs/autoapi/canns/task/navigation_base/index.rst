@@ -1,7 +1,7 @@
-canns.task.navigation_base
+[ANONYMOUS_PROJECT].task.navigation_base
 ==========================
 
-.. py:module:: canns.task.navigation_base
+.. py:module:: [ANONYMOUS_PROJECT].task.navigation_base
 
 .. autoapi-nested-parse::
 
@@ -14,9 +14,9 @@ Classes
 
 .. autoapisummary::
 
-   canns.task.navigation_base.BaseNavigationTask
-   canns.task.navigation_base.GeodesicDistanceResult
-   canns.task.navigation_base.MovementCostGrid
+   [ANONYMOUS_PROJECT].task.navigation_base.BaseNavigationTask
+   [ANONYMOUS_PROJECT].task.navigation_base.GeodesicDistanceResult
+   [ANONYMOUS_PROJECT].task.navigation_base.MovementCostGrid
 
 
 Module Contents
@@ -24,7 +24,7 @@ Module Contents
 
 .. py:class:: BaseNavigationTask(start_pos=(2.5, 2.5), width=5, height=5, dimensionality='2D', boundary_conditions='solid', scale=None, dx=0.01, grid_dx = None, grid_dy = None, boundary=None, walls=None, holes=None, objects=None, dt=None, speed_mean=0.04, speed_std=0.016, speed_coherence_time=0.7, rotational_velocity_coherence_time=0.08, rotational_velocity_std=120 * np.pi / 180, head_direction_smoothing_timescale=0.15, initial_head_direction = None, thigmotaxis=0.5, wall_repel_distance=0.1, wall_repel_strength=1.0, rng_seed = None, data_class=None)
 
-   Bases: :py:obj:`canns.task._base.Task`
+   Bases: :py:obj:`[ANONYMOUS_PROJECT].task._base.Task`
 
 
    Base class for navigation tasks with geodesic distance computation support.

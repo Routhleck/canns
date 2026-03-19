@@ -1,7 +1,7 @@
-canns.pipeline.asa_gui.models
+[ANONYMOUS_PROJECT].pipeline.asa_gui.models
 =============================
 
-.. py:module:: canns.pipeline.asa_gui.models
+.. py:module:: [ANONYMOUS_PROJECT].pipeline.asa_gui.models
 
 .. autoapi-nested-parse::
 
@@ -15,9 +15,9 @@ Submodules
 .. toctree::
    :maxdepth: 1
 
-   /autoapi/canns/pipeline/asa_gui/models/config/index
-   /autoapi/canns/pipeline/asa_gui/models/job/index
-   /autoapi/canns/pipeline/asa_gui/models/presets/index
+   /autoapi/[ANONYMOUS_PROJECT]/pipeline/asa_gui/models/config/index
+   /autoapi/[ANONYMOUS_PROJECT]/pipeline/asa_gui/models/job/index
+   /autoapi/[ANONYMOUS_PROJECT]/pipeline/asa_gui/models/presets/index
 
 
 Classes
@@ -25,9 +25,9 @@ Classes
 
 .. autoapisummary::
 
-   canns.pipeline.asa_gui.models.AnalysisConfig
-   canns.pipeline.asa_gui.models.JobResult
-   canns.pipeline.asa_gui.models.JobSpec
+   [ANONYMOUS_PROJECT].pipeline.asa_gui.models.AnalysisConfig
+   [ANONYMOUS_PROJECT].pipeline.asa_gui.models.JobResult
+   [ANONYMOUS_PROJECT].pipeline.asa_gui.models.JobSpec
 
 
 Functions
@@ -35,7 +35,7 @@ Functions
 
 .. autoapisummary::
 
-   canns.pipeline.asa_gui.models.get_preset_params
+   [ANONYMOUS_PROJECT].pipeline.asa_gui.models.get_preset_params
 
 
 Package Contents

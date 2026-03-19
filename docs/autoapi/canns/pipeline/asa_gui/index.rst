@@ -1,7 +1,7 @@
-canns.pipeline.asa_gui
+[ANONYMOUS_PROJECT].pipeline.asa_gui
 ======================
 
-.. py:module:: canns.pipeline.asa_gui
+.. py:module:: [ANONYMOUS_PROJECT].pipeline.asa_gui
 
 .. autoapi-nested-parse::
 
@@ -15,16 +15,16 @@ Submodules
 .. toctree::
    :maxdepth: 1
 
-   /autoapi/canns/pipeline/asa_gui/__main__/index
-   /autoapi/canns/pipeline/asa_gui/analysis_modes/index
-   /autoapi/canns/pipeline/asa_gui/app/index
-   /autoapi/canns/pipeline/asa_gui/controllers/index
-   /autoapi/canns/pipeline/asa_gui/core/index
-   /autoapi/canns/pipeline/asa_gui/main_window/index
-   /autoapi/canns/pipeline/asa_gui/models/index
-   /autoapi/canns/pipeline/asa_gui/resources/index
-   /autoapi/canns/pipeline/asa_gui/utils/index
-   /autoapi/canns/pipeline/asa_gui/views/index
+   /autoapi/[ANONYMOUS_PROJECT]/pipeline/asa_gui/__main__/index
+   /autoapi/[ANONYMOUS_PROJECT]/pipeline/asa_gui/analysis_modes/index
+   /autoapi/[ANONYMOUS_PROJECT]/pipeline/asa_gui/app/index
+   /autoapi/[ANONYMOUS_PROJECT]/pipeline/asa_gui/controllers/index
+   /autoapi/[ANONYMOUS_PROJECT]/pipeline/asa_gui/core/index
+   /autoapi/[ANONYMOUS_PROJECT]/pipeline/asa_gui/main_window/index
+   /autoapi/[ANONYMOUS_PROJECT]/pipeline/asa_gui/models/index
+   /autoapi/[ANONYMOUS_PROJECT]/pipeline/asa_gui/resources/index
+   /autoapi/[ANONYMOUS_PROJECT]/pipeline/asa_gui/utils/index
+   /autoapi/[ANONYMOUS_PROJECT]/pipeline/asa_gui/views/index
 
 
 Functions
@@ -32,7 +32,7 @@ Functions
 
 .. autoapisummary::
 
-   canns.pipeline.asa_gui.main
+   [ANONYMOUS_PROJECT].pipeline.asa_gui.main
 
 
 Package Contents
@@ -40,6 +40,6 @@ Package Contents
 
 .. py:function:: main()
 
-   Entry point for canns-gui command.
+   Entry point for [ANONYMOUS_PROJECT]-gui command.
 
 

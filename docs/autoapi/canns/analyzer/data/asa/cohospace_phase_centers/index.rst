@@ -1,7 +1,7 @@
-canns.analyzer.data.asa.cohospace_phase_centers
+[ANONYMOUS_PROJECT].analyzer.data.asa.cohospace_phase_centers
 ===============================================
 
-.. py:module:: canns.analyzer.data.asa.cohospace_phase_centers
+.. py:module:: [ANONYMOUS_PROJECT].analyzer.data.asa.cohospace_phase_centers
 
 .. autoapi-nested-parse::
 
@@ -14,8 +14,8 @@ Functions
 
 .. autoapisummary::
 
-   canns.analyzer.data.asa.cohospace_phase_centers.cohospace_phase_centers
-   canns.analyzer.data.asa.cohospace_phase_centers.plot_cohospace_phase_centers
+   [ANONYMOUS_PROJECT].analyzer.data.asa.cohospace_phase_centers.cohospace_phase_centers
+   [ANONYMOUS_PROJECT].analyzer.data.asa.cohospace_phase_centers.plot_cohospace_phase_centers
 
 
 Module Contents

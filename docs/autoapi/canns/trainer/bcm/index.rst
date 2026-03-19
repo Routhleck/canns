@@ -1,7 +1,7 @@
-canns.trainer.bcm
+[ANONYMOUS_PROJECT].trainer.bcm
 =================
 
-.. py:module:: canns.trainer.bcm
+.. py:module:: [ANONYMOUS_PROJECT].trainer.bcm
 
 .. autoapi-nested-parse::
 
@@ -14,7 +14,7 @@ Classes
 
 .. autoapisummary::
 
-   canns.trainer.bcm.BCMTrainer
+   [ANONYMOUS_PROJECT].trainer.bcm.BCMTrainer
 
 
 Module Contents
@@ -22,7 +22,7 @@ Module Contents
 
 .. py:class:: BCMTrainer(model, learning_rate = 0.01, weight_attr = 'W', compiled = True, **kwargs)
 
-   Bases: :py:obj:`canns.trainer._base.Trainer`
+   Bases: :py:obj:`[ANONYMOUS_PROJECT].trainer._base.Trainer`
 
 
    BCM (Bienenstock-Cooper-Munro) sliding-threshold plasticity trainer.

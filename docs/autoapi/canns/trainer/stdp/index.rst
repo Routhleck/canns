@@ -1,7 +1,7 @@
-canns.trainer.stdp
+[ANONYMOUS_PROJECT].trainer.stdp
 ==================
 
-.. py:module:: canns.trainer.stdp
+.. py:module:: [ANONYMOUS_PROJECT].trainer.stdp
 
 .. autoapi-nested-parse::
 
@@ -14,7 +14,7 @@ Classes
 
 .. autoapisummary::
 
-   canns.trainer.stdp.STDPTrainer
+   [ANONYMOUS_PROJECT].trainer.stdp.STDPTrainer
 
 
 Module Contents
@@ -22,7 +22,7 @@ Module Contents
 
 .. py:class:: STDPTrainer(model, learning_rate = 0.01, A_plus = 0.005, A_minus = 0.00525, weight_attr = 'W', w_min = 0.0, w_max = 1.0, compiled = True, **kwargs)
 
-   Bases: :py:obj:`canns.trainer._base.Trainer`
+   Bases: :py:obj:`[ANONYMOUS_PROJECT].trainer._base.Trainer`
 
 
    STDP (Spike-Timing-Dependent Plasticity) trainer.

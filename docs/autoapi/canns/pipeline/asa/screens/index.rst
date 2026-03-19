@@ -1,7 +1,7 @@
-canns.pipeline.asa.screens
+[ANONYMOUS_PROJECT].pipeline.asa.screens
 ==========================
 
-.. py:module:: canns.pipeline.asa.screens
+.. py:module:: [ANONYMOUS_PROJECT].pipeline.asa.screens
 
 .. autoapi-nested-parse::
 
@@ -16,10 +16,10 @@ Classes
 
 .. autoapisummary::
 
-   canns.pipeline.asa.screens.ErrorScreen
-   canns.pipeline.asa.screens.HelpScreen
-   canns.pipeline.asa.screens.TerminalSizeWarning
-   canns.pipeline.asa.screens.WorkdirScreen
+   [ANONYMOUS_PROJECT].pipeline.asa.screens.ErrorScreen
+   [ANONYMOUS_PROJECT].pipeline.asa.screens.HelpScreen
+   [ANONYMOUS_PROJECT].pipeline.asa.screens.TerminalSizeWarning
+   [ANONYMOUS_PROJECT].pipeline.asa.screens.WorkdirScreen
 
 
 Module Contents

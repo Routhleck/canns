@@ -1,7 +1,7 @@
-canns.models.brain_inspired.hopfield
+[ANONYMOUS_PROJECT].models.brain_inspired.hopfield
 ====================================
 
-.. py:module:: canns.models.brain_inspired.hopfield
+.. py:module:: [ANONYMOUS_PROJECT].models.brain_inspired.hopfield
 
 
 Classes
@@ -9,7 +9,7 @@ Classes
 
 .. autoapisummary::
 
-   canns.models.brain_inspired.hopfield.AmariHopfieldNetwork
+   [ANONYMOUS_PROJECT].models.brain_inspired.hopfield.AmariHopfieldNetwork
 
 
 Module Contents
@@ -17,7 +17,7 @@ Module Contents
 
 .. py:class:: AmariHopfieldNetwork(num_neurons, asyn = False, threshold = 0.0, activation = 'sign', temperature = 1.0, **kwargs)
 
-   Bases: :py:obj:`canns.models.brain_inspired._base.BrainInspiredModel`
+   Bases: :py:obj:`[ANONYMOUS_PROJECT].models.brain_inspired._base.BrainInspiredModel`
 
 
    Amari-Hopfield network with discrete or continuous dynamics.
@@ -29,7 +29,7 @@ Module Contents
    .. rubric:: Examples
 
    >>> import jax.numpy as jnp
-   >>> from canns.models.brain_inspired import AmariHopfieldNetwork
+   >>> from [ANONYMOUS_PROJECT].models.brain_inspired import AmariHopfieldNetwork
    >>>
    >>> model = AmariHopfieldNetwork(num_neurons=3, activation="sign")
    >>> pattern = jnp.array([1.0, -1.0, 1.0], dtype=jnp.float32)

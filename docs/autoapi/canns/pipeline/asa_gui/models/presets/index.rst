@@ -1,7 +1,7 @@
-canns.pipeline.asa_gui.models.presets
+[ANONYMOUS_PROJECT].pipeline.asa_gui.models.presets
 =====================================
 
-.. py:module:: canns.pipeline.asa_gui.models.presets
+.. py:module:: [ANONYMOUS_PROJECT].pipeline.asa_gui.models.presets
 
 .. autoapi-nested-parse::
 
@@ -14,7 +14,7 @@ Functions
 
 .. autoapisummary::
 
-   canns.pipeline.asa_gui.models.presets.get_preset_params
+   [ANONYMOUS_PROJECT].pipeline.asa_gui.models.presets.get_preset_params
 
 
 Module Contents

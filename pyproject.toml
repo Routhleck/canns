@@ -1,7 +1,7 @@
 # ---- Project Info and Dependencies ----
 
 [project.urls]
-Repository = "https://github.com/routhleck/canns"
+Repository = "[ANONYMOUS_REPO]"
 # Homepage = "https://..."
 # Documentation = "https://..."
 
@@ -9,7 +9,7 @@ Repository = "https://github.com/routhleck/canns"
 name = "canns"
 description = "A Python Library for Continuous Attractor Neural Networks"
 authors = [
-    { name="Sichao He", email="sichaohe@outlook.com" },
+    { name="[ANONYMOUS_AUTHOR]", email="[ANONYMOUS_USER]@outlook.com" },
 ]
 readme = "README.md"
 license = "Apache-2.0"

@@ -1,7 +1,7 @@
-canns.typing
+[ANONYMOUS_PROJECT].typing
 ============
 
-.. py:module:: canns.typing
+.. py:module:: [ANONYMOUS_PROJECT].typing
 
 
 Attributes
@@ -9,9 +9,9 @@ Attributes
 
 .. autoapisummary::
 
-   canns.typing.Iext_pair_type
-   canns.typing.Iext_type
-   canns.typing.time_type
+   [ANONYMOUS_PROJECT].typing.Iext_pair_type
+   [ANONYMOUS_PROJECT].typing.Iext_type
+   [ANONYMOUS_PROJECT].typing.time_type
 
 
 Package Contents

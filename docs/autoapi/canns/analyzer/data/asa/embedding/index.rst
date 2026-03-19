@@ -1,7 +1,7 @@
-canns.analyzer.data.asa.embedding
+[ANONYMOUS_PROJECT].analyzer.data.asa.embedding
 =================================
 
-.. py:module:: canns.analyzer.data.asa.embedding
+.. py:module:: [ANONYMOUS_PROJECT].analyzer.data.asa.embedding
 
 
 Functions
@@ -9,7 +9,7 @@ Functions
 
 .. autoapisummary::
 
-   canns.analyzer.data.asa.embedding.embed_spike_trains
+   [ANONYMOUS_PROJECT].analyzer.data.asa.embedding.embed_spike_trains
 
 
 Module Contents
@@ -39,7 +39,7 @@ Module Contents
 
    .. rubric:: Examples
 
-   >>> from canns.analyzer.data import SpikeEmbeddingConfig, embed_spike_trains
+   >>> from [ANONYMOUS_PROJECT].analyzer.data import SpikeEmbeddingConfig, embed_spike_trains
    >>> cfg = SpikeEmbeddingConfig(smooth=False, speed_filter=False)
    >>> spikes, xx, yy, tt = embed_spike_trains(mock_data, config=cfg)  # doctest: +SKIP
    >>> spikes.ndim

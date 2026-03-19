@@ -1,22 +1,22 @@
-canns
+[ANONYMOUS_PROJECT]
 =====
 
-.. py:module:: canns
+.. py:module:: [ANONYMOUS_PROJECT]
 
 .. autoapi-nested-parse::
 
-   Top-level package for CANNs.
+   Top-level package for [ANONYMOUS_PROJECT].
 
    This module exposes the main namespaces so you can import them directly from
-   ``canns`` (for example, ``canns.data`` or ``canns.trainer``). It also provides
+   ``[ANONYMOUS_PROJECT]`` (for example, ``[ANONYMOUS_PROJECT].data`` or ``[ANONYMOUS_PROJECT].trainer``). It also provides
    simple version metadata.
 
    .. rubric:: Examples
 
-   >>> import canns
-   >>> print(canns.__version__)
-   >>> print(canns.version_info)
-   >>> print(list(canns.data.DATASETS))
+   >>> import [ANONYMOUS_PROJECT]
+   >>> print([ANONYMOUS_PROJECT].__version__)
+   >>> print([ANONYMOUS_PROJECT].version_info)
+   >>> print(list([ANONYMOUS_PROJECT].data.DATASETS))
 
 
 
@@ -26,14 +26,14 @@ Submodules
 .. toctree::
    :maxdepth: 1
 
-   /autoapi/canns/analyzer/index
-   /autoapi/canns/data/index
-   /autoapi/canns/models/index
-   /autoapi/canns/pipeline/index
-   /autoapi/canns/task/index
-   /autoapi/canns/trainer/index
-   /autoapi/canns/typing/index
-   /autoapi/canns/utils/index
+   /autoapi/[ANONYMOUS_PROJECT]/analyzer/index
+   /autoapi/[ANONYMOUS_PROJECT]/data/index
+   /autoapi/[ANONYMOUS_PROJECT]/models/index
+   /autoapi/[ANONYMOUS_PROJECT]/pipeline/index
+   /autoapi/[ANONYMOUS_PROJECT]/task/index
+   /autoapi/[ANONYMOUS_PROJECT]/trainer/index
+   /autoapi/[ANONYMOUS_PROJECT]/typing/index
+   /autoapi/[ANONYMOUS_PROJECT]/utils/index
 
 
 Attributes
@@ -41,8 +41,8 @@ Attributes
 
 .. autoapisummary::
 
-   canns.__version__
-   canns.version_info
+   [ANONYMOUS_PROJECT].__version__
+   [ANONYMOUS_PROJECT].version_info
 
 
 Package Contents
@@ -57,8 +57,8 @@ Package Contents
 
    .. rubric:: Examples
 
-   >>> import canns
-   >>> print(canns.__version__)
+   >>> import [ANONYMOUS_PROJECT]
+   >>> print([ANONYMOUS_PROJECT].__version__)
 
 .. py:data:: version_info
 
@@ -69,6 +69,6 @@ Package Contents
 
    .. rubric:: Examples
 
-   >>> import canns
-   >>> print(canns.version_info)
+   >>> import [ANONYMOUS_PROJECT]
+   >>> print([ANONYMOUS_PROJECT].version_info)
 

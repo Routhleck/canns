@@ -1,7 +1,7 @@
-canns.analyzer.data.asa.cohospace
+[ANONYMOUS_PROJECT].analyzer.data.asa.cohospace
 =================================
 
-.. py:module:: canns.analyzer.data.asa.cohospace
+.. py:module:: [ANONYMOUS_PROJECT].analyzer.data.asa.cohospace
 
 
 Functions
@@ -9,9 +9,9 @@ Functions
 
 .. autoapisummary::
 
-   canns.analyzer.data.asa.cohospace.cohospace
-   canns.analyzer.data.asa.cohospace.plot_cohospace
-   canns.analyzer.data.asa.cohospace.plot_cohospace_skewed
+   [ANONYMOUS_PROJECT].analyzer.data.asa.cohospace.cohospace
+   [ANONYMOUS_PROJECT].analyzer.data.asa.cohospace.plot_cohospace
+   [ANONYMOUS_PROJECT].analyzer.data.asa.cohospace.plot_cohospace_skewed
 
 
 Module Contents

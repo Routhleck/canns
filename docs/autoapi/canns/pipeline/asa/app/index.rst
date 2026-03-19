@@ -1,7 +1,7 @@
-canns.pipeline.asa.app
+[ANONYMOUS_PROJECT].pipeline.asa.app
 ======================
 
-.. py:module:: canns.pipeline.asa.app
+.. py:module:: [ANONYMOUS_PROJECT].pipeline.asa.app
 
 .. autoapi-nested-parse::
 
@@ -19,7 +19,7 @@ Classes
 
 .. autoapisummary::
 
-   canns.pipeline.asa.app.ASAApp
+   [ANONYMOUS_PROJECT].pipeline.asa.app.ASAApp
 
 
 Module Contents

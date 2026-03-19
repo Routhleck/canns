@@ -1,7 +1,7 @@
-canns.pipeline.gallery
+[ANONYMOUS_PROJECT].pipeline.gallery
 ======================
 
-.. py:module:: canns.pipeline.gallery
+.. py:module:: [ANONYMOUS_PROJECT].pipeline.gallery
 
 .. autoapi-nested-parse::
 
@@ -15,10 +15,10 @@ Submodules
 .. toctree::
    :maxdepth: 1
 
-   /autoapi/canns/pipeline/gallery/__main__/index
-   /autoapi/canns/pipeline/gallery/app/index
-   /autoapi/canns/pipeline/gallery/runner/index
-   /autoapi/canns/pipeline/gallery/state/index
+   /autoapi/[ANONYMOUS_PROJECT]/pipeline/gallery/__main__/index
+   /autoapi/[ANONYMOUS_PROJECT]/pipeline/gallery/app/index
+   /autoapi/[ANONYMOUS_PROJECT]/pipeline/gallery/runner/index
+   /autoapi/[ANONYMOUS_PROJECT]/pipeline/gallery/state/index
 
 
 Classes
@@ -26,7 +26,7 @@ Classes
 
 .. autoapisummary::
 
-   canns.pipeline.gallery.GalleryApp
+   [ANONYMOUS_PROJECT].pipeline.gallery.GalleryApp
 
 
 Functions
@@ -34,7 +34,7 @@ Functions
 
 .. autoapisummary::
 
-   canns.pipeline.gallery.main
+   [ANONYMOUS_PROJECT].pipeline.gallery.main
 
 
 Package Contents
@@ -147,7 +147,7 @@ Package Contents
 
 
    .. py:attribute:: TITLE
-      :value: 'CANNs Model Gallery'
+      :value: '[ANONYMOUS_PROJECT] Model Gallery'
 
 
       A class variable to set the *default* title for the application.

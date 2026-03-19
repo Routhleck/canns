@@ -1,7 +1,7 @@
-canns.pipeline.asa_gui.core.worker
+[ANONYMOUS_PROJECT].pipeline.asa_gui.core.worker
 ==================================
 
-.. py:module:: canns.pipeline.asa_gui.core.worker
+.. py:module:: [ANONYMOUS_PROJECT].pipeline.asa_gui.core.worker
 
 .. autoapi-nested-parse::
 
@@ -17,8 +17,8 @@ Classes
 
 .. autoapisummary::
 
-   canns.pipeline.asa_gui.core.worker.AnalysisWorker
-   canns.pipeline.asa_gui.core.worker.WorkerManager
+   [ANONYMOUS_PROJECT].pipeline.asa_gui.core.worker.AnalysisWorker
+   [ANONYMOUS_PROJECT].pipeline.asa_gui.core.worker.WorkerManager
 
 
 Module Contents

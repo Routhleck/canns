@@ -1,7 +1,7 @@
-canns.pipeline.asa_gui.models.config
+[ANONYMOUS_PROJECT].pipeline.asa_gui.models.config
 ====================================
 
-.. py:module:: canns.pipeline.asa_gui.models.config
+.. py:module:: [ANONYMOUS_PROJECT].pipeline.asa_gui.models.config
 
 .. autoapi-nested-parse::
 
@@ -14,7 +14,7 @@ Classes
 
 .. autoapisummary::
 
-   canns.pipeline.asa_gui.models.config.AnalysisConfig
+   [ANONYMOUS_PROJECT].pipeline.asa_gui.models.config.AnalysisConfig
 
 
 Module Contents

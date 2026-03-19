@@ -1,7 +1,7 @@
-canns.models.basic.cann
+[ANONYMOUS_PROJECT].models.basic.cann
 =======================
 
-.. py:module:: canns.models.basic.cann
+.. py:module:: [ANONYMOUS_PROJECT].models.basic.cann
 
 
 Classes
@@ -9,13 +9,13 @@ Classes
 
 .. autoapisummary::
 
-   canns.models.basic.cann.BaseCANN
-   canns.models.basic.cann.BaseCANN1D
-   canns.models.basic.cann.BaseCANN2D
-   canns.models.basic.cann.CANN1D
-   canns.models.basic.cann.CANN1D_SFA
-   canns.models.basic.cann.CANN2D
-   canns.models.basic.cann.CANN2D_SFA
+   [ANONYMOUS_PROJECT].models.basic.cann.BaseCANN
+   [ANONYMOUS_PROJECT].models.basic.cann.BaseCANN1D
+   [ANONYMOUS_PROJECT].models.basic.cann.BaseCANN2D
+   [ANONYMOUS_PROJECT].models.basic.cann.CANN1D
+   [ANONYMOUS_PROJECT].models.basic.cann.CANN1D_SFA
+   [ANONYMOUS_PROJECT].models.basic.cann.CANN2D
+   [ANONYMOUS_PROJECT].models.basic.cann.CANN2D_SFA
 
 
 Module Contents
@@ -23,7 +23,7 @@ Module Contents
 
 .. py:class:: BaseCANN(shape, **kwargs)
 
-   Bases: :py:obj:`canns.models.basic._base.BasicModel`
+   Bases: :py:obj:`[ANONYMOUS_PROJECT].models.basic._base.BasicModel`
 
 
    Base class for Continuous Attractor Neural Network (CANN) models.
@@ -82,7 +82,7 @@ Module Contents
    .. rubric:: Examples
 
    >>> import brainpy.math as bm
-   >>> from canns.models.basic.cann import BaseCANN1D
+   >>> from [ANONYMOUS_PROJECT].models.basic.cann import BaseCANN1D
    >>>
    >>> bm.set_dt(0.1)
    >>> model = BaseCANN1D(num=64)
@@ -206,7 +206,7 @@ Module Contents
    .. rubric:: Examples
 
    >>> import brainpy.math as bm
-   >>> from canns.models.basic.cann import BaseCANN2D
+   >>> from [ANONYMOUS_PROJECT].models.basic.cann import BaseCANN2D
    >>>
    >>> bm.set_dt(0.1)
    >>> model = BaseCANN2D(length=16)
@@ -346,7 +346,7 @@ Module Contents
    .. rubric:: Examples
 
    >>> import brainpy.math as bm
-   >>> from canns.models.basic import CANN1D
+   >>> from [ANONYMOUS_PROJECT].models.basic import CANN1D
    >>>
    >>> bm.set_dt(0.1)
    >>> model = CANN1D(num=64)
@@ -397,7 +397,7 @@ Module Contents
    .. rubric:: Examples
 
    >>> import brainpy.math as bm
-   >>> from canns.models.basic import CANN1D_SFA
+   >>> from [ANONYMOUS_PROJECT].models.basic import CANN1D_SFA
    >>>
    >>> bm.set_dt(0.1)
    >>> model = CANN1D_SFA(num=64)
@@ -463,7 +463,7 @@ Module Contents
    .. rubric:: Examples
 
    >>> import brainpy.math as bm
-   >>> from canns.models.basic import CANN2D
+   >>> from [ANONYMOUS_PROJECT].models.basic import CANN2D
    >>>
    >>> bm.set_dt(0.1)
    >>> model = CANN2D(length=16)
@@ -511,7 +511,7 @@ Module Contents
    .. rubric:: Examples
 
    >>> import brainpy.math as bm
-   >>> from canns.models.basic import CANN2D_SFA
+   >>> from [ANONYMOUS_PROJECT].models.basic import CANN2D_SFA
    >>>
    >>> bm.set_dt(0.1)
    >>> model = CANN2D_SFA(length=16)

@@ -1,7 +1,7 @@
-canns.analyzer.data.cell_classification.io
+[ANONYMOUS_PROJECT].analyzer.data.cell_classification.io
 ==========================================
 
-.. py:module:: canns.analyzer.data.cell_classification.io
+.. py:module:: [ANONYMOUS_PROJECT].analyzer.data.cell_classification.io
 
 .. autoapi-nested-parse::
 
@@ -15,7 +15,7 @@ Submodules
 .. toctree::
    :maxdepth: 1
 
-   /autoapi/canns/analyzer/data/cell_classification/io/matlab_loader/index
+   /autoapi/[ANONYMOUS_PROJECT]/analyzer/data/cell_classification/io/matlab_loader/index
 
 
 Classes
@@ -23,9 +23,9 @@ Classes
 
 .. autoapisummary::
 
-   canns.analyzer.data.cell_classification.io.MATFileLoader
-   canns.analyzer.data.cell_classification.io.TuningCurve
-   canns.analyzer.data.cell_classification.io.Unit
+   [ANONYMOUS_PROJECT].analyzer.data.cell_classification.io.MATFileLoader
+   [ANONYMOUS_PROJECT].analyzer.data.cell_classification.io.TuningCurve
+   [ANONYMOUS_PROJECT].analyzer.data.cell_classification.io.Unit
 
 
 Package Contents

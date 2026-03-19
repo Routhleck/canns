@@ -1,7 +1,7 @@
-canns.analyzer.data.asa.cohospace_scatter
+[ANONYMOUS_PROJECT].analyzer.data.asa.cohospace_scatter
 =========================================
 
-.. py:module:: canns.analyzer.data.asa.cohospace_scatter
+.. py:module:: [ANONYMOUS_PROJECT].analyzer.data.asa.cohospace_scatter
 
 .. autoapi-nested-parse::
 
@@ -14,18 +14,18 @@ Functions
 
 .. autoapisummary::
 
-   canns.analyzer.data.asa.cohospace_scatter.compute_cohoscore_scatter_1d
-   canns.analyzer.data.asa.cohospace_scatter.compute_cohoscore_scatter_2d
-   canns.analyzer.data.asa.cohospace_scatter.draw_torus_parallelogram_grid_scatter
-   canns.analyzer.data.asa.cohospace_scatter.plot_cohospace_scatter_neuron_1d
-   canns.analyzer.data.asa.cohospace_scatter.plot_cohospace_scatter_neuron_2d
-   canns.analyzer.data.asa.cohospace_scatter.plot_cohospace_scatter_neuron_skewed
-   canns.analyzer.data.asa.cohospace_scatter.plot_cohospace_scatter_population_1d
-   canns.analyzer.data.asa.cohospace_scatter.plot_cohospace_scatter_population_2d
-   canns.analyzer.data.asa.cohospace_scatter.plot_cohospace_scatter_population_skewed
-   canns.analyzer.data.asa.cohospace_scatter.plot_cohospace_scatter_trajectory_1d
-   canns.analyzer.data.asa.cohospace_scatter.plot_cohospace_scatter_trajectory_2d
-   canns.analyzer.data.asa.cohospace_scatter.tile_parallelogram_points_scatter
+   [ANONYMOUS_PROJECT].analyzer.data.asa.cohospace_scatter.compute_cohoscore_scatter_1d
+   [ANONYMOUS_PROJECT].analyzer.data.asa.cohospace_scatter.compute_cohoscore_scatter_2d
+   [ANONYMOUS_PROJECT].analyzer.data.asa.cohospace_scatter.draw_torus_parallelogram_grid_scatter
+   [ANONYMOUS_PROJECT].analyzer.data.asa.cohospace_scatter.plot_cohospace_scatter_neuron_1d
+   [ANONYMOUS_PROJECT].analyzer.data.asa.cohospace_scatter.plot_cohospace_scatter_neuron_2d
+   [ANONYMOUS_PROJECT].analyzer.data.asa.cohospace_scatter.plot_cohospace_scatter_neuron_skewed
+   [ANONYMOUS_PROJECT].analyzer.data.asa.cohospace_scatter.plot_cohospace_scatter_population_1d
+   [ANONYMOUS_PROJECT].analyzer.data.asa.cohospace_scatter.plot_cohospace_scatter_population_2d
+   [ANONYMOUS_PROJECT].analyzer.data.asa.cohospace_scatter.plot_cohospace_scatter_population_skewed
+   [ANONYMOUS_PROJECT].analyzer.data.asa.cohospace_scatter.plot_cohospace_scatter_trajectory_1d
+   [ANONYMOUS_PROJECT].analyzer.data.asa.cohospace_scatter.plot_cohospace_scatter_trajectory_2d
+   [ANONYMOUS_PROJECT].analyzer.data.asa.cohospace_scatter.tile_parallelogram_points_scatter
 
 
 Module Contents

@@ -1,7 +1,7 @@
-canns.analyzer.data.asa.fr
+[ANONYMOUS_PROJECT].analyzer.data.asa.fr
 ==========================
 
-.. py:module:: canns.analyzer.data.asa.fr
+.. py:module:: [ANONYMOUS_PROJECT].analyzer.data.asa.fr
 
 
 Classes
@@ -9,7 +9,7 @@ Classes
 
 .. autoapisummary::
 
-   canns.analyzer.data.asa.fr.FRMResult
+   [ANONYMOUS_PROJECT].analyzer.data.asa.fr.FRMResult
 
 
 Functions
@@ -17,10 +17,10 @@ Functions
 
 .. autoapisummary::
 
-   canns.analyzer.data.asa.fr.compute_fr_heatmap_matrix
-   canns.analyzer.data.asa.fr.compute_frm
-   canns.analyzer.data.asa.fr.plot_frm
-   canns.analyzer.data.asa.fr.save_fr_heatmap_png
+   [ANONYMOUS_PROJECT].analyzer.data.asa.fr.compute_fr_heatmap_matrix
+   [ANONYMOUS_PROJECT].analyzer.data.asa.fr.compute_frm
+   [ANONYMOUS_PROJECT].analyzer.data.asa.fr.plot_frm
+   [ANONYMOUS_PROJECT].analyzer.data.asa.fr.save_fr_heatmap_png
 
 
 Module Contents

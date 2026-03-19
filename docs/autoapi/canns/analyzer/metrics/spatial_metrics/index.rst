@@ -1,7 +1,7 @@
-canns.analyzer.metrics.spatial_metrics
+[ANONYMOUS_PROJECT].analyzer.metrics.spatial_metrics
 ======================================
 
-.. py:module:: canns.analyzer.metrics.spatial_metrics
+.. py:module:: [ANONYMOUS_PROJECT].analyzer.metrics.spatial_metrics
 
 .. autoapi-nested-parse::
 
@@ -19,11 +19,11 @@ Functions
 
 .. autoapisummary::
 
-   canns.analyzer.metrics.spatial_metrics.compute_firing_field
-   canns.analyzer.metrics.spatial_metrics.compute_grid_score
-   canns.analyzer.metrics.spatial_metrics.compute_spatial_autocorrelation
-   canns.analyzer.metrics.spatial_metrics.find_grid_spacing
-   canns.analyzer.metrics.spatial_metrics.gaussian_smooth_heatmaps
+   [ANONYMOUS_PROJECT].analyzer.metrics.spatial_metrics.compute_firing_field
+   [ANONYMOUS_PROJECT].analyzer.metrics.spatial_metrics.compute_grid_score
+   [ANONYMOUS_PROJECT].analyzer.metrics.spatial_metrics.compute_spatial_autocorrelation
+   [ANONYMOUS_PROJECT].analyzer.metrics.spatial_metrics.find_grid_spacing
+   [ANONYMOUS_PROJECT].analyzer.metrics.spatial_metrics.gaussian_smooth_heatmaps
 
 
 Module Contents
@@ -56,7 +56,7 @@ Module Contents
    .. rubric:: Examples
 
    >>> import numpy as np
-   >>> from canns.analyzer.metrics.spatial_metrics import compute_firing_field
+   >>> from [ANONYMOUS_PROJECT].analyzer.metrics.spatial_metrics import compute_firing_field
    >>>
    >>> # Dummy inputs (T timesteps, N neurons)
    >>> activity = np.random.rand(100, 3)
@@ -87,7 +87,7 @@ Module Contents
    .. rubric:: Examples
 
    >>> import numpy as np
-   >>> from canns.analyzer.metrics.spatial_metrics import compute_grid_score
+   >>> from [ANONYMOUS_PROJECT].analyzer.metrics.spatial_metrics import compute_grid_score
    >>>
    >>> autocorr = np.random.rand(15, 15)
    >>> grid_score, rotated_corrs = compute_grid_score(autocorr)
@@ -110,7 +110,7 @@ Module Contents
    .. rubric:: Examples
 
    >>> import numpy as np
-   >>> from canns.analyzer.metrics.spatial_metrics import compute_spatial_autocorrelation
+   >>> from [ANONYMOUS_PROJECT].analyzer.metrics.spatial_metrics import compute_spatial_autocorrelation
    >>>
    >>> rate_map = np.random.rand(10, 10)
    >>> autocorr = compute_spatial_autocorrelation(rate_map)
@@ -134,7 +134,7 @@ Module Contents
    .. rubric:: Examples
 
    >>> import numpy as np
-   >>> from canns.analyzer.metrics.spatial_metrics import find_grid_spacing
+   >>> from [ANONYMOUS_PROJECT].analyzer.metrics.spatial_metrics import find_grid_spacing
    >>>
    >>> autocorr = np.random.rand(20, 20)
    >>> spacing_bins, spacing_m = find_grid_spacing(autocorr, bin_size=0.05)
@@ -157,7 +157,7 @@ Module Contents
    .. rubric:: Examples
 
    >>> import numpy as np
-   >>> from canns.analyzer.metrics.spatial_metrics import gaussian_smooth_heatmaps
+   >>> from [ANONYMOUS_PROJECT].analyzer.metrics.spatial_metrics import gaussian_smooth_heatmaps
    >>>
    >>> heatmaps = np.random.rand(2, 5, 5)
    >>> smoothed = gaussian_smooth_heatmaps(heatmaps, sigma=1.0)

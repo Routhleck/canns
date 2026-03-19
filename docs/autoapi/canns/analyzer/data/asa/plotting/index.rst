@@ -1,7 +1,7 @@
-canns.analyzer.data.asa.plotting
+[ANONYMOUS_PROJECT].analyzer.data.asa.plotting
 ================================
 
-.. py:module:: canns.analyzer.data.asa.plotting
+.. py:module:: [ANONYMOUS_PROJECT].analyzer.data.asa.plotting
 
 
 Functions
@@ -9,13 +9,13 @@ Functions
 
 .. autoapisummary::
 
-   canns.analyzer.data.asa.plotting.plot_2d_bump_on_manifold
-   canns.analyzer.data.asa.plotting.plot_3d_bump_on_torus
-   canns.analyzer.data.asa.plotting.plot_cohomap_scatter
-   canns.analyzer.data.asa.plotting.plot_cohomap_scatter_multi
-   canns.analyzer.data.asa.plotting.plot_path_compare_1d
-   canns.analyzer.data.asa.plotting.plot_path_compare_2d
-   canns.analyzer.data.asa.plotting.plot_projection
+   [ANONYMOUS_PROJECT].analyzer.data.asa.plotting.plot_2d_bump_on_manifold
+   [ANONYMOUS_PROJECT].analyzer.data.asa.plotting.plot_3d_bump_on_torus
+   [ANONYMOUS_PROJECT].analyzer.data.asa.plotting.plot_cohomap_scatter
+   [ANONYMOUS_PROJECT].analyzer.data.asa.plotting.plot_cohomap_scatter_multi
+   [ANONYMOUS_PROJECT].analyzer.data.asa.plotting.plot_path_compare_1d
+   [ANONYMOUS_PROJECT].analyzer.data.asa.plotting.plot_path_compare_2d
+   [ANONYMOUS_PROJECT].analyzer.data.asa.plotting.plot_projection
 
 
 Module Contents
@@ -61,7 +61,7 @@ Module Contents
 
    Visualize the movement of the neural activity bump on a torus using matplotlib animation.
 
-   This function follows the canns.analyzer.plotting patterns for animation generation
+   This function follows the [ANONYMOUS_PROJECT].analyzer.plotting patterns for animation generation
    with progress tracking and proper resource cleanup.
 
    :param decoding_result: dict or str

@@ -1,7 +1,7 @@
-canns.pipeline.asa_gui.resources
+[ANONYMOUS_PROJECT].pipeline.asa_gui.resources
 ================================
 
-.. py:module:: canns.pipeline.asa_gui.resources
+.. py:module:: [ANONYMOUS_PROJECT].pipeline.asa_gui.resources
 
 .. autoapi-nested-parse::
 
@@ -14,8 +14,8 @@ Functions
 
 .. autoapisummary::
 
-   canns.pipeline.asa_gui.resources.load_theme_qss
-   canns.pipeline.asa_gui.resources.resource_path
+   [ANONYMOUS_PROJECT].pipeline.asa_gui.resources.load_theme_qss
+   [ANONYMOUS_PROJECT].pipeline.asa_gui.resources.resource_path
 
 
 Package Contents

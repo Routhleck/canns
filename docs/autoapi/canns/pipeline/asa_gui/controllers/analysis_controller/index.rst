@@ -1,7 +1,7 @@
-canns.pipeline.asa_gui.controllers.analysis_controller
+[ANONYMOUS_PROJECT].pipeline.asa_gui.controllers.analysis_controller
 ======================================================
 
-.. py:module:: canns.pipeline.asa_gui.controllers.analysis_controller
+.. py:module:: [ANONYMOUS_PROJECT].pipeline.asa_gui.controllers.analysis_controller
 
 .. autoapi-nested-parse::
 
@@ -14,7 +14,7 @@ Classes
 
 .. autoapisummary::
 
-   canns.pipeline.asa_gui.controllers.analysis_controller.AnalysisController
+   [ANONYMOUS_PROJECT].pipeline.asa_gui.controllers.analysis_controller.AnalysisController
 
 
 Module Contents

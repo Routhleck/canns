@@ -1,7 +1,7 @@
-canns.analyzer.data.asa.tda
+[ANONYMOUS_PROJECT].analyzer.data.asa.tda
 ===========================
 
-.. py:module:: canns.analyzer.data.asa.tda
+.. py:module:: [ANONYMOUS_PROJECT].analyzer.data.asa.tda
 
 
 Attributes
@@ -9,7 +9,7 @@ Attributes
 
 .. autoapisummary::
 
-   canns.analyzer.data.asa.tda.HAS_NUMBA
+   [ANONYMOUS_PROJECT].analyzer.data.asa.tda.HAS_NUMBA
 
 
 Functions
@@ -17,7 +17,7 @@ Functions
 
 .. autoapisummary::
 
-   canns.analyzer.data.asa.tda.tda_vis
+   [ANONYMOUS_PROJECT].analyzer.data.asa.tda.tda_vis
 
 
 Module Contents
@@ -46,7 +46,7 @@ Module Contents
 
    .. rubric:: Examples
 
-   >>> from canns.analyzer.data import TDAConfig, tda_vis
+   >>> from [ANONYMOUS_PROJECT].analyzer.data import TDAConfig, tda_vis
    >>> cfg = TDAConfig(maxdim=1, do_shuffle=False, show=False)
    >>> result = tda_vis(embed_data, config=cfg)  # doctest: +SKIP
    >>> sorted(result.keys())

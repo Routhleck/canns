@@ -1,7 +1,7 @@
-canns.analyzer.data.asa.utils
+[ANONYMOUS_PROJECT].analyzer.data.asa.utils
 =============================
 
-.. py:module:: canns.analyzer.data.asa.utils
+.. py:module:: [ANONYMOUS_PROJECT].analyzer.data.asa.utils
 
 .. autoapi-nested-parse::
 

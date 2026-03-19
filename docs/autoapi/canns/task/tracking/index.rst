@@ -1,7 +1,7 @@
-canns.task.tracking
+[ANONYMOUS_PROJECT].task.tracking
 ===================
 
-.. py:module:: canns.task.tracking
+.. py:module:: [ANONYMOUS_PROJECT].task.tracking
 
 
 Classes
@@ -9,12 +9,12 @@ Classes
 
 .. autoapisummary::
 
-   canns.task.tracking.PopulationCoding1D
-   canns.task.tracking.PopulationCoding2D
-   canns.task.tracking.SmoothTracking1D
-   canns.task.tracking.SmoothTracking2D
-   canns.task.tracking.TemplateMatching1D
-   canns.task.tracking.TemplateMatching2D
+   [ANONYMOUS_PROJECT].task.tracking.PopulationCoding1D
+   [ANONYMOUS_PROJECT].task.tracking.PopulationCoding2D
+   [ANONYMOUS_PROJECT].task.tracking.SmoothTracking1D
+   [ANONYMOUS_PROJECT].task.tracking.SmoothTracking2D
+   [ANONYMOUS_PROJECT].task.tracking.TemplateMatching1D
+   [ANONYMOUS_PROJECT].task.tracking.TemplateMatching2D
 
 
 Module Contents
@@ -38,8 +38,8 @@ Module Contents
    .. rubric:: Examples
 
    >>> import brainpy.math as bm
-   >>> from canns.models.basic import CANN1D
-   >>> from canns.task.tracking import PopulationCoding1D
+   >>> from [ANONYMOUS_PROJECT].models.basic import CANN1D
+   >>> from [ANONYMOUS_PROJECT].task.tracking import PopulationCoding1D
    >>>
    >>> bm.set_dt(0.1)
    >>> model = CANN1D(num=64)
@@ -94,8 +94,8 @@ Module Contents
    .. rubric:: Examples
 
    >>> import brainpy.math as bm
-   >>> from canns.models.basic import CANN2D
-   >>> from canns.task.tracking import PopulationCoding2D
+   >>> from [ANONYMOUS_PROJECT].models.basic import CANN2D
+   >>> from [ANONYMOUS_PROJECT].task.tracking import PopulationCoding2D
    >>>
    >>> bm.set_dt(0.1)
    >>> model = CANN2D(length=8)
@@ -150,8 +150,8 @@ Module Contents
    .. rubric:: Examples
 
    >>> import brainpy.math as bm
-   >>> from canns.models.basic import CANN1D
-   >>> from canns.task.tracking import SmoothTracking1D
+   >>> from [ANONYMOUS_PROJECT].models.basic import CANN1D
+   >>> from [ANONYMOUS_PROJECT].task.tracking import SmoothTracking1D
    >>>
    >>> bm.set_dt(0.1)
    >>> model = CANN1D(num=64)
@@ -194,8 +194,8 @@ Module Contents
    .. rubric:: Examples
 
    >>> import brainpy.math as bm
-   >>> from canns.models.basic import CANN2D
-   >>> from canns.task.tracking import SmoothTracking2D
+   >>> from [ANONYMOUS_PROJECT].models.basic import CANN2D
+   >>> from [ANONYMOUS_PROJECT].task.tracking import SmoothTracking2D
    >>>
    >>> bm.set_dt(0.1)
    >>> model = CANN2D(length=8)
@@ -239,8 +239,8 @@ Module Contents
    .. rubric:: Examples
 
    >>> import brainpy.math as bm
-   >>> from canns.models.basic import CANN1D
-   >>> from canns.task.tracking import TemplateMatching1D
+   >>> from [ANONYMOUS_PROJECT].models.basic import CANN1D
+   >>> from [ANONYMOUS_PROJECT].task.tracking import TemplateMatching1D
    >>>
    >>> bm.set_dt(0.1)
    >>> model = CANN1D(num=64)
@@ -283,8 +283,8 @@ Module Contents
    .. rubric:: Examples
 
    >>> import brainpy.math as bm
-   >>> from canns.models.basic import CANN2D
-   >>> from canns.task.tracking import TemplateMatching2D
+   >>> from [ANONYMOUS_PROJECT].models.basic import CANN2D
+   >>> from [ANONYMOUS_PROJECT].task.tracking import TemplateMatching2D
    >>>
    >>> bm.set_dt(0.1)
    >>> model = CANN2D(length=8)

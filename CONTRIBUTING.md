@@ -1,6 +1,6 @@
-# Contributing to CANNs
+# Contributing to [ANONYMOUS_PROJECT]
 
-Thank you for your interest in contributing to CANNs! This document provides guidelines and instructions for contributing to the project.
+Thank you for your interest in contributing to [ANONYMOUS_PROJECT]! This document provides guidelines and instructions for contributing to the project.
 
 ## Getting Started
 
@@ -13,8 +13,8 @@ Thank you for your interest in contributing to CANNs! This document provides gui
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/routhleck/canns.git
-cd canns
+git clone [ANONYMOUS_REPO].git
+cd [ANONYMOUS_PROJECT]
 ```
 
 2. Install development dependencies:
@@ -102,7 +102,7 @@ Follow conventional commit format when possible:
 
 Example:
 ```
-feat: add support for hierarchical CANNs
+feat: add support for hierarchical [ANONYMOUS_PROJECT]
 fix: resolve memory leak in CANN2D training
 docs: update quick start guide with new examples
 ```
@@ -130,7 +130,7 @@ The project uses ruff for automatic formatting. Run `make lint` to format your c
 ## Project Structure
 
 ```
-src/canns/          # Core library modules
+src/[ANONYMOUS_PROJECT]/          # Core library modules
 ├── models/         # Neural network models
 │   ├── basic/      # Basic CANN models (1D, 2D, SFA, hierarchical)
 │   └── brain_inspired/  # Brain-inspired models (Hopfield, etc.)
@@ -151,7 +151,7 @@ scripts/            # Utility scripts
 
 ### Adding a New Model
 
-1. Create your model class in `src/canns/models/basic/` or `src/canns/models/brain_inspired/`
+1. Create your model class in `src/[ANONYMOUS_PROJECT]/models/basic/` or `src/[ANONYMOUS_PROJECT]/models/brain_inspired/`
 2. Inherit from `BasicModel` base class
 3. Implement required methods
 4. Add tests in `tests/`
@@ -160,7 +160,7 @@ scripts/            # Utility scripts
 
 ### Adding a New Task
 
-1. Create your task class in `src/canns/task/`
+1. Create your task class in `src/[ANONYMOUS_PROJECT]/task/`
 2. Inherit from `Task` base class
 3. Implement task-specific data generation
 4. Add tests and examples
@@ -168,7 +168,7 @@ scripts/            # Utility scripts
 
 ### Adding Analysis Tools
 
-1. Add analysis functions to `src/canns/analyzer/`
+1. Add analysis functions to `src/[ANONYMOUS_PROJECT]/analyzer/`
 2. Follow existing patterns for consistency
 3. Include visualization capabilities where appropriate
 4. Add tests and examples
@@ -191,16 +191,16 @@ scripts/            # Utility scripts
 
 ## Getting Help
 
-- Open a [discussion](https://github.com/routhleck/canns/discussions) for questions
-- Check existing [issues](https://github.com/routhleck/canns/issues) and documentation
+- Open a [discussion]([ANONYMOUS_REPO]/discussions) for questions
+- Check existing [issues]([ANONYMOUS_REPO]/issues) and documentation
 - Reach out to maintainers if you need guidance
 
 ## License
 
-By contributing to CANNs, you agree that your contributions will be licensed under the Apache License 2.0.
+By contributing to [ANONYMOUS_PROJECT], you agree that your contributions will be licensed under the Apache License 2.0.
 
 ## Recognition
 
 Contributors will be acknowledged in the project. Significant contributions may be highlighted in release notes.
 
-Thank you for contributing to CANNs!
+Thank you for contributing to [ANONYMOUS_PROJECT]!

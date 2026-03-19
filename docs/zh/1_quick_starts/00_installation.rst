@@ -33,11 +33,11 @@
        .. code-block:: bash
 
           # 标准 CPU 版本
-          uv pip install canns
+          uv pip install [ANONYMOUS_PROJECT]
 
           # 使用加速器
-          uv pip install "canns[cuda12]"   # NVIDIA CUDA 12
-          uv pip install "canns[tpu]"      # Google TPU
+          uv pip install "[ANONYMOUS_PROJECT][cuda12]"   # NVIDIA CUDA 12
+          uv pip install "[ANONYMOUS_PROJECT][tpu]"      # Google TPU
 
     .. tab-item:: 使用 pip
        :sync: pip
@@ -45,19 +45,19 @@
        .. code-block:: bash
 
           # 标准 CPU 版本
-          pip install canns
+          pip install [ANONYMOUS_PROJECT]
 
           # 使用加速器
-          pip install "canns[cuda12]"   # NVIDIA CUDA 12
-          pip install "canns[tpu]"      # Google TPU
+          pip install "[ANONYMOUS_PROJECT][cuda12]"   # NVIDIA CUDA 12
+          pip install "[ANONYMOUS_PROJECT][tpu]"      # Google TPU
 
     .. tab-item:: 从源码安装
        :sync: source
 
        .. code-block:: bash
 
-          git clone https://github.com/routhleck/canns.git
-          cd canns
+          git clone [ANONYMOUS_REPO].git
+          cd [ANONYMOUS_PROJECT]
           pip install -e .
 
 验证安装
@@ -65,8 +65,8 @@
 
 .. code-block:: python
 
-   import canns
-   print(f"✅ 成功安装 canns 版本 {canns.__version__}")
+   import [ANONYMOUS_PROJECT]
+   print(f"✅ 成功安装 [ANONYMOUS_PROJECT] 版本 {[ANONYMOUS_PROJECT].__version__}")
 
 .. seealso::
    准备好了吗？查看 :doc:`第一步指南 <01_build_model>`。

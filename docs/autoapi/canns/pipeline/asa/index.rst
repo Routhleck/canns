@@ -1,7 +1,7 @@
-canns.pipeline.asa
+[ANONYMOUS_PROJECT].pipeline.asa
 ==================
 
-.. py:module:: canns.pipeline.asa
+.. py:module:: [ANONYMOUS_PROJECT].pipeline.asa
 
 .. autoapi-nested-parse::
 
@@ -18,12 +18,12 @@ Submodules
 .. toctree::
    :maxdepth: 1
 
-   /autoapi/canns/pipeline/asa/__main__/index
-   /autoapi/canns/pipeline/asa/app/index
-   /autoapi/canns/pipeline/asa/runner/index
-   /autoapi/canns/pipeline/asa/screens/index
-   /autoapi/canns/pipeline/asa/state/index
-   /autoapi/canns/pipeline/asa/widgets/index
+   /autoapi/[ANONYMOUS_PROJECT]/pipeline/asa/__main__/index
+   /autoapi/[ANONYMOUS_PROJECT]/pipeline/asa/app/index
+   /autoapi/[ANONYMOUS_PROJECT]/pipeline/asa/runner/index
+   /autoapi/[ANONYMOUS_PROJECT]/pipeline/asa/screens/index
+   /autoapi/[ANONYMOUS_PROJECT]/pipeline/asa/state/index
+   /autoapi/[ANONYMOUS_PROJECT]/pipeline/asa/widgets/index
 
 
 Classes
@@ -31,7 +31,7 @@ Classes
 
 .. autoapisummary::
 
-   canns.pipeline.asa.ASAApp
+   [ANONYMOUS_PROJECT].pipeline.asa.ASAApp
 
 
 Functions
@@ -39,7 +39,7 @@ Functions
 
 .. autoapisummary::
 
-   canns.pipeline.asa.main
+   [ANONYMOUS_PROJECT].pipeline.asa.main
 
 
 Package Contents
@@ -307,6 +307,6 @@ Package Contents
 
 .. py:function:: main()
 
-   Entry point for canns-tui command.
+   Entry point for [ANONYMOUS_PROJECT]-tui command.
 
 

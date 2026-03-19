@@ -1,18 +1,18 @@
-canns.data
+[ANONYMOUS_PROJECT].data
 ==========
 
-.. py:module:: canns.data
+.. py:module:: [ANONYMOUS_PROJECT].data
 
 .. autoapi-nested-parse::
 
-   Data utilities for CANNs.
+   Data utilities for [ANONYMOUS_PROJECT].
 
    This namespace provides dataset registry, download helpers, and convenience
-   loaders for common CANNs datasets.
+   loaders for common [ANONYMOUS_PROJECT] datasets.
 
    .. rubric:: Examples
 
-   >>> from canns import data
+   >>> from [ANONYMOUS_PROJECT] import data
    >>> print(list(data.DATASETS))
 
 
@@ -23,8 +23,8 @@ Submodules
 .. toctree::
    :maxdepth: 1
 
-   /autoapi/canns/data/datasets/index
-   /autoapi/canns/data/loaders/index
+   /autoapi/[ANONYMOUS_PROJECT]/data/datasets/index
+   /autoapi/[ANONYMOUS_PROJECT]/data/loaders/index
 
 
 Attributes
@@ -32,9 +32,9 @@ Attributes
 
 .. autoapisummary::
 
-   canns.data.DATASETS
-   canns.data.DEFAULT_DATA_DIR
-   canns.data.HUGGINGFACE_REPO
+   [ANONYMOUS_PROJECT].data.DATASETS
+   [ANONYMOUS_PROJECT].data.DEFAULT_DATA_DIR
+   [ANONYMOUS_PROJECT].data.HUGGINGFACE_REPO
 
 
 Functions
@@ -42,18 +42,18 @@ Functions
 
 .. autoapisummary::
 
-   canns.data.download_dataset
-   canns.data.get_data_dir
-   canns.data.get_dataset_path
-   canns.data.get_huggingface_upload_guide
-   canns.data.get_left_right_data_session
-   canns.data.get_left_right_npz
-   canns.data.list_datasets
-   canns.data.load
-   canns.data.load_grid_data
-   canns.data.load_left_right_npz
-   canns.data.load_roi_data
-   canns.data.quick_setup
+   [ANONYMOUS_PROJECT].data.download_dataset
+   [ANONYMOUS_PROJECT].data.get_data_dir
+   [ANONYMOUS_PROJECT].data.get_dataset_path
+   [ANONYMOUS_PROJECT].data.get_huggingface_upload_guide
+   [ANONYMOUS_PROJECT].data.get_left_right_data_session
+   [ANONYMOUS_PROJECT].data.get_left_right_npz
+   [ANONYMOUS_PROJECT].data.list_datasets
+   [ANONYMOUS_PROJECT].data.load
+   [ANONYMOUS_PROJECT].data.load_grid_data
+   [ANONYMOUS_PROJECT].data.load_left_right_npz
+   [ANONYMOUS_PROJECT].data.load_roi_data
+   [ANONYMOUS_PROJECT].data.quick_setup
 
 
 Package Contents
@@ -172,7 +172,7 @@ Package Contents
    :param source: Data source. Can be:
                   - URL string: downloads and loads from URL
                   - Path: loads from local file
-                  - None: uses default CANNs dataset
+                  - None: uses default [ANONYMOUS_PROJECT] dataset
    :type source: str, Path, or None
    :param dataset_key: Which default dataset to use ('grid_1' or 'grid_2') when source is None.
    :type dataset_key: str
@@ -217,7 +217,7 @@ Package Contents
    :param source: Data source. Can be:
                   - URL string: downloads and loads from URL
                   - Path: loads from local file
-                  - None: uses default CANNs dataset
+                  - None: uses default [ANONYMOUS_PROJECT] dataset
    :type source: str, Path, or None
 
    :returns: ROI data array if successful, None otherwise.
@@ -248,6 +248,6 @@ Package Contents
 .. py:data:: DEFAULT_DATA_DIR
 
 .. py:data:: HUGGINGFACE_REPO
-   :value: 'canns-team/data-analysis-datasets'
+   :value: '[ANONYMOUS_PROJECT]-team/data-analysis-datasets'
 
 

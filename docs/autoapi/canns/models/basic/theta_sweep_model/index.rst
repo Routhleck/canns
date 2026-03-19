@@ -1,7 +1,7 @@
-canns.models.basic.theta_sweep_model
+[ANONYMOUS_PROJECT].models.basic.theta_sweep_model
 ====================================
 
-.. py:module:: canns.models.basic.theta_sweep_model
+.. py:module:: [ANONYMOUS_PROJECT].models.basic.theta_sweep_model
 
 
 Classes
@@ -9,9 +9,9 @@ Classes
 
 .. autoapisummary::
 
-   canns.models.basic.theta_sweep_model.DirectionCellNetwork
-   canns.models.basic.theta_sweep_model.GridCellNetwork
-   canns.models.basic.theta_sweep_model.PlaceCellNetwork
+   [ANONYMOUS_PROJECT].models.basic.theta_sweep_model.DirectionCellNetwork
+   [ANONYMOUS_PROJECT].models.basic.theta_sweep_model.GridCellNetwork
+   [ANONYMOUS_PROJECT].models.basic.theta_sweep_model.PlaceCellNetwork
 
 
 Functions
@@ -19,7 +19,7 @@ Functions
 
 .. autoapisummary::
 
-   canns.models.basic.theta_sweep_model.calculate_theta_modulation
+   [ANONYMOUS_PROJECT].models.basic.theta_sweep_model.calculate_theta_modulation
 
 
 Module Contents
@@ -27,7 +27,7 @@ Module Contents
 
 .. py:class:: DirectionCellNetwork(num, tau = 10.0, tau_v = 100.0, noise_strength = 0.1, k = 0.2, adaptation_strength = 15.0, a = 0.7, A = 3.0, J0 = 1.0, g = 1.0, z_min = -bm.pi, z_max = bm.pi, conn_noise = 0.0)
 
-   Bases: :py:obj:`canns.models.basic._base.BasicModel`
+   Bases: :py:obj:`[ANONYMOUS_PROJECT].models.basic._base.BasicModel`
 
 
    1D continuous-attractor direction (head direction) cell network.
@@ -110,7 +110,7 @@ Module Contents
    .. rubric:: Example
 
    >>> import brainpy.math as bm
-   >>> from canns.models.basic.theta_sweep_model import DirectionCellNetwork
+   >>> from [ANONYMOUS_PROJECT].models.basic.theta_sweep_model import DirectionCellNetwork
    >>>
    >>> bm.set_dt(1.)  # 1ms time step
    >>> dc_net = DirectionCellNetwork(num=60)
@@ -291,7 +291,7 @@ Module Contents
 
 .. py:class:: GridCellNetwork(num_dc = 100, num_gc_x = 100, tau = 10.0, tau_v = 100.0, noise_strength = 0.1, conn_noise = 0.0, k = 1.0, adaptation_strength = 15.0, a = 0.8, A = 3.0, J0 = 5.0, g = 1000.0, mapping_ratio = 1, phase_offset = 1.0 / 20)
 
-   Bases: :py:obj:`canns.models.basic._base.BasicModel`
+   Bases: :py:obj:`[ANONYMOUS_PROJECT].models.basic._base.BasicModel`
 
 
    2D continuous-attractor grid cell network with hexagonal lattice structure.
@@ -404,7 +404,7 @@ Module Contents
    .. rubric:: Example
 
    >>> import brainpy.math as bm
-   >>> from canns.models.basic.theta_sweep_model import GridCellNetwork
+   >>> from [ANONYMOUS_PROJECT].models.basic.theta_sweep_model import GridCellNetwork
    >>>
    >>> bm.set_dt(1.0)
    >>> gc_net = GridCellNetwork(num_dc=60, num_gc_x=30, mapping_ratio=1.5)
@@ -673,7 +673,7 @@ Module Contents
 
 .. py:class:: PlaceCellNetwork(geodesic_result, tau = 10.0, tau_v = 100.0, noise_strength = 0.0, k = 0.2, m = 3.0, a = 0.2, A = 5.0, J0 = 1.0, g = 1.0, conn_noise = 0.0)
 
-   Bases: :py:obj:`canns.models.basic._base.BasicModel`
+   Bases: :py:obj:`[ANONYMOUS_PROJECT].models.basic._base.BasicModel`
 
 
    Graph-based continuous-attractor place cell network using environment geodesic distances.

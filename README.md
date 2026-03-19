@@ -1,43 +1,42 @@
-# CANNs: Continuous Attractor Neural Networks Toolkit
+# [ANONYMOUS_PROJECT]: Continuous Attractor Neural Networks Toolkit
 
 <div align="center">
-  <img src="images/logo.svg" alt="CANNs Logo" width="350">
+  <img src="images/logo.svg" alt="[ANONYMOUS_PROJECT] Logo" width="350">
 </div>
 
-[<img src="https://badges.ws/badge/status-stable-green" />](https://github.com/routhleck/canns)
-![PyPI - Python Version](https://img.shields.io/pypi/pyversions/canns)
-[<img src="https://badges.ws/maintenance/yes/2026" />](https://github.com/routhleck/canns)
-<picture><img src="https://badges.ws/github/release/routhleck/canns" /></picture>
-<picture><img src="https://badges.ws/github/license/routhleck/canns" /></picture>
+[<img src="https://badges.ws/badge/status-stable-green" />]([ANONYMOUS_REPO])
+![PyPI - Python Version](https://img.shields.io/pypi/pyversions/[ANONYMOUS_PROJECT])
+[<img src="https://badges.ws/maintenance/yes/2026" />]([ANONYMOUS_REPO])
+<picture><img src="https://badges.ws/github/release/[ANONYMOUS_ORG]/[ANONYMOUS_PROJECT]" /></picture>
+<picture><img src="https://badges.ws/github/license/[ANONYMOUS_ORG]/[ANONYMOUS_PROJECT]" /></picture>
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.18453893.svg)](https://doi.org/10.5281/zenodo.18453893)
 
 
-<picture><img src="https://badges.ws/github/stars/routhleck/canns?logo=github" /></picture>
-[![PyPI Downloads](https://static.pepy.tech/personalized-badge/canns?period=total&units=INTERNATIONAL_SYSTEM&left_color=BLACK&right_color=GREEN&left_text=downloads)](https://pepy.tech/projects/canns)
-[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/Routhleck/canns)
-[<img src="https://badges.ws/badge/Buy_Me_a_Coffee-ff813f?icon=buymeacoffee" />](https://buymeacoffee.com/forrestcai6)
+<picture><img src="https://badges.ws/github/stars/[ANONYMOUS_ORG]/[ANONYMOUS_PROJECT]?logo=github" /></picture>
+[![PyPI Downloads](https://static.pepy.tech/personalized-badge/[ANONYMOUS_PROJECT]?period=total&units=INTERNATIONAL_SYSTEM&left_color=BLACK&right_color=GREEN&left_text=downloads)](https://pepy.tech/projects/[ANONYMOUS_PROJECT])
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)]([ANONYMOUS_REPO])
 
 > 中文说明请见 [README_zh.md](README_zh.md)
 
 ## Overview
 
-CANNs (Continuous Attractor Neural Networks toolkit) is a research toolkit built on [BrainPy](https://github.com/brainpy/BrainPy) and [JAX](https://github.com/jax-ml/jax), with optional Rust-accelerated [`canns-lib`](https://github.com/Routhleck/canns-lib) for selected performance-critical routines (e.g., TDA/Ripser and task generation). It bundles model collections, task generators, analyzers, and the ASA pipeline (GUI/TUI) so researchers can run simulations and analyze results in a consistent workflow. The API separates models, tasks, analyzers, and trainers to keep experiments modular and extensible.
+[ANONYMOUS_PROJECT] (Continuous Attractor Neural Networks toolkit) is a research toolkit built on [BrainPy](https://github.com/brainpy/BrainPy) and [JAX](https://github.com/jax-ml/jax), with optional Rust-accelerated `[ANONYMOUS_LIB]` for selected performance-critical routines (e.g., TDA/Ripser and task generation). It bundles model collections, task generators, analyzers, and the ASA pipeline (GUI/TUI) so researchers can run simulations and analyze results in a consistent workflow. The API separates models, tasks, analyzers, and trainers to keep experiments modular and extensible.
 
 ## Architecture
 
 <p align="center">
-  <img src="docs/_static/architecture.png" alt="CANNs Architecture" width="900">
+  <img src="docs/_static/architecture.png" alt="[ANONYMOUS_PROJECT] Architecture" width="900">
   <br>
-  <span style="color: grey; font-size: 14px;">Layer hierarchy of the CANNs library showing five levels: Application (Pipeline orchestration), Functional (Task, Trainer, Analyzer, Utils modules), Core Models (CANN implementations), Foundation (BrainPy/JAX and Rust FFI backends), and Hardware (CPU/GPU/TPU support)</span>
+  <span style="color: grey; font-size: 14px;">Layer hierarchy of the [ANONYMOUS_PROJECT] library showing five levels: Application (Pipeline orchestration), Functional (Task, Trainer, Analyzer, Utils modules), Core Models (CANN implementations), Foundation (BrainPy/JAX and Rust FFI backends), and Hardware (CPU/GPU/TPU support)</span>
 </p>
 
-The CANNs library follows a modular architecture guided by two core principles: **separation of concerns** and **extensibility through
+The [ANONYMOUS_PROJECT] library follows a modular architecture guided by two core principles: **separation of concerns** and **extensibility through
 base classes**. The design separates functional responsibilities into five independent modules: 
-1. **Models** (`canns.models`) define neural network dynamics; 
-2. **Tasks** (`canns.task`) generate experimental paradigms and input data; 
-3. **Analyzers** (`canns.analyzer`) provide visualization and analysis tools;
-4. **Trainers** (`canns.trainer`) implement learning rules for brain-inspired models; 
-5. **Pipeline** (`canns.pipeline`) orchestrates complete workflows.
+1. **Models** (`[ANONYMOUS_PROJECT].models`) define neural network dynamics; 
+2. **Tasks** (`[ANONYMOUS_PROJECT].task`) generate experimental paradigms and input data; 
+3. **Analyzers** (`[ANONYMOUS_PROJECT].analyzer`) provide visualization and analysis tools;
+4. **Trainers** (`[ANONYMOUS_PROJECT].trainer`) implement learning rules for brain-inspired models; 
+5. **Pipeline** (`[ANONYMOUS_PROJECT].pipeline`) orchestrates complete workflows.
 
 Each module focuses on a single responsibility—models don't generate input data, tasks don't analyze results, and analyzers don't modify
 parameters. This separation ensures maintainability, testability, and extensibility. All major components inherit from abstract base classes
@@ -48,12 +47,12 @@ seamlessly integrate with the built-in ecosystem.
 
 
 
-- **Model collections**: basic CANNs (1D/2D, SFA), hierarchical path integration, theta-sweep models, brain-inspired models (e.g., Amari-Hopfield, linear/spiking layers)
+- **Model collections**: basic [ANONYMOUS_PROJECT] (1D/2D, SFA), hierarchical path integration, theta-sweep models, brain-inspired models (e.g., Amari-Hopfield, linear/spiking layers)
 - **Task generators**: smooth tracking, population coding, template matching, open/closed-loop navigation
 - **Analyzer suite**: energy landscapes, tuning curves, raster/firing-rate plots, TDA and decoding utilities, cell classification
 - **ASA pipeline & GUI/TUI**: end-to-end workflow for preprocessing, TDA, decoding, and result visualization (e.g., CohoMap/CohoSpace/PathCompare/FR/FRM/GridScore)
 - **Training & extensibility**: HebbianTrainer plus base classes for consistent extension
-- **Optional acceleration**: `canns-lib` for selected performance-critical routines
+- **Optional acceleration**: `[ANONYMOUS_LIB]` for selected performance-critical routines
 
 ## Analyzer Visuals
 
@@ -123,9 +122,9 @@ seamlessly integrate with the built-in ecosystem.
 
 ```python
 import brainpy.math as bm
-from canns.analyzer.visualization import PlotConfigs, energy_landscape_1d_animation
-from canns.models.basic import CANN1D
-from canns.task.tracking import SmoothTracking1D
+from [ANONYMOUS_PROJECT].analyzer.visualization import PlotConfigs, energy_landscape_1d_animation
+from [ANONYMOUS_PROJECT].models.basic import CANN1D
+from [ANONYMOUS_PROJECT].task.tracking import SmoothTracking1D
 
 # simulation time step
 bm.set_dt(0.1)
@@ -175,55 +174,29 @@ energy_landscape_1d_animation(
 
 ```bash
 # CPU-only
-pip install canns
+pip install [ANONYMOUS_PROJECT]
 
 # Optional accelerators (Linux)
-pip install canns[cuda12]
-pip install canns[cuda13]
-pip install canns[tpu]
+pip install [ANONYMOUS_PROJECT][cuda12]
+pip install [ANONYMOUS_PROJECT][cuda13]
+pip install [ANONYMOUS_PROJECT][tpu]
 
 # GUI (ASA Pipeline)
-pip install canns[gui]
+pip install [ANONYMOUS_PROJECT][gui]
 ```
 
 Optional (uv):
 
 ```bash
-uv pip install canns
+uv pip install [ANONYMOUS_PROJECT]
 ```
 
 ## Docs & Examples
 
-- Documentation and tutorials: <https://routhleck.com/canns/>
+- Documentation and tutorials: <[ANONYMOUS_DOCS]>
 - Local scripts: `examples/`
 - Sphinx docs and notebooks: `docs/`
-- ASA GUI entry: `canns-gui`
-
-## Citation
-
-If you use CANNs in your research, please cite:
-
-```bibtex
-@software{he_2026_canns,
-  author       = {He, Sichao and
-                  Tuerhong, Aiersi and
-                  She, Shangjun and
-                  Chu, Tianhao and
-                  Wu, Yuling and
-                  Zuo, Junfeng and
-                  Wu, Si},
-  title        = {CANNs: Continuous Attractor Neural Networks Toolkit},
-  month        = feb,
-  year         = 2026,
-  publisher    = {Zenodo},
-  version      = {v1.0.0},
-  doi          = {10.5281/zenodo.18453893},
-  url          = {https://doi.org/10.5281/zenodo.18453893}
-}
-```
-
-**Plain text:**
-> He, S., Tuerhong, A., She, S., Chu, T., Wu, Y., Zuo, J., & Wu, S. (2026). CANNs: Continuous Attractor Neural Networks Toolkit (v1.0.0). Zenodo. https://doi.org/10.5281/zenodo.18453893
+- ASA GUI entry: `[ANONYMOUS_PROJECT]-gui`
 
 ## Contributing & License
 

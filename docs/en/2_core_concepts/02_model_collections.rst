@@ -2,20 +2,20 @@
 Model Collections
 ==================
 
-This document explains the different categories of models in the CANNs library and how to extend them.
+This document explains the different categories of models in the [ANONYMOUS_PROJECT] library and how to extend them.
 
 Overview
 ========
 
-The models module (``canns.models``) implements various CANN architectures and their variants. Models are organized into three categories:
+The models module (``[ANONYMOUS_PROJECT].models``) implements various CANN architectures and their variants. Models are organized into three categories:
 
-**Basic Models** (``canns.models.basic``)
+**Basic Models** (``[ANONYMOUS_PROJECT].models.basic``)
    Standard CANN implementations and variants
 
-**Brain-Inspired Models** (``canns.models.brain_inspired``)
+**Brain-Inspired Models** (``[ANONYMOUS_PROJECT].models.brain_inspired``)
    Models with biological learning mechanisms
 
-**Hybrid Models** (``canns.models.hybrid``)
+**Hybrid Models** (``[ANONYMOUS_PROJECT].models.hybrid``)
    Combinations of CANN with artificial neural networks
 
 All models are built on BrainPy's dynamics framework, which provides state management, time stepping, and JIT compilation capabilities.
@@ -28,7 +28,7 @@ Basic models implement the mathematically tractable and canonical continuous att
 Available Basic Models
 ----------------------
 
-Models are organized by module files in ``canns.models.basic``:
+Models are organized by module files in ``[ANONYMOUS_PROJECT].models.basic``:
 
 Origin CANN (cann.py)
 ~~~~~~~~~~~~~~~~~~~~~
@@ -87,7 +87,7 @@ Models designed for theta :cite:p:`chu2024firing,ji2025systems` rhythm analysis 
 Implementing Basic Models
 --------------------------
 
-Every basic model inherits from ``canns.models.basic.BasicModel`` or ``canns.models.basic.BasicModelGroup``.
+Every basic model inherits from ``[ANONYMOUS_PROJECT].models.basic.BasicModel`` or ``[ANONYMOUS_PROJECT].models.basic.BasicModelGroup``.
 
 Constructor Setup
 ~~~~~~~~~~~~~~~~~
@@ -108,7 +108,7 @@ Required Methods
    - Apply Gaussian function with specified width
    - Store result in ``self.conn_mat``
 
-   See ``src/canns/models/basic/cann.py`` for reference implementations.
+   See ``src/[ANONYMOUS_PROJECT]/models/basic/cann.py`` for reference implementations.
 
 **Stimulus Generation** (``get_stimulus_by_pos(pos)``)
    Convert feature space positions into external input patterns. Called by task modules to generate neural inputs:
@@ -167,7 +167,7 @@ Available Brain-Inspired Models
 Implementing Brain-Inspired Models
 -----------------------------------
 
-Inherit from ``canns.models.brain_inspired.BrainInspiredModel`` or ``canns.models.brain_inspired.BrainInspiredModelGroup``.
+Inherit from ``[ANONYMOUS_PROJECT].models.brain_inspired.BrainInspiredModel`` or ``[ANONYMOUS_PROJECT].models.brain_inspired.BrainInspiredModelGroup``.
 
 State and Weight Variables
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -214,7 +214,7 @@ Dynamic Resizing
 
 Optional support for changing network size while preserving learned structure: ``resize(num_neurons, preserve_submatrix)``
 
-See ``src/canns/models/brain_inspired/hopfield.py`` for reference implementation.
+See ``src/[ANONYMOUS_PROJECT]/models/brain_inspired/hopfield.py`` for reference implementation.
 
 Hybrid Models
 =============
@@ -228,7 +228,7 @@ Hybrid Models
    - Integration of attractor dynamics with feedforward processing
    - Bridging biological plausibility with deep learning capabilities
 
-   Current status: Placeholder module structure exists in ``canns.models.hybrid`` for future implementations.
+   Current status: Placeholder module structure exists in ``[ANONYMOUS_PROJECT].models.hybrid`` for future implementations.
 
 BrainPy Foundation
 ==================
@@ -274,7 +274,7 @@ Compiled Simulation
 Summary
 =======
 
-The CANNs model collection provides:
+The [ANONYMOUS_PROJECT] model collection provides:
 
 1. **Basic Models** - Standard CANN implementations for immediate use
 2. **Brain-Inspired Models** - Networks with local learning capabilities

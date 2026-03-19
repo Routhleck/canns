@@ -1,7 +1,7 @@
-canns.pipeline.asa_gui.views.widgets.file_list
+[ANONYMOUS_PROJECT].pipeline.asa_gui.views.widgets.file_list
 ==============================================
 
-.. py:module:: canns.pipeline.asa_gui.views.widgets.file_list
+.. py:module:: [ANONYMOUS_PROJECT].pipeline.asa_gui.views.widgets.file_list
 
 .. autoapi-nested-parse::
 
@@ -14,7 +14,7 @@ Classes
 
 .. autoapisummary::
 
-   canns.pipeline.asa_gui.views.widgets.file_list.FileList
+   [ANONYMOUS_PROJECT].pipeline.asa_gui.views.widgets.file_list.FileList
 
 
 Module Contents

@@ -1,7 +1,7 @@
-canns.analyzer.visualization.core
+[ANONYMOUS_PROJECT].analyzer.visualization.core
 =================================
 
-.. py:module:: canns.analyzer.visualization.core
+.. py:module:: [ANONYMOUS_PROJECT].analyzer.visualization.core
 
 .. autoapi-nested-parse::
 
@@ -24,12 +24,12 @@ Submodules
 .. toctree::
    :maxdepth: 1
 
-   /autoapi/canns/analyzer/visualization/core/animation/index
-   /autoapi/canns/analyzer/visualization/core/backend/index
-   /autoapi/canns/analyzer/visualization/core/config/index
-   /autoapi/canns/analyzer/visualization/core/jupyter_utils/index
-   /autoapi/canns/analyzer/visualization/core/rendering/index
-   /autoapi/canns/analyzer/visualization/core/writers/index
+   /autoapi/[ANONYMOUS_PROJECT]/analyzer/visualization/core/animation/index
+   /autoapi/[ANONYMOUS_PROJECT]/analyzer/visualization/core/backend/index
+   /autoapi/[ANONYMOUS_PROJECT]/analyzer/visualization/core/config/index
+   /autoapi/[ANONYMOUS_PROJECT]/analyzer/visualization/core/jupyter_utils/index
+   /autoapi/[ANONYMOUS_PROJECT]/analyzer/visualization/core/rendering/index
+   /autoapi/[ANONYMOUS_PROJECT]/analyzer/visualization/core/writers/index
 
 
 Classes
@@ -37,14 +37,14 @@ Classes
 
 .. autoapisummary::
 
-   canns.analyzer.visualization.core.AnimationBackend
-   canns.analyzer.visualization.core.AnimationConfig
-   canns.analyzer.visualization.core.BackendSelection
-   canns.analyzer.visualization.core.OptimizedAnimationBase
-   canns.analyzer.visualization.core.OptimizedAnimationWriter
-   canns.analyzer.visualization.core.ParallelAnimationRenderer
-   canns.analyzer.visualization.core.PlotConfig
-   canns.analyzer.visualization.core.PlotConfigs
+   [ANONYMOUS_PROJECT].analyzer.visualization.core.AnimationBackend
+   [ANONYMOUS_PROJECT].analyzer.visualization.core.AnimationConfig
+   [ANONYMOUS_PROJECT].analyzer.visualization.core.BackendSelection
+   [ANONYMOUS_PROJECT].analyzer.visualization.core.OptimizedAnimationBase
+   [ANONYMOUS_PROJECT].analyzer.visualization.core.OptimizedAnimationWriter
+   [ANONYMOUS_PROJECT].analyzer.visualization.core.ParallelAnimationRenderer
+   [ANONYMOUS_PROJECT].analyzer.visualization.core.PlotConfig
+   [ANONYMOUS_PROJECT].analyzer.visualization.core.PlotConfigs
 
 
 Functions
@@ -52,20 +52,20 @@ Functions
 
 .. autoapisummary::
 
-   canns.analyzer.visualization.core.create_optimized_writer
-   canns.analyzer.visualization.core.display_animation_in_jupyter
-   canns.analyzer.visualization.core.emit_backend_warnings
-   canns.analyzer.visualization.core.finalize_figure
-   canns.analyzer.visualization.core.get_imageio_writer_kwargs
-   canns.analyzer.visualization.core.get_matplotlib_writer
-   canns.analyzer.visualization.core.get_multiprocessing_context
-   canns.analyzer.visualization.core.get_optimal_worker_count
-   canns.analyzer.visualization.core.get_recommended_format
-   canns.analyzer.visualization.core.is_jupyter_environment
-   canns.analyzer.visualization.core.render_animation_parallel
-   canns.analyzer.visualization.core.select_animation_backend
-   canns.analyzer.visualization.core.warn_double_rendering
-   canns.analyzer.visualization.core.warn_gif_format
+   [ANONYMOUS_PROJECT].analyzer.visualization.core.create_optimized_writer
+   [ANONYMOUS_PROJECT].analyzer.visualization.core.display_animation_in_jupyter
+   [ANONYMOUS_PROJECT].analyzer.visualization.core.emit_backend_warnings
+   [ANONYMOUS_PROJECT].analyzer.visualization.core.finalize_figure
+   [ANONYMOUS_PROJECT].analyzer.visualization.core.get_imageio_writer_kwargs
+   [ANONYMOUS_PROJECT].analyzer.visualization.core.get_matplotlib_writer
+   [ANONYMOUS_PROJECT].analyzer.visualization.core.get_multiprocessing_context
+   [ANONYMOUS_PROJECT].analyzer.visualization.core.get_optimal_worker_count
+   [ANONYMOUS_PROJECT].analyzer.visualization.core.get_recommended_format
+   [ANONYMOUS_PROJECT].analyzer.visualization.core.is_jupyter_environment
+   [ANONYMOUS_PROJECT].analyzer.visualization.core.render_animation_parallel
+   [ANONYMOUS_PROJECT].analyzer.visualization.core.select_animation_backend
+   [ANONYMOUS_PROJECT].analyzer.visualization.core.warn_double_rendering
+   [ANONYMOUS_PROJECT].analyzer.visualization.core.warn_gif_format
 
 
 Package Contents
@@ -132,7 +132,7 @@ Package Contents
 
    .. rubric:: Example
 
-   >>> from canns.analyzer.visualization import AnimationConfig
+   >>> from [ANONYMOUS_PROJECT].analyzer.visualization import AnimationConfig
    >>>
    >>> # Dummy input representing total frames
    >>> total_frames = 120
@@ -446,12 +446,12 @@ Package Contents
 
 .. py:class:: PlotConfig
 
-   Unified configuration class for plotting helpers in ``canns.analyzer``.
+   Unified configuration class for plotting helpers in ``[ANONYMOUS_PROJECT].analyzer``.
 
    .. rubric:: Examples
 
    >>> import numpy as np
-   >>> from canns.analyzer.visualization import PlotConfig, energy_landscape_1d_static
+   >>> from [ANONYMOUS_PROJECT].analyzer.visualization import PlotConfig, energy_landscape_1d_static
    >>>
    >>> # Dummy input (matches test-style energy_landscape usage)
    >>> x = np.linspace(0, 1, 5)
@@ -644,7 +644,7 @@ Package Contents
    .. rubric:: Examples
 
    >>> import numpy as np
-   >>> from canns.analyzer.visualization import PlotConfigs, energy_landscape_1d_static
+   >>> from [ANONYMOUS_PROJECT].analyzer.visualization import PlotConfigs, energy_landscape_1d_static
    >>>
    >>> x = np.linspace(0, 1, 5)
    >>> data_sets = {"u": (x, np.sin(x))}
@@ -754,7 +754,7 @@ Package Contents
 
       .. rubric:: Example
 
-      >>> from canns.analyzer.visualization import PlotConfigs
+      >>> from [ANONYMOUS_PROJECT].analyzer.visualization import PlotConfigs
       >>> config = PlotConfigs.firing_field_heatmap(
       ...     title="Grid Cell Firing Field",
       ...     save_path="ratemap.png"
@@ -788,7 +788,7 @@ Package Contents
 
       .. rubric:: Example
 
-      >>> from canns.analyzer.visualization import PlotConfigs
+      >>> from [ANONYMOUS_PROJECT].analyzer.visualization import PlotConfigs
       >>> config = PlotConfigs.grid_autocorrelation(
       ...     title="Grid Cell Autocorrelation",
       ...     save_path="autocorr.png"
@@ -959,7 +959,7 @@ Package Contents
 
    Factory function to create an optimized animation writer.
 
-   This is the recommended way to create writers for CANNs animations.
+   This is the recommended way to create writers for [ANONYMOUS_PROJECT] animations.
 
    :param save_path: Output file path
    :param fps: Frames per second
@@ -999,7 +999,7 @@ Package Contents
    >>> import numpy as np
    >>> from matplotlib import pyplot as plt
    >>> from matplotlib.animation import FuncAnimation
-   >>> from canns.analyzer.visualization.core.jupyter_utils import (
+   >>> from [ANONYMOUS_PROJECT].analyzer.visualization.core.jupyter_utils import (
    ...     display_animation_in_jupyter,
    ...     is_jupyter_environment,
    ... )
@@ -1038,8 +1038,8 @@ Package Contents
 
    >>> import numpy as np
    >>> from matplotlib import pyplot as plt
-   >>> from canns.analyzer.visualization import PlotConfig
-   >>> from canns.analyzer.visualization.core.config import finalize_figure
+   >>> from [ANONYMOUS_PROJECT].analyzer.visualization import PlotConfig
+   >>> from [ANONYMOUS_PROJECT].analyzer.visualization.core.config import finalize_figure
    >>>
    >>> x = np.linspace(0, 1, 5)
    >>> y = np.sin(x)
@@ -1078,7 +1078,7 @@ Package Contents
 
    .. rubric:: Examples
 
-   >>> from canns.analyzer.visualization.core.writers import get_matplotlib_writer
+   >>> from [ANONYMOUS_PROJECT].analyzer.visualization.core.writers import get_matplotlib_writer
    >>> writer = get_matplotlib_writer("output.gif", fps=5)
    >>> print(writer is not None)
    True
@@ -1123,7 +1123,7 @@ Package Contents
 
    .. rubric:: Examples
 
-   >>> from canns.analyzer.visualization.core.jupyter_utils import is_jupyter_environment
+   >>> from [ANONYMOUS_PROJECT].analyzer.visualization.core.jupyter_utils import is_jupyter_environment
    >>> print(is_jupyter_environment() in {True, False})
    True
 
@@ -1149,8 +1149,8 @@ Package Contents
    >>> import numpy as np
    >>> import tempfile
    >>> from pathlib import Path
-   >>> from canns.analyzer.visualization.core.rendering import render_animation_parallel
-   >>> from canns.analyzer.visualization.core import rendering
+   >>> from [ANONYMOUS_PROJECT].analyzer.visualization.core.rendering import render_animation_parallel
+   >>> from [ANONYMOUS_PROJECT].analyzer.visualization.core import rendering
    >>>
    >>> def render_frame(idx, data):
    ...     frame = data[idx]
@@ -1181,7 +1181,7 @@ Package Contents
 
    .. rubric:: Examples
 
-   >>> from canns.analyzer.visualization.core.backend import select_animation_backend
+   >>> from [ANONYMOUS_PROJECT].analyzer.visualization.core.backend import select_animation_backend
    >>> selection = select_animation_backend("output.mp4")
    >>> print(selection.backend in {"imageio", "matplotlib"})
    True

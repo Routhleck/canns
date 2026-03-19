@@ -1,10 +1,10 @@
 # Release Guide
 
-This document describes the release process for the CANNs library.
+This document describes the release process for the [ANONYMOUS_PROJECT] library.
 
 ## Version Management System
 
-The CANNs project uses a centralized version management system that ensures consistency across all components:
+The [ANONYMOUS_PROJECT] project uses a centralized version management system that ensures consistency across all components:
 
 - **Git tags**: Source of truth for version numbers (format: `v0.5.1`)
 - **Package version**: Automatically derived from git tags using `uv-dynamic-versioning`
@@ -62,7 +62,7 @@ The CANNs project uses a centralized version management system that ensures cons
 
 If you prefer to create releases manually through GitHub UI:
 
-1. Go to [GitHub Releases](https://github.com/routhleck/canns/releases)
+1. Go to [GitHub Releases]([ANONYMOUS_REPO]/releases)
 2. Click "Create a new release"
 3. Choose the tag (or create new one): `v0.5.2`
 4. Fill in release title: `Release 0.5.2`
@@ -86,7 +86,7 @@ If you prefer to create releases manually through GitHub UI:
 The system uses multiple fallbacks to ensure version consistency:
 
 1. **Git tags** (primary source): `git describe --tags --abbrev=0`
-2. **Package metadata**: `importlib.metadata.version("canns")`
+2. **Package metadata**: `importlib.metadata.version("[ANONYMOUS_PROJECT]")`
 3. **Fallback**: Hardcoded version in source files
 
 ## Configuration Files

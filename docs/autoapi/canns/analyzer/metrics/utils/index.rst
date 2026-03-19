@@ -1,7 +1,7 @@
-canns.analyzer.metrics.utils
+[ANONYMOUS_PROJECT].analyzer.metrics.utils
 ============================
 
-.. py:module:: canns.analyzer.metrics.utils
+.. py:module:: [ANONYMOUS_PROJECT].analyzer.metrics.utils
 
 
 Functions
@@ -9,9 +9,9 @@ Functions
 
 .. autoapisummary::
 
-   canns.analyzer.metrics.utils.firing_rate_to_spike_train
-   canns.analyzer.metrics.utils.normalize_firing_rates
-   canns.analyzer.metrics.utils.spike_train_to_firing_rate
+   [ANONYMOUS_PROJECT].analyzer.metrics.utils.firing_rate_to_spike_train
+   [ANONYMOUS_PROJECT].analyzer.metrics.utils.normalize_firing_rates
+   [ANONYMOUS_PROJECT].analyzer.metrics.utils.spike_train_to_firing_rate
 
 
 Module Contents
@@ -46,7 +46,7 @@ Module Contents
    .. rubric:: Examples
 
    >>> import numpy as np
-   >>> from canns.analyzer.metrics.utils import firing_rate_to_spike_train
+   >>> from [ANONYMOUS_PROJECT].analyzer.metrics.utils import firing_rate_to_spike_train
    >>>
    >>> rates = np.full((10, 2), 0.5)  # 10 coarse timesteps, 2 neurons
    >>> spikes = firing_rate_to_spike_train(rates, dt_rate=0.1, dt_spike=0.01)
@@ -71,7 +71,7 @@ Module Contents
    .. rubric:: Examples
 
    >>> import numpy as np
-   >>> from canns.analyzer.metrics.utils import normalize_firing_rates
+   >>> from [ANONYMOUS_PROJECT].analyzer.metrics.utils import normalize_firing_rates
    >>>
    >>> rates = np.array([[0.0, 1.0], [2.0, 3.0]])
    >>> normalized = normalize_firing_rates(rates, method="min_max")
@@ -99,7 +99,7 @@ Module Contents
    .. rubric:: Examples
 
    >>> import numpy as np
-   >>> from canns.analyzer.metrics.utils import spike_train_to_firing_rate
+   >>> from [ANONYMOUS_PROJECT].analyzer.metrics.utils import spike_train_to_firing_rate
    >>>
    >>> spike_train = np.zeros((1000, 3), dtype=int)
    >>> spike_train[::100, 0] = 1

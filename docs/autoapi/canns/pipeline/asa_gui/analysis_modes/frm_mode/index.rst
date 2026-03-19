@@ -1,7 +1,7 @@
-canns.pipeline.asa_gui.analysis_modes.frm_mode
+[ANONYMOUS_PROJECT].pipeline.asa_gui.analysis_modes.frm_mode
 ==============================================
 
-.. py:module:: canns.pipeline.asa_gui.analysis_modes.frm_mode
+.. py:module:: [ANONYMOUS_PROJECT].pipeline.asa_gui.analysis_modes.frm_mode
 
 .. autoapi-nested-parse::
 
@@ -14,7 +14,7 @@ Classes
 
 .. autoapisummary::
 
-   canns.pipeline.asa_gui.analysis_modes.frm_mode.FRMMode
+   [ANONYMOUS_PROJECT].pipeline.asa_gui.analysis_modes.frm_mode.FRMMode
 
 
 Module Contents
@@ -22,7 +22,7 @@ Module Contents
 
 .. py:class:: FRMMode
 
-   Bases: :py:obj:`canns.pipeline.asa_gui.analysis_modes.base.AbstractAnalysisMode`
+   Bases: :py:obj:`[ANONYMOUS_PROJECT].pipeline.asa_gui.analysis_modes.base.AbstractAnalysisMode`
 
 
    Helper class that provides a standard way to create an ABC using

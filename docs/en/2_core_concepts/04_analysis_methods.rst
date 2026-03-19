@@ -5,12 +5,12 @@
 Analysis Methods
 ================
 
-This document explains the analysis and visualization tools in the CANNs library.
+This document explains the analysis and visualization tools in the [ANONYMOUS_PROJECT] library.
 
 Overview
 ========
 
-The analyzer module (``canns.analyzer``) provides tools for visualizing and interpreting both simulation outputs and experimental data. It organizes into distinct components based on data source and analysis type:
+The analyzer module (``[ANONYMOUS_PROJECT].analyzer``) provides tools for visualizing and interpreting both simulation outputs and experimental data. It organizes into distinct components based on data source and analysis type:
 
 Module Structure
 ----------------
@@ -261,7 +261,7 @@ Current Scope
 .. admonition:: Implementation Status
    :class: note
 
-   Currently focused on analyzing RNN models (including CANNs as a special case). Provides tools for:
+   Currently focused on analyzing RNN models (including [ANONYMOUS_PROJECT] as a special case). Provides tools for:
 
    * Understanding intrinsic network dynamics
    * Characterizing attractor landscapes
@@ -272,7 +272,7 @@ Topological Data Analysis (TDA)
 
 TDA tools :cite:p:`carlsson2009topology` detect geometric and topological structures in high-dimensional neural activity data using persistent homology :cite:p:`edelsbrunner2010computational`.
 
-Why TDA for CANNs
+Why TDA for [ANONYMOUS_PROJECT]
 -----------------
 
 .. important::
@@ -336,7 +336,7 @@ Implementation Notes
    * **External dependencies** for some advanced methods
    * **Focus on tools** relevant to attractor network research
 
-   See the ``canns-lib`` Ripser module for performance details (1.13x average speedup, up to 1.82x).
+   See the ``[ANONYMOUS_PROJECT]-lib`` Ripser module for performance details (1.13x average speedup, up to 1.82x).
 
 Summary
 =======

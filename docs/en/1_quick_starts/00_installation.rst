@@ -33,11 +33,11 @@ Choose your preferred package manager:
        .. code-block:: bash
 
           # Standard CPU
-          uv pip install canns
+          uv pip install [ANONYMOUS_PROJECT]
 
           # With Acceleration
-          uv pip install "canns[cuda12]"   # NVIDIA CUDA 12
-          uv pip install "canns[tpu]"      # Google TPU
+          uv pip install "[ANONYMOUS_PROJECT][cuda12]"   # NVIDIA CUDA 12
+          uv pip install "[ANONYMOUS_PROJECT][tpu]"      # Google TPU
 
     .. tab-item:: Using pip
        :sync: pip
@@ -45,19 +45,19 @@ Choose your preferred package manager:
        .. code-block:: bash
 
           # Standard CPU
-          pip install canns
+          pip install [ANONYMOUS_PROJECT]
 
           # With Acceleration
-          pip install "canns[cuda12]"   # NVIDIA CUDA 12
-          pip install "canns[tpu]"      # Google TPU
+          pip install "[ANONYMOUS_PROJECT][cuda12]"   # NVIDIA CUDA 12
+          pip install "[ANONYMOUS_PROJECT][tpu]"      # Google TPU
 
     .. tab-item:: From Source
        :sync: source
 
        .. code-block:: bash
 
-          git clone https://github.com/routhleck/canns.git
-          cd canns
+          git clone [ANONYMOUS_REPO].git
+          cd [ANONYMOUS_PROJECT]
           pip install -e .
 
 Verify Installation
@@ -65,8 +65,8 @@ Verify Installation
 
 .. code-block:: python
 
-   import canns
-   print(f"✅ Successfully installed canns version {canns.__version__}")
+   import [ANONYMOUS_PROJECT]
+   print(f"✅ Successfully installed [ANONYMOUS_PROJECT] version {[ANONYMOUS_PROJECT].__version__}")
 
 .. seealso::
    Ready to go? Check out the :doc:`First Steps Guide <01_build_model>`.

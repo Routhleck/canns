@@ -1,7 +1,7 @@
-canns.analyzer.visualization.energy_plots
+[ANONYMOUS_PROJECT].analyzer.visualization.energy_plots
 =========================================
 
-.. py:module:: canns.analyzer.visualization.energy_plots
+.. py:module:: [ANONYMOUS_PROJECT].analyzer.visualization.energy_plots
 
 .. autoapi-nested-parse::
 
@@ -14,10 +14,10 @@ Functions
 
 .. autoapisummary::
 
-   canns.analyzer.visualization.energy_plots.energy_landscape_1d_animation
-   canns.analyzer.visualization.energy_plots.energy_landscape_1d_static
-   canns.analyzer.visualization.energy_plots.energy_landscape_2d_animation
-   canns.analyzer.visualization.energy_plots.energy_landscape_2d_static
+   [ANONYMOUS_PROJECT].analyzer.visualization.energy_plots.energy_landscape_1d_animation
+   [ANONYMOUS_PROJECT].analyzer.visualization.energy_plots.energy_landscape_1d_static
+   [ANONYMOUS_PROJECT].analyzer.visualization.energy_plots.energy_landscape_2d_animation
+   [ANONYMOUS_PROJECT].analyzer.visualization.energy_plots.energy_landscape_2d_static
 
 
 Module Contents
@@ -53,7 +53,7 @@ Module Contents
    .. rubric:: Examples
 
    >>> import numpy as np
-   >>> from canns.analyzer.visualization import energy_landscape_1d_animation, PlotConfigs
+   >>> from [ANONYMOUS_PROJECT].analyzer.visualization import energy_landscape_1d_animation, PlotConfigs
    >>>
    >>> x = np.linspace(0, 1, 5)
    >>> y_series = np.stack([np.sin(x), np.cos(x)], axis=0)
@@ -90,7 +90,7 @@ Module Contents
    .. rubric:: Examples
 
    >>> import numpy as np
-   >>> from canns.analyzer.visualization import energy_landscape_1d_static, PlotConfigs
+   >>> from [ANONYMOUS_PROJECT].analyzer.visualization import energy_landscape_1d_static, PlotConfigs
    >>>
    >>> x = np.linspace(0, 1, 5)
    >>> data_sets = {"u": (x, np.sin(x)), "Iext": (x, np.cos(x))}
@@ -132,7 +132,7 @@ Module Contents
    .. rubric:: Examples
 
    >>> import numpy as np
-   >>> from canns.analyzer.visualization import energy_landscape_2d_animation, PlotConfigs
+   >>> from [ANONYMOUS_PROJECT].analyzer.visualization import energy_landscape_2d_animation, PlotConfigs
    >>>
    >>> zs = np.random.rand(3, 4, 4)
    >>> config = PlotConfigs.energy_landscape_2d_animation(
@@ -167,7 +167,7 @@ Module Contents
    .. rubric:: Examples
 
    >>> import numpy as np
-   >>> from canns.analyzer.visualization import energy_landscape_2d_static, PlotConfigs
+   >>> from [ANONYMOUS_PROJECT].analyzer.visualization import energy_landscape_2d_static, PlotConfigs
    >>>
    >>> z = np.random.rand(4, 4)
    >>> config = PlotConfigs.energy_landscape_2d_static(show=False)

@@ -1,7 +1,7 @@
-canns.analyzer.data.cell_classification.io.matlab_loader
+[ANONYMOUS_PROJECT].analyzer.data.cell_classification.io.matlab_loader
 ========================================================
 
-.. py:module:: canns.analyzer.data.cell_classification.io.matlab_loader
+.. py:module:: [ANONYMOUS_PROJECT].analyzer.data.cell_classification.io.matlab_loader
 
 .. autoapi-nested-parse::
 
@@ -16,7 +16,7 @@ Attributes
 
 .. autoapisummary::
 
-   canns.analyzer.data.cell_classification.io.matlab_loader.loader
+   [ANONYMOUS_PROJECT].analyzer.data.cell_classification.io.matlab_loader.loader
 
 
 Classes
@@ -24,9 +24,9 @@ Classes
 
 .. autoapisummary::
 
-   canns.analyzer.data.cell_classification.io.matlab_loader.MATFileLoader
-   canns.analyzer.data.cell_classification.io.matlab_loader.TuningCurve
-   canns.analyzer.data.cell_classification.io.matlab_loader.Unit
+   [ANONYMOUS_PROJECT].analyzer.data.cell_classification.io.matlab_loader.MATFileLoader
+   [ANONYMOUS_PROJECT].analyzer.data.cell_classification.io.matlab_loader.TuningCurve
+   [ANONYMOUS_PROJECT].analyzer.data.cell_classification.io.matlab_loader.Unit
 
 
 Module Contents

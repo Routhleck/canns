@@ -1,7 +1,7 @@
-canns.pipeline.asa_gui.views.pages.preprocess_page
+[ANONYMOUS_PROJECT].pipeline.asa_gui.views.pages.preprocess_page
 ==================================================
 
-.. py:module:: canns.pipeline.asa_gui.views.pages.preprocess_page
+.. py:module:: [ANONYMOUS_PROJECT].pipeline.asa_gui.views.pages.preprocess_page
 
 .. autoapi-nested-parse::
 
@@ -14,7 +14,7 @@ Classes
 
 .. autoapisummary::
 
-   canns.pipeline.asa_gui.views.pages.preprocess_page.PreprocessPage
+   [ANONYMOUS_PROJECT].pipeline.asa_gui.views.pages.preprocess_page.PreprocessPage
 
 
 Module Contents

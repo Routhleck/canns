@@ -1,7 +1,7 @@
-canns.analyzer.data.asa.cohomap
+[ANONYMOUS_PROJECT].analyzer.data.asa.cohomap
 ===============================
 
-.. py:module:: canns.analyzer.data.asa.cohomap
+.. py:module:: [ANONYMOUS_PROJECT].analyzer.data.asa.cohomap
 
 .. autoapi-nested-parse::
 
@@ -14,9 +14,9 @@ Functions
 
 .. autoapisummary::
 
-   canns.analyzer.data.asa.cohomap.cohomap
-   canns.analyzer.data.asa.cohomap.fit_cohomap_stripes
-   canns.analyzer.data.asa.cohomap.plot_cohomap
+   [ANONYMOUS_PROJECT].analyzer.data.asa.cohomap.cohomap
+   [ANONYMOUS_PROJECT].analyzer.data.asa.cohomap.fit_cohomap_stripes
+   [ANONYMOUS_PROJECT].analyzer.data.asa.cohomap.plot_cohomap
 
 
 Module Contents

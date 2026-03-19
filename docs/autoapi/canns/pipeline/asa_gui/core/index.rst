@@ -1,7 +1,7 @@
-canns.pipeline.asa_gui.core
+[ANONYMOUS_PROJECT].pipeline.asa_gui.core
 ===========================
 
-.. py:module:: canns.pipeline.asa_gui.core
+.. py:module:: [ANONYMOUS_PROJECT].pipeline.asa_gui.core
 
 .. autoapi-nested-parse::
 
@@ -15,10 +15,10 @@ Submodules
 .. toctree::
    :maxdepth: 1
 
-   /autoapi/canns/pipeline/asa_gui/core/cache/index
-   /autoapi/canns/pipeline/asa_gui/core/runner/index
-   /autoapi/canns/pipeline/asa_gui/core/state/index
-   /autoapi/canns/pipeline/asa_gui/core/worker/index
+   /autoapi/[ANONYMOUS_PROJECT]/pipeline/asa_gui/core/cache/index
+   /autoapi/[ANONYMOUS_PROJECT]/pipeline/asa_gui/core/runner/index
+   /autoapi/[ANONYMOUS_PROJECT]/pipeline/asa_gui/core/state/index
+   /autoapi/[ANONYMOUS_PROJECT]/pipeline/asa_gui/core/worker/index
 
 
 Exceptions
@@ -26,7 +26,7 @@ Exceptions
 
 .. autoapisummary::
 
-   canns.pipeline.asa_gui.core.ProcessingError
+   [ANONYMOUS_PROJECT].pipeline.asa_gui.core.ProcessingError
 
 
 Classes
@@ -34,12 +34,12 @@ Classes
 
 .. autoapisummary::
 
-   canns.pipeline.asa_gui.core.AnalysisWorker
-   canns.pipeline.asa_gui.core.PipelineResult
-   canns.pipeline.asa_gui.core.PipelineRunner
-   canns.pipeline.asa_gui.core.StateManager
-   canns.pipeline.asa_gui.core.WorkerManager
-   canns.pipeline.asa_gui.core.WorkflowState
+   [ANONYMOUS_PROJECT].pipeline.asa_gui.core.AnalysisWorker
+   [ANONYMOUS_PROJECT].pipeline.asa_gui.core.PipelineResult
+   [ANONYMOUS_PROJECT].pipeline.asa_gui.core.PipelineRunner
+   [ANONYMOUS_PROJECT].pipeline.asa_gui.core.StateManager
+   [ANONYMOUS_PROJECT].pipeline.asa_gui.core.WorkerManager
+   [ANONYMOUS_PROJECT].pipeline.asa_gui.core.WorkflowState
 
 
 Package Contents

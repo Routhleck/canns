@@ -1,7 +1,7 @@
-canns.analyzer.data.cell_classification.core.grid_modules_leiden
+[ANONYMOUS_PROJECT].analyzer.data.cell_classification.core.grid_modules_leiden
 ================================================================
 
-.. py:module:: canns.analyzer.data.cell_classification.core.grid_modules_leiden
+.. py:module:: [ANONYMOUS_PROJECT].analyzer.data.cell_classification.core.grid_modules_leiden
 
 
 Functions
@@ -9,7 +9,7 @@ Functions
 
 .. autoapisummary::
 
-   canns.analyzer.data.cell_classification.core.grid_modules_leiden.identify_grid_modules_and_stats
+   [ANONYMOUS_PROJECT].analyzer.data.cell_classification.core.grid_modules_leiden.identify_grid_modules_and_stats
 
 
 Module Contents

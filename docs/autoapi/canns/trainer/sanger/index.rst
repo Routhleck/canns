@@ -1,7 +1,7 @@
-canns.trainer.sanger
+[ANONYMOUS_PROJECT].trainer.sanger
 ====================
 
-.. py:module:: canns.trainer.sanger
+.. py:module:: [ANONYMOUS_PROJECT].trainer.sanger
 
 .. autoapi-nested-parse::
 
@@ -14,7 +14,7 @@ Classes
 
 .. autoapisummary::
 
-   canns.trainer.sanger.SangerTrainer
+   [ANONYMOUS_PROJECT].trainer.sanger.SangerTrainer
 
 
 Module Contents
@@ -22,7 +22,7 @@ Module Contents
 
 .. py:class:: SangerTrainer(model, learning_rate = 0.01, normalize_weights = True, weight_attr = 'W', compiled = True, **kwargs)
 
-   Bases: :py:obj:`canns.trainer._base.Trainer`
+   Bases: :py:obj:`[ANONYMOUS_PROJECT].trainer._base.Trainer`
 
 
    Sanger's rule (Generalized Hebbian Algorithm) for multiple PC extraction.

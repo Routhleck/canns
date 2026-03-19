@@ -1,7 +1,7 @@
-canns.pipeline.asa_gui.views.widgets.help_dialog
+[ANONYMOUS_PROJECT].pipeline.asa_gui.views.widgets.help_dialog
 ================================================
 
-.. py:module:: canns.pipeline.asa_gui.views.widgets.help_dialog
+.. py:module:: [ANONYMOUS_PROJECT].pipeline.asa_gui.views.widgets.help_dialog
 
 .. autoapi-nested-parse::
 
@@ -14,7 +14,7 @@ Classes
 
 .. autoapisummary::
 
-   canns.pipeline.asa_gui.views.widgets.help_dialog.HelpDialog
+   [ANONYMOUS_PROJECT].pipeline.asa_gui.views.widgets.help_dialog.HelpDialog
 
 
 Functions
@@ -22,7 +22,7 @@ Functions
 
 .. autoapisummary::
 
-   canns.pipeline.asa_gui.views.widgets.help_dialog.show_help_dialog
+   [ANONYMOUS_PROJECT].pipeline.asa_gui.views.widgets.help_dialog.show_help_dialog
 
 
 Module Contents

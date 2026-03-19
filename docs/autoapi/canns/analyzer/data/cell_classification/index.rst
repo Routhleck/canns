@@ -1,7 +1,7 @@
-canns.analyzer.data.cell_classification
+[ANONYMOUS_PROJECT].analyzer.data.cell_classification
 =======================================
 
-.. py:module:: canns.analyzer.data.cell_classification
+.. py:module:: [ANONYMOUS_PROJECT].analyzer.data.cell_classification
 
 .. autoapi-nested-parse::
 
@@ -21,10 +21,10 @@ Submodules
 .. toctree::
    :maxdepth: 1
 
-   /autoapi/canns/analyzer/data/cell_classification/core/index
-   /autoapi/canns/analyzer/data/cell_classification/io/index
-   /autoapi/canns/analyzer/data/cell_classification/utils/index
-   /autoapi/canns/analyzer/data/cell_classification/visualization/index
+   /autoapi/[ANONYMOUS_PROJECT]/analyzer/data/cell_classification/core/index
+   /autoapi/[ANONYMOUS_PROJECT]/analyzer/data/cell_classification/io/index
+   /autoapi/[ANONYMOUS_PROJECT]/analyzer/data/cell_classification/utils/index
+   /autoapi/[ANONYMOUS_PROJECT]/analyzer/data/cell_classification/visualization/index
 
 
 Classes
@@ -32,16 +32,16 @@ Classes
 
 .. autoapisummary::
 
-   canns.analyzer.data.cell_classification.BTNAnalyzer
-   canns.analyzer.data.cell_classification.BTNConfig
-   canns.analyzer.data.cell_classification.BTNResult
-   canns.analyzer.data.cell_classification.GridnessAnalyzer
-   canns.analyzer.data.cell_classification.GridnessResult
-   canns.analyzer.data.cell_classification.HDCellResult
-   canns.analyzer.data.cell_classification.HeadDirectionAnalyzer
-   canns.analyzer.data.cell_classification.MATFileLoader
-   canns.analyzer.data.cell_classification.TuningCurve
-   canns.analyzer.data.cell_classification.Unit
+   [ANONYMOUS_PROJECT].analyzer.data.cell_classification.BTNAnalyzer
+   [ANONYMOUS_PROJECT].analyzer.data.cell_classification.BTNConfig
+   [ANONYMOUS_PROJECT].analyzer.data.cell_classification.BTNResult
+   [ANONYMOUS_PROJECT].analyzer.data.cell_classification.GridnessAnalyzer
+   [ANONYMOUS_PROJECT].analyzer.data.cell_classification.GridnessResult
+   [ANONYMOUS_PROJECT].analyzer.data.cell_classification.HDCellResult
+   [ANONYMOUS_PROJECT].analyzer.data.cell_classification.HeadDirectionAnalyzer
+   [ANONYMOUS_PROJECT].analyzer.data.cell_classification.MATFileLoader
+   [ANONYMOUS_PROJECT].analyzer.data.cell_classification.TuningCurve
+   [ANONYMOUS_PROJECT].analyzer.data.cell_classification.Unit
 
 
 Functions
@@ -49,40 +49,40 @@ Functions
 
 .. autoapisummary::
 
-   canns.analyzer.data.cell_classification.autocorrelation_2d
-   canns.analyzer.data.cell_classification.cart2pol
-   canns.analyzer.data.cell_classification.circ_dist
-   canns.analyzer.data.cell_classification.circ_dist2
-   canns.analyzer.data.cell_classification.circ_mean
-   canns.analyzer.data.cell_classification.circ_r
-   canns.analyzer.data.cell_classification.circ_rtest
-   canns.analyzer.data.cell_classification.circ_std
-   canns.analyzer.data.cell_classification.compute_2d_autocorrelation
-   canns.analyzer.data.cell_classification.compute_field_statistics
-   canns.analyzer.data.cell_classification.compute_grid_spacing
-   canns.analyzer.data.cell_classification.compute_rate_map
-   canns.analyzer.data.cell_classification.compute_rate_map_from_binned
-   canns.analyzer.data.cell_classification.compute_spatial_information
-   canns.analyzer.data.cell_classification.fit_ellipse
-   canns.analyzer.data.cell_classification.identify_grid_modules_and_stats
-   canns.analyzer.data.cell_classification.label_connected_components
-   canns.analyzer.data.cell_classification.normalized_xcorr2
-   canns.analyzer.data.cell_classification.pearson_correlation
-   canns.analyzer.data.cell_classification.plot_autocorrelogram
-   canns.analyzer.data.cell_classification.plot_btn_autocorr_summary
-   canns.analyzer.data.cell_classification.plot_btn_distance_matrix
-   canns.analyzer.data.cell_classification.plot_grid_score_histogram
-   canns.analyzer.data.cell_classification.plot_gridness_analysis
-   canns.analyzer.data.cell_classification.plot_hd_analysis
-   canns.analyzer.data.cell_classification.plot_polar_tuning
-   canns.analyzer.data.cell_classification.plot_rate_map
-   canns.analyzer.data.cell_classification.plot_temporal_autocorr
-   canns.analyzer.data.cell_classification.pol2cart
-   canns.analyzer.data.cell_classification.polyarea
-   canns.analyzer.data.cell_classification.regionprops
-   canns.analyzer.data.cell_classification.rotate_image
-   canns.analyzer.data.cell_classification.squared_distance
-   canns.analyzer.data.cell_classification.wrap_to_pi
+   [ANONYMOUS_PROJECT].analyzer.data.cell_classification.autocorrelation_2d
+   [ANONYMOUS_PROJECT].analyzer.data.cell_classification.cart2pol
+   [ANONYMOUS_PROJECT].analyzer.data.cell_classification.circ_dist
+   [ANONYMOUS_PROJECT].analyzer.data.cell_classification.circ_dist2
+   [ANONYMOUS_PROJECT].analyzer.data.cell_classification.circ_mean
+   [ANONYMOUS_PROJECT].analyzer.data.cell_classification.circ_r
+   [ANONYMOUS_PROJECT].analyzer.data.cell_classification.circ_rtest
+   [ANONYMOUS_PROJECT].analyzer.data.cell_classification.circ_std
+   [ANONYMOUS_PROJECT].analyzer.data.cell_classification.compute_2d_autocorrelation
+   [ANONYMOUS_PROJECT].analyzer.data.cell_classification.compute_field_statistics
+   [ANONYMOUS_PROJECT].analyzer.data.cell_classification.compute_grid_spacing
+   [ANONYMOUS_PROJECT].analyzer.data.cell_classification.compute_rate_map
+   [ANONYMOUS_PROJECT].analyzer.data.cell_classification.compute_rate_map_from_binned
+   [ANONYMOUS_PROJECT].analyzer.data.cell_classification.compute_spatial_information
+   [ANONYMOUS_PROJECT].analyzer.data.cell_classification.fit_ellipse
+   [ANONYMOUS_PROJECT].analyzer.data.cell_classification.identify_grid_modules_and_stats
+   [ANONYMOUS_PROJECT].analyzer.data.cell_classification.label_connected_components
+   [ANONYMOUS_PROJECT].analyzer.data.cell_classification.normalized_xcorr2
+   [ANONYMOUS_PROJECT].analyzer.data.cell_classification.pearson_correlation
+   [ANONYMOUS_PROJECT].analyzer.data.cell_classification.plot_autocorrelogram
+   [ANONYMOUS_PROJECT].analyzer.data.cell_classification.plot_btn_autocorr_summary
+   [ANONYMOUS_PROJECT].analyzer.data.cell_classification.plot_btn_distance_matrix
+   [ANONYMOUS_PROJECT].analyzer.data.cell_classification.plot_grid_score_histogram
+   [ANONYMOUS_PROJECT].analyzer.data.cell_classification.plot_gridness_analysis
+   [ANONYMOUS_PROJECT].analyzer.data.cell_classification.plot_hd_analysis
+   [ANONYMOUS_PROJECT].analyzer.data.cell_classification.plot_polar_tuning
+   [ANONYMOUS_PROJECT].analyzer.data.cell_classification.plot_rate_map
+   [ANONYMOUS_PROJECT].analyzer.data.cell_classification.plot_temporal_autocorr
+   [ANONYMOUS_PROJECT].analyzer.data.cell_classification.pol2cart
+   [ANONYMOUS_PROJECT].analyzer.data.cell_classification.polyarea
+   [ANONYMOUS_PROJECT].analyzer.data.cell_classification.regionprops
+   [ANONYMOUS_PROJECT].analyzer.data.cell_classification.rotate_image
+   [ANONYMOUS_PROJECT].analyzer.data.cell_classification.squared_distance
+   [ANONYMOUS_PROJECT].analyzer.data.cell_classification.wrap_to_pi
 
 
 Package Contents

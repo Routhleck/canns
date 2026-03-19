@@ -1,7 +1,7 @@
-canns.analyzer.data.cell_classification.core.grid_cells
+[ANONYMOUS_PROJECT].analyzer.data.cell_classification.core.grid_cells
 =======================================================
 
-.. py:module:: canns.analyzer.data.cell_classification.core.grid_cells
+.. py:module:: [ANONYMOUS_PROJECT].analyzer.data.cell_classification.core.grid_cells
 
 .. autoapi-nested-parse::
 
@@ -18,7 +18,7 @@ Attributes
 
 .. autoapisummary::
 
-   canns.analyzer.data.cell_classification.core.grid_cells.x
+   [ANONYMOUS_PROJECT].analyzer.data.cell_classification.core.grid_cells.x
 
 
 Classes
@@ -26,8 +26,8 @@ Classes
 
 .. autoapisummary::
 
-   canns.analyzer.data.cell_classification.core.grid_cells.GridnessAnalyzer
-   canns.analyzer.data.cell_classification.core.grid_cells.GridnessResult
+   [ANONYMOUS_PROJECT].analyzer.data.cell_classification.core.grid_cells.GridnessAnalyzer
+   [ANONYMOUS_PROJECT].analyzer.data.cell_classification.core.grid_cells.GridnessResult
 
 
 Functions
@@ -35,7 +35,7 @@ Functions
 
 .. autoapisummary::
 
-   canns.analyzer.data.cell_classification.core.grid_cells.compute_2d_autocorrelation
+   [ANONYMOUS_PROJECT].analyzer.data.cell_classification.core.grid_cells.compute_2d_autocorrelation
 
 
 Module Contents

@@ -1,12 +1,12 @@
 详细教程
 ========
 
-涵盖CANNs库各个方面的综合教程，按研究场景组织。
+涵盖[ANONYMOUS_PROJECT]库各个方面的综合教程，按研究场景组织。
 
 概述
 ----
 
-这些教程为在不同研究场景中使用CANNs库提供深入的实践指导。教程以 Jupyter 笔记本为主，少量采用 `.rst` 文档（例如 TUI 使用说明）。
+这些教程为在不同研究场景中使用[ANONYMOUS_PROJECT]库提供深入的实践指导。教程以 Jupyter 笔记本为主，少量采用 `.rst` 文档（例如 TUI 使用说明）。
 
 场景
 ----
@@ -85,7 +85,7 @@
 快速开始
 --------
 
-**初次接触CANNs？**
+**初次接触[ANONYMOUS_PROJECT]？**
 
 1. 首先完成 :doc:`../1_quick_starts/index`
 2. 阅读 :doc:`../2_core_concepts/index` 以获取背景信息
@@ -105,8 +105,8 @@
 .. code-block:: bash
 
    # 克隆仓库
-   git clone https://github.com/routhleck/canns.git
-   cd canns
+   git clone [ANONYMOUS_REPO].git
+   cd [ANONYMOUS_PROJECT]
 
    # 安装依赖
    pip install -e .[dev]
@@ -125,7 +125,7 @@
 
 - **文档**: 完整的API参考可用
 - **示例**: `examples/`目录中的其他示例
-- **问题**: 在`GitHub Issues <https://github.com/routhleck/canns/issues>`_上报告问题
+- **问题**: 在`GitHub Issues <[ANONYMOUS_REPO]/issues>`_上报告问题
 - **讨论**: 在GitHub讨论中提问
 
 贡献

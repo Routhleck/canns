@@ -1,7 +1,7 @@
-canns.analyzer.data.cell_classification.utils.correlation
+[ANONYMOUS_PROJECT].analyzer.data.cell_classification.utils.correlation
 =========================================================
 
-.. py:module:: canns.analyzer.data.cell_classification.utils.correlation
+.. py:module:: [ANONYMOUS_PROJECT].analyzer.data.cell_classification.utils.correlation
 
 .. autoapi-nested-parse::
 
@@ -17,7 +17,7 @@ Attributes
 
 .. autoapisummary::
 
-   canns.analyzer.data.cell_classification.utils.correlation.x
+   [ANONYMOUS_PROJECT].analyzer.data.cell_classification.utils.correlation.x
 
 
 Functions
@@ -25,9 +25,9 @@ Functions
 
 .. autoapisummary::
 
-   canns.analyzer.data.cell_classification.utils.correlation.autocorrelation_2d
-   canns.analyzer.data.cell_classification.utils.correlation.normalized_xcorr2
-   canns.analyzer.data.cell_classification.utils.correlation.pearson_correlation
+   [ANONYMOUS_PROJECT].analyzer.data.cell_classification.utils.correlation.autocorrelation_2d
+   [ANONYMOUS_PROJECT].analyzer.data.cell_classification.utils.correlation.normalized_xcorr2
+   [ANONYMOUS_PROJECT].analyzer.data.cell_classification.utils.correlation.pearson_correlation
 
 
 Module Contents

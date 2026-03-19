@@ -2,20 +2,20 @@
 模型集合
 ==================
 
-本文档介绍 CANNs 库中不同类别的模型及其扩展方法。
+本文档介绍 [ANONYMOUS_PROJECT] 库中不同类别的模型及其扩展方法。
 
 概述
 ========
 
-模型模块（``canns.models``）实现了各种 CANN 架构及其变体。模型分为三个类别：
+模型模块（``[ANONYMOUS_PROJECT].models``）实现了各种 CANN 架构及其变体。模型分为三个类别：
 
-**基础模型** (``canns.models.basic``)
+**基础模型** (``[ANONYMOUS_PROJECT].models.basic``)
    标准 CANN 实现和变体
 
-**类脑模型** (``canns.models.brain_inspired``)
+**类脑模型** (``[ANONYMOUS_PROJECT].models.brain_inspired``)
    具有生物学习机制的模型
 
-**混合模型** (``canns.models.hybrid``)
+**混合模型** (``[ANONYMOUS_PROJECT].models.hybrid``)
    CANN 与人工神经网络的组合
 
 所有模型都基于 BrainPy 的动力学框架构建，该框架提供状态管理、时间步进和 JIT 编译功能。
@@ -23,12 +23,12 @@
 基础模型
 ============
 
-基础模型实现了核心的 **Wu-Amari-Wong 连续吸引子神经网络（CANNs）** 动力学 :cite:p:`amari1977dynamics,wu2008dynamics,fung2010moving,wu2016continuous`，如理论神经科学文献所述。它们使用预定义的连接模式（通常是高斯核）和固定参数。
+基础模型实现了核心的 **Wu-Amari-Wong 连续吸引子神经网络（[ANONYMOUS_PROJECT]）** 动力学 :cite:p:`amari1977dynamics,wu2008dynamics,fung2010moving,wu2016continuous`，如理论神经科学文献所述。它们使用预定义的连接模式（通常是高斯核）和固定参数。
 
 可用的基础模型
 ----------------------
 
-模型按 ``canns.models.basic`` 中的模块文件组织：
+模型按 ``[ANONYMOUS_PROJECT].models.basic`` 中的模块文件组织：
 
 原始 CANN (cann.py)
 ~~~~~~~~~~~~~~~~~~~~~
@@ -87,7 +87,7 @@ Theta扫描模型 (theta_sweep_model.py)
 实现基础模型
 --------------------------
 
-每个基础模型都继承自 ``canns.models.basic.BasicModel`` 或 ``canns.models.basic.BasicModelGroup``。
+每个基础模型都继承自 ``[ANONYMOUS_PROJECT].models.basic.BasicModel`` 或 ``[ANONYMOUS_PROJECT].models.basic.BasicModelGroup``。
 
 构造函数设置
 ~~~~~~~~~~~~~~~~~
@@ -108,7 +108,7 @@ Theta扫描模型 (theta_sweep_model.py)
    - 应用指定宽度的高斯函数
    - 将结果存储在 ``self.conn_mat`` 中
 
-   参见 ``src/canns/models/basic/cann.py`` 的参考实现。
+   参见 ``src/[ANONYMOUS_PROJECT]/models/basic/cann.py`` 的参考实现。
 
 **刺激生成** (``get_stimulus_by_pos(pos)``)
    将特征空间位置转换为外部输入模式。由任务模块调用以生成神经输入：
@@ -167,7 +167,7 @@ Theta扫描模型 (theta_sweep_model.py)
 实现类脑模型
 -----------------------------------
 
-继承自 ``canns.models.brain_inspired.BrainInspiredModel`` 或 ``canns.models.brain_inspired.BrainInspiredModelGroup``。
+继承自 ``[ANONYMOUS_PROJECT].models.brain_inspired.BrainInspiredModel`` 或 ``[ANONYMOUS_PROJECT].models.brain_inspired.BrainInspiredModelGroup``。
 
 状态和权重变量
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -214,7 +214,7 @@ Hebbian 学习
 
 可选支持在保留学习结构的同时更改网络大小：``resize(num_neurons, preserve_submatrix)``
 
-参见 ``src/canns/models/brain_inspired/hopfield.py`` 的参考实现。
+参见 ``src/[ANONYMOUS_PROJECT]/models/brain_inspired/hopfield.py`` 的参考实现。
 
 混合模型
 =============
@@ -228,7 +228,7 @@ Hebbian 学习
    - 吸引子动力学与前馈处理的集成
    - 将生物学合理性与深度学习能力相结合
 
-   当前状态：在 ``canns.models.hybrid`` 中存在用于未来实现的占位符模块结构。
+   当前状态：在 ``[ANONYMOUS_PROJECT].models.hybrid`` 中存在用于未来实现的占位符模块结构。
 
 BrainPy 基础
 ==================
@@ -274,7 +274,7 @@ BrainPy 基础
 总结
 =======
 
-CANNs 模型集合提供：
+[ANONYMOUS_PROJECT] 模型集合提供：
 
 1. **基础模型** - 可立即使用的标准 CANN 实现
 2. **类脑模型** - 具有局部学习能力的网络

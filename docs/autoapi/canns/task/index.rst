@@ -1,7 +1,7 @@
-canns.task
+[ANONYMOUS_PROJECT].task
 ==========
 
-.. py:module:: canns.task
+.. py:module:: [ANONYMOUS_PROJECT].task
 
 
 Submodules
@@ -10,10 +10,10 @@ Submodules
 .. toctree::
    :maxdepth: 1
 
-   /autoapi/canns/task/closed_loop_navigation/index
-   /autoapi/canns/task/navigation_base/index
-   /autoapi/canns/task/open_loop_navigation/index
-   /autoapi/canns/task/tracking/index
+   /autoapi/[ANONYMOUS_PROJECT]/task/closed_loop_navigation/index
+   /autoapi/[ANONYMOUS_PROJECT]/task/navigation_base/index
+   /autoapi/[ANONYMOUS_PROJECT]/task/open_loop_navigation/index
+   /autoapi/[ANONYMOUS_PROJECT]/task/tracking/index
 
 
 Attributes
@@ -21,7 +21,7 @@ Attributes
 
 .. autoapisummary::
 
-   canns.task.INT32_MAX
+   [ANONYMOUS_PROJECT].task.INT32_MAX
 
 
 Classes
@@ -29,8 +29,8 @@ Classes
 
 .. autoapisummary::
 
-   canns.task.GeodesicDistanceResult
-   canns.task.MovementCostGrid
+   [ANONYMOUS_PROJECT].task.GeodesicDistanceResult
+   [ANONYMOUS_PROJECT].task.MovementCostGrid
 
 
 Package Contents

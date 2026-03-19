@@ -1,7 +1,7 @@
-canns.analyzer.data.cell_classification.utils.circular_stats
+[ANONYMOUS_PROJECT].analyzer.data.cell_classification.utils.circular_stats
 ============================================================
 
-.. py:module:: canns.analyzer.data.cell_classification.utils.circular_stats
+.. py:module:: [ANONYMOUS_PROJECT].analyzer.data.cell_classification.utils.circular_stats
 
 .. autoapi-nested-parse::
 
@@ -23,11 +23,11 @@ Attributes
 
 .. autoapisummary::
 
-   canns.analyzer.data.cell_classification.utils.circular_stats.angles
-   canns.analyzer.data.cell_classification.utils.circular_stats.angular_distance
-   canns.analyzer.data.cell_classification.utils.circular_stats.angular_mean
-   canns.analyzer.data.cell_classification.utils.circular_stats.angular_std
-   canns.analyzer.data.cell_classification.utils.circular_stats.mvl
+   [ANONYMOUS_PROJECT].analyzer.data.cell_classification.utils.circular_stats.angles
+   [ANONYMOUS_PROJECT].analyzer.data.cell_classification.utils.circular_stats.angular_distance
+   [ANONYMOUS_PROJECT].analyzer.data.cell_classification.utils.circular_stats.angular_mean
+   [ANONYMOUS_PROJECT].analyzer.data.cell_classification.utils.circular_stats.angular_std
+   [ANONYMOUS_PROJECT].analyzer.data.cell_classification.utils.circular_stats.mvl
 
 
 Functions
@@ -35,12 +35,12 @@ Functions
 
 .. autoapisummary::
 
-   canns.analyzer.data.cell_classification.utils.circular_stats.circ_dist
-   canns.analyzer.data.cell_classification.utils.circular_stats.circ_dist2
-   canns.analyzer.data.cell_classification.utils.circular_stats.circ_mean
-   canns.analyzer.data.cell_classification.utils.circular_stats.circ_r
-   canns.analyzer.data.cell_classification.utils.circular_stats.circ_rtest
-   canns.analyzer.data.cell_classification.utils.circular_stats.circ_std
+   [ANONYMOUS_PROJECT].analyzer.data.cell_classification.utils.circular_stats.circ_dist
+   [ANONYMOUS_PROJECT].analyzer.data.cell_classification.utils.circular_stats.circ_dist2
+   [ANONYMOUS_PROJECT].analyzer.data.cell_classification.utils.circular_stats.circ_mean
+   [ANONYMOUS_PROJECT].analyzer.data.cell_classification.utils.circular_stats.circ_r
+   [ANONYMOUS_PROJECT].analyzer.data.cell_classification.utils.circular_stats.circ_rtest
+   [ANONYMOUS_PROJECT].analyzer.data.cell_classification.utils.circular_stats.circ_std
 
 
 Module Contents

@@ -1,67 +1,63 @@
-CANNs 文档
+[ANONYMOUS_PROJECT] 文档
 ====================
 
 .. image:: https://badges.ws/badge/status-stable-green
-   :target: https://github.com/routhleck/canns
+   :target: [ANONYMOUS_REPO]
    :alt: 状态：稳定
 
-.. image:: https://img.shields.io/pypi/pyversions/canns
-   :target: https://pypi.org/project/canns/
+.. image:: https://img.shields.io/pypi/pyversions/[ANONYMOUS_PROJECT]
+   :target: https://pypi.org/project/[ANONYMOUS_PROJECT]/
    :alt: Python 版本
 
 .. image:: https://badges.ws/maintenance/yes/2026
-   :target: https://github.com/routhleck/canns
+   :target: [ANONYMOUS_REPO]
    :alt: 持续维护
 
-.. image:: https://badges.ws/github/release/routhleck/canns
-   :target: https://github.com/routhleck/canns/releases
+.. image:: https://badges.ws/github/release/[ANONYMOUS_ORG]/[ANONYMOUS_PROJECT]
+   :target: [ANONYMOUS_REPO]/releases
    :alt: 发行版本
 
-.. image:: https://badges.ws/github/license/routhleck/canns
-   :target: https://github.com/routhleck/canns/blob/master/LICENSE
+.. image:: https://badges.ws/github/license/[ANONYMOUS_ORG]/[ANONYMOUS_PROJECT]
+   :target: [ANONYMOUS_REPO]/blob/master/LICENSE
    :alt: 许可证
 
 .. image:: https://zenodo.org/badge/DOI/10.5281/zenodo.18453893.svg
    :target: https://doi.org/10.5281/zenodo.18453893
    :alt: DOI
 
-.. image:: https://badges.ws/github/stars/routhleck/canns?logo=github
-   :target: https://github.com/routhleck/canns/stargazers
+.. image:: https://badges.ws/github/stars/[ANONYMOUS_ORG]/[ANONYMOUS_PROJECT]?logo=github
+   :target: [ANONYMOUS_REPO]/stargazers
    :alt: GitHub Stars
 
-.. image:: https://static.pepy.tech/personalized-badge/canns?period=total&units=INTERNATIONAL_SYSTEM&left_color=BLACK&right_color=GREEN&left_text=downloads
-   :target: https://pepy.tech/projects/canns
+.. image:: https://static.pepy.tech/personalized-badge/[ANONYMOUS_PROJECT]?period=total&units=INTERNATIONAL_SYSTEM&left_color=BLACK&right_color=GREEN&left_text=downloads
+   :target: https://pepy.tech/projects/[ANONYMOUS_PROJECT]
    :alt: 下载量
 
 .. image:: https://deepwiki.com/badge.svg
-   :target: https://deepwiki.com/Routhleck/canns
+   :target: https://deepwiki.com/[ANONYMOUS_ORG]/[ANONYMOUS_PROJECT]
    :alt: 询问 DeepWiki
 
-.. image:: https://badges.ws/badge/Buy_Me_a_Coffee-ff813f?icon=buymeacoffee
-   :target: https://buymeacoffee.com/forrestcai6
-   :alt: 请我喝咖啡
-
 .. image:: ../_static/logo.svg
-   :alt: CANNs Logo
+   :alt: [ANONYMOUS_PROJECT] Logo
    :width: 350
    :align: center
 
-欢迎使用 CANNs！
+欢迎使用 [ANONYMOUS_PROJECT]！
 -----------------
 
-CANNs（Continuous Attractor Neural Networks toolkit）是基于 `BrainPy <https://github.com/brainpy/BrainPy>`_ 与
-`JAX <https://github.com/jax-ml/jax>`_ 构建的研究工具库，并可选使用 Rust 加速库 ``canns-lib`` 优化部分性能敏感例程（如
+[ANONYMOUS_PROJECT]（Continuous Attractor Neural Networks toolkit）是基于 `BrainPy <https://github.com/brainpy/BrainPy>`_ 与
+`JAX <https://github.com/jax-ml/jax>`_ 构建的研究工具库，并可选使用 Rust 加速库 ``[ANONYMOUS_PROJECT]-lib`` 优化部分性能敏感例程（如
 TDA/Ripser 与任务生成）。它集成模型集合、任务生成器、分析器、训练器与 ASA 流水线（GUI/TUI），以统一工作流完成仿真与分析。
 
 架构
 ------------
 
 .. figure:: ../_static/architecture.png
-   :alt: CANNs Architecture
+   :alt: [ANONYMOUS_PROJECT] Architecture
    :width: 900
    :align: center
 
-   CANNs 库的层级结构，展示五个层级：应用层（流水线编排）、功能层（任务/训练器/分析器/工具模块）、核心模型层（CANN 实现）、基础层
+   [ANONYMOUS_PROJECT] 库的层级结构，展示五个层级：应用层（流水线编排）、功能层（任务/训练器/分析器/工具模块）、核心模型层（CANN 实现）、基础层
    （BrainPy/JAX 与 Rust FFI 后端）以及硬件层（CPU/GPU/TPU 支持）。
 
 核心特性
@@ -72,7 +68,7 @@ TDA/Ripser 与任务生成）。它集成模型集合、任务生成器、分析
 - **分析器能力**：能量景观、调谐曲线、栅格/放电率图、TDA 与解码工具、细胞分类
 - **ASA 流水线 & GUI/TUI**：端到端流程（预处理、TDA、解码与结果可视化，如 CohoMap/CohoSpace/PathCompare/FR/FRM/GridScore）
 - **训练与扩展**：HebbianTrainer 与统一基类便于扩展
-- **可选加速**：``canns-lib`` 覆盖部分性能敏感例程
+- **可选加速**：``[ANONYMOUS_PROJECT]-lib`` 覆盖部分性能敏感例程
 
 模型分析概览
 -----------------------
@@ -224,35 +220,35 @@ ASA 流水线（GUI/TUI）
 快速开始
 -----------
 
-安装 CANNs：
+安装 [ANONYMOUS_PROJECT]：
 
 .. code-block:: bash
 
    # 仅 CPU
-   pip install canns
+   pip install [ANONYMOUS_PROJECT]
 
    # 可选加速（Linux）
-   pip install canns[cuda12]
-   pip install canns[cuda13]
-   pip install canns[tpu]
+   pip install [ANONYMOUS_PROJECT][cuda12]
+   pip install [ANONYMOUS_PROJECT][cuda13]
+   pip install [ANONYMOUS_PROJECT][tpu]
 
    # GUI（ASA Pipeline）
-   pip install canns[gui]
+   pip install [ANONYMOUS_PROJECT][gui]
 
 可选（uv）：
 
 .. code-block:: bash
 
-   uv pip install canns
+   uv pip install [ANONYMOUS_PROJECT]
 
 1D CANN 平滑追踪（导入 → 仿真 → 可视化）：
 
 .. code-block:: python
 
    import brainpy.math as bm
-   from canns.analyzer.visualization import PlotConfigs, energy_landscape_1d_animation
-   from canns.models.basic import CANN1D
-   from canns.task.tracking import SmoothTracking1D
+   from [ANONYMOUS_PROJECT].analyzer.visualization import PlotConfigs, energy_landscape_1d_animation
+   from [ANONYMOUS_PROJECT].models.basic import CANN1D
+   from [ANONYMOUS_PROJECT].task.tracking import SmoothTracking1D
 
    # 模拟时间步长
    bm.set_dt(0.1)
@@ -305,7 +301,7 @@ ASA 流水线（GUI/TUI）
    :maxdepth: 1
    :caption: 简介
 
-   0_why_canns
+   0_why_[ANONYMOUS_PROJECT]
 
 .. toctree::
    :maxdepth: 2
@@ -330,41 +326,41 @@ ASA 流水线（GUI/TUI）
    :caption: 资源
 
    references
-   GitHub 仓库 <https://github.com/routhleck/canns>
-   GitHub Issues <https://github.com/routhleck/canns/issues>
-   讨论区 <https://github.com/routhleck/canns/discussions>
+   GitHub 仓库 <[ANONYMOUS_REPO]>
+   GitHub Issues <[ANONYMOUS_REPO]/issues>
+   讨论区 <[ANONYMOUS_REPO]/discussions>
 
 **语言**: `English <../en/index.html>`_ | `中文 <../zh/index.html>`_
 
 社区和支持
 ---------------------
 
-- **GitHub 仓库**: https://github.com/routhleck/canns
-- **问题追踪**: https://github.com/routhleck/canns/issues
-- **讨论区**: https://github.com/routhleck/canns/discussions
-- **文档**: https://routhleck.com/canns/
+- **GitHub 仓库**: [ANONYMOUS_REPO]
+- **问题追踪**: [ANONYMOUS_REPO]/issues
+- **讨论区**: [ANONYMOUS_REPO]/discussions
+- **文档**: [ANONYMOUS_DOCS]
 
 贡献
 ------------
 
-欢迎贡献！请查看我们的 `贡献指南 <https://github.com/routhleck/canns/blob/master/CONTRIBUTING.md>`_。
+欢迎贡献！请查看我们的 `贡献指南 <[ANONYMOUS_REPO]/blob/master/CONTRIBUTING.md>`_。
 
 引用
 --------
 
-如果您在研究中使用了 CANNs，请引用：
+如果您在研究中使用了 [ANONYMOUS_PROJECT]，请引用：
 
 .. code-block:: bibtex
 
-   @software{he_2026_canns,
-     author       = {He, Sichao and
+   @software{he_2026_[ANONYMOUS_PROJECT],
+     author       = {[ANONYMOUS_AUTHOR] and
                      Tuerhong, Aiersi and
                      She, Shangjun and
                      Chu, Tianhao and
                      Wu, Yuling and
                      Zuo, Junfeng and
                      Wu, Si},
-     title        = {CANNs: Continuous Attractor Neural Networks Toolkit},
+     title        = {[ANONYMOUS_PROJECT]: Continuous Attractor Neural Networks Toolkit},
      month        = feb,
      year         = 2026,
      publisher    = {Zenodo},

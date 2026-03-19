@@ -1,7 +1,7 @@
-canns.pipeline.asa_gui.app
+[ANONYMOUS_PROJECT].pipeline.asa_gui.app
 ==========================
 
-.. py:module:: canns.pipeline.asa_gui.app
+.. py:module:: [ANONYMOUS_PROJECT].pipeline.asa_gui.app
 
 .. autoapi-nested-parse::
 
@@ -14,7 +14,7 @@ Classes
 
 .. autoapisummary::
 
-   canns.pipeline.asa_gui.app.ASAGuiApp
+   [ANONYMOUS_PROJECT].pipeline.asa_gui.app.ASAGuiApp
 
 
 Module Contents
@@ -22,6 +22,6 @@ Module Contents
 
 .. py:class:: ASAGuiApp(parent=None)
 
-   Bases: :py:obj:`canns.pipeline.asa_gui.main_window.MainWindow`
+   Bases: :py:obj:`[ANONYMOUS_PROJECT].pipeline.asa_gui.main_window.MainWindow`
 
 

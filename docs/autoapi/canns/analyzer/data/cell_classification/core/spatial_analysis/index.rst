@@ -1,7 +1,7 @@
-canns.analyzer.data.cell_classification.core.spatial_analysis
+[ANONYMOUS_PROJECT].analyzer.data.cell_classification.core.spatial_analysis
 =============================================================
 
-.. py:module:: canns.analyzer.data.cell_classification.core.spatial_analysis
+.. py:module:: [ANONYMOUS_PROJECT].analyzer.data.cell_classification.core.spatial_analysis
 
 .. autoapi-nested-parse::
 
@@ -16,7 +16,7 @@ Attributes
 
 .. autoapisummary::
 
-   canns.analyzer.data.cell_classification.core.spatial_analysis.time_stamps
+   [ANONYMOUS_PROJECT].analyzer.data.cell_classification.core.spatial_analysis.time_stamps
 
 
 Functions
@@ -24,11 +24,11 @@ Functions
 
 .. autoapisummary::
 
-   canns.analyzer.data.cell_classification.core.spatial_analysis.compute_field_statistics
-   canns.analyzer.data.cell_classification.core.spatial_analysis.compute_grid_spacing
-   canns.analyzer.data.cell_classification.core.spatial_analysis.compute_rate_map
-   canns.analyzer.data.cell_classification.core.spatial_analysis.compute_rate_map_from_binned
-   canns.analyzer.data.cell_classification.core.spatial_analysis.compute_spatial_information
+   [ANONYMOUS_PROJECT].analyzer.data.cell_classification.core.spatial_analysis.compute_field_statistics
+   [ANONYMOUS_PROJECT].analyzer.data.cell_classification.core.spatial_analysis.compute_grid_spacing
+   [ANONYMOUS_PROJECT].analyzer.data.cell_classification.core.spatial_analysis.compute_rate_map
+   [ANONYMOUS_PROJECT].analyzer.data.cell_classification.core.spatial_analysis.compute_rate_map_from_binned
+   [ANONYMOUS_PROJECT].analyzer.data.cell_classification.core.spatial_analysis.compute_spatial_information
 
 
 Module Contents

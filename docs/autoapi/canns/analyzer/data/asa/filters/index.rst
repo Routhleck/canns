@@ -1,6 +1,6 @@
-canns.analyzer.data.asa.filters
+[ANONYMOUS_PROJECT].analyzer.data.asa.filters
 ===============================
 
-.. py:module:: canns.analyzer.data.asa.filters
+.. py:module:: [ANONYMOUS_PROJECT].analyzer.data.asa.filters
 
 

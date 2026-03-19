@@ -2,31 +2,31 @@
 Design Philosophy & Architecture Overview
 =====================================================
 
-This document explains the core design principles and module organization of the CANNs library.
+This document explains the core design principles and module organization of the [ANONYMOUS_PROJECT] library.
 
 Core Design Principles
 ======================
 
-The CANNs library rests on two fundamental principles that guide its architecture and implementation.
+The [ANONYMOUS_PROJECT] library rests on two fundamental principles that guide its architecture and implementation.
 
 Separation of Concerns
 ----------------------
 
 The library strictly separates different functional responsibilities into independent modules:
 
-:🏗️ **Models** (``canns.models``):
+:🏗️ **Models** (``[ANONYMOUS_PROJECT].models``):
    Define neural network dynamics and state evolution
 
-:📊 **Tasks** (``canns.task``):
+:📊 **Tasks** (``[ANONYMOUS_PROJECT].task``):
    Generate experimental paradigms and input data
 
-:📈 **Analyzers** (``canns.analyzer``):
+:📈 **Analyzers** (``[ANONYMOUS_PROJECT].analyzer``):
    Visualize and analyze simulation results
 
-:🧠 **Trainers** (``canns.trainer``):
+:🧠 **Trainers** (``[ANONYMOUS_PROJECT].trainer``):
    Implement learning rules for brain-inspired models
 
-:🔗 **Pipeline** (``canns.pipeline``):
+:🔗 **Pipeline** (``[ANONYMOUS_PROJECT].pipeline``):
    Orchestrate complete experimental workflows
 
 Each module focuses on a single responsibility. Models don't generate their own input data. Tasks don't analyze results. Analyzers don't modify model parameters. This separation makes the codebase maintainable, testable, and extensible.
@@ -36,9 +36,9 @@ Extensibility Through Base Classes
 
 Every major component inherits from abstract base classes that define standard interfaces:
 
-* ``canns.models.basic.BasicModel`` for basic CANN models
-* ``canns.models.brain_inspired.BrainInspiredModel`` for brain-inspired models
-* ``canns.trainer.Trainer`` for training algorithms
+* ``[ANONYMOUS_PROJECT].models.basic.BasicModel`` for basic CANN models
+* ``[ANONYMOUS_PROJECT].models.brain_inspired.BrainInspiredModel`` for brain-inspired models
+* ``[ANONYMOUS_PROJECT].trainer.Trainer`` for training algorithms
 
 These base classes establish contracts ensuring all implementations work seamlessly with the rest of the library. Users can create custom models, tasks, or trainers by inheriting from these bases and implementing the required methods.
 
@@ -48,13 +48,13 @@ Module Architecture
 Four Core Application Scenarios
 --------------------------------
 
-The CANNs library supports four distinct workflows, each addressing different research needs. These scenarios demonstrate the modular design and flexibility of the architecture.
+The [ANONYMOUS_PROJECT] library supports four distinct workflows, each addressing different research needs. These scenarios demonstrate the modular design and flexibility of the architecture.
 
-.. figure:: ../../_static/canns_scenarios_custom.png
+.. figure:: ../../_static/[ANONYMOUS_PROJECT]_scenarios_custom.png
    :align: center
    :width: 100%
 
-   CANNs Four Core Application Scenarios
+   [ANONYMOUS_PROJECT] Four Core Application Scenarios
 
 .. grid:: 2
    :gutter: 3
@@ -125,7 +125,7 @@ The CANNs library supports four distinct workflows, each addressing different re
       **Steps:**
 
       5. **Input Config**: Specify parameters via configuration files
-      6. **Pipeline Orchestration**: ``canns.pipeline`` coordinates all modules
+      6. **Pipeline Orchestration**: ``[ANONYMOUS_PROJECT].pipeline`` coordinates all modules
       7. **Auto Execution**: Automatic model creation, simulation, and analysis
       8. **Output Reports**: Generate comprehensive result summaries
 
@@ -148,7 +148,7 @@ Module Interaction Pattern
 BrainPy Integration
 -------------------
 
-The CANNs library builds on BrainPy :cite:p:`wang2023brainpy` (``brainpy``), a powerful framework for brain dynamics programming. BrainPy provides:
+The [ANONYMOUS_PROJECT] library builds on BrainPy :cite:p:`wang2023brainpy` (``brainpy``), a powerful framework for brain dynamics programming. BrainPy provides:
 
 :⚙️ **Dynamics Abstraction**:
    ``bp.DynamicalSystem`` base class for neural systems
@@ -191,7 +191,7 @@ Trainers modify model parameters—specifically connection weights—according t
 Pipeline Orchestration
 ~~~~~~~~~~~~~~~~~~~~~~~
 
-The ``canns.pipeline`` module coordinates all other modules into complete experimental workflows. It manages the full cycle from model setup through task execution to result analysis, providing a high-level interface for common use cases.
+The ``[ANONYMOUS_PROJECT].pipeline`` module coordinates all other modules into complete experimental workflows. It manages the full cycle from model setup through task execution to result analysis, providing a high-level interface for common use cases.
 
 Design Trade-offs
 =================
@@ -230,18 +230,18 @@ JAX :cite:p:`jax2018github`-based compilation provides GPU/TPU acceleration but 
 
 Users benefit from GPU/TPU acceleration without writing JAX-specific code directly.
 
-Native Layer (canns-lib)
+Native Layer ([ANONYMOUS_PROJECT]-lib)
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. important::
 
-   For performance-critical operations where Python overhead is significant, the library provides optional Rust-powered backends through ``canns-lib``:
+   For performance-critical operations where Python overhead is significant, the library provides optional Rust-powered backends through ``[ANONYMOUS_PROJECT]-lib``:
 
    * **Ripser Module**: Topological Data Analysis :cite:p:`carlsson2009topology,edelsbrunner2010computational` with 1.13x average speedup (up to 1.82x) vs. pure Python
    * **Spatial Navigation**: Accelerated RatInABox environments with ~700x speedup for long trajectory integration
    * **Future Modules**: Planned support for approximate nearest neighbors, dynamics computation
 
-   The canns-lib integration follows the same principle: it exposes simple Python APIs while leveraging native performance for bottleneck operations. Users can opt into these accelerations without changing their code structure.
+   The [ANONYMOUS_PROJECT]-lib integration follows the same principle: it exposes simple Python APIs while leveraging native performance for bottleneck operations. Users can opt into these accelerations without changing their code structure.
 
 Extending the Library
 =====================
@@ -286,7 +286,7 @@ Creating Custom Trainers
 
 .. note::
 
-   Trainers inherit from ``canns.trainer.Trainer`` and implement:
+   Trainers inherit from ``[ANONYMOUS_PROJECT].trainer.Trainer`` and implement:
 
    * ``train()``: Parameter update strategy
    * ``predict()``: Single-sample inference
@@ -295,7 +295,7 @@ Creating Custom Trainers
 Summary
 =======
 
-The CANNs library achieves its goals through careful architectural choices:
+The [ANONYMOUS_PROJECT] library achieves its goals through careful architectural choices:
 
 .. grid:: 2 2 2 4
    :gutter: 2

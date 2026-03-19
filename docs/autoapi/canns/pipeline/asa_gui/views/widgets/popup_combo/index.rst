@@ -1,7 +1,7 @@
-canns.pipeline.asa_gui.views.widgets.popup_combo
+[ANONYMOUS_PROJECT].pipeline.asa_gui.views.widgets.popup_combo
 ================================================
 
-.. py:module:: canns.pipeline.asa_gui.views.widgets.popup_combo
+.. py:module:: [ANONYMOUS_PROJECT].pipeline.asa_gui.views.widgets.popup_combo
 
 .. autoapi-nested-parse::
 
@@ -14,7 +14,7 @@ Classes
 
 .. autoapisummary::
 
-   canns.pipeline.asa_gui.views.widgets.popup_combo.PopupComboBox
+   [ANONYMOUS_PROJECT].pipeline.asa_gui.views.widgets.popup_combo.PopupComboBox
 
 
 Module Contents

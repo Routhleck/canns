@@ -1,7 +1,7 @@
-canns.analyzer.visualization.core.config
+[ANONYMOUS_PROJECT].analyzer.visualization.core.config
 ========================================
 
-.. py:module:: canns.analyzer.visualization.core.config
+.. py:module:: [ANONYMOUS_PROJECT].analyzer.visualization.core.config
 
 .. autoapi-nested-parse::
 
@@ -14,9 +14,9 @@ Classes
 
 .. autoapisummary::
 
-   canns.analyzer.visualization.core.config.AnimationConfig
-   canns.analyzer.visualization.core.config.PlotConfig
-   canns.analyzer.visualization.core.config.PlotConfigs
+   [ANONYMOUS_PROJECT].analyzer.visualization.core.config.AnimationConfig
+   [ANONYMOUS_PROJECT].analyzer.visualization.core.config.PlotConfig
+   [ANONYMOUS_PROJECT].analyzer.visualization.core.config.PlotConfigs
 
 
 Functions
@@ -24,7 +24,7 @@ Functions
 
 .. autoapisummary::
 
-   canns.analyzer.visualization.core.config.finalize_figure
+   [ANONYMOUS_PROJECT].analyzer.visualization.core.config.finalize_figure
 
 
 Module Contents
@@ -68,7 +68,7 @@ Module Contents
 
    .. rubric:: Example
 
-   >>> from canns.analyzer.visualization import AnimationConfig
+   >>> from [ANONYMOUS_PROJECT].analyzer.visualization import AnimationConfig
    >>>
    >>> # Dummy input representing total frames
    >>> total_frames = 120
@@ -127,12 +127,12 @@ Module Contents
 
 .. py:class:: PlotConfig
 
-   Unified configuration class for plotting helpers in ``canns.analyzer``.
+   Unified configuration class for plotting helpers in ``[ANONYMOUS_PROJECT].analyzer``.
 
    .. rubric:: Examples
 
    >>> import numpy as np
-   >>> from canns.analyzer.visualization import PlotConfig, energy_landscape_1d_static
+   >>> from [ANONYMOUS_PROJECT].analyzer.visualization import PlotConfig, energy_landscape_1d_static
    >>>
    >>> # Dummy input (matches test-style energy_landscape usage)
    >>> x = np.linspace(0, 1, 5)
@@ -325,7 +325,7 @@ Module Contents
    .. rubric:: Examples
 
    >>> import numpy as np
-   >>> from canns.analyzer.visualization import PlotConfigs, energy_landscape_1d_static
+   >>> from [ANONYMOUS_PROJECT].analyzer.visualization import PlotConfigs, energy_landscape_1d_static
    >>>
    >>> x = np.linspace(0, 1, 5)
    >>> data_sets = {"u": (x, np.sin(x))}
@@ -435,7 +435,7 @@ Module Contents
 
       .. rubric:: Example
 
-      >>> from canns.analyzer.visualization import PlotConfigs
+      >>> from [ANONYMOUS_PROJECT].analyzer.visualization import PlotConfigs
       >>> config = PlotConfigs.firing_field_heatmap(
       ...     title="Grid Cell Firing Field",
       ...     save_path="ratemap.png"
@@ -469,7 +469,7 @@ Module Contents
 
       .. rubric:: Example
 
-      >>> from canns.analyzer.visualization import PlotConfigs
+      >>> from [ANONYMOUS_PROJECT].analyzer.visualization import PlotConfigs
       >>> config = PlotConfigs.grid_autocorrelation(
       ...     title="Grid Cell Autocorrelation",
       ...     save_path="autocorr.png"
@@ -650,8 +650,8 @@ Module Contents
 
    >>> import numpy as np
    >>> from matplotlib import pyplot as plt
-   >>> from canns.analyzer.visualization import PlotConfig
-   >>> from canns.analyzer.visualization.core.config import finalize_figure
+   >>> from [ANONYMOUS_PROJECT].analyzer.visualization import PlotConfig
+   >>> from [ANONYMOUS_PROJECT].analyzer.visualization.core.config import finalize_figure
    >>>
    >>> x = np.linspace(0, 1, 5)
    >>> y = np.sin(x)

@@ -1,7 +1,7 @@
-canns.pipeline.launcher
+[ANONYMOUS_PROJECT].pipeline.launcher
 =======================
 
-.. py:module:: canns.pipeline.launcher
+.. py:module:: [ANONYMOUS_PROJECT].pipeline.launcher
 
 .. autoapi-nested-parse::
 
@@ -14,7 +14,7 @@ Classes
 
 .. autoapisummary::
 
-   canns.pipeline.launcher.ModePicker
+   [ANONYMOUS_PROJECT].pipeline.launcher.ModePicker
 
 
 Functions
@@ -22,7 +22,7 @@ Functions
 
 .. autoapisummary::
 
-   canns.pipeline.launcher.main
+   [ANONYMOUS_PROJECT].pipeline.launcher.main
 
 
 Module Contents
@@ -114,7 +114,7 @@ Module Contents
 
 
    .. py:attribute:: TITLE
-      :value: 'CANNs TUI Launcher'
+      :value: '[ANONYMOUS_PROJECT] TUI Launcher'
 
 
       A class variable to set the *default* title for the application.
@@ -125,6 +125,6 @@ Module Contents
 
 .. py:function:: main()
 
-   Entry point for the unified canns-tui launcher.
+   Entry point for the unified [ANONYMOUS_PROJECT]-tui launcher.
 
 

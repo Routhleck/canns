@@ -1,7 +1,7 @@
-canns.trainer.hebbian
+[ANONYMOUS_PROJECT].trainer.hebbian
 =====================
 
-.. py:module:: canns.trainer.hebbian
+.. py:module:: [ANONYMOUS_PROJECT].trainer.hebbian
 
 
 Classes
@@ -9,8 +9,8 @@ Classes
 
 .. autoapisummary::
 
-   canns.trainer.hebbian.AntiHebbianTrainer
-   canns.trainer.hebbian.HebbianTrainer
+   [ANONYMOUS_PROJECT].trainer.hebbian.AntiHebbianTrainer
+   [ANONYMOUS_PROJECT].trainer.hebbian.HebbianTrainer
 
 
 Module Contents
@@ -59,7 +59,7 @@ Module Contents
 
 .. py:class:: HebbianTrainer(model, show_iteration_progress = False, compiled_prediction = True, *, weight_attr = 'W', subtract_mean = True, zero_diagonal = True, normalize_by_patterns = True, prefer_generic = True, state_attr = None, prefer_generic_predict = True, preserve_on_resize = True)
 
-   Bases: :py:obj:`canns.trainer._base.Trainer`
+   Bases: :py:obj:`[ANONYMOUS_PROJECT].trainer._base.Trainer`
 
 
    Generic Hebbian trainer with progress reporting.

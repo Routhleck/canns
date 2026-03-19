@@ -1,7 +1,7 @@
-canns.analyzer.data
+[ANONYMOUS_PROJECT].analyzer.data
 ===================
 
-.. py:module:: canns.analyzer.data
+.. py:module:: [ANONYMOUS_PROJECT].analyzer.data
 
 .. autoapi-nested-parse::
 
@@ -15,7 +15,7 @@ Submodules
 .. toctree::
    :maxdepth: 1
 
-   /autoapi/canns/analyzer/data/asa/index
-   /autoapi/canns/analyzer/data/cell_classification/index
+   /autoapi/[ANONYMOUS_PROJECT]/analyzer/data/asa/index
+   /autoapi/[ANONYMOUS_PROJECT]/analyzer/data/cell_classification/index
 
 

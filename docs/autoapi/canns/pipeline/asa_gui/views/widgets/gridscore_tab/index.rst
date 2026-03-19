@@ -1,7 +1,7 @@
-canns.pipeline.asa_gui.views.widgets.gridscore_tab
+[ANONYMOUS_PROJECT].pipeline.asa_gui.views.widgets.gridscore_tab
 ==================================================
 
-.. py:module:: canns.pipeline.asa_gui.views.widgets.gridscore_tab
+.. py:module:: [ANONYMOUS_PROJECT].pipeline.asa_gui.views.widgets.gridscore_tab
 
 .. autoapi-nested-parse::
 
@@ -14,7 +14,7 @@ Classes
 
 .. autoapisummary::
 
-   canns.pipeline.asa_gui.views.widgets.gridscore_tab.GridScoreTab
+   [ANONYMOUS_PROJECT].pipeline.asa_gui.views.widgets.gridscore_tab.GridScoreTab
 
 
 Module Contents

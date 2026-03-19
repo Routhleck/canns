@@ -1,7 +1,7 @@
-canns.analyzer.data.asa.coho
+[ANONYMOUS_PROJECT].analyzer.data.asa.coho
 ============================
 
-.. py:module:: canns.analyzer.data.asa.coho
+.. py:module:: [ANONYMOUS_PROJECT].analyzer.data.asa.coho
 
 .. autoapi-nested-parse::
 

@@ -1,7 +1,7 @@
-canns.analyzer.metrics.systematic_ratemap
+[ANONYMOUS_PROJECT].analyzer.metrics.systematic_ratemap
 =========================================
 
-.. py:module:: canns.analyzer.metrics.systematic_ratemap
+.. py:module:: [ANONYMOUS_PROJECT].analyzer.metrics.systematic_ratemap
 
 .. autoapi-nested-parse::
 
@@ -29,8 +29,8 @@ canns.analyzer.metrics.systematic_ratemap
 
    .. rubric:: Example
 
-   >>> from canns.models.basic import GridCell2DVelocity
-   >>> from canns.analyzer.metrics.systematic_ratemap import compute_systematic_ratemap
+   >>> from [ANONYMOUS_PROJECT].models.basic import GridCell2DVelocity
+   >>> from [ANONYMOUS_PROJECT].analyzer.metrics.systematic_ratemap import compute_systematic_ratemap
    >>>
    >>> # Initialize and heal network
    >>> model = GridCell2DVelocity(length=40)
@@ -54,7 +54,7 @@ Functions
 
 .. autoapisummary::
 
-   canns.analyzer.metrics.systematic_ratemap.compute_systematic_ratemap
+   [ANONYMOUS_PROJECT].analyzer.metrics.systematic_ratemap.compute_systematic_ratemap
 
 
 Module Contents
@@ -115,8 +115,8 @@ Module Contents
    .. rubric:: Example
 
    >>> import brainpy.math as bm
-   >>> from canns.models.basic import GridCell2DVelocity
-   >>> from canns.analyzer.metrics.systematic_ratemap import compute_systematic_ratemap
+   >>> from [ANONYMOUS_PROJECT].models.basic import GridCell2DVelocity
+   >>> from [ANONYMOUS_PROJECT].analyzer.metrics.systematic_ratemap import compute_systematic_ratemap
    >>>
    >>> # Dummy model (small for quick runs)
    >>> bm.set_dt(5e-4)

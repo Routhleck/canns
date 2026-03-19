@@ -1,7 +1,7 @@
-canns.pipeline.asa.__main__
+[ANONYMOUS_PROJECT].pipeline.asa.__main__
 ===========================
 
-.. py:module:: canns.pipeline.asa.__main__
+.. py:module:: [ANONYMOUS_PROJECT].pipeline.asa.__main__
 
 .. autoapi-nested-parse::
 
@@ -14,7 +14,7 @@ Attributes
 
 .. autoapisummary::
 
-   canns.pipeline.asa.__main__.app
+   [ANONYMOUS_PROJECT].pipeline.asa.__main__.app
 
 
 Module Contents

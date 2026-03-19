@@ -2,12 +2,12 @@
 Task Generators
 ================
 
-This document explains the task generation philosophy and available paradigms in the CANNs library.
+This document explains the task generation philosophy and available paradigms in the [ANONYMOUS_PROJECT] library.
 
 Overview
 ========
 
-The task module (``canns.task``) generates experimental data for CANN simulations with support for saving, loading, importing, and visualization. It provides standardized paradigms that abstract common experimental scenarios, ensuring reproducibility and convenience.
+The task module (``[ANONYMOUS_PROJECT].task``) generates experimental data for CANN simulations with support for saving, loading, importing, and visualization. It provides standardized paradigms that abstract common experimental scenarios, ensuring reproducibility and convenience.
 
 .. grid:: 2
    :gutter: 3

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Generate CANNs Four Core Application Scenarios Diagram
+Generate [ANONYMOUS_PROJECT] Four Core Application Scenarios Diagram
 Customize the text in the 'scenarios' dictionary below
 """
 
@@ -17,7 +17,7 @@ plt.rcParams['axes.unicode_minus'] = False
 # ============================================
 
 # Main title
-MAIN_TITLE = 'CANNs: Four Core Application Scenarios'
+MAIN_TITLE = '[ANONYMOUS_PROJECT]: Four Core Application Scenarios'
 
 # Color scheme for each scenario
 colors = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96E6A1']
@@ -83,7 +83,7 @@ scenarios = [
 LEGEND_TEXT = 'Input (Yellow) → Processing (Gray) → Output (Green)'
 
 # Output filename
-OUTPUT_FILENAME = 'canns_scenarios_custom'
+OUTPUT_FILENAME = '[ANONYMOUS_PROJECT]_scenarios_custom'
 
 # ============================================
 # FONT SIZE SETTINGS - Adjust as needed

@@ -24,7 +24,7 @@ Target Audience
 Prerequisites
 -------------
 
-- CANNs installed (recommended via ``pip install -e .`` or ``pip install canns``)
+- [ANONYMOUS_PROJECT] installed (recommended via ``pip install -e .`` or ``pip install [ANONYMOUS_PROJECT]``)
 - Terminal width of at least 120 columns (minimum 100 columns)
 - Prepared ASA or Neuron + Trajectory data
 
@@ -35,13 +35,13 @@ Execute in your project environment:
 
 .. code-block:: bash
 
-   python -m canns.pipeline.asa
+   python -m [ANONYMOUS_PROJECT].pipeline.asa
    # or
-   canns-tui
+   [ANONYMOUS_PROJECT]-tui
 
 .. note::
-   ``canns-tui`` is now the unified entry point. Upon launch, you first select **ASA** or **Model Gallery**.
-   To enter ASA directly, use ``python -m canns.pipeline.asa``.
+   ``[ANONYMOUS_PROJECT]-tui`` is now the unified entry point. Upon launch, you first select **ASA** or **Model Gallery**.
+   To enter ASA directly, use ``python -m [ANONYMOUS_PROJECT].pipeline.asa``.
 
 If a size warning appears after launch, enlarge your terminal window or reduce the font size.
 

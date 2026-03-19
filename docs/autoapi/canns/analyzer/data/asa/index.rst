@@ -1,7 +1,7 @@
-canns.analyzer.data.asa
+[ANONYMOUS_PROJECT].analyzer.data.asa
 =======================
 
-.. py:module:: canns.analyzer.data.asa
+.. py:module:: [ANONYMOUS_PROJECT].analyzer.data.asa
 
 
 Submodules
@@ -10,21 +10,21 @@ Submodules
 .. toctree::
    :maxdepth: 1
 
-   /autoapi/canns/analyzer/data/asa/coho/index
-   /autoapi/canns/analyzer/data/asa/cohomap/index
-   /autoapi/canns/analyzer/data/asa/cohomap_vectors/index
-   /autoapi/canns/analyzer/data/asa/cohospace/index
-   /autoapi/canns/analyzer/data/asa/cohospace_phase_centers/index
-   /autoapi/canns/analyzer/data/asa/cohospace_scatter/index
-   /autoapi/canns/analyzer/data/asa/config/index
-   /autoapi/canns/analyzer/data/asa/decode/index
-   /autoapi/canns/analyzer/data/asa/embedding/index
-   /autoapi/canns/analyzer/data/asa/fly_roi/index
-   /autoapi/canns/analyzer/data/asa/fr/index
-   /autoapi/canns/analyzer/data/asa/path/index
-   /autoapi/canns/analyzer/data/asa/plotting/index
-   /autoapi/canns/analyzer/data/asa/tda/index
-   /autoapi/canns/analyzer/data/asa/utils/index
+   /autoapi/[ANONYMOUS_PROJECT]/analyzer/data/asa/coho/index
+   /autoapi/[ANONYMOUS_PROJECT]/analyzer/data/asa/cohomap/index
+   /autoapi/[ANONYMOUS_PROJECT]/analyzer/data/asa/cohomap_vectors/index
+   /autoapi/[ANONYMOUS_PROJECT]/analyzer/data/asa/cohospace/index
+   /autoapi/[ANONYMOUS_PROJECT]/analyzer/data/asa/cohospace_phase_centers/index
+   /autoapi/[ANONYMOUS_PROJECT]/analyzer/data/asa/cohospace_scatter/index
+   /autoapi/[ANONYMOUS_PROJECT]/analyzer/data/asa/config/index
+   /autoapi/[ANONYMOUS_PROJECT]/analyzer/data/asa/decode/index
+   /autoapi/[ANONYMOUS_PROJECT]/analyzer/data/asa/embedding/index
+   /autoapi/[ANONYMOUS_PROJECT]/analyzer/data/asa/fly_roi/index
+   /autoapi/[ANONYMOUS_PROJECT]/analyzer/data/asa/fr/index
+   /autoapi/[ANONYMOUS_PROJECT]/analyzer/data/asa/path/index
+   /autoapi/[ANONYMOUS_PROJECT]/analyzer/data/asa/plotting/index
+   /autoapi/[ANONYMOUS_PROJECT]/analyzer/data/asa/tda/index
+   /autoapi/[ANONYMOUS_PROJECT]/analyzer/data/asa/utils/index
 
 
 Exceptions
@@ -32,9 +32,9 @@ Exceptions
 
 .. autoapisummary::
 
-   canns.analyzer.data.asa.CANN2DError
-   canns.analyzer.data.asa.DataLoadError
-   canns.analyzer.data.asa.ProcessingError
+   [ANONYMOUS_PROJECT].analyzer.data.asa.CANN2DError
+   [ANONYMOUS_PROJECT].analyzer.data.asa.DataLoadError
+   [ANONYMOUS_PROJECT].analyzer.data.asa.ProcessingError
 
 
 Classes
@@ -42,13 +42,13 @@ Classes
 
 .. autoapisummary::
 
-   canns.analyzer.data.asa.BumpFitsConfig
-   canns.analyzer.data.asa.CANN1DPlotConfig
-   canns.analyzer.data.asa.CANN2DPlotConfig
-   canns.analyzer.data.asa.Constants
-   canns.analyzer.data.asa.FRMResult
-   canns.analyzer.data.asa.SpikeEmbeddingConfig
-   canns.analyzer.data.asa.TDAConfig
+   [ANONYMOUS_PROJECT].analyzer.data.asa.BumpFitsConfig
+   [ANONYMOUS_PROJECT].analyzer.data.asa.CANN1DPlotConfig
+   [ANONYMOUS_PROJECT].analyzer.data.asa.CANN2DPlotConfig
+   [ANONYMOUS_PROJECT].analyzer.data.asa.Constants
+   [ANONYMOUS_PROJECT].analyzer.data.asa.FRMResult
+   [ANONYMOUS_PROJECT].analyzer.data.asa.SpikeEmbeddingConfig
+   [ANONYMOUS_PROJECT].analyzer.data.asa.TDAConfig
 
 
 Functions
@@ -56,47 +56,47 @@ Functions
 
 .. autoapisummary::
 
-   canns.analyzer.data.asa.align_coords_to_position_1d
-   canns.analyzer.data.asa.align_coords_to_position_2d
-   canns.analyzer.data.asa.apply_angle_scale
-   canns.analyzer.data.asa.cohomap
-   canns.analyzer.data.asa.cohomap_vectors
-   canns.analyzer.data.asa.cohospace
-   canns.analyzer.data.asa.cohospace_phase_centers
-   canns.analyzer.data.asa.compute_cohoscore_scatter_1d
-   canns.analyzer.data.asa.compute_cohoscore_scatter_2d
-   canns.analyzer.data.asa.compute_fr_heatmap_matrix
-   canns.analyzer.data.asa.compute_frm
-   canns.analyzer.data.asa.create_1d_bump_animation
-   canns.analyzer.data.asa.decode_circular_coordinates
-   canns.analyzer.data.asa.decode_circular_coordinates_multi
-   canns.analyzer.data.asa.embed_spike_trains
-   canns.analyzer.data.asa.fit_cohomap_stripes
-   canns.analyzer.data.asa.plot_2d_bump_on_manifold
-   canns.analyzer.data.asa.plot_3d_bump_on_torus
-   canns.analyzer.data.asa.plot_cohomap
-   canns.analyzer.data.asa.plot_cohomap_scatter
-   canns.analyzer.data.asa.plot_cohomap_scatter_multi
-   canns.analyzer.data.asa.plot_cohomap_stripes
-   canns.analyzer.data.asa.plot_cohomap_vectors
-   canns.analyzer.data.asa.plot_cohospace
-   canns.analyzer.data.asa.plot_cohospace_phase_centers
-   canns.analyzer.data.asa.plot_cohospace_scatter_neuron_1d
-   canns.analyzer.data.asa.plot_cohospace_scatter_neuron_2d
-   canns.analyzer.data.asa.plot_cohospace_scatter_neuron_skewed
-   canns.analyzer.data.asa.plot_cohospace_scatter_population_1d
-   canns.analyzer.data.asa.plot_cohospace_scatter_population_2d
-   canns.analyzer.data.asa.plot_cohospace_scatter_population_skewed
-   canns.analyzer.data.asa.plot_cohospace_scatter_trajectory_1d
-   canns.analyzer.data.asa.plot_cohospace_scatter_trajectory_2d
-   canns.analyzer.data.asa.plot_cohospace_skewed
-   canns.analyzer.data.asa.plot_frm
-   canns.analyzer.data.asa.plot_path_compare_1d
-   canns.analyzer.data.asa.plot_path_compare_2d
-   canns.analyzer.data.asa.plot_projection
-   canns.analyzer.data.asa.roi_bump_fits
-   canns.analyzer.data.asa.save_fr_heatmap_png
-   canns.analyzer.data.asa.tda_vis
+   [ANONYMOUS_PROJECT].analyzer.data.asa.align_coords_to_position_1d
+   [ANONYMOUS_PROJECT].analyzer.data.asa.align_coords_to_position_2d
+   [ANONYMOUS_PROJECT].analyzer.data.asa.apply_angle_scale
+   [ANONYMOUS_PROJECT].analyzer.data.asa.cohomap
+   [ANONYMOUS_PROJECT].analyzer.data.asa.cohomap_vectors
+   [ANONYMOUS_PROJECT].analyzer.data.asa.cohospace
+   [ANONYMOUS_PROJECT].analyzer.data.asa.cohospace_phase_centers
+   [ANONYMOUS_PROJECT].analyzer.data.asa.compute_cohoscore_scatter_1d
+   [ANONYMOUS_PROJECT].analyzer.data.asa.compute_cohoscore_scatter_2d
+   [ANONYMOUS_PROJECT].analyzer.data.asa.compute_fr_heatmap_matrix
+   [ANONYMOUS_PROJECT].analyzer.data.asa.compute_frm
+   [ANONYMOUS_PROJECT].analyzer.data.asa.create_1d_bump_animation
+   [ANONYMOUS_PROJECT].analyzer.data.asa.decode_circular_coordinates
+   [ANONYMOUS_PROJECT].analyzer.data.asa.decode_circular_coordinates_multi
+   [ANONYMOUS_PROJECT].analyzer.data.asa.embed_spike_trains
+   [ANONYMOUS_PROJECT].analyzer.data.asa.fit_cohomap_stripes
+   [ANONYMOUS_PROJECT].analyzer.data.asa.plot_2d_bump_on_manifold
+   [ANONYMOUS_PROJECT].analyzer.data.asa.plot_3d_bump_on_torus
+   [ANONYMOUS_PROJECT].analyzer.data.asa.plot_cohomap
+   [ANONYMOUS_PROJECT].analyzer.data.asa.plot_cohomap_scatter
+   [ANONYMOUS_PROJECT].analyzer.data.asa.plot_cohomap_scatter_multi
+   [ANONYMOUS_PROJECT].analyzer.data.asa.plot_cohomap_stripes
+   [ANONYMOUS_PROJECT].analyzer.data.asa.plot_cohomap_vectors
+   [ANONYMOUS_PROJECT].analyzer.data.asa.plot_cohospace
+   [ANONYMOUS_PROJECT].analyzer.data.asa.plot_cohospace_phase_centers
+   [ANONYMOUS_PROJECT].analyzer.data.asa.plot_cohospace_scatter_neuron_1d
+   [ANONYMOUS_PROJECT].analyzer.data.asa.plot_cohospace_scatter_neuron_2d
+   [ANONYMOUS_PROJECT].analyzer.data.asa.plot_cohospace_scatter_neuron_skewed
+   [ANONYMOUS_PROJECT].analyzer.data.asa.plot_cohospace_scatter_population_1d
+   [ANONYMOUS_PROJECT].analyzer.data.asa.plot_cohospace_scatter_population_2d
+   [ANONYMOUS_PROJECT].analyzer.data.asa.plot_cohospace_scatter_population_skewed
+   [ANONYMOUS_PROJECT].analyzer.data.asa.plot_cohospace_scatter_trajectory_1d
+   [ANONYMOUS_PROJECT].analyzer.data.asa.plot_cohospace_scatter_trajectory_2d
+   [ANONYMOUS_PROJECT].analyzer.data.asa.plot_cohospace_skewed
+   [ANONYMOUS_PROJECT].analyzer.data.asa.plot_frm
+   [ANONYMOUS_PROJECT].analyzer.data.asa.plot_path_compare_1d
+   [ANONYMOUS_PROJECT].analyzer.data.asa.plot_path_compare_2d
+   [ANONYMOUS_PROJECT].analyzer.data.asa.plot_projection
+   [ANONYMOUS_PROJECT].analyzer.data.asa.roi_bump_fits
+   [ANONYMOUS_PROJECT].analyzer.data.asa.save_fr_heatmap_png
+   [ANONYMOUS_PROJECT].analyzer.data.asa.tda_vis
 
 
 Package Contents
@@ -226,7 +226,7 @@ Package Contents
 
 .. py:class:: CANN1DPlotConfig
 
-   Bases: :py:obj:`canns.analyzer.visualization.PlotConfig`
+   Bases: :py:obj:`[ANONYMOUS_PROJECT].analyzer.visualization.PlotConfig`
 
 
    Specialized PlotConfig for CANN1D visualizations.
@@ -272,17 +272,17 @@ Package Contents
 
 .. py:class:: CANN2DPlotConfig
 
-   Bases: :py:obj:`canns.analyzer.visualization.PlotConfig`
+   Bases: :py:obj:`[ANONYMOUS_PROJECT].analyzer.visualization.PlotConfig`
 
 
    Specialized PlotConfig for CANN2D visualizations.
 
-   Extends :class:`canns.analyzer.visualization.PlotConfig` with fields that
+   Extends :class:`[ANONYMOUS_PROJECT].analyzer.visualization.PlotConfig` with fields that
    control 3D projection and torus animation parameters.
 
    .. rubric:: Examples
 
-   >>> from canns.analyzer.data import CANN2DPlotConfig
+   >>> from [ANONYMOUS_PROJECT].analyzer.data import CANN2DPlotConfig
    >>> cfg = CANN2DPlotConfig.for_projection_3d(title="Projection")
    >>> cfg.zlabel
    'Component 3'
@@ -370,7 +370,7 @@ Package Contents
 
    .. rubric:: Examples
 
-   >>> from canns.analyzer.data import Constants
+   >>> from [ANONYMOUS_PROJECT].analyzer.data import Constants
    >>> Constants.DEFAULT_DPI
    300
 
@@ -500,7 +500,7 @@ Package Contents
 
    .. rubric:: Examples
 
-   >>> from canns.analyzer.data import SpikeEmbeddingConfig
+   >>> from [ANONYMOUS_PROJECT].analyzer.data import SpikeEmbeddingConfig
    >>> cfg = SpikeEmbeddingConfig(smooth=False, speed_filter=False)
    >>> cfg.min_speed
    2.5
@@ -632,7 +632,7 @@ Package Contents
 
    .. rubric:: Examples
 
-   >>> from canns.analyzer.data import TDAConfig
+   >>> from [ANONYMOUS_PROJECT].analyzer.data import TDAConfig
    >>> cfg = TDAConfig(maxdim=1, do_shuffle=False, show=False)
    >>> cfg.maxdim
    1
@@ -940,7 +940,7 @@ Package Contents
 
    Decode circular coordinates (bump positions) from cohomology.
 
-   :param persistence_result: Output from :func:`canns.analyzer.data.tda_vis`, containing keys:
+   :param persistence_result: Output from :func:`[ANONYMOUS_PROJECT].analyzer.data.tda_vis`, containing keys:
                               ``persistence``, ``indstemp``, ``movetimes``, ``n_points``.
    :type persistence_result: dict
    :param spike_data: Spike data dictionary containing ``'spike'``, ``'t'`` and optionally ``'x'``/``'y'``.
@@ -962,7 +962,7 @@ Package Contents
 
    .. rubric:: Examples
 
-   >>> from canns.analyzer.data import tda_vis, decode_circular_coordinates
+   >>> from [ANONYMOUS_PROJECT].analyzer.data import tda_vis, decode_circular_coordinates
    >>> persistence = tda_vis(embed_spikes, config=tda_cfg)  # doctest: +SKIP
    >>> decoding = decode_circular_coordinates(persistence, spike_data)  # doctest: +SKIP
    >>> decoding["coords"].shape  # doctest: +SKIP
@@ -972,7 +972,7 @@ Package Contents
 
    Decode multiple circular coordinates from TDA persistence.
 
-   :param persistence_result: Output from :func:`canns.analyzer.data.tda_vis`, containing keys:
+   :param persistence_result: Output from :func:`[ANONYMOUS_PROJECT].analyzer.data.tda_vis`, containing keys:
                               ``persistence``, ``indstemp``, ``movetimes``, ``n_points``.
    :type persistence_result: dict
    :param spike_data: Spike data dictionary containing ``'spike'``, ``'t'`` and optionally ``'x'``/``'y'``.
@@ -1015,7 +1015,7 @@ Package Contents
 
    .. rubric:: Examples
 
-   >>> from canns.analyzer.data import SpikeEmbeddingConfig, embed_spike_trains
+   >>> from [ANONYMOUS_PROJECT].analyzer.data import SpikeEmbeddingConfig, embed_spike_trains
    >>> cfg = SpikeEmbeddingConfig(smooth=False, speed_filter=False)
    >>> spikes, xx, yy, tt = embed_spike_trains(mock_data, config=cfg)  # doctest: +SKIP
    >>> spikes.ndim
@@ -1067,7 +1067,7 @@ Package Contents
 
    Visualize the movement of the neural activity bump on a torus using matplotlib animation.
 
-   This function follows the canns.analyzer.plotting patterns for animation generation
+   This function follows the [ANONYMOUS_PROJECT].analyzer.plotting patterns for animation generation
    with progress tracking and proper resource cleanup.
 
    :param decoding_result: dict or str
@@ -1580,7 +1580,7 @@ Package Contents
 
    .. rubric:: Examples
 
-   >>> from canns.analyzer.data import TDAConfig, tda_vis
+   >>> from [ANONYMOUS_PROJECT].analyzer.data import TDAConfig, tda_vis
    >>> cfg = TDAConfig(maxdim=1, do_shuffle=False, show=False)
    >>> result = tda_vis(embed_data, config=cfg)  # doctest: +SKIP
    >>> sorted(result.keys())

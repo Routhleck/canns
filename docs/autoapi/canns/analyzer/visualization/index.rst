@@ -1,7 +1,7 @@
-canns.analyzer.visualization
+[ANONYMOUS_PROJECT].analyzer.visualization
 ============================
 
-.. py:module:: canns.analyzer.visualization
+.. py:module:: [ANONYMOUS_PROJECT].analyzer.visualization
 
 .. autoapi-nested-parse::
 
@@ -15,12 +15,12 @@ Submodules
 .. toctree::
    :maxdepth: 1
 
-   /autoapi/canns/analyzer/visualization/core/index
-   /autoapi/canns/analyzer/visualization/energy_plots/index
-   /autoapi/canns/analyzer/visualization/spatial_plots/index
-   /autoapi/canns/analyzer/visualization/spike_plots/index
-   /autoapi/canns/analyzer/visualization/theta_sweep_plots/index
-   /autoapi/canns/analyzer/visualization/tuning_plots/index
+   /autoapi/[ANONYMOUS_PROJECT]/analyzer/visualization/core/index
+   /autoapi/[ANONYMOUS_PROJECT]/analyzer/visualization/energy_plots/index
+   /autoapi/[ANONYMOUS_PROJECT]/analyzer/visualization/spatial_plots/index
+   /autoapi/[ANONYMOUS_PROJECT]/analyzer/visualization/spike_plots/index
+   /autoapi/[ANONYMOUS_PROJECT]/analyzer/visualization/theta_sweep_plots/index
+   /autoapi/[ANONYMOUS_PROJECT]/analyzer/visualization/tuning_plots/index
 
 
 Classes
@@ -28,12 +28,12 @@ Classes
 
 .. autoapisummary::
 
-   canns.analyzer.visualization.AnimationConfig
-   canns.analyzer.visualization.OptimizedAnimationBase
-   canns.analyzer.visualization.OptimizedAnimationWriter
-   canns.analyzer.visualization.ParallelAnimationRenderer
-   canns.analyzer.visualization.PlotConfig
-   canns.analyzer.visualization.PlotConfigs
+   [ANONYMOUS_PROJECT].analyzer.visualization.AnimationConfig
+   [ANONYMOUS_PROJECT].analyzer.visualization.OptimizedAnimationBase
+   [ANONYMOUS_PROJECT].analyzer.visualization.OptimizedAnimationWriter
+   [ANONYMOUS_PROJECT].analyzer.visualization.ParallelAnimationRenderer
+   [ANONYMOUS_PROJECT].analyzer.visualization.PlotConfig
+   [ANONYMOUS_PROJECT].analyzer.visualization.PlotConfigs
 
 
 Functions
@@ -41,31 +41,31 @@ Functions
 
 .. autoapisummary::
 
-   canns.analyzer.visualization.average_firing_rate_plot
-   canns.analyzer.visualization.create_grid_cell_tracking_animation
-   canns.analyzer.visualization.create_optimized_writer
-   canns.analyzer.visualization.create_theta_sweep_grid_cell_animation
-   canns.analyzer.visualization.create_theta_sweep_place_cell_animation
-   canns.analyzer.visualization.display_animation_in_jupyter
-   canns.analyzer.visualization.energy_landscape_1d_animation
-   canns.analyzer.visualization.energy_landscape_1d_static
-   canns.analyzer.visualization.energy_landscape_2d_animation
-   canns.analyzer.visualization.energy_landscape_2d_static
-   canns.analyzer.visualization.finalize_figure
-   canns.analyzer.visualization.get_recommended_format
-   canns.analyzer.visualization.is_jupyter_environment
-   canns.analyzer.visualization.plot_autocorrelation
-   canns.analyzer.visualization.plot_firing_field_heatmap
-   canns.analyzer.visualization.plot_grid_cell_manifold
-   canns.analyzer.visualization.plot_grid_score
-   canns.analyzer.visualization.plot_grid_spacing_analysis
-   canns.analyzer.visualization.plot_internal_position_trajectory
-   canns.analyzer.visualization.plot_population_activity_with_theta
-   canns.analyzer.visualization.population_activity_heatmap
-   canns.analyzer.visualization.raster_plot
-   canns.analyzer.visualization.tuning_curve
-   canns.analyzer.visualization.warn_double_rendering
-   canns.analyzer.visualization.warn_gif_format
+   [ANONYMOUS_PROJECT].analyzer.visualization.average_firing_rate_plot
+   [ANONYMOUS_PROJECT].analyzer.visualization.create_grid_cell_tracking_animation
+   [ANONYMOUS_PROJECT].analyzer.visualization.create_optimized_writer
+   [ANONYMOUS_PROJECT].analyzer.visualization.create_theta_sweep_grid_cell_animation
+   [ANONYMOUS_PROJECT].analyzer.visualization.create_theta_sweep_place_cell_animation
+   [ANONYMOUS_PROJECT].analyzer.visualization.display_animation_in_jupyter
+   [ANONYMOUS_PROJECT].analyzer.visualization.energy_landscape_1d_animation
+   [ANONYMOUS_PROJECT].analyzer.visualization.energy_landscape_1d_static
+   [ANONYMOUS_PROJECT].analyzer.visualization.energy_landscape_2d_animation
+   [ANONYMOUS_PROJECT].analyzer.visualization.energy_landscape_2d_static
+   [ANONYMOUS_PROJECT].analyzer.visualization.finalize_figure
+   [ANONYMOUS_PROJECT].analyzer.visualization.get_recommended_format
+   [ANONYMOUS_PROJECT].analyzer.visualization.is_jupyter_environment
+   [ANONYMOUS_PROJECT].analyzer.visualization.plot_autocorrelation
+   [ANONYMOUS_PROJECT].analyzer.visualization.plot_firing_field_heatmap
+   [ANONYMOUS_PROJECT].analyzer.visualization.plot_grid_cell_manifold
+   [ANONYMOUS_PROJECT].analyzer.visualization.plot_grid_score
+   [ANONYMOUS_PROJECT].analyzer.visualization.plot_grid_spacing_analysis
+   [ANONYMOUS_PROJECT].analyzer.visualization.plot_internal_position_trajectory
+   [ANONYMOUS_PROJECT].analyzer.visualization.plot_population_activity_with_theta
+   [ANONYMOUS_PROJECT].analyzer.visualization.population_activity_heatmap
+   [ANONYMOUS_PROJECT].analyzer.visualization.raster_plot
+   [ANONYMOUS_PROJECT].analyzer.visualization.tuning_curve
+   [ANONYMOUS_PROJECT].analyzer.visualization.warn_double_rendering
+   [ANONYMOUS_PROJECT].analyzer.visualization.warn_gif_format
 
 
 Package Contents
@@ -109,7 +109,7 @@ Package Contents
 
    .. rubric:: Example
 
-   >>> from canns.analyzer.visualization import AnimationConfig
+   >>> from [ANONYMOUS_PROJECT].analyzer.visualization import AnimationConfig
    >>>
    >>> # Dummy input representing total frames
    >>> total_frames = 120
@@ -394,12 +394,12 @@ Package Contents
 
 .. py:class:: PlotConfig
 
-   Unified configuration class for plotting helpers in ``canns.analyzer``.
+   Unified configuration class for plotting helpers in ``[ANONYMOUS_PROJECT].analyzer``.
 
    .. rubric:: Examples
 
    >>> import numpy as np
-   >>> from canns.analyzer.visualization import PlotConfig, energy_landscape_1d_static
+   >>> from [ANONYMOUS_PROJECT].analyzer.visualization import PlotConfig, energy_landscape_1d_static
    >>>
    >>> # Dummy input (matches test-style energy_landscape usage)
    >>> x = np.linspace(0, 1, 5)
@@ -592,7 +592,7 @@ Package Contents
    .. rubric:: Examples
 
    >>> import numpy as np
-   >>> from canns.analyzer.visualization import PlotConfigs, energy_landscape_1d_static
+   >>> from [ANONYMOUS_PROJECT].analyzer.visualization import PlotConfigs, energy_landscape_1d_static
    >>>
    >>> x = np.linspace(0, 1, 5)
    >>> data_sets = {"u": (x, np.sin(x))}
@@ -702,7 +702,7 @@ Package Contents
 
       .. rubric:: Example
 
-      >>> from canns.analyzer.visualization import PlotConfigs
+      >>> from [ANONYMOUS_PROJECT].analyzer.visualization import PlotConfigs
       >>> config = PlotConfigs.firing_field_heatmap(
       ...     title="Grid Cell Firing Field",
       ...     save_path="ratemap.png"
@@ -736,7 +736,7 @@ Package Contents
 
       .. rubric:: Example
 
-      >>> from canns.analyzer.visualization import PlotConfigs
+      >>> from [ANONYMOUS_PROJECT].analyzer.visualization import PlotConfigs
       >>> config = PlotConfigs.grid_autocorrelation(
       ...     title="Grid Cell Autocorrelation",
       ...     save_path="autocorr.png"
@@ -922,7 +922,7 @@ Package Contents
    .. rubric:: Examples
 
    >>> import numpy as np
-   >>> from canns.analyzer.visualization import average_firing_rate_plot, PlotConfigs
+   >>> from [ANONYMOUS_PROJECT].analyzer.visualization import average_firing_rate_plot, PlotConfigs
    >>>
    >>> spike_train = np.random.randint(0, 2, size=(10, 4))
    >>> config = PlotConfigs.average_firing_rate_plot(mode="population", show=False)
@@ -985,7 +985,7 @@ Package Contents
    .. rubric:: Example
 
    >>> import numpy as np
-   >>> from canns.analyzer.visualization import (
+   >>> from [ANONYMOUS_PROJECT].analyzer.visualization import (
    ...     create_grid_cell_tracking_animation,
    ...     PlotConfigs,
    ... )
@@ -1013,7 +1013,7 @@ Package Contents
 
    Factory function to create an optimized animation writer.
 
-   This is the recommended way to create writers for CANNs animations.
+   This is the recommended way to create writers for [ANONYMOUS_PROJECT] animations.
 
    :param save_path: Output file path
    :param fps: Frames per second
@@ -1076,8 +1076,8 @@ Package Contents
 
    >>> import numpy as np
    >>> import brainpy.math as bm
-   >>> from canns.models.basic.theta_sweep_model import GridCellNetwork
-   >>> from canns.analyzer.visualization import PlotConfig
+   >>> from [ANONYMOUS_PROJECT].models.basic.theta_sweep_model import GridCellNetwork
+   >>> from [ANONYMOUS_PROJECT].analyzer.visualization import PlotConfig
    >>>
    >>> # Minimal example with synthetic data (for structure demonstration)
    >>> bm.set_dt(1.0)
@@ -1137,7 +1137,7 @@ Package Contents
    documentation or example scripts.
 
    >>> import numpy as np
-   >>> from canns.analyzer.visualization import PlotConfig
+   >>> from [ANONYMOUS_PROJECT].analyzer.visualization import PlotConfig
    >>>
    >>> # Prepare your data from simulation
    >>> position_data = np.array([[0.1, 0.1], [0.2, 0.2], [0.3, 0.3]])
@@ -1169,7 +1169,7 @@ Package Contents
    >>> import numpy as np
    >>> from matplotlib import pyplot as plt
    >>> from matplotlib.animation import FuncAnimation
-   >>> from canns.analyzer.visualization.core.jupyter_utils import (
+   >>> from [ANONYMOUS_PROJECT].analyzer.visualization.core.jupyter_utils import (
    ...     display_animation_in_jupyter,
    ...     is_jupyter_environment,
    ... )
@@ -1219,7 +1219,7 @@ Package Contents
    .. rubric:: Examples
 
    >>> import numpy as np
-   >>> from canns.analyzer.visualization import energy_landscape_1d_animation, PlotConfigs
+   >>> from [ANONYMOUS_PROJECT].analyzer.visualization import energy_landscape_1d_animation, PlotConfigs
    >>>
    >>> x = np.linspace(0, 1, 5)
    >>> y_series = np.stack([np.sin(x), np.cos(x)], axis=0)
@@ -1256,7 +1256,7 @@ Package Contents
    .. rubric:: Examples
 
    >>> import numpy as np
-   >>> from canns.analyzer.visualization import energy_landscape_1d_static, PlotConfigs
+   >>> from [ANONYMOUS_PROJECT].analyzer.visualization import energy_landscape_1d_static, PlotConfigs
    >>>
    >>> x = np.linspace(0, 1, 5)
    >>> data_sets = {"u": (x, np.sin(x)), "Iext": (x, np.cos(x))}
@@ -1298,7 +1298,7 @@ Package Contents
    .. rubric:: Examples
 
    >>> import numpy as np
-   >>> from canns.analyzer.visualization import energy_landscape_2d_animation, PlotConfigs
+   >>> from [ANONYMOUS_PROJECT].analyzer.visualization import energy_landscape_2d_animation, PlotConfigs
    >>>
    >>> zs = np.random.rand(3, 4, 4)
    >>> config = PlotConfigs.energy_landscape_2d_animation(
@@ -1333,7 +1333,7 @@ Package Contents
    .. rubric:: Examples
 
    >>> import numpy as np
-   >>> from canns.analyzer.visualization import energy_landscape_2d_static, PlotConfigs
+   >>> from [ANONYMOUS_PROJECT].analyzer.visualization import energy_landscape_2d_static, PlotConfigs
    >>>
    >>> z = np.random.rand(4, 4)
    >>> config = PlotConfigs.energy_landscape_2d_static(show=False)
@@ -1356,8 +1356,8 @@ Package Contents
 
    >>> import numpy as np
    >>> from matplotlib import pyplot as plt
-   >>> from canns.analyzer.visualization import PlotConfig
-   >>> from canns.analyzer.visualization.core.config import finalize_figure
+   >>> from [ANONYMOUS_PROJECT].analyzer.visualization import PlotConfig
+   >>> from [ANONYMOUS_PROJECT].analyzer.visualization.core.config import finalize_figure
    >>>
    >>> x = np.linspace(0, 1, 5)
    >>> y = np.sin(x)
@@ -1392,7 +1392,7 @@ Package Contents
 
    .. rubric:: Examples
 
-   >>> from canns.analyzer.visualization.core.jupyter_utils import is_jupyter_environment
+   >>> from [ANONYMOUS_PROJECT].analyzer.visualization.core.jupyter_utils import is_jupyter_environment
    >>> print(is_jupyter_environment() in {True, False})
    True
 
@@ -1431,8 +1431,8 @@ Package Contents
    .. rubric:: Example
 
    >>> import numpy as np
-   >>> from canns.analyzer.metrics.spatial_metrics import compute_spatial_autocorrelation
-   >>> from canns.analyzer.visualization import plot_autocorrelation, PlotConfigs
+   >>> from [ANONYMOUS_PROJECT].analyzer.metrics.spatial_metrics import compute_spatial_autocorrelation
+   >>> from [ANONYMOUS_PROJECT].analyzer.visualization import plot_autocorrelation, PlotConfigs
    >>>
    >>> rate_map = np.random.rand(10, 10)
    >>> autocorr = compute_spatial_autocorrelation(rate_map)
@@ -1489,7 +1489,7 @@ Package Contents
    .. rubric:: Example
 
    >>> import numpy as np
-   >>> from canns.analyzer.visualization import plot_firing_field_heatmap, PlotConfig
+   >>> from [ANONYMOUS_PROJECT].analyzer.visualization import plot_firing_field_heatmap, PlotConfig
    >>>
    >>> # Dummy input heatmap (M x K)
    >>> heatmap = np.random.rand(6, 6)
@@ -1515,7 +1515,7 @@ Package Contents
    .. rubric:: Examples
 
    >>> import numpy as np
-   >>> from canns.analyzer.visualization import plot_grid_cell_manifold, PlotConfig
+   >>> from [ANONYMOUS_PROJECT].analyzer.visualization import plot_grid_cell_manifold, PlotConfig
    >>>
    >>> value_grid_twisted = np.random.rand(9, 2)
    >>> grid_cell_activity = np.random.rand(3, 3)
@@ -1562,8 +1562,8 @@ Package Contents
    .. rubric:: Example
 
    >>> import numpy as np
-   >>> from canns.analyzer.metrics.spatial_metrics import compute_grid_score
-   >>> from canns.analyzer.visualization import plot_grid_score
+   >>> from [ANONYMOUS_PROJECT].analyzer.metrics.spatial_metrics import compute_grid_score
+   >>> from [ANONYMOUS_PROJECT].analyzer.visualization import plot_grid_score
    >>>
    >>> autocorr = np.random.rand(10, 10)
    >>> grid_score, rotated_corrs = compute_grid_score(autocorr)
@@ -1611,8 +1611,8 @@ Package Contents
    .. rubric:: Example
 
    >>> import numpy as np
-   >>> from canns.analyzer.metrics.spatial_metrics import find_grid_spacing
-   >>> from canns.analyzer.visualization import plot_grid_spacing_analysis
+   >>> from [ANONYMOUS_PROJECT].analyzer.metrics.spatial_metrics import find_grid_spacing
+   >>> from [ANONYMOUS_PROJECT].analyzer.visualization import plot_grid_spacing_analysis
    >>>
    >>> autocorr = np.random.rand(12, 12)
    >>> spacing_bins, spacing_m = find_grid_spacing(autocorr, bin_size=0.05)
@@ -1663,7 +1663,7 @@ Package Contents
    .. rubric:: Examples
 
    >>> import numpy as np
-   >>> from canns.analyzer.visualization import plot_population_activity_with_theta, PlotConfig
+   >>> from [ANONYMOUS_PROJECT].analyzer.visualization import plot_population_activity_with_theta, PlotConfig
    >>>
    >>> time_steps = np.linspace(0, 1, 5)
    >>> theta_phase = np.linspace(-np.pi, np.pi, 5)
@@ -1704,7 +1704,7 @@ Package Contents
    .. rubric:: Example
 
    >>> import numpy as np
-   >>> from canns.analyzer.visualization import population_activity_heatmap, PlotConfig
+   >>> from [ANONYMOUS_PROJECT].analyzer.visualization import population_activity_heatmap, PlotConfig
    >>> activity = np.random.rand(10, 5)
    >>> config = PlotConfig(show=False)
    >>> fig, ax = population_activity_heatmap(activity, dt=0.1, config=config)
@@ -1731,7 +1731,7 @@ Package Contents
    .. rubric:: Examples
 
    >>> import numpy as np
-   >>> from canns.analyzer.visualization import raster_plot, PlotConfigs
+   >>> from [ANONYMOUS_PROJECT].analyzer.visualization import raster_plot, PlotConfigs
    >>>
    >>> spike_train = np.zeros((5, 3), dtype=int)
    >>> spike_train[::2, 0] = 1
@@ -1762,7 +1762,7 @@ Package Contents
    .. rubric:: Examples
 
    >>> import numpy as np
-   >>> from canns.analyzer.visualization import tuning_curve, PlotConfigs
+   >>> from [ANONYMOUS_PROJECT].analyzer.visualization import tuning_curve, PlotConfigs
    >>>
    >>> stimulus = np.linspace(0, 1, 10)
    >>> firing_rates = np.random.rand(10, 3)

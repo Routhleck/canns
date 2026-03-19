@@ -1,7 +1,7 @@
-canns.trainer.oja
+[ANONYMOUS_PROJECT].trainer.oja
 =================
 
-.. py:module:: canns.trainer.oja
+.. py:module:: [ANONYMOUS_PROJECT].trainer.oja
 
 .. autoapi-nested-parse::
 
@@ -14,7 +14,7 @@ Classes
 
 .. autoapisummary::
 
-   canns.trainer.oja.OjaTrainer
+   [ANONYMOUS_PROJECT].trainer.oja.OjaTrainer
 
 
 Module Contents
@@ -22,7 +22,7 @@ Module Contents
 
 .. py:class:: OjaTrainer(model, learning_rate = 0.01, normalize_weights = True, weight_attr = 'W', compiled = True, **kwargs)
 
-   Bases: :py:obj:`canns.trainer._base.Trainer`
+   Bases: :py:obj:`[ANONYMOUS_PROJECT].trainer._base.Trainer`
 
 
    Oja's normalized Hebbian learning trainer.

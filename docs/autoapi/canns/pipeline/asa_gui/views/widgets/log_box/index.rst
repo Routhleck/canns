@@ -1,7 +1,7 @@
-canns.pipeline.asa_gui.views.widgets.log_box
+[ANONYMOUS_PROJECT].pipeline.asa_gui.views.widgets.log_box
 ============================================
 
-.. py:module:: canns.pipeline.asa_gui.views.widgets.log_box
+.. py:module:: [ANONYMOUS_PROJECT].pipeline.asa_gui.views.widgets.log_box
 
 .. autoapi-nested-parse::
 
@@ -14,7 +14,7 @@ Classes
 
 .. autoapisummary::
 
-   canns.pipeline.asa_gui.views.widgets.log_box.LogBox
+   [ANONYMOUS_PROJECT].pipeline.asa_gui.views.widgets.log_box.LogBox
 
 
 Module Contents

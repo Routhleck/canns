@@ -1,7 +1,7 @@
-canns.pipeline.asa_gui.views.widgets.pathcompare_tab
+[ANONYMOUS_PROJECT].pipeline.asa_gui.views.widgets.pathcompare_tab
 ====================================================
 
-.. py:module:: canns.pipeline.asa_gui.views.widgets.pathcompare_tab
+.. py:module:: [ANONYMOUS_PROJECT].pipeline.asa_gui.views.widgets.pathcompare_tab
 
 .. autoapi-nested-parse::
 
@@ -14,7 +14,7 @@ Classes
 
 .. autoapisummary::
 
-   canns.pipeline.asa_gui.views.widgets.pathcompare_tab.PathCompareTab
+   [ANONYMOUS_PROJECT].pipeline.asa_gui.views.widgets.pathcompare_tab.PathCompareTab
 
 
 Module Contents

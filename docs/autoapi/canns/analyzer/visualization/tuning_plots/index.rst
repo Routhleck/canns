@@ -1,7 +1,7 @@
-canns.analyzer.visualization.tuning_plots
+[ANONYMOUS_PROJECT].analyzer.visualization.tuning_plots
 =========================================
 
-.. py:module:: canns.analyzer.visualization.tuning_plots
+.. py:module:: [ANONYMOUS_PROJECT].analyzer.visualization.tuning_plots
 
 .. autoapi-nested-parse::
 
@@ -14,7 +14,7 @@ Functions
 
 .. autoapisummary::
 
-   canns.analyzer.visualization.tuning_plots.tuning_curve
+   [ANONYMOUS_PROJECT].analyzer.visualization.tuning_plots.tuning_curve
 
 
 Module Contents
@@ -41,7 +41,7 @@ Module Contents
    .. rubric:: Examples
 
    >>> import numpy as np
-   >>> from canns.analyzer.visualization import tuning_curve, PlotConfigs
+   >>> from [ANONYMOUS_PROJECT].analyzer.visualization import tuning_curve, PlotConfigs
    >>>
    >>> stimulus = np.linspace(0, 1, 10)
    >>> firing_rates = np.random.rand(10, 3)

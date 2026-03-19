@@ -1,18 +1,18 @@
-canns.models
+[ANONYMOUS_PROJECT].models
 ============
 
-.. py:module:: canns.models
+.. py:module:: [ANONYMOUS_PROJECT].models
 
 .. autoapi-nested-parse::
 
-   Model definitions for CANNs.
+   Model definitions for [ANONYMOUS_PROJECT].
 
-   This namespace exposes common model families, such as basic CANNs and
+   This namespace exposes common model families, such as basic [ANONYMOUS_PROJECT] and
    brain-inspired variants.
 
    .. rubric:: Examples
 
-   >>> from canns import models
+   >>> from [ANONYMOUS_PROJECT] import models
    >>> print(models.basic)
 
 
@@ -23,8 +23,8 @@ Submodules
 .. toctree::
    :maxdepth: 1
 
-   /autoapi/canns/models/basic/index
-   /autoapi/canns/models/brain_inspired/index
-   /autoapi/canns/models/hybrid/index
+   /autoapi/[ANONYMOUS_PROJECT]/models/basic/index
+   /autoapi/[ANONYMOUS_PROJECT]/models/brain_inspired/index
+   /autoapi/[ANONYMOUS_PROJECT]/models/hybrid/index
 
 

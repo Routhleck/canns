@@ -1,11 +1,11 @@
-canns.analyzer.visualization.theta_sweep_plots
+[ANONYMOUS_PROJECT].analyzer.visualization.theta_sweep_plots
 ==============================================
 
-.. py:module:: canns.analyzer.visualization.theta_sweep_plots
+.. py:module:: [ANONYMOUS_PROJECT].analyzer.visualization.theta_sweep_plots
 
 .. autoapi-nested-parse::
 
-   Theta sweep specific visualization functions for CANNs models.
+   Theta sweep specific visualization functions for [ANONYMOUS_PROJECT] models.
 
    This module contains specialized plotting functions for analyzing theta-modulated
    neural activity, particularly for direction cell and grid cell networks.
@@ -17,12 +17,12 @@ Functions
 
 .. autoapisummary::
 
-   canns.analyzer.visualization.theta_sweep_plots.create_theta_sweep_grid_cell_animation
-   canns.analyzer.visualization.theta_sweep_plots.create_theta_sweep_place_cell_animation
-   canns.analyzer.visualization.theta_sweep_plots.plot_direction_cell_polar
-   canns.analyzer.visualization.theta_sweep_plots.plot_grid_cell_manifold
-   canns.analyzer.visualization.theta_sweep_plots.plot_internal_position_trajectory
-   canns.analyzer.visualization.theta_sweep_plots.plot_population_activity_with_theta
+   [ANONYMOUS_PROJECT].analyzer.visualization.theta_sweep_plots.create_theta_sweep_grid_cell_animation
+   [ANONYMOUS_PROJECT].analyzer.visualization.theta_sweep_plots.create_theta_sweep_place_cell_animation
+   [ANONYMOUS_PROJECT].analyzer.visualization.theta_sweep_plots.plot_direction_cell_polar
+   [ANONYMOUS_PROJECT].analyzer.visualization.theta_sweep_plots.plot_grid_cell_manifold
+   [ANONYMOUS_PROJECT].analyzer.visualization.theta_sweep_plots.plot_internal_position_trajectory
+   [ANONYMOUS_PROJECT].analyzer.visualization.theta_sweep_plots.plot_population_activity_with_theta
 
 
 Module Contents
@@ -65,8 +65,8 @@ Module Contents
 
    >>> import numpy as np
    >>> import brainpy.math as bm
-   >>> from canns.models.basic.theta_sweep_model import GridCellNetwork
-   >>> from canns.analyzer.visualization import PlotConfig
+   >>> from [ANONYMOUS_PROJECT].models.basic.theta_sweep_model import GridCellNetwork
+   >>> from [ANONYMOUS_PROJECT].analyzer.visualization import PlotConfig
    >>>
    >>> # Minimal example with synthetic data (for structure demonstration)
    >>> bm.set_dt(1.0)
@@ -126,7 +126,7 @@ Module Contents
    documentation or example scripts.
 
    >>> import numpy as np
-   >>> from canns.analyzer.visualization import PlotConfig
+   >>> from [ANONYMOUS_PROJECT].analyzer.visualization import PlotConfig
    >>>
    >>> # Prepare your data from simulation
    >>> position_data = np.array([[0.1, 0.1], [0.2, 0.2], [0.3, 0.3]])
@@ -174,7 +174,7 @@ Module Contents
    .. rubric:: Examples
 
    >>> import numpy as np
-   >>> from canns.analyzer.visualization import plot_grid_cell_manifold, PlotConfig
+   >>> from [ANONYMOUS_PROJECT].analyzer.visualization import plot_grid_cell_manifold, PlotConfig
    >>>
    >>> value_grid_twisted = np.random.rand(9, 2)
    >>> grid_cell_activity = np.random.rand(3, 3)
@@ -221,7 +221,7 @@ Module Contents
    .. rubric:: Examples
 
    >>> import numpy as np
-   >>> from canns.analyzer.visualization import plot_population_activity_with_theta, PlotConfig
+   >>> from [ANONYMOUS_PROJECT].analyzer.visualization import plot_population_activity_with_theta, PlotConfig
    >>>
    >>> time_steps = np.linspace(0, 1, 5)
    >>> theta_phase = np.linspace(-np.pi, np.pi, 5)

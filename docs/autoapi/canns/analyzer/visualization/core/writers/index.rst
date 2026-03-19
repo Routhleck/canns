@@ -1,7 +1,7 @@
-canns.analyzer.visualization.core.writers
+[ANONYMOUS_PROJECT].analyzer.visualization.core.writers
 =========================================
 
-.. py:module:: canns.analyzer.visualization.core.writers
+.. py:module:: [ANONYMOUS_PROJECT].analyzer.visualization.core.writers
 
 .. autoapi-nested-parse::
 
@@ -17,10 +17,10 @@ Attributes
 
 .. autoapisummary::
 
-   canns.analyzer.visualization.core.writers.EncodingSpeed
-   canns.analyzer.visualization.core.writers.FFMPEG_AVAILABLE
-   canns.analyzer.visualization.core.writers.IMAGEIO_AVAILABLE
-   canns.analyzer.visualization.core.writers.VideoFormat
+   [ANONYMOUS_PROJECT].analyzer.visualization.core.writers.EncodingSpeed
+   [ANONYMOUS_PROJECT].analyzer.visualization.core.writers.FFMPEG_AVAILABLE
+   [ANONYMOUS_PROJECT].analyzer.visualization.core.writers.IMAGEIO_AVAILABLE
+   [ANONYMOUS_PROJECT].analyzer.visualization.core.writers.VideoFormat
 
 
 Classes
@@ -28,7 +28,7 @@ Classes
 
 .. autoapisummary::
 
-   canns.analyzer.visualization.core.writers.OptimizedAnimationWriter
+   [ANONYMOUS_PROJECT].analyzer.visualization.core.writers.OptimizedAnimationWriter
 
 
 Functions
@@ -36,11 +36,11 @@ Functions
 
 .. autoapisummary::
 
-   canns.analyzer.visualization.core.writers.create_optimized_writer
-   canns.analyzer.visualization.core.writers.get_matplotlib_writer
-   canns.analyzer.visualization.core.writers.get_recommended_format
-   canns.analyzer.visualization.core.writers.warn_double_rendering
-   canns.analyzer.visualization.core.writers.warn_gif_format
+   [ANONYMOUS_PROJECT].analyzer.visualization.core.writers.create_optimized_writer
+   [ANONYMOUS_PROJECT].analyzer.visualization.core.writers.get_matplotlib_writer
+   [ANONYMOUS_PROJECT].analyzer.visualization.core.writers.get_recommended_format
+   [ANONYMOUS_PROJECT].analyzer.visualization.core.writers.warn_double_rendering
+   [ANONYMOUS_PROJECT].analyzer.visualization.core.writers.warn_gif_format
 
 
 Module Contents
@@ -147,7 +147,7 @@ Module Contents
 
    Factory function to create an optimized animation writer.
 
-   This is the recommended way to create writers for CANNs animations.
+   This is the recommended way to create writers for [ANONYMOUS_PROJECT] animations.
 
    :param save_path: Output file path
    :param fps: Frames per second
@@ -185,7 +185,7 @@ Module Contents
 
    .. rubric:: Examples
 
-   >>> from canns.analyzer.visualization.core.writers import get_matplotlib_writer
+   >>> from [ANONYMOUS_PROJECT].analyzer.visualization.core.writers import get_matplotlib_writer
    >>> writer = get_matplotlib_writer("output.gif", fps=5)
    >>> print(writer is not None)
    True

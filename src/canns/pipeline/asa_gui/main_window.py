@@ -179,7 +179,7 @@ class MainWindow(QMainWindow):
         return pixmap.scaledToHeight(int(height), Qt.SmoothTransformation)
 
     def _open_homepage(self) -> None:
-        QDesktopServices.openUrl(QUrl("https://github.com/Routhleck/canns"))
+        QDesktopServices.openUrl(QUrl("[ANONYMOUS_REPO]"))
 
 
 ASAGuiApp = MainWindow

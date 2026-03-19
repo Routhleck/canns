@@ -1,7 +1,7 @@
-canns.analyzer.visualization.core.animation
+[ANONYMOUS_PROJECT].analyzer.visualization.core.animation
 ===========================================
 
-.. py:module:: canns.analyzer.visualization.core.animation
+.. py:module:: [ANONYMOUS_PROJECT].analyzer.visualization.core.animation
 
 .. autoapi-nested-parse::
 
@@ -17,7 +17,7 @@ Classes
 
 .. autoapisummary::
 
-   canns.analyzer.visualization.core.animation.OptimizedAnimationBase
+   [ANONYMOUS_PROJECT].analyzer.visualization.core.animation.OptimizedAnimationBase
 
 
 Functions
@@ -25,9 +25,9 @@ Functions
 
 .. autoapisummary::
 
-   canns.analyzer.visualization.core.animation.create_buffer
-   canns.analyzer.visualization.core.animation.optimize_colormap
-   canns.analyzer.visualization.core.animation.supports_blitting
+   [ANONYMOUS_PROJECT].analyzer.visualization.core.animation.create_buffer
+   [ANONYMOUS_PROJECT].analyzer.visualization.core.animation.optimize_colormap
+   [ANONYMOUS_PROJECT].analyzer.visualization.core.animation.supports_blitting
 
 
 Module Contents

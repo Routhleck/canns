@@ -1,7 +1,7 @@
-canns.models.brain_inspired
+[ANONYMOUS_PROJECT].models.brain_inspired
 ===========================
 
-.. py:module:: canns.models.brain_inspired
+.. py:module:: [ANONYMOUS_PROJECT].models.brain_inspired
 
 .. autoapi-nested-parse::
 
@@ -19,9 +19,9 @@ Submodules
 .. toctree::
    :maxdepth: 1
 
-   /autoapi/canns/models/brain_inspired/hopfield/index
-   /autoapi/canns/models/brain_inspired/linear/index
-   /autoapi/canns/models/brain_inspired/spiking/index
+   /autoapi/[ANONYMOUS_PROJECT]/models/brain_inspired/hopfield/index
+   /autoapi/[ANONYMOUS_PROJECT]/models/brain_inspired/linear/index
+   /autoapi/[ANONYMOUS_PROJECT]/models/brain_inspired/spiking/index
 
 
 Classes
@@ -29,11 +29,11 @@ Classes
 
 .. autoapisummary::
 
-   canns.models.brain_inspired.AmariHopfieldNetwork
-   canns.models.brain_inspired.BrainInspiredModel
-   canns.models.brain_inspired.BrainInspiredModelGroup
-   canns.models.brain_inspired.LinearLayer
-   canns.models.brain_inspired.SpikingLayer
+   [ANONYMOUS_PROJECT].models.brain_inspired.AmariHopfieldNetwork
+   [ANONYMOUS_PROJECT].models.brain_inspired.BrainInspiredModel
+   [ANONYMOUS_PROJECT].models.brain_inspired.BrainInspiredModelGroup
+   [ANONYMOUS_PROJECT].models.brain_inspired.LinearLayer
+   [ANONYMOUS_PROJECT].models.brain_inspired.SpikingLayer
 
 
 Package Contents
@@ -41,7 +41,7 @@ Package Contents
 
 .. py:class:: AmariHopfieldNetwork(num_neurons, asyn = False, threshold = 0.0, activation = 'sign', temperature = 1.0, **kwargs)
 
-   Bases: :py:obj:`canns.models.brain_inspired._base.BrainInspiredModel`
+   Bases: :py:obj:`[ANONYMOUS_PROJECT].models.brain_inspired._base.BrainInspiredModel`
 
 
    Amari-Hopfield network with discrete or continuous dynamics.
@@ -53,7 +53,7 @@ Package Contents
    .. rubric:: Examples
 
    >>> import jax.numpy as jnp
-   >>> from canns.models.brain_inspired import AmariHopfieldNetwork
+   >>> from [ANONYMOUS_PROJECT].models.brain_inspired import AmariHopfieldNetwork
    >>>
    >>> model = AmariHopfieldNetwork(num_neurons=3, activation="sign")
    >>> pattern = jnp.array([1.0, -1.0, 1.0], dtype=jnp.float32)
@@ -155,7 +155,7 @@ Package Contents
 
 .. py:class:: BrainInspiredModel(name = None, mode = None)
 
-   Bases: :py:obj:`canns.models.basic._base.BasicModel`
+   Bases: :py:obj:`[ANONYMOUS_PROJECT].models.basic._base.BasicModel`
 
 
    Base class for brain-inspired models.
@@ -243,7 +243,7 @@ Package Contents
 
 .. py:class:: BrainInspiredModelGroup(*children_as_tuple, name = None, mode = None, child_type = DynamicalSystem, **children_as_dict)
 
-   Bases: :py:obj:`canns.models.basic._base.BasicModelGroup`
+   Bases: :py:obj:`[ANONYMOUS_PROJECT].models.basic._base.BasicModelGroup`
 
 
    Base class for groups of brain-inspired models.
@@ -254,7 +254,7 @@ Package Contents
 
 .. py:class:: LinearLayer(input_size, output_size, use_bcm_threshold = False, threshold_tau = 100.0, **kwargs)
 
-   Bases: :py:obj:`canns.models.brain_inspired._base.BrainInspiredModel`
+   Bases: :py:obj:`[ANONYMOUS_PROJECT].models.brain_inspired._base.BrainInspiredModel`
 
 
    Generic linear feedforward layer for brain-inspired learning rules.
@@ -268,7 +268,7 @@ Package Contents
    .. rubric:: Examples
 
    >>> import jax.numpy as jnp
-   >>> from canns.models.brain_inspired import LinearLayer
+   >>> from [ANONYMOUS_PROJECT].models.brain_inspired import LinearLayer
    >>>
    >>> layer = LinearLayer(input_size=3, output_size=2)
    >>> y = layer.forward(jnp.array([1.0, 0.5, -1.0], dtype=jnp.float32))
@@ -372,7 +372,7 @@ Package Contents
 
 .. py:class:: SpikingLayer(input_size, output_size, threshold = 1.0, v_reset = 0.0, leak = 0.9, trace_decay = 0.95, dt = 1.0, **kwargs)
 
-   Bases: :py:obj:`canns.models.brain_inspired._base.BrainInspiredModel`
+   Bases: :py:obj:`[ANONYMOUS_PROJECT].models.brain_inspired._base.BrainInspiredModel`
 
 
    Simple Leaky Integrate-and-Fire (LIF) spiking neuron layer.
@@ -395,7 +395,7 @@ Package Contents
    .. rubric:: Examples
 
    >>> import jax.numpy as jnp
-   >>> from canns.models.brain_inspired import SpikingLayer
+   >>> from [ANONYMOUS_PROJECT].models.brain_inspired import SpikingLayer
    >>>
    >>> layer = SpikingLayer(input_size=3, output_size=2, threshold=0.5)
    >>> # Continuous input currents (binary spikes {0,1} are a special case)

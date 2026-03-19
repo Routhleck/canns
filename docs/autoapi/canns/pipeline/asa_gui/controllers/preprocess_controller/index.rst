@@ -1,7 +1,7 @@
-canns.pipeline.asa_gui.controllers.preprocess_controller
+[ANONYMOUS_PROJECT].pipeline.asa_gui.controllers.preprocess_controller
 ========================================================
 
-.. py:module:: canns.pipeline.asa_gui.controllers.preprocess_controller
+.. py:module:: [ANONYMOUS_PROJECT].pipeline.asa_gui.controllers.preprocess_controller
 
 .. autoapi-nested-parse::
 
@@ -14,7 +14,7 @@ Classes
 
 .. autoapisummary::
 
-   canns.pipeline.asa_gui.controllers.preprocess_controller.PreprocessController
+   [ANONYMOUS_PROJECT].pipeline.asa_gui.controllers.preprocess_controller.PreprocessController
 
 
 Module Contents

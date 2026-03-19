@@ -1,7 +1,7 @@
-canns.analyzer.data.cell_classification.visualization.btn_plots
+[ANONYMOUS_PROJECT].analyzer.data.cell_classification.visualization.btn_plots
 ===============================================================
 
-.. py:module:: canns.analyzer.data.cell_classification.visualization.btn_plots
+.. py:module:: [ANONYMOUS_PROJECT].analyzer.data.cell_classification.visualization.btn_plots
 
 .. autoapi-nested-parse::
 
@@ -14,8 +14,8 @@ Functions
 
 .. autoapisummary::
 
-   canns.analyzer.data.cell_classification.visualization.btn_plots.plot_btn_autocorr_summary
-   canns.analyzer.data.cell_classification.visualization.btn_plots.plot_btn_distance_matrix
+   [ANONYMOUS_PROJECT].analyzer.data.cell_classification.visualization.btn_plots.plot_btn_autocorr_summary
+   [ANONYMOUS_PROJECT].analyzer.data.cell_classification.visualization.btn_plots.plot_btn_distance_matrix
 
 
 Module Contents

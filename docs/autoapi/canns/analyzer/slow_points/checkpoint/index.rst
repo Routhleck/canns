@@ -1,7 +1,7 @@
-canns.analyzer.slow_points.checkpoint
+[ANONYMOUS_PROJECT].analyzer.slow_points.checkpoint
 =====================================
 
-.. py:module:: canns.analyzer.slow_points.checkpoint
+.. py:module:: [ANONYMOUS_PROJECT].analyzer.slow_points.checkpoint
 
 .. autoapi-nested-parse::
 
@@ -14,8 +14,8 @@ Functions
 
 .. autoapisummary::
 
-   canns.analyzer.slow_points.checkpoint.load_checkpoint
-   canns.analyzer.slow_points.checkpoint.save_checkpoint
+   [ANONYMOUS_PROJECT].analyzer.slow_points.checkpoint.load_checkpoint
+   [ANONYMOUS_PROJECT].analyzer.slow_points.checkpoint.save_checkpoint
 
 
 Module Contents
@@ -35,7 +35,7 @@ Module Contents
    >>> import tempfile
    >>> import brainpy as bp
    >>> import brainpy.math as bm
-   >>> from canns.analyzer.slow_points import save_checkpoint, load_checkpoint
+   >>> from [ANONYMOUS_PROJECT].analyzer.slow_points import save_checkpoint, load_checkpoint
    >>>
    >>> class DummyModel(bp.DynamicalSystem):
    ...     def __init__(self):
@@ -63,7 +63,7 @@ Module Contents
    >>> import tempfile
    >>> import brainpy as bp
    >>> import brainpy.math as bm
-   >>> from canns.analyzer.slow_points import save_checkpoint
+   >>> from [ANONYMOUS_PROJECT].analyzer.slow_points import save_checkpoint
    >>>
    >>> class DummyModel(bp.DynamicalSystem):
    ...     def __init__(self):

@@ -39,7 +39,7 @@
 
 **教程3: Model Gallery TUI**
 
-- 对齐 ``canns-experiments/figure2`` 的 5×3 分析布局
+- 对齐 ``[ANONYMOUS_PROJECT]-experiments/figure2`` 的 5×3 分析布局
 - CANN1D / CANN2D / GridCell 的典型可视化一键生成
 - 结果预览与输出目录统一管理
 
@@ -119,5 +119,5 @@ ASA GUI 提供：
 
 - 将 ASA GUI 应用于真实实验数据
 - 基于生成的中间结果开展自定义分析
-- 参考 ``canns.pipeline.asa`` 扩展新功能
+- 参考 ``[ANONYMOUS_PROJECT].pipeline.asa`` 扩展新功能
 - 为库贡献新的分析模块

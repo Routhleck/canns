@@ -1,7 +1,7 @@
-canns.analyzer.data.asa.fly_roi
+[ANONYMOUS_PROJECT].analyzer.data.asa.fly_roi
 ===============================
 
-.. py:module:: canns.analyzer.data.asa.fly_roi
+.. py:module:: [ANONYMOUS_PROJECT].analyzer.data.asa.fly_roi
 
 
 Attributes
@@ -9,8 +9,8 @@ Attributes
 
 .. autoapisummary::
 
-   canns.analyzer.data.asa.fly_roi.HAS_NUMBA
-   canns.analyzer.data.asa.fly_roi.data
+   [ANONYMOUS_PROJECT].analyzer.data.asa.fly_roi.HAS_NUMBA
+   [ANONYMOUS_PROJECT].analyzer.data.asa.fly_roi.data
 
 
 Exceptions
@@ -18,9 +18,9 @@ Exceptions
 
 .. autoapisummary::
 
-   canns.analyzer.data.asa.fly_roi.AnimationError
-   canns.analyzer.data.asa.fly_roi.CANN1DError
-   canns.analyzer.data.asa.fly_roi.FittingError
+   [ANONYMOUS_PROJECT].analyzer.data.asa.fly_roi.AnimationError
+   [ANONYMOUS_PROJECT].analyzer.data.asa.fly_roi.CANN1DError
+   [ANONYMOUS_PROJECT].analyzer.data.asa.fly_roi.FittingError
 
 
 Classes
@@ -28,10 +28,10 @@ Classes
 
 .. autoapisummary::
 
-   canns.analyzer.data.asa.fly_roi.BumpFitsConfig
-   canns.analyzer.data.asa.fly_roi.CANN1DPlotConfig
-   canns.analyzer.data.asa.fly_roi.Constants
-   canns.analyzer.data.asa.fly_roi.SiteBump
+   [ANONYMOUS_PROJECT].analyzer.data.asa.fly_roi.BumpFitsConfig
+   [ANONYMOUS_PROJECT].analyzer.data.asa.fly_roi.CANN1DPlotConfig
+   [ANONYMOUS_PROJECT].analyzer.data.asa.fly_roi.Constants
+   [ANONYMOUS_PROJECT].analyzer.data.asa.fly_roi.SiteBump
 
 
 Functions
@@ -39,8 +39,8 @@ Functions
 
 .. autoapisummary::
 
-   canns.analyzer.data.asa.fly_roi.create_1d_bump_animation
-   canns.analyzer.data.asa.fly_roi.roi_bump_fits
+   [ANONYMOUS_PROJECT].analyzer.data.asa.fly_roi.create_1d_bump_animation
+   [ANONYMOUS_PROJECT].analyzer.data.asa.fly_roi.roi_bump_fits
 
 
 Module Contents
@@ -149,7 +149,7 @@ Module Contents
 
 .. py:class:: CANN1DPlotConfig
 
-   Bases: :py:obj:`canns.analyzer.visualization.PlotConfig`
+   Bases: :py:obj:`[ANONYMOUS_PROJECT].analyzer.visualization.PlotConfig`
 
 
    Specialized PlotConfig for CANN1D visualizations.

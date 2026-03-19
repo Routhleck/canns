@@ -1,7 +1,7 @@
-canns.pipeline.asa_gui.analysis_modes.base
+[ANONYMOUS_PROJECT].pipeline.asa_gui.analysis_modes.base
 ==========================================
 
-.. py:module:: canns.pipeline.asa_gui.analysis_modes.base
+.. py:module:: [ANONYMOUS_PROJECT].pipeline.asa_gui.analysis_modes.base
 
 .. autoapi-nested-parse::
 
@@ -14,7 +14,7 @@ Classes
 
 .. autoapisummary::
 
-   canns.pipeline.asa_gui.analysis_modes.base.AbstractAnalysisMode
+   [ANONYMOUS_PROJECT].pipeline.asa_gui.analysis_modes.base.AbstractAnalysisMode
 
 
 Functions
@@ -22,7 +22,7 @@ Functions
 
 .. autoapisummary::
 
-   canns.pipeline.asa_gui.analysis_modes.base.configure_form_layout
+   [ANONYMOUS_PROJECT].pipeline.asa_gui.analysis_modes.base.configure_form_layout
 
 
 Module Contents

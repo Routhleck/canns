@@ -1,7 +1,7 @@
-canns.trainer.utils
+[ANONYMOUS_PROJECT].trainer.utils
 ===================
 
-.. py:module:: canns.trainer.utils
+.. py:module:: [ANONYMOUS_PROJECT].trainer.utils
 
 .. autoapi-nested-parse::
 
@@ -14,7 +14,7 @@ Attributes
 
 .. autoapisummary::
 
-   canns.trainer.utils.stdp_kernel_vec
+   [ANONYMOUS_PROJECT].trainer.utils.stdp_kernel_vec
 
 
 Functions
@@ -22,11 +22,11 @@ Functions
 
 .. autoapisummary::
 
-   canns.trainer.utils.compute_running_average
-   canns.trainer.utils.initialize_spike_buffer
-   canns.trainer.utils.normalize_weight_rows
-   canns.trainer.utils.stdp_kernel
-   canns.trainer.utils.update_spike_buffer
+   [ANONYMOUS_PROJECT].trainer.utils.compute_running_average
+   [ANONYMOUS_PROJECT].trainer.utils.initialize_spike_buffer
+   [ANONYMOUS_PROJECT].trainer.utils.normalize_weight_rows
+   [ANONYMOUS_PROJECT].trainer.utils.stdp_kernel
+   [ANONYMOUS_PROJECT].trainer.utils.update_spike_buffer
 
 
 Module Contents

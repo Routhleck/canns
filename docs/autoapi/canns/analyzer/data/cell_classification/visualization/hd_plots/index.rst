@@ -1,7 +1,7 @@
-canns.analyzer.data.cell_classification.visualization.hd_plots
+[ANONYMOUS_PROJECT].analyzer.data.cell_classification.visualization.hd_plots
 ==============================================================
 
-.. py:module:: canns.analyzer.data.cell_classification.visualization.hd_plots
+.. py:module:: [ANONYMOUS_PROJECT].analyzer.data.cell_classification.visualization.hd_plots
 
 .. autoapi-nested-parse::
 
@@ -16,9 +16,9 @@ Functions
 
 .. autoapisummary::
 
-   canns.analyzer.data.cell_classification.visualization.hd_plots.plot_hd_analysis
-   canns.analyzer.data.cell_classification.visualization.hd_plots.plot_polar_tuning
-   canns.analyzer.data.cell_classification.visualization.hd_plots.plot_temporal_autocorr
+   [ANONYMOUS_PROJECT].analyzer.data.cell_classification.visualization.hd_plots.plot_hd_analysis
+   [ANONYMOUS_PROJECT].analyzer.data.cell_classification.visualization.hd_plots.plot_polar_tuning
+   [ANONYMOUS_PROJECT].analyzer.data.cell_classification.visualization.hd_plots.plot_temporal_autocorr
 
 
 Module Contents

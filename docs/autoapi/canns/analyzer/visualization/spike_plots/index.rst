@@ -1,7 +1,7 @@
-canns.analyzer.visualization.spike_plots
+[ANONYMOUS_PROJECT].analyzer.visualization.spike_plots
 ========================================
 
-.. py:module:: canns.analyzer.visualization.spike_plots
+.. py:module:: [ANONYMOUS_PROJECT].analyzer.visualization.spike_plots
 
 .. autoapi-nested-parse::
 
@@ -14,9 +14,9 @@ Functions
 
 .. autoapisummary::
 
-   canns.analyzer.visualization.spike_plots.average_firing_rate_plot
-   canns.analyzer.visualization.spike_plots.population_activity_heatmap
-   canns.analyzer.visualization.spike_plots.raster_plot
+   [ANONYMOUS_PROJECT].analyzer.visualization.spike_plots.average_firing_rate_plot
+   [ANONYMOUS_PROJECT].analyzer.visualization.spike_plots.population_activity_heatmap
+   [ANONYMOUS_PROJECT].analyzer.visualization.spike_plots.raster_plot
 
 
 Module Contents
@@ -41,7 +41,7 @@ Module Contents
    .. rubric:: Examples
 
    >>> import numpy as np
-   >>> from canns.analyzer.visualization import average_firing_rate_plot, PlotConfigs
+   >>> from [ANONYMOUS_PROJECT].analyzer.visualization import average_firing_rate_plot, PlotConfigs
    >>>
    >>> spike_train = np.random.randint(0, 2, size=(10, 4))
    >>> config = PlotConfigs.average_firing_rate_plot(mode="population", show=False)
@@ -77,7 +77,7 @@ Module Contents
    .. rubric:: Example
 
    >>> import numpy as np
-   >>> from canns.analyzer.visualization import population_activity_heatmap, PlotConfig
+   >>> from [ANONYMOUS_PROJECT].analyzer.visualization import population_activity_heatmap, PlotConfig
    >>> activity = np.random.rand(10, 5)
    >>> config = PlotConfig(show=False)
    >>> fig, ax = population_activity_heatmap(activity, dt=0.1, config=config)
@@ -104,7 +104,7 @@ Module Contents
    .. rubric:: Examples
 
    >>> import numpy as np
-   >>> from canns.analyzer.visualization import raster_plot, PlotConfigs
+   >>> from [ANONYMOUS_PROJECT].analyzer.visualization import raster_plot, PlotConfigs
    >>>
    >>> spike_train = np.zeros((5, 3), dtype=int)
    >>> spike_train[::2, 0] = 1

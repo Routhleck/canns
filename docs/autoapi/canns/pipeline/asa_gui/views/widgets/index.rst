@@ -1,7 +1,7 @@
-canns.pipeline.asa_gui.views.widgets
+[ANONYMOUS_PROJECT].pipeline.asa_gui.views.widgets
 ====================================
 
-.. py:module:: canns.pipeline.asa_gui.views.widgets
+.. py:module:: [ANONYMOUS_PROJECT].pipeline.asa_gui.views.widgets
 
 .. autoapi-nested-parse::
 
@@ -15,16 +15,16 @@ Submodules
 .. toctree::
    :maxdepth: 1
 
-   /autoapi/canns/pipeline/asa_gui/views/widgets/artifacts_tab/index
-   /autoapi/canns/pipeline/asa_gui/views/widgets/drop_zone/index
-   /autoapi/canns/pipeline/asa_gui/views/widgets/file_list/index
-   /autoapi/canns/pipeline/asa_gui/views/widgets/gridscore_tab/index
-   /autoapi/canns/pipeline/asa_gui/views/widgets/help_dialog/index
-   /autoapi/canns/pipeline/asa_gui/views/widgets/image_tab/index
-   /autoapi/canns/pipeline/asa_gui/views/widgets/image_viewer/index
-   /autoapi/canns/pipeline/asa_gui/views/widgets/log_box/index
-   /autoapi/canns/pipeline/asa_gui/views/widgets/pathcompare_tab/index
-   /autoapi/canns/pipeline/asa_gui/views/widgets/popup_combo/index
+   /autoapi/[ANONYMOUS_PROJECT]/pipeline/asa_gui/views/widgets/artifacts_tab/index
+   /autoapi/[ANONYMOUS_PROJECT]/pipeline/asa_gui/views/widgets/drop_zone/index
+   /autoapi/[ANONYMOUS_PROJECT]/pipeline/asa_gui/views/widgets/file_list/index
+   /autoapi/[ANONYMOUS_PROJECT]/pipeline/asa_gui/views/widgets/gridscore_tab/index
+   /autoapi/[ANONYMOUS_PROJECT]/pipeline/asa_gui/views/widgets/help_dialog/index
+   /autoapi/[ANONYMOUS_PROJECT]/pipeline/asa_gui/views/widgets/image_tab/index
+   /autoapi/[ANONYMOUS_PROJECT]/pipeline/asa_gui/views/widgets/image_viewer/index
+   /autoapi/[ANONYMOUS_PROJECT]/pipeline/asa_gui/views/widgets/log_box/index
+   /autoapi/[ANONYMOUS_PROJECT]/pipeline/asa_gui/views/widgets/pathcompare_tab/index
+   /autoapi/[ANONYMOUS_PROJECT]/pipeline/asa_gui/views/widgets/popup_combo/index
 
 
 Classes
@@ -32,14 +32,14 @@ Classes
 
 .. autoapisummary::
 
-   canns.pipeline.asa_gui.views.widgets.ArtifactsTab
-   canns.pipeline.asa_gui.views.widgets.DropZone
-   canns.pipeline.asa_gui.views.widgets.FileList
-   canns.pipeline.asa_gui.views.widgets.GridScoreTab
-   canns.pipeline.asa_gui.views.widgets.ImageTab
-   canns.pipeline.asa_gui.views.widgets.ImageViewer
-   canns.pipeline.asa_gui.views.widgets.LogBox
-   canns.pipeline.asa_gui.views.widgets.PathCompareTab
+   [ANONYMOUS_PROJECT].pipeline.asa_gui.views.widgets.ArtifactsTab
+   [ANONYMOUS_PROJECT].pipeline.asa_gui.views.widgets.DropZone
+   [ANONYMOUS_PROJECT].pipeline.asa_gui.views.widgets.FileList
+   [ANONYMOUS_PROJECT].pipeline.asa_gui.views.widgets.GridScoreTab
+   [ANONYMOUS_PROJECT].pipeline.asa_gui.views.widgets.ImageTab
+   [ANONYMOUS_PROJECT].pipeline.asa_gui.views.widgets.ImageViewer
+   [ANONYMOUS_PROJECT].pipeline.asa_gui.views.widgets.LogBox
+   [ANONYMOUS_PROJECT].pipeline.asa_gui.views.widgets.PathCompareTab
 
 
 Package Contents

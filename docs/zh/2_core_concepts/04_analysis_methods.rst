@@ -2,7 +2,7 @@
 分析方法
 ================
 
-本文档整理 ``canns.analyzer`` 当前实现的分析与可视化工具，覆盖数据分析（ASA pipeline）、
+本文档整理 ``[ANONYMOUS_PROJECT].analyzer`` 当前实现的分析与可视化工具，覆盖数据分析（ASA pipeline）、
 模型可视化、空间指标、RNN 动力学以及模型专用分析。
 
 .. note::
@@ -52,7 +52,7 @@ ASA pipeline 面向实验神经记录，核心输入为 ``spike/x/y/t``。典型
 7. ``compute_fr_heatmap_matrix`` / ``compute_frm`` —— FR Heatmap / FRM
 
 .. note::
-   ASA 的交互式 TUI 由 ``canns.pipeline.asa`` 提供，复用同一套 Python API。
+   ASA 的交互式 TUI 由 ``[ANONYMOUS_PROJECT].pipeline.asa`` 提供，复用同一套 Python API。
 
 输入格式
 ----------------
@@ -94,7 +94,7 @@ ASA pipeline 面向实验神经记录，核心输入为 ``spike/x/y/t``。典型
 可视化与模型输出分析
 ===========================
 
-模型仿真结果的主要可视化集中在 ``canns.analyzer.visualization``：
+模型仿真结果的主要可视化集中在 ``[ANONYMOUS_PROJECT].analyzer.visualization``：
 
 .. list-table::
    :widths: 30 70
@@ -127,7 +127,7 @@ PlotConfig 系统
 空间指标与统计（metrics）
 ===========================
 
-``canns.analyzer.metrics`` 提供无绘图库依赖的计算函数：
+``[ANONYMOUS_PROJECT].analyzer.metrics`` 提供无绘图库依赖的计算函数：
 
 - ``spatial_metrics``
 
@@ -143,7 +143,7 @@ PlotConfig 系统
 RNN 动力学分析（slow_points）
 ================================
 
-``canns.analyzer.slow_points`` 提供不动点分析工具：
+``[ANONYMOUS_PROJECT].analyzer.slow_points`` 提供不动点分析工具：
 
 - ``FixedPointFinder``：在 RNN/CANN 动力系统中寻找不动点
 - ``FixedPoints``：存储与分析不动点集合
@@ -163,21 +163,21 @@ RNN 动力学分析（slow_points）
 拓扑数据分析（TDA）
 =======================
 
-TDA 在 ASA pipeline 中实现，依赖 ``canns.analyzer.data.asa.tda``：
+TDA 在 ASA pipeline 中实现，依赖 ``[ANONYMOUS_PROJECT].analyzer.data.asa.tda``：
 
 - ``TDAConfig`` 定义降维、采样与持久同调参数
 - ``tda_vis`` 负责计算与可视化 barcode
-- 内部使用 ``canns_lib.ripser`` 加速持续同调计算
+- 内部使用 ``[ANONYMOUS_PROJECT]_lib.ripser`` 加速持续同调计算
 
 TDA 适用于检测 **环/环面** 等低维拓扑结构，可用于评估实验记录与模型预测的一致性。
 
 总结
 =======
 
-``canns.analyzer`` 提供从 **实验数据分析** 到 **模型可视化** 再到 **动力学与专用模型诊断** 的全链路工具。
+``[ANONYMOUS_PROJECT].analyzer`` 提供从 **实验数据分析** 到 **模型可视化** 再到 **动力学与专用模型诊断** 的全链路工具。
 推荐工作流：
 
-- 实验记录 → ASA pipeline（``canns.analyzer.data``）
+- 实验记录 → ASA pipeline（``[ANONYMOUS_PROJECT].analyzer.data``）
 - 仿真输出 → visualization + metrics
 - 动力学研究 → slow_points
 - 专用模型 → model_specific

@@ -1,7 +1,7 @@
-canns.pipeline.asa_gui.models.job
+[ANONYMOUS_PROJECT].pipeline.asa_gui.models.job
 =================================
 
-.. py:module:: canns.pipeline.asa_gui.models.job
+.. py:module:: [ANONYMOUS_PROJECT].pipeline.asa_gui.models.job
 
 .. autoapi-nested-parse::
 
@@ -14,8 +14,8 @@ Classes
 
 .. autoapisummary::
 
-   canns.pipeline.asa_gui.models.job.JobResult
-   canns.pipeline.asa_gui.models.job.JobSpec
+   [ANONYMOUS_PROJECT].pipeline.asa_gui.models.job.JobResult
+   [ANONYMOUS_PROJECT].pipeline.asa_gui.models.job.JobSpec
 
 
 Module Contents

@@ -1,7 +1,7 @@
-canns.models.basic.hierarchical_model
+[ANONYMOUS_PROJECT].models.basic.hierarchical_model
 =====================================
 
-.. py:module:: canns.models.basic.hierarchical_model
+.. py:module:: [ANONYMOUS_PROJECT].models.basic.hierarchical_model
 
 
 Classes
@@ -9,12 +9,12 @@ Classes
 
 .. autoapisummary::
 
-   canns.models.basic.hierarchical_model.BandCell
-   canns.models.basic.hierarchical_model.GaussRecUnits
-   canns.models.basic.hierarchical_model.GridCell
-   canns.models.basic.hierarchical_model.HierarchicalNetwork
-   canns.models.basic.hierarchical_model.HierarchicalPathIntegrationModel
-   canns.models.basic.hierarchical_model.NonRecUnits
+   [ANONYMOUS_PROJECT].models.basic.hierarchical_model.BandCell
+   [ANONYMOUS_PROJECT].models.basic.hierarchical_model.GaussRecUnits
+   [ANONYMOUS_PROJECT].models.basic.hierarchical_model.GridCell
+   [ANONYMOUS_PROJECT].models.basic.hierarchical_model.HierarchicalNetwork
+   [ANONYMOUS_PROJECT].models.basic.hierarchical_model.HierarchicalPathIntegrationModel
+   [ANONYMOUS_PROJECT].models.basic.hierarchical_model.NonRecUnits
 
 
 Module Contents
@@ -22,7 +22,7 @@ Module Contents
 
 .. py:class:: BandCell(angle, spacing, size=180, z_min=-bm.pi, z_max=bm.pi, noise=2.0, w_L2S=0.2, w_S2L=1.0, gain=0.2, gauss_tau=1.0, gauss_J0=1.1, gauss_k=0.0005, gauss_a=2 / 9 * bm.pi, nonrec_tau=0.1, **kwargs)
 
-   Bases: :py:obj:`canns.models.basic._base.BasicModel`
+   Bases: :py:obj:`[ANONYMOUS_PROJECT].models.basic._base.BasicModel`
 
 
    A model of a band cell module for path integration.
@@ -314,7 +314,7 @@ Module Contents
 
 .. py:class:: GaussRecUnits(size, tau = 1.0, J0 = 1.1, k = 0.0005, a = 2 / 9 * bm.pi, z_min = -bm.pi, z_max = bm.pi, noise = 2.0)
 
-   Bases: :py:obj:`canns.models.basic._base.BasicModel`
+   Bases: :py:obj:`[ANONYMOUS_PROJECT].models.basic._base.BasicModel`
 
 
    A model of recurrently connected units with Gaussian connectivity.
@@ -559,7 +559,7 @@ Module Contents
 
 .. py:class:: GridCell(num, angle, spacing, tau=0.1, tau_v=10.0, k=0.005, a=bm.pi / 9, A=1.0, J0=1.0, mbar=1.0)
 
-   Bases: :py:obj:`canns.models.basic._base.BasicModel`
+   Bases: :py:obj:`[ANONYMOUS_PROJECT].models.basic._base.BasicModel`
 
 
    A model of a grid cell module using a 2D continuous attractor network.
@@ -840,7 +840,7 @@ Module Contents
 
 .. py:class:: HierarchicalNetwork(num_module, num_place, spacing_min=2.0, spacing_max=5.0, module_angle=0.0, band_size=180, band_noise=0.0, band_w_L2S=0.2, band_w_S2L=1.0, band_gain=0.2, grid_num=20, grid_tau=0.1, grid_tau_v=10.0, grid_k=0.005, grid_a=bm.pi / 9, grid_A=1.0, grid_J0=1.0, grid_mbar=1.0, gauss_tau=1.0, gauss_J0=1.1, gauss_k=0.0005, gauss_a=2 / 9 * bm.pi, nonrec_tau=0.1)
 
-   Bases: :py:obj:`canns.models.basic._base.BasicModelGroup`
+   Bases: :py:obj:`[ANONYMOUS_PROJECT].models.basic._base.BasicModelGroup`
 
 
    A full hierarchical network composed of multiple grid modules.
@@ -851,7 +851,7 @@ Module Contents
    .. rubric:: Examples
 
    >>> import brainpy.math as bm
-   >>> from canns.models.basic import HierarchicalNetwork
+   >>> from [ANONYMOUS_PROJECT].models.basic import HierarchicalNetwork
    >>>
    >>> bm.set_dt(0.1)
    >>> model = HierarchicalNetwork(num_module=1, num_place=3)
@@ -1015,7 +1015,7 @@ Module Contents
 
 .. py:class:: HierarchicalPathIntegrationModel(spacing, angle, place_center=None, band_size=180, band_noise=0.0, band_w_L2S=0.2, band_w_S2L=1.0, band_gain=0.2, grid_num=20, grid_tau=0.1, grid_tau_v=10.0, grid_k=0.005, grid_a=bm.pi / 9, grid_A=1.0, grid_J0=1.0, grid_mbar=1.0, gauss_tau=1.0, gauss_J0=1.1, gauss_k=0.0005, gauss_a=2 / 9 * bm.pi, nonrec_tau=0.1)
 
-   Bases: :py:obj:`canns.models.basic._base.BasicModelGroup`
+   Bases: :py:obj:`[ANONYMOUS_PROJECT].models.basic._base.BasicModelGroup`
 
 
    A hierarchical model combining band cells and grid cells for path integration.
@@ -1028,7 +1028,7 @@ Module Contents
    .. rubric:: Examples
 
    >>> import brainpy.math as bm
-   >>> from canns.models.basic.hierarchical_model import HierarchicalPathIntegrationModel
+   >>> from [ANONYMOUS_PROJECT].models.basic.hierarchical_model import HierarchicalPathIntegrationModel
    >>>
    >>> bm.set_dt(0.1)
    >>> place_center = bm.array([[0.0, 0.0], [1.0, 1.0]])
@@ -1236,7 +1236,7 @@ Module Contents
 
 .. py:class:: NonRecUnits(size, tau = 0.1, z_min = -bm.pi, z_max = bm.pi, noise = 2.0)
 
-   Bases: :py:obj:`canns.models.basic._base.BasicModel`
+   Bases: :py:obj:`[ANONYMOUS_PROJECT].models.basic._base.BasicModel`
 
 
    A model of non-recurrently connected units.

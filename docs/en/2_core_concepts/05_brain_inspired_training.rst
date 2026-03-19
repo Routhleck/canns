@@ -2,12 +2,12 @@
 Brain-Inspired Training
 ========================
 
-This document explains the brain-inspired learning mechanisms and the Trainer framework in the CANNs library.
+This document explains the brain-inspired learning mechanisms and the Trainer framework in the [ANONYMOUS_PROJECT] library.
 
 Overview
 ========
 
-The trainer module (``canns.trainer``) provides a unified interface for training brain-inspired models using biologically plausible learning rules. Unlike conventional deep learning with backpropagation, these methods rely on local, activity-dependent plasticity.
+The trainer module (``[ANONYMOUS_PROJECT].trainer``) provides a unified interface for training brain-inspired models using biologically plausible learning rules. Unlike conventional deep learning with backpropagation, these methods rely on local, activity-dependent plasticity.
 
 Core Concept: Activity-Dependent Plasticity
 ============================================
@@ -130,7 +130,7 @@ The Trainer class is separated from Model classes for several reasons:
 Implementing Custom Trainers
 -----------------------------
 
-To create a new trainer, inherit from ``canns.trainer.Trainer`` and implement:
+To create a new trainer, inherit from ``[ANONYMOUS_PROJECT].trainer.Trainer`` and implement:
 
 **Constructor**
    Store target model reference and configuration:

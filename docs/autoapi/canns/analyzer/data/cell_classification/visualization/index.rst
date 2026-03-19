@@ -1,7 +1,7 @@
-canns.analyzer.data.cell_classification.visualization
+[ANONYMOUS_PROJECT].analyzer.data.cell_classification.visualization
 =====================================================
 
-.. py:module:: canns.analyzer.data.cell_classification.visualization
+.. py:module:: [ANONYMOUS_PROJECT].analyzer.data.cell_classification.visualization
 
 .. autoapi-nested-parse::
 
@@ -15,9 +15,9 @@ Submodules
 .. toctree::
    :maxdepth: 1
 
-   /autoapi/canns/analyzer/data/cell_classification/visualization/btn_plots/index
-   /autoapi/canns/analyzer/data/cell_classification/visualization/grid_plots/index
-   /autoapi/canns/analyzer/data/cell_classification/visualization/hd_plots/index
+   /autoapi/[ANONYMOUS_PROJECT]/analyzer/data/cell_classification/visualization/btn_plots/index
+   /autoapi/[ANONYMOUS_PROJECT]/analyzer/data/cell_classification/visualization/grid_plots/index
+   /autoapi/[ANONYMOUS_PROJECT]/analyzer/data/cell_classification/visualization/hd_plots/index
 
 
 Functions
@@ -25,15 +25,15 @@ Functions
 
 .. autoapisummary::
 
-   canns.analyzer.data.cell_classification.visualization.plot_autocorrelogram
-   canns.analyzer.data.cell_classification.visualization.plot_btn_autocorr_summary
-   canns.analyzer.data.cell_classification.visualization.plot_btn_distance_matrix
-   canns.analyzer.data.cell_classification.visualization.plot_grid_score_histogram
-   canns.analyzer.data.cell_classification.visualization.plot_gridness_analysis
-   canns.analyzer.data.cell_classification.visualization.plot_hd_analysis
-   canns.analyzer.data.cell_classification.visualization.plot_polar_tuning
-   canns.analyzer.data.cell_classification.visualization.plot_rate_map
-   canns.analyzer.data.cell_classification.visualization.plot_temporal_autocorr
+   [ANONYMOUS_PROJECT].analyzer.data.cell_classification.visualization.plot_autocorrelogram
+   [ANONYMOUS_PROJECT].analyzer.data.cell_classification.visualization.plot_btn_autocorr_summary
+   [ANONYMOUS_PROJECT].analyzer.data.cell_classification.visualization.plot_btn_distance_matrix
+   [ANONYMOUS_PROJECT].analyzer.data.cell_classification.visualization.plot_grid_score_histogram
+   [ANONYMOUS_PROJECT].analyzer.data.cell_classification.visualization.plot_gridness_analysis
+   [ANONYMOUS_PROJECT].analyzer.data.cell_classification.visualization.plot_hd_analysis
+   [ANONYMOUS_PROJECT].analyzer.data.cell_classification.visualization.plot_polar_tuning
+   [ANONYMOUS_PROJECT].analyzer.data.cell_classification.visualization.plot_rate_map
+   [ANONYMOUS_PROJECT].analyzer.data.cell_classification.visualization.plot_temporal_autocorr
 
 
 Package Contents

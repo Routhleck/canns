@@ -1,7 +1,7 @@
-canns.pipeline.asa_gui.views.widgets.image_viewer
+[ANONYMOUS_PROJECT].pipeline.asa_gui.views.widgets.image_viewer
 =================================================
 
-.. py:module:: canns.pipeline.asa_gui.views.widgets.image_viewer
+.. py:module:: [ANONYMOUS_PROJECT].pipeline.asa_gui.views.widgets.image_viewer
 
 .. autoapi-nested-parse::
 
@@ -14,7 +14,7 @@ Classes
 
 .. autoapisummary::
 
-   canns.pipeline.asa_gui.views.widgets.image_viewer.ImageViewer
+   [ANONYMOUS_PROJECT].pipeline.asa_gui.views.widgets.image_viewer.ImageViewer
 
 
 Module Contents

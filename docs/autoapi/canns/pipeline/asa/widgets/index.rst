@@ -1,7 +1,7 @@
-canns.pipeline.asa.widgets
+[ANONYMOUS_PROJECT].pipeline.asa.widgets
 ==========================
 
-.. py:module:: canns.pipeline.asa.widgets
+.. py:module:: [ANONYMOUS_PROJECT].pipeline.asa.widgets
 
 .. autoapi-nested-parse::
 
@@ -16,9 +16,9 @@ Classes
 
 .. autoapisummary::
 
-   canns.pipeline.asa.widgets.ImagePreview
-   canns.pipeline.asa.widgets.LogViewer
-   canns.pipeline.asa.widgets.ParamGroup
+   [ANONYMOUS_PROJECT].pipeline.asa.widgets.ImagePreview
+   [ANONYMOUS_PROJECT].pipeline.asa.widgets.LogViewer
+   [ANONYMOUS_PROJECT].pipeline.asa.widgets.ParamGroup
 
 
 Module Contents

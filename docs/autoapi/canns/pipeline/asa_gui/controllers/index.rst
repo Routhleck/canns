@@ -1,7 +1,7 @@
-canns.pipeline.asa_gui.controllers
+[ANONYMOUS_PROJECT].pipeline.asa_gui.controllers
 ==================================
 
-.. py:module:: canns.pipeline.asa_gui.controllers
+.. py:module:: [ANONYMOUS_PROJECT].pipeline.asa_gui.controllers
 
 .. autoapi-nested-parse::
 
@@ -15,8 +15,8 @@ Submodules
 .. toctree::
    :maxdepth: 1
 
-   /autoapi/canns/pipeline/asa_gui/controllers/analysis_controller/index
-   /autoapi/canns/pipeline/asa_gui/controllers/preprocess_controller/index
+   /autoapi/[ANONYMOUS_PROJECT]/pipeline/asa_gui/controllers/analysis_controller/index
+   /autoapi/[ANONYMOUS_PROJECT]/pipeline/asa_gui/controllers/preprocess_controller/index
 
 
 Classes
@@ -24,8 +24,8 @@ Classes
 
 .. autoapisummary::
 
-   canns.pipeline.asa_gui.controllers.AnalysisController
-   canns.pipeline.asa_gui.controllers.PreprocessController
+   [ANONYMOUS_PROJECT].pipeline.asa_gui.controllers.AnalysisController
+   [ANONYMOUS_PROJECT].pipeline.asa_gui.controllers.PreprocessController
 
 
 Package Contents

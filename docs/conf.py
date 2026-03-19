@@ -5,11 +5,11 @@ import sys
 sys.path.insert(0, os.path.abspath('../src'))
 
 # -- Project information -----------------------------------------------------
-project = 'CANNs'
+project = '[ANONYMOUS_PROJECT]'
 # Note: Using 'copyright' variable name is required by Sphinx
 # ruff: noqa: A001
-copyright = '2025, Sichao He'  # noqa: A001
-author = 'Sichao He'
+copyright = '2025, [ANONYMOUS_AUTHOR]'  # noqa: A001
+author = '[ANONYMOUS_AUTHOR]'
 
 # Get version from the installed package or git tags
 # For GitHub Pages deployment, use the latest git tag (formal release version)
@@ -34,8 +34,8 @@ else:
     # For local development, use the package version (includes dev info)
     try:
         # Try to import from the package
-        import canns
-        version = canns.__version__
+        import [ANONYMOUS_PROJECT]
+        version = [ANONYMOUS_PROJECT].__version__
         release = version
     except (ImportError, AttributeError):
         # Fallback: try to get from git tags
@@ -91,8 +91,8 @@ copybutton_remove_prompts = True
 copybutton_line_continuation_character = "\\"
 
 # -- AutoAPI configuration ---------------------------------------------------
-# Point AutoAPI at the package itself so the top-level is "canns", not "src.canns".
-autoapi_dirs = ['../src/canns']
+# Point AutoAPI at the package itself so the top-level is "[ANONYMOUS_PROJECT]", not "src.[ANONYMOUS_PROJECT]".
+autoapi_dirs = ['../src/[ANONYMOUS_PROJECT]']
 autoapi_type = 'python'
 autoapi_template_dir = '_templates/autoapi'
 autoapi_root = 'autoapi'
@@ -149,7 +149,7 @@ html_theme_options = {
     "sidebar_hide_name": False,
     "navigation_with_keys": True,
     "top_of_page_button": "edit",
-    "source_repository": "https://github.com/routhleck/canns/",
+    "source_repository": "[ANONYMOUS_REPO]/",
     "source_branch": "main",
     "source_directory": "docs/",
     "light_logo": "logo.svg",
@@ -223,8 +223,8 @@ latex_elements = {
 
 # LaTeX document configuration
 latex_documents = [
-    ('index', 'canns.tex', 'CANNs Documentation',
-     'Sichao He', 'manual'),
+    ('index', '[ANONYMOUS_PROJECT].tex', '[ANONYMOUS_PROJECT] Documentation',
+     '[ANONYMOUS_AUTHOR]', 'manual'),
 ]
 
 # -- Options for ePub output -------------------------------------------------

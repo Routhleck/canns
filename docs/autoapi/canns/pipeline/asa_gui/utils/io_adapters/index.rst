@@ -1,7 +1,7 @@
-canns.pipeline.asa_gui.utils.io_adapters
+[ANONYMOUS_PROJECT].pipeline.asa_gui.utils.io_adapters
 ========================================
 
-.. py:module:: canns.pipeline.asa_gui.utils.io_adapters
+.. py:module:: [ANONYMOUS_PROJECT].pipeline.asa_gui.utils.io_adapters
 
 .. autoapi-nested-parse::
 
@@ -14,8 +14,8 @@ Functions
 
 .. autoapisummary::
 
-   canns.pipeline.asa_gui.utils.io_adapters.load_asa_npz
-   canns.pipeline.asa_gui.utils.io_adapters.pack_neuron_traj_to_asa
+   [ANONYMOUS_PROJECT].pipeline.asa_gui.utils.io_adapters.load_asa_npz
+   [ANONYMOUS_PROJECT].pipeline.asa_gui.utils.io_adapters.pack_neuron_traj_to_asa
 
 
 Module Contents

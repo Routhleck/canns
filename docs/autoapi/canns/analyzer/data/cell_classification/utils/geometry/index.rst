@@ -1,7 +1,7 @@
-canns.analyzer.data.cell_classification.utils.geometry
+[ANONYMOUS_PROJECT].analyzer.data.cell_classification.utils.geometry
 ======================================================
 
-.. py:module:: canns.analyzer.data.cell_classification.utils.geometry
+.. py:module:: [ANONYMOUS_PROJECT].analyzer.data.cell_classification.utils.geometry
 
 .. autoapi-nested-parse::
 
@@ -17,7 +17,7 @@ Attributes
 
 .. autoapisummary::
 
-   canns.analyzer.data.cell_classification.utils.geometry.t
+   [ANONYMOUS_PROJECT].analyzer.data.cell_classification.utils.geometry.t
 
 
 Functions
@@ -25,12 +25,12 @@ Functions
 
 .. autoapisummary::
 
-   canns.analyzer.data.cell_classification.utils.geometry.cart2pol
-   canns.analyzer.data.cell_classification.utils.geometry.fit_ellipse
-   canns.analyzer.data.cell_classification.utils.geometry.pol2cart
-   canns.analyzer.data.cell_classification.utils.geometry.polyarea
-   canns.analyzer.data.cell_classification.utils.geometry.squared_distance
-   canns.analyzer.data.cell_classification.utils.geometry.wrap_to_pi
+   [ANONYMOUS_PROJECT].analyzer.data.cell_classification.utils.geometry.cart2pol
+   [ANONYMOUS_PROJECT].analyzer.data.cell_classification.utils.geometry.fit_ellipse
+   [ANONYMOUS_PROJECT].analyzer.data.cell_classification.utils.geometry.pol2cart
+   [ANONYMOUS_PROJECT].analyzer.data.cell_classification.utils.geometry.polyarea
+   [ANONYMOUS_PROJECT].analyzer.data.cell_classification.utils.geometry.squared_distance
+   [ANONYMOUS_PROJECT].analyzer.data.cell_classification.utils.geometry.wrap_to_pi
 
 
 Module Contents

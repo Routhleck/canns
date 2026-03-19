@@ -1,7 +1,7 @@
-canns.analyzer.data.asa.decode
+[ANONYMOUS_PROJECT].analyzer.data.asa.decode
 ==============================
 
-.. py:module:: canns.analyzer.data.asa.decode
+.. py:module:: [ANONYMOUS_PROJECT].analyzer.data.asa.decode
 
 
 Functions
@@ -9,9 +9,9 @@ Functions
 
 .. autoapisummary::
 
-   canns.analyzer.data.asa.decode.decode_circular_coordinates
-   canns.analyzer.data.asa.decode.decode_circular_coordinates1
-   canns.analyzer.data.asa.decode.decode_circular_coordinates_multi
+   [ANONYMOUS_PROJECT].analyzer.data.asa.decode.decode_circular_coordinates
+   [ANONYMOUS_PROJECT].analyzer.data.asa.decode.decode_circular_coordinates1
+   [ANONYMOUS_PROJECT].analyzer.data.asa.decode.decode_circular_coordinates_multi
 
 
 Module Contents
@@ -21,7 +21,7 @@ Module Contents
 
    Decode circular coordinates (bump positions) from cohomology.
 
-   :param persistence_result: Output from :func:`canns.analyzer.data.tda_vis`, containing keys:
+   :param persistence_result: Output from :func:`[ANONYMOUS_PROJECT].analyzer.data.tda_vis`, containing keys:
                               ``persistence``, ``indstemp``, ``movetimes``, ``n_points``.
    :type persistence_result: dict
    :param spike_data: Spike data dictionary containing ``'spike'``, ``'t'`` and optionally ``'x'``/``'y'``.
@@ -43,7 +43,7 @@ Module Contents
 
    .. rubric:: Examples
 
-   >>> from canns.analyzer.data import tda_vis, decode_circular_coordinates
+   >>> from [ANONYMOUS_PROJECT].analyzer.data import tda_vis, decode_circular_coordinates
    >>> persistence = tda_vis(embed_spikes, config=tda_cfg)  # doctest: +SKIP
    >>> decoding = decode_circular_coordinates(persistence, spike_data)  # doctest: +SKIP
    >>> decoding["coords"].shape  # doctest: +SKIP
@@ -58,7 +58,7 @@ Module Contents
 
    Decode multiple circular coordinates from TDA persistence.
 
-   :param persistence_result: Output from :func:`canns.analyzer.data.tda_vis`, containing keys:
+   :param persistence_result: Output from :func:`[ANONYMOUS_PROJECT].analyzer.data.tda_vis`, containing keys:
                               ``persistence``, ``indstemp``, ``movetimes``, ``n_points``.
    :type persistence_result: dict
    :param spike_data: Spike data dictionary containing ``'spike'``, ``'t'`` and optionally ``'x'``/``'y'``.

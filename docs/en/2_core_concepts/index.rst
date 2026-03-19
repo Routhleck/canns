@@ -4,7 +4,7 @@ Core Concepts
 
 Deep dive into library design, architecture, and theoretical foundations.
 
-This section explains the CANNs library's design principles, module organization, and conceptual foundations. These documents focus on the "why" and "when" rather than the "how"—helping you understand the library's architecture and make informed decisions about using its components.
+This section explains the [ANONYMOUS_PROJECT] library's design principles, module organization, and conceptual foundations. These documents focus on the "why" and "when" rather than the "how"—helping you understand the library's architecture and make informed decisions about using its components.
 
 .. toctree::
    :maxdepth: 1
@@ -23,7 +23,7 @@ Overview
    Understand the library's architecture, core design principles, and four application scenarios. Learn about separation of concerns, extensibility, BrainPy :cite:p:`wang2023brainpy` integration, and performance strategies.
 
 :doc:`02_model_collections`
-   Explore three model categories: Basic CANN models, Brain-Inspired models with learning mechanisms, and Hybrid models combining CANNs with ANNs. Understand the BrainPy foundation and how to implement custom models.
+   Explore three model categories: Basic CANN models, Brain-Inspired models with learning mechanisms, and Hybrid models combining [ANONYMOUS_PROJECT] with ANNs. Understand the BrainPy foundation and how to implement custom models.
 
 :doc:`03_task_generators`
    Task generation philosophy and available paradigms. Learn about tracking tasks (population coding, template matching, smooth tracking) and navigation tasks (closed-loop, open-loop). Understand model-task coupling and design considerations.

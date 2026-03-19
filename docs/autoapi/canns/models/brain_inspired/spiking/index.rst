@@ -1,7 +1,7 @@
-canns.models.brain_inspired.spiking
+[ANONYMOUS_PROJECT].models.brain_inspired.spiking
 ===================================
 
-.. py:module:: canns.models.brain_inspired.spiking
+.. py:module:: [ANONYMOUS_PROJECT].models.brain_inspired.spiking
 
 .. autoapi-nested-parse::
 
@@ -14,7 +14,7 @@ Classes
 
 .. autoapisummary::
 
-   canns.models.brain_inspired.spiking.SpikingLayer
+   [ANONYMOUS_PROJECT].models.brain_inspired.spiking.SpikingLayer
 
 
 Module Contents
@@ -22,7 +22,7 @@ Module Contents
 
 .. py:class:: SpikingLayer(input_size, output_size, threshold = 1.0, v_reset = 0.0, leak = 0.9, trace_decay = 0.95, dt = 1.0, **kwargs)
 
-   Bases: :py:obj:`canns.models.brain_inspired._base.BrainInspiredModel`
+   Bases: :py:obj:`[ANONYMOUS_PROJECT].models.brain_inspired._base.BrainInspiredModel`
 
 
    Simple Leaky Integrate-and-Fire (LIF) spiking neuron layer.
@@ -45,7 +45,7 @@ Module Contents
    .. rubric:: Examples
 
    >>> import jax.numpy as jnp
-   >>> from canns.models.brain_inspired import SpikingLayer
+   >>> from [ANONYMOUS_PROJECT].models.brain_inspired import SpikingLayer
    >>>
    >>> layer = SpikingLayer(input_size=3, output_size=2, threshold=0.5)
    >>> # Continuous input currents (binary spikes {0,1} are a special case)

@@ -1,7 +1,7 @@
-canns.pipeline.asa_gui.analysis_modes
+[ANONYMOUS_PROJECT].pipeline.asa_gui.analysis_modes
 =====================================
 
-.. py:module:: canns.pipeline.asa_gui.analysis_modes
+.. py:module:: [ANONYMOUS_PROJECT].pipeline.asa_gui.analysis_modes
 
 .. autoapi-nested-parse::
 
@@ -15,16 +15,16 @@ Submodules
 .. toctree::
    :maxdepth: 1
 
-   /autoapi/canns/pipeline/asa_gui/analysis_modes/base/index
-   /autoapi/canns/pipeline/asa_gui/analysis_modes/batch_mode/index
-   /autoapi/canns/pipeline/asa_gui/analysis_modes/cohomap_mode/index
-   /autoapi/canns/pipeline/asa_gui/analysis_modes/cohospace_mode/index
-   /autoapi/canns/pipeline/asa_gui/analysis_modes/decode_mode/index
-   /autoapi/canns/pipeline/asa_gui/analysis_modes/fr_mode/index
-   /autoapi/canns/pipeline/asa_gui/analysis_modes/frm_mode/index
-   /autoapi/canns/pipeline/asa_gui/analysis_modes/gridscore_mode/index
-   /autoapi/canns/pipeline/asa_gui/analysis_modes/pathcompare_mode/index
-   /autoapi/canns/pipeline/asa_gui/analysis_modes/tda_mode/index
+   /autoapi/[ANONYMOUS_PROJECT]/pipeline/asa_gui/analysis_modes/base/index
+   /autoapi/[ANONYMOUS_PROJECT]/pipeline/asa_gui/analysis_modes/batch_mode/index
+   /autoapi/[ANONYMOUS_PROJECT]/pipeline/asa_gui/analysis_modes/cohomap_mode/index
+   /autoapi/[ANONYMOUS_PROJECT]/pipeline/asa_gui/analysis_modes/cohospace_mode/index
+   /autoapi/[ANONYMOUS_PROJECT]/pipeline/asa_gui/analysis_modes/decode_mode/index
+   /autoapi/[ANONYMOUS_PROJECT]/pipeline/asa_gui/analysis_modes/fr_mode/index
+   /autoapi/[ANONYMOUS_PROJECT]/pipeline/asa_gui/analysis_modes/frm_mode/index
+   /autoapi/[ANONYMOUS_PROJECT]/pipeline/asa_gui/analysis_modes/gridscore_mode/index
+   /autoapi/[ANONYMOUS_PROJECT]/pipeline/asa_gui/analysis_modes/pathcompare_mode/index
+   /autoapi/[ANONYMOUS_PROJECT]/pipeline/asa_gui/analysis_modes/tda_mode/index
 
 
 Classes
@@ -32,17 +32,17 @@ Classes
 
 .. autoapisummary::
 
-   canns.pipeline.asa_gui.analysis_modes.AbstractAnalysisMode
-   canns.pipeline.asa_gui.analysis_modes.BatchMode
-   canns.pipeline.asa_gui.analysis_modes.CohoMapMode
-   canns.pipeline.asa_gui.analysis_modes.CohoSpaceMode
-   canns.pipeline.asa_gui.analysis_modes.DecodeMode
-   canns.pipeline.asa_gui.analysis_modes.FRMMode
-   canns.pipeline.asa_gui.analysis_modes.FRMode
-   canns.pipeline.asa_gui.analysis_modes.GridScoreInspectMode
-   canns.pipeline.asa_gui.analysis_modes.GridScoreMode
-   canns.pipeline.asa_gui.analysis_modes.PathCompareMode
-   canns.pipeline.asa_gui.analysis_modes.TDAMode
+   [ANONYMOUS_PROJECT].pipeline.asa_gui.analysis_modes.AbstractAnalysisMode
+   [ANONYMOUS_PROJECT].pipeline.asa_gui.analysis_modes.BatchMode
+   [ANONYMOUS_PROJECT].pipeline.asa_gui.analysis_modes.CohoMapMode
+   [ANONYMOUS_PROJECT].pipeline.asa_gui.analysis_modes.CohoSpaceMode
+   [ANONYMOUS_PROJECT].pipeline.asa_gui.analysis_modes.DecodeMode
+   [ANONYMOUS_PROJECT].pipeline.asa_gui.analysis_modes.FRMMode
+   [ANONYMOUS_PROJECT].pipeline.asa_gui.analysis_modes.FRMode
+   [ANONYMOUS_PROJECT].pipeline.asa_gui.analysis_modes.GridScoreInspectMode
+   [ANONYMOUS_PROJECT].pipeline.asa_gui.analysis_modes.GridScoreMode
+   [ANONYMOUS_PROJECT].pipeline.asa_gui.analysis_modes.PathCompareMode
+   [ANONYMOUS_PROJECT].pipeline.asa_gui.analysis_modes.TDAMode
 
 
 Functions
@@ -50,7 +50,7 @@ Functions
 
 .. autoapisummary::
 
-   canns.pipeline.asa_gui.analysis_modes.get_analysis_modes
+   [ANONYMOUS_PROJECT].pipeline.asa_gui.analysis_modes.get_analysis_modes
 
 
 Package Contents
@@ -109,7 +109,7 @@ Package Contents
 
 .. py:class:: BatchMode
 
-   Bases: :py:obj:`canns.pipeline.asa_gui.analysis_modes.base.AbstractAnalysisMode`
+   Bases: :py:obj:`[ANONYMOUS_PROJECT].pipeline.asa_gui.analysis_modes.base.AbstractAnalysisMode`
 
 
    Helper class that provides a standard way to create an ABC using
@@ -140,7 +140,7 @@ Package Contents
 
 .. py:class:: CohoMapMode
 
-   Bases: :py:obj:`canns.pipeline.asa_gui.analysis_modes.base.AbstractAnalysisMode`
+   Bases: :py:obj:`[ANONYMOUS_PROJECT].pipeline.asa_gui.analysis_modes.base.AbstractAnalysisMode`
 
 
    Helper class that provides a standard way to create an ABC using
@@ -183,7 +183,7 @@ Package Contents
 
 .. py:class:: CohoSpaceMode
 
-   Bases: :py:obj:`canns.pipeline.asa_gui.analysis_modes.base.AbstractAnalysisMode`
+   Bases: :py:obj:`[ANONYMOUS_PROJECT].pipeline.asa_gui.analysis_modes.base.AbstractAnalysisMode`
 
 
    Helper class that provides a standard way to create an ABC using
@@ -226,7 +226,7 @@ Package Contents
 
 .. py:class:: DecodeMode
 
-   Bases: :py:obj:`canns.pipeline.asa_gui.analysis_modes.base.AbstractAnalysisMode`
+   Bases: :py:obj:`[ANONYMOUS_PROJECT].pipeline.asa_gui.analysis_modes.base.AbstractAnalysisMode`
 
 
    Helper class that provides a standard way to create an ABC using
@@ -269,7 +269,7 @@ Package Contents
 
 .. py:class:: FRMMode
 
-   Bases: :py:obj:`canns.pipeline.asa_gui.analysis_modes.base.AbstractAnalysisMode`
+   Bases: :py:obj:`[ANONYMOUS_PROJECT].pipeline.asa_gui.analysis_modes.base.AbstractAnalysisMode`
 
 
    Helper class that provides a standard way to create an ABC using
@@ -312,7 +312,7 @@ Package Contents
 
 .. py:class:: FRMode
 
-   Bases: :py:obj:`canns.pipeline.asa_gui.analysis_modes.base.AbstractAnalysisMode`
+   Bases: :py:obj:`[ANONYMOUS_PROJECT].pipeline.asa_gui.analysis_modes.base.AbstractAnalysisMode`
 
 
    Helper class that provides a standard way to create an ABC using
@@ -374,7 +374,7 @@ Package Contents
 
 .. py:class:: GridScoreMode
 
-   Bases: :py:obj:`canns.pipeline.asa_gui.analysis_modes.base.AbstractAnalysisMode`
+   Bases: :py:obj:`[ANONYMOUS_PROJECT].pipeline.asa_gui.analysis_modes.base.AbstractAnalysisMode`
 
 
    Helper class that provides a standard way to create an ABC using
@@ -420,7 +420,7 @@ Package Contents
 
 .. py:class:: PathCompareMode
 
-   Bases: :py:obj:`canns.pipeline.asa_gui.analysis_modes.base.AbstractAnalysisMode`
+   Bases: :py:obj:`[ANONYMOUS_PROJECT].pipeline.asa_gui.analysis_modes.base.AbstractAnalysisMode`
 
 
    Helper class that provides a standard way to create an ABC using
@@ -457,7 +457,7 @@ Package Contents
 
 .. py:class:: TDAMode
 
-   Bases: :py:obj:`canns.pipeline.asa_gui.analysis_modes.base.AbstractAnalysisMode`
+   Bases: :py:obj:`[ANONYMOUS_PROJECT].pipeline.asa_gui.analysis_modes.base.AbstractAnalysisMode`
 
 
    Helper class that provides a standard way to create an ABC using

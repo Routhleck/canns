@@ -118,7 +118,7 @@ def translate_with_openrouter(prompt):
 
     headers = {
         "Authorization": f"Bearer {api_key}",
-        "HTTP-Referer": "https://github.com/Routhleck/canns",
+        "HTTP-Referer": "[ANONYMOUS_REPO]",
         "X-Title": "CANNS Documentation Translator",
     }
 

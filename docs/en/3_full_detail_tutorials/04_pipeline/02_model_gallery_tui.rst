@@ -1,7 +1,7 @@
 Tutorial 3: Model Gallery TUI Tutorial
 =================
 
-This tutorial introduces the usage of the Model Gallery TUI. The Gallery runs a complete analysis pipeline for three model types (CANN1D / CANN2D / GridCell) in an interactive terminal interface, **covering** all subfigure visualizations corresponding to ``canns-experiments/figure2``, and outputs results as PNG files.
+This tutorial introduces the usage of the Model Gallery TUI. The Gallery runs a complete analysis pipeline for three model types (CANN1D / CANN2D / GridCell) in an interactive terminal interface, **covering** all subfigure visualizations corresponding to ``[ANONYMOUS_PROJECT]-experiments/figure2``, and outputs results as PNG files.
 
 Composite Full Result Figure
 --------------------
@@ -32,26 +32,26 @@ Target Audience
 Prerequisites
 --------
 
-- CANNs installed (recommended via ``pip install -e .`` or ``pip install canns``)
+- [ANONYMOUS_PROJECT] installed (recommended via ``pip install -e .`` or ``pip install [ANONYMOUS_PROJECT]``)
 - Terminal width should be at least 120 columns, with a minimum of 100 columns
 
 Launching the Model Gallery TUI
 ----------------------
 
-Recommended method: Use the unified entry point ``canns-tui``, then select **Model Gallery** after startup.
+Recommended method: Use the unified entry point ``[ANONYMOUS_PROJECT]-tui``, then select **Model Gallery** after startup.
 
 .. code-block:: bash
 
-   canns-tui
+   [ANONYMOUS_PROJECT]-tui
    # Select Model Gallery on the selection page after launch
 
 You can also launch the Gallery directly:
 
 .. code-block:: bash
 
-   python -m canns.pipeline.gallery
+   python -m [ANONYMOUS_PROJECT].pipeline.gallery
    # or
-   canns-gallery
+   [ANONYMOUS_PROJECT]-gallery
 
 If a size warning appears after launch, please enlarge your terminal window or reduce the font size.
 
@@ -133,7 +133,7 @@ Keyboard Shortcuts
 Model and Analysis Overview
 --------------
 
-The Gallery's analysis items are aligned with ``canns-experiments/figure2`` (see :ref:`Composite Full Result Figure <fig-gallery-full>`):
+The Gallery's analysis items are aligned with ``[ANONYMOUS_PROJECT]-experiments/figure2`` (see :ref:`Composite Full Result Figure <fig-gallery-full>`):
 
 **CANN1D** (A.1–A.5 / corresponding to the first row of :ref:`Composite Full Result Figure <fig-gallery-full>`):
 
@@ -185,7 +185,7 @@ Parameter Description (Key Parameters)
 Workflow
 --------
 
-1. Launch ``canns-tui`` and enter **Model Gallery** from the selection page.\n
+1. Launch ``[ANONYMOUS_PROJECT]-tui`` and enter **Model Gallery** from the selection page.\n
 2. Select **Model** and **Analysis** on the left.\n
 3. Adjust model and analysis parameters in the center parameter area (scrollable).\n
 4. Click **Run** and wait for execution to complete.\n

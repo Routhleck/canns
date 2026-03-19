@@ -1,7 +1,7 @@
-canns.pipeline.asa_gui.utils.formatters
+[ANONYMOUS_PROJECT].pipeline.asa_gui.utils.formatters
 =======================================
 
-.. py:module:: canns.pipeline.asa_gui.utils.formatters
+.. py:module:: [ANONYMOUS_PROJECT].pipeline.asa_gui.utils.formatters
 
 .. autoapi-nested-parse::
 
@@ -14,7 +14,7 @@ Functions
 
 .. autoapisummary::
 
-   canns.pipeline.asa_gui.utils.formatters.format_duration
+   [ANONYMOUS_PROJECT].pipeline.asa_gui.utils.formatters.format_duration
 
 
 Module Contents

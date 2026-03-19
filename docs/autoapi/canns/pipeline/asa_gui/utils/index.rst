@@ -1,7 +1,7 @@
-canns.pipeline.asa_gui.utils
+[ANONYMOUS_PROJECT].pipeline.asa_gui.utils
 ============================
 
-.. py:module:: canns.pipeline.asa_gui.utils
+.. py:module:: [ANONYMOUS_PROJECT].pipeline.asa_gui.utils
 
 .. autoapi-nested-parse::
 
@@ -15,8 +15,8 @@ Submodules
 .. toctree::
    :maxdepth: 1
 
-   /autoapi/canns/pipeline/asa_gui/utils/formatters/index
-   /autoapi/canns/pipeline/asa_gui/utils/io_adapters/index
-   /autoapi/canns/pipeline/asa_gui/utils/validators/index
+   /autoapi/[ANONYMOUS_PROJECT]/pipeline/asa_gui/utils/formatters/index
+   /autoapi/[ANONYMOUS_PROJECT]/pipeline/asa_gui/utils/io_adapters/index
+   /autoapi/[ANONYMOUS_PROJECT]/pipeline/asa_gui/utils/validators/index
 
 

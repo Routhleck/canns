@@ -1,7 +1,7 @@
-canns.pipeline.asa.state
+[ANONYMOUS_PROJECT].pipeline.asa.state
 ========================
 
-.. py:module:: canns.pipeline.asa.state
+.. py:module:: [ANONYMOUS_PROJECT].pipeline.asa.state
 
 .. autoapi-nested-parse::
 
@@ -17,7 +17,7 @@ Classes
 
 .. autoapisummary::
 
-   canns.pipeline.asa.state.WorkflowState
+   [ANONYMOUS_PROJECT].pipeline.asa.state.WorkflowState
 
 
 Functions
@@ -25,12 +25,12 @@ Functions
 
 .. autoapisummary::
 
-   canns.pipeline.asa.state.check_cached_artifacts
-   canns.pipeline.asa.state.get_preset_params
-   canns.pipeline.asa.state.load_cached_result
-   canns.pipeline.asa.state.relative_path
-   canns.pipeline.asa.state.resolve_path
-   canns.pipeline.asa.state.validate_files
+   [ANONYMOUS_PROJECT].pipeline.asa.state.check_cached_artifacts
+   [ANONYMOUS_PROJECT].pipeline.asa.state.get_preset_params
+   [ANONYMOUS_PROJECT].pipeline.asa.state.load_cached_result
+   [ANONYMOUS_PROJECT].pipeline.asa.state.relative_path
+   [ANONYMOUS_PROJECT].pipeline.asa.state.resolve_path
+   [ANONYMOUS_PROJECT].pipeline.asa.state.validate_files
 
 
 Module Contents

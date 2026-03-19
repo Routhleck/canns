@@ -1,7 +1,7 @@
-canns.pipeline.asa_gui.main_window
+[ANONYMOUS_PROJECT].pipeline.asa_gui.main_window
 ==================================
 
-.. py:module:: canns.pipeline.asa_gui.main_window
+.. py:module:: [ANONYMOUS_PROJECT].pipeline.asa_gui.main_window
 
 .. autoapi-nested-parse::
 
@@ -14,7 +14,7 @@ Attributes
 
 .. autoapisummary::
 
-   canns.pipeline.asa_gui.main_window.ASAGuiApp
+   [ANONYMOUS_PROJECT].pipeline.asa_gui.main_window.ASAGuiApp
 
 
 Classes
@@ -22,8 +22,8 @@ Classes
 
 .. autoapisummary::
 
-   canns.pipeline.asa_gui.main_window.LogoLabel
-   canns.pipeline.asa_gui.main_window.MainWindow
+   [ANONYMOUS_PROJECT].pipeline.asa_gui.main_window.LogoLabel
+   [ANONYMOUS_PROJECT].pipeline.asa_gui.main_window.MainWindow
 
 
 Module Contents

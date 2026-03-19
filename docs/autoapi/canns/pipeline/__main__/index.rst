@@ -1,11 +1,11 @@
-canns.pipeline.__main__
+[ANONYMOUS_PROJECT].pipeline.__main__
 =======================
 
-.. py:module:: canns.pipeline.__main__
+.. py:module:: [ANONYMOUS_PROJECT].pipeline.__main__
 
 .. autoapi-nested-parse::
 
-   Run the canns TUI launcher as a module.
+   Run the [ANONYMOUS_PROJECT] TUI launcher as a module.
 
 
 

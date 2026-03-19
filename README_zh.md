@@ -1,43 +1,42 @@
-# CANNs：连续吸引子神经网络工具包
+# [ANONYMOUS_PROJECT]：连续吸引子神经网络工具包
 
 <div align="center">
-  <img src="images/logo.svg" alt="CANNs Logo" width="350">
+  <img src="images/logo.svg" alt="[ANONYMOUS_PROJECT] Logo" width="350">
 </div>
 
-[<img src="https://badges.ws/badge/status-stable-green" />](https://github.com/routhleck/canns)
-![PyPI - Python Version](https://img.shields.io/pypi/pyversions/canns)
-[<img src="https://badges.ws/maintenance/yes/2026" />](https://github.com/routhleck/canns)
-<picture><img src="https://badges.ws/github/release/routhleck/canns" /></picture>
-<picture><img src="https://badges.ws/github/license/routhleck/canns" /></picture>
+[<img src="https://badges.ws/badge/status-stable-green" />]([ANONYMOUS_REPO])
+![PyPI - Python Version](https://img.shields.io/pypi/pyversions/[ANONYMOUS_PROJECT])
+[<img src="https://badges.ws/maintenance/yes/2026" />]([ANONYMOUS_REPO])
+<picture><img src="https://badges.ws/github/release/[ANONYMOUS_ORG]/[ANONYMOUS_PROJECT]" /></picture>
+<picture><img src="https://badges.ws/github/license/[ANONYMOUS_ORG]/[ANONYMOUS_PROJECT]" /></picture>
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.18453893.svg)](https://doi.org/10.5281/zenodo.18453893)
 
 
-<picture><img src="https://badges.ws/github/stars/routhleck/canns?logo=github" /></picture>
-[![PyPI Downloads](https://static.pepy.tech/personalized-badge/canns?period=total&units=INTERNATIONAL_SYSTEM&left_color=BLACK&right_color=GREEN&left_text=downloads)](https://pepy.tech/projects/canns)
-[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/Routhleck/canns)
-[<img src="https://badges.ws/badge/Buy_Me_a_Coffee-ff813f?icon=buymeacoffee" />](https://buymeacoffee.com/forrestcai6)
+<picture><img src="https://badges.ws/github/stars/[ANONYMOUS_ORG]/[ANONYMOUS_PROJECT]?logo=github" /></picture>
+[![PyPI Downloads](https://static.pepy.tech/personalized-badge/[ANONYMOUS_PROJECT]?period=total&units=INTERNATIONAL_SYSTEM&left_color=BLACK&right_color=GREEN&left_text=downloads)](https://pepy.tech/projects/[ANONYMOUS_PROJECT])
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)]([ANONYMOUS_REPO])
 
 > English version: [README.md](README.md)
 
 ## 概览
 
-CANNs（Continuous Attractor Neural Networks toolkit）是基于 [BrainPy](https://github.com/brainpy/BrainPy) 和 [JAX](https://github.com/jax-ml/jax) 构建的研究工具库，并可选使用 Rust 加速库 [`canns-lib`](https://github.com/Routhleck/canns-lib) 优化部分性能敏感例程（如 TDA/Ripser 与任务生成）。它提供模型集合、任务生成器、分析器以及 ASA 流水线（GUI/TUI），帮助研究者在统一工作流中完成仿真与分析。API 按模型、任务、分析器和训练器分层设计，便于模块化扩展。
+[ANONYMOUS_PROJECT]（Continuous Attractor Neural Networks toolkit）是基于 [BrainPy](https://github.com/brainpy/BrainPy) 和 [JAX](https://github.com/jax-ml/jax) 构建的研究工具库，并可选使用 Rust 加速库 `[ANONYMOUS_LIB]` 优化部分性能敏感例程（如 TDA/Ripser 与任务生成）。它提供模型集合、任务生成器、分析器以及 ASA 流水线（GUI/TUI），帮助研究者在统一工作流中完成仿真与分析。API 按模型、任务、分析器和训练器分层设计，便于模块化扩展。
 
 ## 架构
 
 <p align="center">
-  <img src="docs/_static/architecture.png" alt="CANNs Architecture" width="900">
+  <img src="docs/_static/architecture.png" alt="[ANONYMOUS_PROJECT] Architecture" width="900">
   <br>
-  <span style="color: grey; font-size: 14px;">CANNs 库的层级结构，展示了五个层级：应用层（流水线编排）、功能层（任务、训练器、分析器、工具模块）、核心模型层（CANN 实现）、基础层（BrainPy/JAX 和 Rust FFI 后端）以及硬件层（CPU/GPU/TPU 支持）</span>
+  <span style="color: grey; font-size: 14px;">[ANONYMOUS_PROJECT] 库的层级结构，展示了五个层级：应用层（流水线编排）、功能层（任务、训练器、分析器、工具模块）、核心模型层（CANN 实现）、基础层（BrainPy/JAX 和 Rust FFI 后端）以及硬件层（CPU/GPU/TPU 支持）</span>
 </p>
 
-CANNs 采用模块化架构，遵循两条核心原则：**关注点分离** 与 **通过基类实现可扩展性**。
+[ANONYMOUS_PROJECT] 采用模块化架构，遵循两条核心原则：**关注点分离** 与 **通过基类实现可扩展性**。
 设计将功能职责拆分为五个独立模块：
-1. **模型**（`canns.models`）定义神经网络动力学；
-2. **任务**（`canns.task`）生成实验范式与输入数据；
-3. **分析器**（`canns.analyzer`）提供可视化与分析工具；
-4. **训练器**（`canns.trainer`）实现类脑模型的学习规则；
-5. **流水线**（`canns.pipeline`）端到端完整工作流。
+1. **模型**（`[ANONYMOUS_PROJECT].models`）定义神经网络动力学；
+2. **任务**（`[ANONYMOUS_PROJECT].task`）生成实验范式与输入数据；
+3. **分析器**（`[ANONYMOUS_PROJECT].analyzer`）提供可视化与分析工具；
+4. **训练器**（`[ANONYMOUS_PROJECT].trainer`）实现类脑模型的学习规则；
+5. **流水线**（`[ANONYMOUS_PROJECT].pipeline`）端到端完整工作流。
 
 各模块职责单一——模型不生成输入、任务不分析结果、分析器不修改参数。
 这种设计有利于维护、测试与扩展。核心组件继承抽象基类
@@ -51,7 +50,7 @@ CANNs 采用模块化架构，遵循两条核心原则：**关注点分离** 与
 - **分析器能力**：能量景观、调谐曲线、栅格/放电率图、TDA 与解码工具、细胞分类
 - **ASA 流水线 & GUI/TUI**：端到端流程（预处理、TDA、解码与结果可视化，如 CohoMap/CohoSpace/PathCompare/FR/FRM/GridScore）
 - **训练与扩展**：HebbianTrainer 与统一基类便于扩展
-- **可选加速**：`canns-lib` 覆盖部分性能敏感例程
+- **可选加速**：`[ANONYMOUS_LIB]` 覆盖部分性能敏感例程
 
 ## Analyzer 可视化
 
@@ -121,9 +120,9 @@ CANNs 采用模块化架构，遵循两条核心原则：**关注点分离** 与
 
 ```python
 import brainpy.math as bm
-from canns.analyzer.visualization import PlotConfigs, energy_landscape_1d_animation
-from canns.models.basic import CANN1D
-from canns.task.tracking import SmoothTracking1D
+from [ANONYMOUS_PROJECT].analyzer.visualization import PlotConfigs, energy_landscape_1d_animation
+from [ANONYMOUS_PROJECT].models.basic import CANN1D
+from [ANONYMOUS_PROJECT].task.tracking import SmoothTracking1D
 
 # 模拟时间步长
 bm.set_dt(0.1)
@@ -173,56 +172,30 @@ energy_landscape_1d_animation(
 
 ```bash
 # 仅 CPU
-pip install canns
+pip install [ANONYMOUS_PROJECT]
 
 # 可选加速（Linux）
-pip install canns[cuda12]
-pip install canns[cuda13]
-pip install canns[tpu]
+pip install [ANONYMOUS_PROJECT][cuda12]
+pip install [ANONYMOUS_PROJECT][cuda13]
+pip install [ANONYMOUS_PROJECT][tpu]
 
 # GUI（ASA Pipeline）
-pip install canns[gui]
+pip install [ANONYMOUS_PROJECT][gui]
 ```
 
 可选（uv）：
 
 ```bash
-uv pip install canns
+uv pip install [ANONYMOUS_PROJECT]
 ```
 
 ## 文档&示例
 
-- 文档与教程：<https://routhleck.com/canns/>
-- 快速入门与设计笔记：<https://routhleck.com/canns/en/notebooks/>
+- 文档与教程：<[ANONYMOUS_DOCS]>
+- 快速入门与设计笔记：<[ANONYMOUS_DOCS]>
 - 本地示例脚本：`examples/`
 - Sphinx 文档与 Notebook：`docs/`
-- ASA GUI 入口：`canns-gui`
-
-## 引用
-
-如果您在研究中使用了 CANNs，请引用：
-
-```bibtex
-@software{he_2026_canns,
-  author       = {He, Sichao and
-                  Tuerhong, Aiersi and
-                  She, Shangjun and
-                  Chu, Tianhao and
-                  Wu, Yuling and
-                  Zuo, Junfeng and
-                  Wu, Si},
-  title        = {CANNs: Continuous Attractor Neural Networks Toolkit},
-  month        = feb,
-  year         = 2026,
-  publisher    = {Zenodo},
-  version      = {v1.0.0},
-  doi          = {10.5281/zenodo.18453893},
-  url          = {https://doi.org/10.5281/zenodo.18453893}
-}
-```
-
-**纯文本格式：**
-> He, S., Tuerhong, A., She, S., Chu, T., Wu, Y., Zuo, J., & Wu, S. (2026). CANNs: Continuous Attractor Neural Networks Toolkit (v1.0.0). Zenodo. https://doi.org/10.5281/zenodo.18453893
+- ASA GUI 入口：`[ANONYMOUS_PROJECT]-gui`
 
 ## 贡献&许可证
 

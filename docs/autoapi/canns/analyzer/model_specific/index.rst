@@ -1,7 +1,7 @@
-canns.analyzer.model_specific
+[ANONYMOUS_PROJECT].analyzer.model_specific
 =============================
 
-.. py:module:: canns.analyzer.model_specific
+.. py:module:: [ANONYMOUS_PROJECT].analyzer.model_specific
 
 .. autoapi-nested-parse::
 
@@ -15,6 +15,6 @@ Submodules
 .. toctree::
    :maxdepth: 1
 
-   /autoapi/canns/analyzer/model_specific/hopfield/index
+   /autoapi/[ANONYMOUS_PROJECT]/analyzer/model_specific/hopfield/index
 
 

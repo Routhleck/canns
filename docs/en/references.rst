@@ -2,7 +2,7 @@
 References
 ==========
 
-This page lists all references cited throughout the CANNs documentation.
+This page lists all references cited throughout the [ANONYMOUS_PROJECT] documentation.
 
 .. note::
    To cite these references in your documentation or notebooks, use the ``:cite:`` role.
@@ -64,7 +64,7 @@ In Jupyter Notebooks
 - ``:cite:p:`key``` - Parenthetical: (Author, Year) - entire citation is clickable
 - ``:cite:t:`key``` - Textual: Author [Year] - only year is clickable
 
-**Example**: See ``docs/en/0_why_canns.ipynb`` for a complete working example.
+**Example**: See ``docs/en/0_why_[ANONYMOUS_PROJECT].ipynb`` for a complete working example.
 
 Adding New References
 =====================

@@ -1,7 +1,7 @@
-canns.analyzer.data.asa.config
+[ANONYMOUS_PROJECT].analyzer.data.asa.config
 ==============================
 
-.. py:module:: canns.analyzer.data.asa.config
+.. py:module:: [ANONYMOUS_PROJECT].analyzer.data.asa.config
 
 
 Exceptions
@@ -9,9 +9,9 @@ Exceptions
 
 .. autoapisummary::
 
-   canns.analyzer.data.asa.config.CANN2DError
-   canns.analyzer.data.asa.config.DataLoadError
-   canns.analyzer.data.asa.config.ProcessingError
+   [ANONYMOUS_PROJECT].analyzer.data.asa.config.CANN2DError
+   [ANONYMOUS_PROJECT].analyzer.data.asa.config.DataLoadError
+   [ANONYMOUS_PROJECT].analyzer.data.asa.config.ProcessingError
 
 
 Classes
@@ -19,10 +19,10 @@ Classes
 
 .. autoapisummary::
 
-   canns.analyzer.data.asa.config.CANN2DPlotConfig
-   canns.analyzer.data.asa.config.Constants
-   canns.analyzer.data.asa.config.SpikeEmbeddingConfig
-   canns.analyzer.data.asa.config.TDAConfig
+   [ANONYMOUS_PROJECT].analyzer.data.asa.config.CANN2DPlotConfig
+   [ANONYMOUS_PROJECT].analyzer.data.asa.config.Constants
+   [ANONYMOUS_PROJECT].analyzer.data.asa.config.SpikeEmbeddingConfig
+   [ANONYMOUS_PROJECT].analyzer.data.asa.config.TDAConfig
 
 
 Module Contents
@@ -81,17 +81,17 @@ Module Contents
 
 .. py:class:: CANN2DPlotConfig
 
-   Bases: :py:obj:`canns.analyzer.visualization.PlotConfig`
+   Bases: :py:obj:`[ANONYMOUS_PROJECT].analyzer.visualization.PlotConfig`
 
 
    Specialized PlotConfig for CANN2D visualizations.
 
-   Extends :class:`canns.analyzer.visualization.PlotConfig` with fields that
+   Extends :class:`[ANONYMOUS_PROJECT].analyzer.visualization.PlotConfig` with fields that
    control 3D projection and torus animation parameters.
 
    .. rubric:: Examples
 
-   >>> from canns.analyzer.data import CANN2DPlotConfig
+   >>> from [ANONYMOUS_PROJECT].analyzer.data import CANN2DPlotConfig
    >>> cfg = CANN2DPlotConfig.for_projection_3d(title="Projection")
    >>> cfg.zlabel
    'Component 3'
@@ -179,7 +179,7 @@ Module Contents
 
    .. rubric:: Examples
 
-   >>> from canns.analyzer.data import Constants
+   >>> from [ANONYMOUS_PROJECT].analyzer.data import Constants
    >>> Constants.DEFAULT_DPI
    300
 
@@ -256,7 +256,7 @@ Module Contents
 
    .. rubric:: Examples
 
-   >>> from canns.analyzer.data import SpikeEmbeddingConfig
+   >>> from [ANONYMOUS_PROJECT].analyzer.data import SpikeEmbeddingConfig
    >>> cfg = SpikeEmbeddingConfig(smooth=False, speed_filter=False)
    >>> cfg.min_speed
    2.5
@@ -388,7 +388,7 @@ Module Contents
 
    .. rubric:: Examples
 
-   >>> from canns.analyzer.data import TDAConfig
+   >>> from [ANONYMOUS_PROJECT].analyzer.data import TDAConfig
    >>> cfg = TDAConfig(maxdim=1, do_shuffle=False, show=False)
    >>> cfg.maxdim
    1

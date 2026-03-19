@@ -1,11 +1,11 @@
-canns.analyzer
+[ANONYMOUS_PROJECT].analyzer
 ==============
 
-.. py:module:: canns.analyzer
+.. py:module:: [ANONYMOUS_PROJECT].analyzer
 
 .. autoapi-nested-parse::
 
-   Analyzer utilities for inspecting CANNs models and simulations.
+   Analyzer utilities for inspecting [ANONYMOUS_PROJECT] models and simulations.
 
    This namespace groups analysis helpers such as model metrics, visualization,
    experimental or synthetic data analysis, slow-point (fixed-point) analysis,
@@ -13,7 +13,7 @@ canns.analyzer
 
    .. rubric:: Examples
 
-   >>> from canns import analyzer
+   >>> from [ANONYMOUS_PROJECT] import analyzer
    >>> print(analyzer.__all__)
 
 
@@ -24,10 +24,10 @@ Submodules
 .. toctree::
    :maxdepth: 1
 
-   /autoapi/canns/analyzer/data/index
-   /autoapi/canns/analyzer/metrics/index
-   /autoapi/canns/analyzer/model_specific/index
-   /autoapi/canns/analyzer/slow_points/index
-   /autoapi/canns/analyzer/visualization/index
+   /autoapi/[ANONYMOUS_PROJECT]/analyzer/data/index
+   /autoapi/[ANONYMOUS_PROJECT]/analyzer/metrics/index
+   /autoapi/[ANONYMOUS_PROJECT]/analyzer/model_specific/index
+   /autoapi/[ANONYMOUS_PROJECT]/analyzer/slow_points/index
+   /autoapi/[ANONYMOUS_PROJECT]/analyzer/visualization/index
 
 

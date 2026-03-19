@@ -1,7 +1,7 @@
-canns.pipeline.asa_gui.views.panels
+[ANONYMOUS_PROJECT].pipeline.asa_gui.views.panels
 ===================================
 
-.. py:module:: canns.pipeline.asa_gui.views.panels
+.. py:module:: [ANONYMOUS_PROJECT].pipeline.asa_gui.views.panels
 
 .. autoapi-nested-parse::
 

@@ -1,7 +1,7 @@
-canns.analyzer.data.cell_classification.utils
+[ANONYMOUS_PROJECT].analyzer.data.cell_classification.utils
 =============================================
 
-.. py:module:: canns.analyzer.data.cell_classification.utils
+.. py:module:: [ANONYMOUS_PROJECT].analyzer.data.cell_classification.utils
 
 .. autoapi-nested-parse::
 
@@ -15,10 +15,10 @@ Submodules
 .. toctree::
    :maxdepth: 1
 
-   /autoapi/canns/analyzer/data/cell_classification/utils/circular_stats/index
-   /autoapi/canns/analyzer/data/cell_classification/utils/correlation/index
-   /autoapi/canns/analyzer/data/cell_classification/utils/geometry/index
-   /autoapi/canns/analyzer/data/cell_classification/utils/image_processing/index
+   /autoapi/[ANONYMOUS_PROJECT]/analyzer/data/cell_classification/utils/circular_stats/index
+   /autoapi/[ANONYMOUS_PROJECT]/analyzer/data/cell_classification/utils/correlation/index
+   /autoapi/[ANONYMOUS_PROJECT]/analyzer/data/cell_classification/utils/geometry/index
+   /autoapi/[ANONYMOUS_PROJECT]/analyzer/data/cell_classification/utils/image_processing/index
 
 
 Functions
@@ -26,28 +26,28 @@ Functions
 
 .. autoapisummary::
 
-   canns.analyzer.data.cell_classification.utils.autocorrelation_2d
-   canns.analyzer.data.cell_classification.utils.cart2pol
-   canns.analyzer.data.cell_classification.utils.circ_dist
-   canns.analyzer.data.cell_classification.utils.circ_dist2
-   canns.analyzer.data.cell_classification.utils.circ_mean
-   canns.analyzer.data.cell_classification.utils.circ_r
-   canns.analyzer.data.cell_classification.utils.circ_rtest
-   canns.analyzer.data.cell_classification.utils.circ_std
-   canns.analyzer.data.cell_classification.utils.dilate_image
-   canns.analyzer.data.cell_classification.utils.find_contours_at_level
-   canns.analyzer.data.cell_classification.utils.find_regional_maxima
-   canns.analyzer.data.cell_classification.utils.fit_ellipse
-   canns.analyzer.data.cell_classification.utils.gaussian_filter_2d
-   canns.analyzer.data.cell_classification.utils.label_connected_components
-   canns.analyzer.data.cell_classification.utils.normalized_xcorr2
-   canns.analyzer.data.cell_classification.utils.pearson_correlation
-   canns.analyzer.data.cell_classification.utils.pol2cart
-   canns.analyzer.data.cell_classification.utils.polyarea
-   canns.analyzer.data.cell_classification.utils.regionprops
-   canns.analyzer.data.cell_classification.utils.rotate_image
-   canns.analyzer.data.cell_classification.utils.squared_distance
-   canns.analyzer.data.cell_classification.utils.wrap_to_pi
+   [ANONYMOUS_PROJECT].analyzer.data.cell_classification.utils.autocorrelation_2d
+   [ANONYMOUS_PROJECT].analyzer.data.cell_classification.utils.cart2pol
+   [ANONYMOUS_PROJECT].analyzer.data.cell_classification.utils.circ_dist
+   [ANONYMOUS_PROJECT].analyzer.data.cell_classification.utils.circ_dist2
+   [ANONYMOUS_PROJECT].analyzer.data.cell_classification.utils.circ_mean
+   [ANONYMOUS_PROJECT].analyzer.data.cell_classification.utils.circ_r
+   [ANONYMOUS_PROJECT].analyzer.data.cell_classification.utils.circ_rtest
+   [ANONYMOUS_PROJECT].analyzer.data.cell_classification.utils.circ_std
+   [ANONYMOUS_PROJECT].analyzer.data.cell_classification.utils.dilate_image
+   [ANONYMOUS_PROJECT].analyzer.data.cell_classification.utils.find_contours_at_level
+   [ANONYMOUS_PROJECT].analyzer.data.cell_classification.utils.find_regional_maxima
+   [ANONYMOUS_PROJECT].analyzer.data.cell_classification.utils.fit_ellipse
+   [ANONYMOUS_PROJECT].analyzer.data.cell_classification.utils.gaussian_filter_2d
+   [ANONYMOUS_PROJECT].analyzer.data.cell_classification.utils.label_connected_components
+   [ANONYMOUS_PROJECT].analyzer.data.cell_classification.utils.normalized_xcorr2
+   [ANONYMOUS_PROJECT].analyzer.data.cell_classification.utils.pearson_correlation
+   [ANONYMOUS_PROJECT].analyzer.data.cell_classification.utils.pol2cart
+   [ANONYMOUS_PROJECT].analyzer.data.cell_classification.utils.polyarea
+   [ANONYMOUS_PROJECT].analyzer.data.cell_classification.utils.regionprops
+   [ANONYMOUS_PROJECT].analyzer.data.cell_classification.utils.rotate_image
+   [ANONYMOUS_PROJECT].analyzer.data.cell_classification.utils.squared_distance
+   [ANONYMOUS_PROJECT].analyzer.data.cell_classification.utils.wrap_to_pi
 
 
 Package Contents
