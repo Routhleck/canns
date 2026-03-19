@@ -21,10 +21,6 @@
    :target: [ANONYMOUS_REPO]/blob/master/LICENSE
    :alt: 许可证
 
-.. image:: https://zenodo.org/badge/DOI/10.5281/zenodo.18453893.svg
-   :target: https://doi.org/10.5281/zenodo.18453893
-   :alt: DOI
-
 .. image:: https://badges.ws/github/stars/[ANONYMOUS_ORG]/[ANONYMOUS_PROJECT]?logo=github
    :target: [ANONYMOUS_REPO]/stargazers
    :alt: GitHub Stars
@@ -344,27 +340,3 @@ ASA 流水线（GUI/TUI）
 ------------
 
 欢迎贡献！请查看我们的 `贡献指南 <[ANONYMOUS_REPO]/blob/master/CONTRIBUTING.md>`_。
-
-引用
---------
-
-如果您在研究中使用了 [ANONYMOUS_PROJECT]，请引用：
-
-.. code-block:: bibtex
-
-   @software{he_2026_[ANONYMOUS_PROJECT],
-     author       = {[ANONYMOUS_AUTHOR] and
-                     Tuerhong, Aiersi and
-                     She, Shangjun and
-                     Chu, Tianhao and
-                     Wu, Yuling and
-                     Zuo, Junfeng and
-                     Wu, Si},
-     title        = {[ANONYMOUS_PROJECT]: Continuous Attractor Neural Networks Toolkit},
-     month        = feb,
-     year         = 2026,
-     publisher    = {Zenodo},
-     version      = {v1.0.0},
-     doi          = {10.5281/zenodo.18453893},
-     url          = {https://doi.org/10.5281/zenodo.18453893}
-   }

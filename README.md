@@ -9,8 +9,6 @@
 [<img src="https://badges.ws/maintenance/yes/2026" />]([ANONYMOUS_REPO])
 <picture><img src="https://badges.ws/github/release/[ANONYMOUS_ORG]/[ANONYMOUS_PROJECT]" /></picture>
 <picture><img src="https://badges.ws/github/license/[ANONYMOUS_ORG]/[ANONYMOUS_PROJECT]" /></picture>
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.18453893.svg)](https://doi.org/10.5281/zenodo.18453893)
-
 
 <picture><img src="https://badges.ws/github/stars/[ANONYMOUS_ORG]/[ANONYMOUS_PROJECT]?logo=github" /></picture>
 [![PyPI Downloads](https://static.pepy.tech/personalized-badge/[ANONYMOUS_PROJECT]?period=total&units=INTERNATIONAL_SYSTEM&left_color=BLACK&right_color=GREEN&left_text=downloads)](https://pepy.tech/projects/[ANONYMOUS_PROJECT])
