@@ -224,6 +224,7 @@ ax.plot(pattern_counts, capacity_test_results, marker="o", linewidth=2)
 ax.axvline(
     x=analyzer.estimate_capacity(), color="r", linestyle="--", label="Theoretical capacity"
 )
+print(f"Theoretical capacity estimate: {analyzer.estimate_capacity()} patterns")
 ax.set_xlabel("Number of Stored Patterns")
 ax.set_ylabel("Mean Recall Overlap (20% noise)")
 ax.set_title("Recall Quality vs Number of Stored Patterns")

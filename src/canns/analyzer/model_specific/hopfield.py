@@ -150,8 +150,13 @@ class HopfieldAnalyzer:
         """
         Estimate theoretical storage capacity of the network.
 
-        Uses the rule of thumb: capacity ≈ N / (4 * ln(N))
-        where N is the number of neurons.
+        Uses the classical result: capacity ≈ 0.14 * N, derived from
+        Gaussian approximation of crosstalk terms with P_error ≈ 0.0036.
+
+        Reference:
+            Hopfield, J. J. (1982). Neural networks and physical systems with
+            emergent collective computational abilities. Proc. Natl. Acad. Sci.
+            USA, 79(8), 2554-2558.
 
         Returns:
             Estimated number of patterns that can be reliably stored
@@ -159,9 +164,9 @@ class HopfieldAnalyzer:
         if hasattr(self.model, "storage_capacity"):
             return self.model.storage_capacity
 
-        # Default estimate: N / (4 * ln(N))
+        # Default estimate: 0.14 * N
         n = self.model.num_neurons if hasattr(self.model, "num_neurons") else 100
-        return max(1, int(n / (4 * np.log(n))))
+        return max(1, int(0.14 * n))
 
     def get_statistics(self) -> dict:
         """

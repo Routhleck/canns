@@ -183,9 +183,9 @@ class AmariHopfieldNetwork(BrainInspiredModel):
         Get theoretical storage capacity.
 
         Returns:
-            Theoretical storage capacity (approximately N/(4*ln(N)))
+            Theoretical storage capacity (approximately 0.14 * N).
         """
-        return max(1, int(self.num_neurons / (4 * np.log(self.num_neurons))))
+        return max(1, int(0.14 * self.num_neurons))
 
     def compute_overlap(self, pattern1, pattern2):
         """
