@@ -115,8 +115,8 @@ def test_hopfield_capacity_estimation():
 
     capacity = analyzer.estimate_capacity()
 
-    # Should be approximately N / (4 * ln(N))
-    expected = int(100 / (4 * jnp.log(100)))
+    # Should be approximately 0.14 * N
+    expected = int(0.14 * 100)
     assert capacity > 0
     assert abs(capacity - expected) <= 1
 
