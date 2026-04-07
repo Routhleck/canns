@@ -1,7 +1,6 @@
 import brainpy.math as bm
 import jax
 import jax.numpy as jnp
-import numpy as np
 
 from ._base import BrainInspiredModel
 
