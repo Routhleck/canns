@@ -58,8 +58,10 @@ def analysis_help_markdown(mode: str | None, lang: str = "en") -> str:
             ),
             "cohomap": (
                 "## CohoMap\n"
-                "- 将解码得到的相位轨迹投影回真实 `x/y` 轨迹。\n"
-                "- 若启用 `speed_filter`，请使用 `coordsbox/times_box` 对齐。\n"
+                "- 默认输出 EcohoMap：把解码相位按真实 `x/y` 空间分箱成相位图。\n"
+                "- `num_circ=1` 会生成单张 EcohoMap；`num_circ>1` 会生成多个 phase maps。\n"
+                "- `cohomap.png` 是相位图，`cohomap_data.npz` 保存分箱后的 map 数据。\n"
+                "- 旧版 trajectory-scatter 辅助图仍会保存为 `cohomap_scatter.png`。\n"
             ),
             "pathcompare": (
                 "## PathCompare\n"
@@ -71,7 +73,9 @@ def analysis_help_markdown(mode: str | None, lang: str = "en") -> str:
             ),
             "cohospace": (
                 "## CohoSpace / CohoScore\n"
-                "- 查看神经元在相位空间中的偏好分布。\n"
+                "- 2D 模式默认输出 EcohoSpace：把神经元活动按 decoded phase space 分箱成 rate map。\n"
+                "- single neuron 显示单个 neuron 的 EcohoSpace map；population 显示选中 neuron 的平均 map。\n"
+                "- 1D 模式仍使用 scatter 可视化，因为 EcohoSpace 需要两个相位坐标。\n"
                 "- `top_percent`：选取活跃点百分比。\n"
                 "- `view`：single neuron / population；`top_k` 仅对 population 生效。\n"
                 "- `use_best`：使用 CohoScore 最小（更集中）的 neuron。\n"
@@ -125,8 +129,10 @@ def analysis_help_markdown(mode: str | None, lang: str = "en") -> str:
         ),
         "cohomap": (
             "## CohoMap\n"
-            "- Project decoded phase back to real `x/y` trajectory.\n"
-            "- If `speed_filter` is on, use `coordsbox/times_box` for alignment.\n"
+            "- Default output is EcohoMap: decoded phases are binned back into real `x/y` space.\n"
+            "- `num_circ=1` produces one EcohoMap; `num_circ>1` produces multiple phase maps.\n"
+            "- `cohomap.png` shows the phase maps; `cohomap_data.npz` stores the binned maps.\n"
+            "- A legacy trajectory-scatter helper is also saved as `cohomap_scatter.png`.\n"
         ),
         "pathcompare": (
             "## PathCompare\n"
@@ -138,7 +144,9 @@ def analysis_help_markdown(mode: str | None, lang: str = "en") -> str:
         ),
         "cohospace": (
             "## CohoSpace / CohoScore\n"
-            "- Visualize neuron preference in phase space.\n"
+            "- In 2D mode, default output is EcohoSpace: neuron activity is binned in decoded phase space.\n"
+            "- Single-neuron view shows an EcohoSpace rate map; population view averages selected maps.\n"
+            "- 1D mode still uses the scatter visualization because EcohoSpace needs two phase coordinates.\n"
             "- `top_percent`: active percentile threshold.\n"
             "- `view`: single neuron / population; `top_k` for population only.\n"
             "- `use_best`: pick neuron with smallest CohoScore (most selective).\n"

@@ -651,7 +651,7 @@ class PipelineRunner:
     def _run_cohomap(
         self, asa_data: dict[str, Any], state: WorkflowState, log_callback
     ) -> dict[str, Path]:
-        from canns.analyzer.data.asa import plot_cohomap_scatter_multi
+        from canns.analyzer.data.asa import cohomap, plot_cohomap, plot_cohomap_scatter_multi
         from canns.analyzer.visualization import PlotConfigs
 
         tda_dir = self._results_dir(state) / "TDA"
@@ -666,30 +666,82 @@ class PipelineRunner:
 
         params = state.analysis_params
         subsample = int(params.get("cohomap_subsample", 10))
+        bins = int(params.get("cohomap_bins", 101))
+        smooth_sigma = float(params.get("cohomap_smooth_sigma", 1.0))
+        display_mode = str(params.get("cohomap_mode", "cos"))
+        align_torus = bool(params.get("cohomap_align_torus", True))
 
         cohomap_path = out_dir / "cohomap.png"
+        cohomap_data_path = out_dir / "cohomap_data.npz"
+        cohomap_scatter_path = out_dir / "cohomap_scatter.png"
+        coords_for_dim = np.asarray(decode_result.get("coordsbox", decode_result.get("coords")))
+        decoded_dim = 1 if coords_for_dim.ndim == 1 else coords_for_dim.shape[1]
+        supports_ecohomap = decoded_dim >= 1
         stage_hash = self._hash_obj(
             {
                 "decode_hash": self._load_cache_meta(self._stage_cache_path(out_dir)).get(
                     "decode_hash"
                 ),
-                "plot": "cohomap",
+                "plot": "ecohomap_all_phase_maps_v3",
                 "subsample": subsample,
+                "bins": bins,
+                "smooth_sigma": smooth_sigma,
+                "display_mode": display_mode,
+                "align_torus": align_torus,
+                "decoded_dim": decoded_dim,
             }
         )
-        if self._stage_cache_hit(out_dir, stage_hash, [cohomap_path]):
-            log_callback("♻️ Using cached CohoMap plot.")
-            return {"decoding": out_dir / "decoding.npz", "cohomap": cohomap_path}
-
-        log_callback("Generating cohomology map...")
-        pos = self._aligned_pos if self._aligned_pos is not None else asa_data
-        config = PlotConfigs.cohomap(show=False, save_path=str(cohomap_path))
-        plot_cohomap_scatter_multi(
-            decoding_result=decode_result,
-            position_data={"x": pos["x"], "y": pos["y"]},
-            config=config,
-            subsample=subsample,
+        required = (
+            [cohomap_path, cohomap_data_path, cohomap_scatter_path]
+            if supports_ecohomap
+            else [cohomap_scatter_path]
         )
+        if self._stage_cache_hit(out_dir, stage_hash, required):
+            log_callback("♻️ Using cached CohoMap plot.")
+            artifacts = {
+                "decoding": out_dir / "decoding.npz",
+                "cohomap": cohomap_path if supports_ecohomap else cohomap_scatter_path,
+                "cohomap_scatter": cohomap_scatter_path,
+            }
+            if supports_ecohomap:
+                artifacts["cohomap_data"] = cohomap_data_path
+            return artifacts
+
+        pos = self._aligned_pos if self._aligned_pos is not None else asa_data
+        if supports_ecohomap:
+            log_callback("Generating EcohoMap phase maps...")
+            config = PlotConfigs.cohomap(show=False, save_path=str(cohomap_path))
+            cohomap_result = cohomap(
+                decoding_result=decode_result,
+                position_data={"x": pos["x"], "y": pos["y"], "t": pos.get("t", asa_data.get("t"))},
+                bins=bins,
+                smooth_sigma=smooth_sigma,
+                align_torus=align_torus,
+            )
+            np.savez_compressed(cohomap_data_path, **cohomap_result)
+            plot_cohomap(
+                cohomap_result,
+                config=config,
+                mode=display_mode,
+            )
+        else:
+            log_callback(
+                "Decoded coordinates are empty; skipping EcohoMap and generating legacy scatter."
+            )
+
+        try:
+            scatter_cfg = PlotConfigs.cohomap(show=False, save_path=str(cohomap_scatter_path))
+            plot_cohomap_scatter_multi(
+                decoding_result=decode_result,
+                position_data={"x": pos["x"], "y": pos["y"]},
+                config=scatter_cfg,
+                subsample=subsample,
+            )
+        except Exception as exc:
+            if not supports_ecohomap:
+                raise ProcessingError(f"Legacy CohoMap scatter failed: {exc}") from exc
+            log_callback(f"⚠️ Legacy CohoMap scatter helper failed: {exc}")
+            cohomap_scatter_path = None
 
         self._write_cache_meta(
             self._stage_cache_path(out_dir),
@@ -699,7 +751,15 @@ class PipelineRunner:
             },
         )
 
-        return {"decoding": out_dir / "decoding.npz", "cohomap": cohomap_path}
+        artifacts = {"decoding": out_dir / "decoding.npz"}
+        if supports_ecohomap:
+            artifacts["cohomap"] = cohomap_path
+            artifacts["cohomap_data"] = cohomap_data_path
+        else:
+            artifacts["cohomap"] = cohomap_scatter_path
+        if cohomap_scatter_path is not None:
+            artifacts["cohomap_scatter"] = cohomap_scatter_path
+        return artifacts
 
     def _run_pathcompare(
         self, asa_data: dict[str, Any], state: WorkflowState, log_callback
@@ -1175,12 +1235,13 @@ class PipelineRunner:
         self, asa_data: dict[str, Any], state: WorkflowState, log_callback
     ) -> dict[str, Path]:
         from canns.analyzer.data.asa import (
+            cohospace,
+            plot_cohospace,
             plot_cohospace_scatter_neuron_1d,
-            plot_cohospace_scatter_neuron_2d,
             plot_cohospace_scatter_population_1d,
-            plot_cohospace_scatter_population_2d,
             plot_cohospace_scatter_trajectory_1d,
             plot_cohospace_scatter_trajectory_2d,
+            plot_cohospace_skewed,
         )
         from canns.analyzer.data.asa.cohospace_scatter import (
             compute_cohoscore_scatter_1d,
@@ -1216,13 +1277,16 @@ class PipelineRunner:
         top_percent = float(params.get("top_percent", 5.0))
         view = str(params.get("view", "both"))
         subsample = int(params.get("subsample", 2))
-        unfold = str(params.get("unfold", "square"))
+        bins = int(params.get("bins", 51))
+        smooth_sigma = float(params.get("smooth_sigma", 1.0))
+        unfold = str(params.get("unfold", "skew"))
         skew_show_grid = bool(params.get("skew_show_grid", True))
         skew_tiles = int(params.get("skew_tiles", 0))
         enable_score = bool(params.get("enable_score", True))
         top_k = int(params.get("top_k", 10))
         use_best = bool(params.get("use_best", True))
         times = decode_result.get("times")
+        times_box = decode_result.get("times_box", times)
 
         def pick_coords(arr: np.ndarray) -> np.ndarray:
             if dim_mode == "1d":
@@ -1239,14 +1303,15 @@ class PipelineRunner:
         coords2 = pick_coords(coords)
         coordsbox2 = pick_coords(coordsbox) if coordsbox.ndim == 2 else coords2
 
-        if mode == "spike":
-            activity = self._build_spike_matrix_from_events(asa_data)
+        if isinstance(self._embed_data, np.ndarray) and self._embed_data.ndim == 2:
+            activity = self._embed_data
+            if mode == "spike":
+                log_callback(
+                    "CohoSpace: using preprocessed activity for decode alignment "
+                    "(mode controls scatter thresholding only)."
+                )
         else:
-            activity = (
-                self._embed_data
-                if self._embed_data is not None
-                else self._build_spike_matrix_from_events(asa_data)
-            )
+            activity = self._build_spike_matrix_from_events(asa_data)
 
         scores = None
         top_ids = None
@@ -1292,10 +1357,14 @@ class PipelineRunner:
                 "persistence": self._hash_file(persistence_path),
                 "decode_hash": decode_meta.get("decode_hash"),
                 "params": params,
+                "activity_policy": "prefer_preprocessed_activity_for_decode_alignment_v1",
             }
         )
         meta_path = self._stage_cache_path(out_dir)
         required = [out_dir / "cohospace_trajectory.png"]
+        cohospace_data_path = out_dir / "cohospace_data.npz"
+        if dim_mode != "1d":
+            required.append(cohospace_data_path)
         if view in {"both", "population"}:
             required.append(out_dir / "cohospace_population.png")
         if view in {"both", "single"}:
@@ -1304,11 +1373,25 @@ class PipelineRunner:
         if self._stage_cache_hit(out_dir, stage_hash, required):
             log_callback("♻️ Using cached CohoSpace plots.")
             artifacts = {"trajectory": out_dir / "cohospace_trajectory.png"}
+            if dim_mode != "1d":
+                artifacts["cohospace_data"] = cohospace_data_path
             if view in {"both", "single"}:
                 artifacts["neuron"] = out_dir / f"cohospace_neuron_{neuron_id}.png"
             if view in {"both", "population"}:
                 artifacts["population"] = out_dir / "cohospace_population.png"
             return artifacts
+
+        cohospace_result = None
+        if dim_mode != "1d":
+            log_callback("Computing EcohoSpace binned rate maps...")
+            cohospace_result = cohospace(
+                coordsbox2,
+                activity,
+                times=times_box,
+                bins=bins,
+                smooth_sigma=smooth_sigma,
+            )
+            np.savez_compressed(cohospace_data_path, **cohospace_result)
 
         log_callback("Plotting cohomology space trajectory...")
         traj_path = out_dir / "cohospace_trajectory.png"
@@ -1333,46 +1416,48 @@ class PipelineRunner:
         if neuron_id is not None and view in {"both", "single"}:
             log_callback(f"Plotting neuron {neuron_id}...")
             neuron_path = out_dir / f"cohospace_neuron_{neuron_id}.png"
-            if unfold == "skew" and dim_mode != "1d":
+            if dim_mode != "1d" and cohospace_result is not None:
+                if unfold == "skew":
+                    plot_cohospace_skewed(
+                        cohospace_result,
+                        neuron_id=int(neuron_id),
+                        save_path=str(neuron_path),
+                        show=False,
+                        show_grid=skew_show_grid,
+                    )
+                else:
+                    neuron_cfg = PlotConfigs.cohospace_neuron_2d(
+                        show=False, save_path=str(neuron_path)
+                    )
+                    plot_cohospace(
+                        cohospace_result,
+                        neuron_id=int(neuron_id),
+                        config=neuron_cfg,
+                    )
+            elif unfold == "skew" and dim_mode != "1d":
                 plot_cohospace_scatter_neuron_skewed(
                     coords=coordsbox2,
                     activity=activity,
                     neuron_id=int(neuron_id),
                     mode=mode,
                     top_percent=top_percent,
-                    times=times,
+                    times=times_box,
                     save_path=str(neuron_path),
                     show=False,
                     show_grid=skew_show_grid,
                     n_tiles=skew_tiles,
                 )
             else:
-                if dim_mode == "1d":
-                    neuron_cfg = PlotConfigs.cohospace_neuron_1d(
-                        show=False, save_path=str(neuron_path)
-                    )
-                    plot_cohospace_scatter_neuron_1d(
-                        coords=coordsbox2,
-                        activity=activity,
-                        neuron_id=int(neuron_id),
-                        mode=mode,
-                        top_percent=top_percent,
-                        times=times,
-                        config=neuron_cfg,
-                    )
-                else:
-                    neuron_cfg = PlotConfigs.cohospace_neuron_2d(
-                        show=False, save_path=str(neuron_path)
-                    )
-                    plot_cohospace_scatter_neuron_2d(
-                        coords=coordsbox2,
-                        activity=activity,
-                        neuron_id=int(neuron_id),
-                        mode=mode,
-                        top_percent=top_percent,
-                        times=times,
-                        config=neuron_cfg,
-                    )
+                neuron_cfg = PlotConfigs.cohospace_neuron_1d(show=False, save_path=str(neuron_path))
+                plot_cohospace_scatter_neuron_1d(
+                    coords=coordsbox2,
+                    activity=activity,
+                    neuron_id=int(neuron_id),
+                    mode=mode,
+                    top_percent=top_percent,
+                    times=times_box,
+                    config=neuron_cfg,
+                )
             artifacts["neuron"] = neuron_path
 
         if view in {"both", "population"}:
@@ -1383,7 +1468,45 @@ class PipelineRunner:
                 log_callback(f"CohoSpace: aggregating top-{len(neuron_ids)} neurons by CohoScore.")
             else:
                 neuron_ids = list(range(activity.shape[1]))
-            if unfold == "skew" and dim_mode != "1d":
+            if dim_mode != "1d" and cohospace_result is not None:
+                import matplotlib.pyplot as plt
+
+                maps = np.asarray(cohospace_result["rate_maps"])
+                selected = maps[np.asarray(neuron_ids, dtype=int)]
+                pop_map = np.nanmean(selected, axis=0)
+                x_edge = np.asarray(cohospace_result["x_edge"])
+                y_edge = np.asarray(cohospace_result["y_edge"])
+                fig, ax = plt.subplots(1, 1, figsize=(5, 5))
+                if unfold == "skew":
+                    th1, th2 = np.meshgrid(x_edge, y_edge, indexing="xy")
+                    x_skew = th1 + 0.5 * th2
+                    y_skew = (np.sqrt(3) / 2.0) * th2
+                    im = ax.pcolormesh(x_skew, y_skew, pop_map, shading="auto", cmap="viridis")
+                    if skew_show_grid:
+                        e1 = np.array([2 * np.pi, 0.0])
+                        e2 = np.array([np.pi, np.sqrt(3) * np.pi])
+                        poly = np.vstack([np.zeros(2), e1, e1 + e2, e2, np.zeros(2)])
+                        ax.plot(poly[:, 0], poly[:, 1], lw=1.1, color="0.35")
+                    ax.set_aspect("equal", "box")
+                    ax.set_xticks([])
+                    ax.set_yticks([])
+                    ax.set_title(f"EcohoSpace Population Map (n={len(neuron_ids)})")
+                else:
+                    im = ax.imshow(
+                        pop_map,
+                        origin="lower",
+                        extent=[x_edge[0], x_edge[-1], y_edge[0], y_edge[-1]],
+                        cmap="viridis",
+                    )
+                    ax.set_aspect("equal", "box")
+                    ax.set_xticks([])
+                    ax.set_yticks([])
+                    ax.set_title(f"EcohoSpace Population Map (n={len(neuron_ids)})")
+                plt.colorbar(im, ax=ax, fraction=0.046, pad=0.04, label="Mean activity")
+                fig.tight_layout()
+                fig.savefig(pop_path, dpi=200, bbox_inches="tight")
+                plt.close(fig)
+            elif unfold == "skew" and dim_mode != "1d":
                 plot_cohospace_scatter_population_skewed(
                     coords=coords2,
                     activity=activity,
@@ -1397,35 +1520,21 @@ class PipelineRunner:
                     n_tiles=skew_tiles,
                 )
             else:
-                if dim_mode == "1d":
-                    pop_cfg = PlotConfigs.cohospace_population_1d(
-                        show=False, save_path=str(pop_path)
-                    )
-                    plot_cohospace_scatter_population_1d(
-                        coords=coords2,
-                        activity=activity,
-                        neuron_ids=neuron_ids,
-                        mode=mode,
-                        top_percent=top_percent,
-                        times=times,
-                        config=pop_cfg,
-                    )
-                else:
-                    pop_cfg = PlotConfigs.cohospace_population_2d(
-                        show=False, save_path=str(pop_path)
-                    )
-                    plot_cohospace_scatter_population_2d(
-                        coords=coords2,
-                        activity=activity,
-                        neuron_ids=neuron_ids,
-                        mode=mode,
-                        top_percent=top_percent,
-                        times=times,
-                        config=pop_cfg,
-                    )
+                pop_cfg = PlotConfigs.cohospace_population_1d(show=False, save_path=str(pop_path))
+                plot_cohospace_scatter_population_1d(
+                    coords=coords2,
+                    activity=activity,
+                    neuron_ids=neuron_ids,
+                    mode=mode,
+                    top_percent=top_percent,
+                    times=times,
+                    config=pop_cfg,
+                )
             artifacts["population"] = pop_path
 
         self._write_cache_meta(meta_path, {"hash": stage_hash})
+        if dim_mode != "1d":
+            artifacts["cohospace_data"] = cohospace_data_path
         return artifacts
 
     def _run_fr(

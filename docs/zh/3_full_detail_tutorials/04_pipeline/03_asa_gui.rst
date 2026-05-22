@@ -221,12 +221,25 @@ ASA 文件格式
 切换到 **Analysis** 页面，选择分析模块并配置参数：
 
 - **TDA**：持久同调分析与条形码
-- **CohoMap / CohoSpace**：解码并绘制空间结构
+- **CohoMap / CohoSpace**：解码圆坐标并绘制相位空间结构
 - **Path Compare**：轨迹比较（含动画输出）
 - **FR / FRM**：放电率热图与神经元放电率图
 - **GridScore**：网格评分与神经元浏览器
 
 点击 **Run Analysis** 开始运行。
+
+CohoMap 与 CohoSpace 说明
+^^^^^^^^^^^^^^^^^^^^^^^^^
+
+GUI 现在以 Ecoho 风格图作为 CohoMap/CohoSpace 的主要输出：
+
+- **CohoMap** 会将解码得到的 circular phase 按真实 ``x/y`` 空间重新分箱。
+  ``Decode num_circ`` 控制显示几个 phase map。``num_circ=1`` 会生成单张
+  EcohoMap，``num_circ>1`` 会在同一张图中显示多个面板。
+- **CohoSpace** 会在 decoded phase space 中对神经元活动分箱。2D 模式下，
+  默认使用 firing-rate map、``smooth_sigma=1.0`` 与 skewed torus unfolding。
+- 旧版 trajectory-scatter CohoMap 仍会保存为辅助图，但 GUI 主预览标签页显示
+  EcohoMap 结果。
 
 步骤 4：查看结果
 ----------------
@@ -246,6 +259,26 @@ ASA 文件格式
 
 其中 ``<dataset>`` 由输入文件名生成，``<hash>`` 为输入哈希前缀。
 目录中会包含分析结果与缓存（``.asa_cache``），以加速重复运行。
+
+常见 ASA 输出包括：
+
+.. list-table::
+   :widths: 35 65
+
+   * - ``TDA/persistence.npz``
+     - 持续同调结果，供解码与后续分析使用。
+   * - ``TDA/barcode.png``
+     - persistent features 的 barcode 可视化。
+   * - ``CohoMap/cohomap.png``
+     - GUI 主预览中显示的 EcohoMap phase maps。
+   * - ``CohoMap/cohomap_data.npz``
+     - 分箱后的 phase-map 数据，供后续脚本使用。
+   * - ``CohoMap/cohomap_scatter.png``
+     - 旧版 trajectory-scatter 辅助图。
+   * - ``CohoSpace/cohospace.png``
+     - EcohoSpace 或 scatter 可视化，取决于相位维度。
+   * - ``CohoSpace/cohospace_data.npz``
+     - 可用时保存分箱后的 CohoSpace rate-map 数据。
 
 注意事项
 --------

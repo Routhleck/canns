@@ -735,10 +735,11 @@ def _shuffle_spike_trains(sspikes):
     """Perform random circular shift on spike trains."""
     shuffled = sspikes.copy()
     num_neurons = shuffled.shape[1]
+    num_timepoints = shuffled.shape[0]
 
     # Independent shift for each neuron
     for n in range(num_neurons):
-        shift = np.random.randint(0, int(shuffled.shape[0] * 0.1))
+        shift = np.random.randint(0, num_timepoints)
         shuffled[:, n] = np.roll(shuffled[:, n], shift)
 
     return shuffled
@@ -852,14 +853,14 @@ def _plot_barcode_with_shuffle(persistence, shuffle_max):
         else:
             thresholds[dim] = 0
 
+    labels = ["$H_0$", "$H_1$", "$H_2$"]
+
     for _, dim in enumerate(dims):
         axes = plt.subplot(gs[dim])
-        axes.axis("off")
-
-        # Add gray background to represent shuffle region
-        if dim in thresholds:
-            axes.axvspan(0, thresholds[dim], alpha=0.2, color="gray", zorder=-3)
-            axes.axvline(x=thresholds[dim], color="gray", linestyle="--", alpha=0.7)
+        axes.axis("on")
+        axes.set_yticks([])
+        if dim < len(labels):
+            axes.set_ylabel(labels[dim], rotation=0, labelpad=20, fontsize=12)
 
         # Do not pre-filter out infinite bars; copy the full diagram instead
         d = np.copy(persistence["dgms"][dim])
@@ -876,23 +877,31 @@ def _plot_barcode_with_shuffle(persistence, shuffle_max):
             if dim > 0:
                 dinds = dinds[np.flip(np.argsort(d[dinds, 0]))]
 
-            # Mark significant bars
-            significant_bars = []
-            for idx in dinds:
-                if dlife[idx] > thresholds.get(dim, 0):
-                    significant_bars.append(idx)
+            threshold = thresholds.get(dim, 0)
 
-            # Draw bars
+            # Draw paper-style shuffle shadow: the longest shuffle lifetime
+            # aligned to the lower value (birth) of each original bar.
             for i, idx in enumerate(dinds):
-                color = "red" if idx in significant_bars else colormap[dim]
+                if threshold > 0:
+                    axes.barh(
+                        0.5 + i,
+                        threshold,
+                        height=0.9,
+                        left=d[idx, 0],
+                        alpha=0.35,
+                        color="gray",
+                        linewidth=0,
+                        zorder=1,
+                    )
                 axes.barh(
                     0.5 + i,
                     dlife[idx],
-                    height=0.8,
+                    height=0.62,
                     left=d[idx, 0],
                     alpha=alpha,
-                    color=color,
+                    color=colormap[dim],
                     linewidth=0,
+                    zorder=2,
                 )
 
             indsall = len(dinds)
@@ -901,8 +910,7 @@ def _plot_barcode_with_shuffle(persistence, shuffle_max):
 
         axes.plot([0, 0], [0, indsall], c="k", linestyle="-", lw=1)
         axes.plot([0, indsall], [0, 0], c="k", linestyle="-", lw=1)
-        axes.set_xlim([0, infinity])
-        axes.set_title(f"$H_{dim}$", loc="left")
+        axes.set_xlim([min_birth - delta, infinity])
 
     plt.tight_layout()
     return fig

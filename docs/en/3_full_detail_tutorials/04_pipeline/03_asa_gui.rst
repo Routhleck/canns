@@ -220,12 +220,25 @@ Step 3: Select Analysis Module
 Switch to the **Analysis** page, choose an analysis module, and configure its parameters:
 
 - **TDA**: Persistent homology analysis and barcode visualization
-- **CohoMap / CohoSpace**: Decode and plot spatial structures
+- **CohoMap / CohoSpace**: Decode circular coordinates and plot phase-space structures
 - **Path Compare**: Trajectory comparison (with animation output)
 - **FR / FRM**: Firing rate heatmaps and neuron firing rate maps
 - **GridScore**: Grid score computation and neuron browser
 
 Click **Run Analysis** to start.
+
+CohoMap and CohoSpace Notes
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The GUI now uses Ecoho-style maps as the primary CohoMap/CohoSpace outputs:
+
+- **CohoMap** bins decoded circular phases back into the real ``x/y`` space.
+  ``Decode num_circ`` controls how many phase maps are shown. ``num_circ=1`` produces
+  a single EcohoMap panel, while ``num_circ>1`` produces multiple panels in one figure.
+- **CohoSpace** bins neural activity in decoded phase space. In 2D mode, the default
+  display uses firing-rate maps with ``smooth_sigma=1.0`` and skewed torus unfolding.
+- The legacy trajectory-scatter CohoMap is still saved as an auxiliary file, but the
+  main preview tab shows the EcohoMap result.
 
 Step 4: View Results
 --------------------
@@ -245,6 +258,26 @@ The output directory defaults to the current working directory:
 
 where ``<dataset>`` is derived from the input filename and ``<hash>`` is a prefix of the input hash.  
 The directory contains analysis results and a cache (``.asa_cache``) to accelerate repeated runs.
+
+Common ASA outputs include:
+
+.. list-table::
+   :widths: 35 65
+
+   * - ``TDA/persistence.npz``
+     - Persistent homology results used by decoding and downstream analysis.
+   * - ``TDA/barcode.png``
+     - Barcode visualization of persistent features.
+   * - ``CohoMap/cohomap.png``
+     - EcohoMap phase maps shown in the GUI preview.
+   * - ``CohoMap/cohomap_data.npz``
+     - Binned phase-map data for downstream scripts.
+   * - ``CohoMap/cohomap_scatter.png``
+     - Legacy trajectory-scatter helper figure.
+   * - ``CohoSpace/cohospace.png``
+     - EcohoSpace or scatter visualization, depending on phase dimensionality.
+   * - ``CohoSpace/cohospace_data.npz``
+     - Binned CohoSpace rate-map data when available.
 
 Notes
 -----

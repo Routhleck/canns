@@ -75,6 +75,27 @@ from .plotting import (
     plot_path_compare_2d,
     plot_projection,
 )
+from .spatial_embedding import (
+    ensure_2d as ensure_spatial_input_2d,
+)
+from .spatial_embedding import (
+    fr_tensor_to_point_cloud as build_spatial_point_cloud,
+)
+from .spatial_tda import (
+    build_fr_tensor,
+    crop_center,
+    fr_tensor_to_point_cloud,
+    pca_reduce,
+    run_spatial_null_model,
+    run_spatial_ph,
+    run_spatial_tda_from_asa,
+)
+from .spatial_tda import (
+    diagram_summary as summarize_spatial_tda,
+)
+from .spatial_tda import (
+    finite_lifetimes as spatial_tda_lifetimes,
+)
 
 # TDA entry point
 from .tda import tda_vis
@@ -118,6 +139,17 @@ __all__ = [
     "FRMResult",
     "compute_frm",
     "plot_frm",
+    "crop_center",
+    "build_fr_tensor",
+    "fr_tensor_to_point_cloud",
+    "pca_reduce",
+    "run_spatial_ph",
+    "run_spatial_null_model",
+    "run_spatial_tda_from_asa",
+    "summarize_spatial_tda",
+    "spatial_tda_lifetimes",
+    "ensure_spatial_input_2d",
+    "build_spatial_point_cloud",
     "plot_cohospace_scatter_trajectory_1d",
     "plot_cohospace_scatter_trajectory_2d",
     "plot_cohospace_scatter_neuron_1d",
