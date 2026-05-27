@@ -5,6 +5,53 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.0] - 2026-07-03
+
+### Added
+- `TDAConfig.use_ffi_shuffle` (default `False`) — when True and `canns-lib>=0.9.0` is installed, the TDA shuffle null-model loop is routed through the new `canns_lib._ripser_core.shuffle_null_model` FFI. Internally parallelised with rayon, replacing the per-shuffle `multiprocessing.Pool` + `ripser` call with a single Rust call. Typically 100-3000× faster (T=100, N=40, 50 shuffles: 12 ms vs 31 s measured against the legacy path).
+- `_run_shuffle_analysis` now accepts `use_ffi_shuffle=True` and `force_legacy=True` kwargs. The legacy `mp.Pool` path remains the default and is also used automatically when the FFI raises (older `canns-lib`, shape mismatch, FFI exception).
+
+### Changed
+- `canns-lib` minimum version bumped from `>=0.6.2` to `>=0.9.0` in `pyproject.toml`. The FFI is only available from `canns-lib` 0.9.0 onward; older versions continue to work through the automatic fallback.
+
+### Notes for users
+- The FFI shuffle null-model computes a Euclidean distance matrix **directly from the raw (T, N) spike-train matrix** and runs ripser on that, skipping the timepoint downsampling, PCA, UMAP denoising, and nbs thresholding that `_compute_persistence` applies in the legacy path. The resulting null distribution **will differ** from the legacy path because the input point cloud is different. The FFI is exposed as opt-in only; users reproducing published null-model results should keep `use_ffi_shuffle=False` until they confirm the semantic difference is acceptable for their study.
+
+## [Unreleased]
+
+### Added
+- arXiv preprint reference ([arXiv:2606.27783](https://arxiv.org/abs/2606.27783)) describing the CANNs toolkit
+- arXiv badge to README and documentation index pages
+
+### Changed
+- Updated `CITATION.cff` `preferred-citation` to point to the arXiv preprint (was Zenodo software entry)
+- Updated `README.md` and `README_zh.md` Citation sections to recommend the arXiv paper as the primary citation, with Zenodo archive as an optional version-specific citation
+- Updated `docs/en/index.rst` and `docs/zh/index.rst` Citation sections to match the new README guidance
+- Added arXiv preprint entry (`he2026canns`) to `paper.bib` and `docs/refs/references.bib`
+- Updated `paper.md` frontmatter date to 26 June 2026 and added a preprint notice banner
+
+## [1.1.0] - 2026-05-28
+
+### Added
+- ASA spatial TDA workflows with automated grid threshold detection
+- Phase center comparison workflow for cell population analysis
+- Spatial embedding module for coordinate embedding utilities
+- TDA null model comparison for statistical validation
+- New ASA GUI analysis mode updates and improvements
+
+### Changed
+- Enhanced cohomoap and cohospace analysis modes in ASA GUI
+- Updated ASA pipeline tutorials with spatial workflow examples
+- Expanded core concepts documentation (EN + ZH)
+
+### Files Added/Modified
+- `src/canns/analyzer/workflows/auto_grid_threshold.py`
+- `src/canns/analyzer/workflows/phase_center_comparison.py`
+- `src/canns/analyzer/data/asa/spatial_tda.py`
+- `src/canns/analyzer/data/asa/spatial_embedding.py`
+- `examples/asa/subcluster_grid_cells_asa.py`
+- `examples/asa/tda_null_model_compare.py`
+
 ## [1.0.2] - 2026-04-08
 
 ### Added
@@ -649,6 +696,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Initial release
 - Basic structure template
 - Core application structure
+
+[1.1.0]: https://github.com/routhleck/canns/compare/v1.0.2...v1.1.0
 
 [1.0.2]: https://github.com/routhleck/canns/compare/v1.0.1...v1.0.2
 

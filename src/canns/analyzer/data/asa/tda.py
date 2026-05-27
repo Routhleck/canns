@@ -6,6 +6,7 @@ from typing import Any
 
 import matplotlib.pyplot as plt
 import numpy as np
+from canns_lib import _ripser_core
 from canns_lib.ripser import ripser
 from matplotlib import gridspec
 from scipy.sparse import coo_matrix
@@ -214,6 +215,7 @@ def _perform_shuffle_analysis(embed_data: np.ndarray, config: TDAConfig) -> dict
         "nbs": config.nbs,
         "maxdim": config.maxdim,
         "coeff": config.coeff,
+        "use_ffi_shuffle": config.use_ffi_shuffle,
     }
 
     shuffle_max = _run_shuffle_analysis(
@@ -669,10 +671,81 @@ def _fast_pca_transform(data, components):
 
 
 def _run_shuffle_analysis(sspikes, num_shuffles=1000, num_cores=4, progress_bar=True, **kwargs):
-    """Perform shuffle analysis with optimized computation."""
-    return _run_shuffle_analysis_multiprocessing(
-        sspikes, num_shuffles, num_cores, progress_bar, **kwargs
-    )
+    """Perform shuffle analysis with optimized computation.
+
+    Behavior depends on ``use_ffi_shuffle`` (in ``kwargs`` or in a global
+    default — see ``TDAConfig.use_ffi_shuffle``):
+
+    - ``use_ffi_shuffle=False`` (default): legacy path, runs
+      ``_compute_persistence`` per shuffle under a ``mp.Pool``. Slow but
+      matches historical behavior exactly (timepoint downsampling, PCA, UMAP
+      denoising, nbs thresholding all included).
+    - ``use_ffi_shuffle=True``: fast Rust+rayon ``shuffle_null_model`` FFI from
+      canns-lib. Computes a Euclidean distance matrix **directly from the raw
+      (T, N) spike-train matrix** and runs ripser, skipping all preprocessing
+      (no downsampling, PCA, denoising, nbs). Typically 100-3000x faster on
+      the shuffle loop, but **distributions will differ from the legacy path**
+      because the input point cloud is different. Use only when:
+        1. The preprocessing in ``_compute_persistence`` is intentionally
+           undesired, or
+        2. You are reproducing a null model whose definition is "shuffle then
+           ripser on raw spike trains" (which is what the FFI computes).
+      Falls back to the legacy path if canns-lib lacks the FFI or if
+      ``maxdim > 2`` / shape is invalid for the FFI.
+
+    Use ``force_legacy=True`` to unconditionally bypass the FFI.
+    """
+    if not kwargs.get("use_ffi_shuffle", False) or kwargs.get("force_legacy", False):
+        # _process_single_shuffle does not know about the FFI control flags.
+        legacy_kwargs = {
+            k: v for k, v in kwargs.items() if k not in {"use_ffi_shuffle", "force_legacy"}
+        }
+        return _run_shuffle_analysis_multiprocessing(
+            sspikes, num_shuffles, num_cores, progress_bar, **legacy_kwargs
+        )
+    # Strip FFI control flags from kwargs to avoid leaking them into the
+    # legacy path on any fallback (would otherwise recurse / crash).
+    legacy_kwargs = {
+        k: v for k, v in kwargs.items() if k not in {"use_ffi_shuffle", "force_legacy"}
+    }
+    maxdim = int(kwargs.get("maxdim", 1))
+    coeff = int(kwargs.get("coeff", 47))
+    if sspikes is None or sspikes.ndim != 2 or sspikes.shape[0] < 2 or sspikes.shape[1] < 2:
+        return _run_shuffle_analysis_multiprocessing(
+            sspikes, num_shuffles, num_cores, progress_bar, **legacy_kwargs
+        )
+    if maxdim > 2:  # FFI supports 0..=2 only
+        return _run_shuffle_analysis_multiprocessing(
+            sspikes, num_shuffles, num_cores, progress_bar, **legacy_kwargs
+        )
+    try:
+        flat = np.ascontiguousarray(sspikes, dtype=np.float32).ravel()
+        t, n = sspikes.shape
+        if flat.size != t * n:
+            raise ValueError("sspikes is not contiguous")
+        result = _ripser_core.shuffle_null_model(
+            flat,
+            int(t),
+            int(n),
+            int(num_shuffles),
+            maxdim,
+            np.inf,
+            coeff,
+            0,
+        )
+        out: dict[int, list[float]] = {}
+        for d in range(maxdim + 1):
+            arr = np.asarray(result.get(d, []), dtype=np.float64)
+            out[d] = arr.tolist()
+        return out
+    except Exception as exc:  # noqa: BLE001
+        logging.warning(
+            "canns_lib shuffle_null_model FFI failed (%s); falling back to mp.Pool",
+            exc,
+        )
+        return _run_shuffle_analysis_multiprocessing(
+            sspikes, num_shuffles, num_cores, progress_bar, **legacy_kwargs
+        )
 
 
 def _run_shuffle_analysis_multiprocessing(
