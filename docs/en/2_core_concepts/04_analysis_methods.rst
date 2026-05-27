@@ -206,6 +206,104 @@ Capabilities
       * Develop decoding algorithms for neural data
       * Test theoretical predictions with simulated experiments
 
+ASA Pipeline
+------------
+
+The ASA (Attractor Structure Analyzer) pipeline is the main data-analysis workflow
+for spike trains or firing-rate matrices with optional behavioral trajectories
+(``spike/x/y/t``). It is available through the Python API and the ASA GUI.
+
+.. list-table::
+   :widths: 30 70
+
+   * - **Preprocessing**
+     - ``embed_spike_trains`` converts spike events into dense ``(T, N)`` activity matrices.
+   * - **Time TDA**
+     - ``tda_vis`` computes persistent homology on the time-indexed activity trajectory ``r(t)``.
+   * - **Decoding**
+     - ``decode_circular_coordinates_multi`` reconstructs circular coordinates from selected H1 features.
+   * - **CohoMap**
+     - ``cohomap`` bins decoded phases back into real ``x/y`` space. A single decoded circle produces one EcohoMap panel; multiple circles produce multiple phase maps.
+   * - **CohoSpace**
+     - ``cohospace`` bins neuron activity in decoded phase space and supports EcohoSpace rate-map outputs.
+   * - **PathCompare**
+     - ``plot_path_compare_1d`` / ``plot_path_compare_2d`` compare real trajectories with decoded trajectories.
+   * - **FR / FRM / GridScore**
+     - Firing-rate heatmaps, single-neuron firing-rate maps, and gridness analysis.
+
+Time TDA and Spatial TDA
+------------------------
+
+ASA now separates two point-cloud constructions:
+
+.. list-table::
+   :header-rows: 1
+   :widths: 25 35 40
+
+   * - Method
+     - Input point cloud
+     - Main use
+   * - **Time TDA**
+     - Time samples of population activity, ``r(t)``
+     - Dynamics, decoding, CohoMap/CohoSpace, and path comparison.
+   * - **Spatial TDA**
+     - Position-binned firing-rate vectors, ``r(x)``
+     - Spatial representation manifolds and Fig.4C-style barcode analysis.
+
+Spatial TDA is implemented by ``spatial_embedding.py`` and ``spatial_tda.py`` in
+``canns.analyzer.data.asa``. The example script
+``examples/experimental_data_analysis/spatial_tda_from_asa.py`` provides a CLI wrapper
+for ASA ``.npz`` files.
+
+.. figure:: /_static/asa_spatial_tda_barcode_example.png
+   :width: 70%
+   :align: center
+
+   Example Spatial TDA output. This workflow first rewrites time-indexed activity
+   as position-indexed firing-rate vectors, ``r(x)``, then computes persistent
+   homology on the spatial-bin point cloud.
+
+Workflow Helpers
+----------------
+
+Higher-level ASA workflows live in ``canns.analyzer.workflows``. They compose existing
+ASA building blocks rather than introducing separate low-level algorithms:
+
+- ``auto_grid_threshold.py`` sweeps grid-score ranked neuron subsets and reports candidate thresholds.
+- ``phase_center_comparison.py`` compares phase centers across sessions or conditions, using torus-aware displacement.
+
+These helpers organize common research questions around the existing ASA modules:
+
+.. list-table::
+   :header-rows: 1
+   :widths: 28 42 30
+
+   * - Workflow
+     - Question
+     - Typical outputs
+   * - ``auto_grid_threshold.py``
+     - Which grid-score cutoff or top-k subset gives a cleaner neuron population for TDA or coho analysis?
+     - Threshold sweep summaries, best subset metadata, barcode / coho quality metrics.
+   * - ``phase_center_comparison.py``
+     - How do the same neurons move in coho torus phase space across two sessions or conditions?
+     - Paired black/red phase-center plots and torus-aware displacement summaries.
+
+.. figure:: /_static/asa_auto_grid_threshold_example.png
+   :width: 80%
+   :align: center
+
+   Example automatic grid-score threshold sweep. The workflow scans candidate subsets
+   so users can quickly inspect which neuron population gives more stable topology
+   and coho outputs.
+
+.. figure:: /_static/asa_phase_center_comparison_example.png
+   :width: 70%
+   :align: center
+
+   Example phase-center comparison. Black and red points mark the same neurons across
+   two sessions or conditions, and connecting lines use the shortest displacement
+   under torus periodic boundaries.
+
 RNN Dynamics Analysis
 =====================
 

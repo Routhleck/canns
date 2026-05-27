@@ -9,7 +9,7 @@ Examples:
     >>> print(analyzer.__all__)
 """
 
-from . import data, metrics, model_specific, slow_points, visualization
+from . import data, metrics, model_specific, slow_points, visualization, workflows
 
 __all__ = [
     "metrics",
@@ -17,4 +17,5 @@ __all__ = [
     "data",
     "slow_points",
     "model_specific",
+    "workflows",
 ]

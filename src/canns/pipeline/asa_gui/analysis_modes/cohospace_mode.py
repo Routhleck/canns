@@ -46,7 +46,7 @@ class CohoSpaceMode(AbstractAnalysisMode):
 
         self.mode = PopupComboBox()
         self.mode.addItems(["spike", "fr"])
-        self.mode.setCurrentText("spike")
+        self.mode.setCurrentText("fr")
 
         self.top_percent = QDoubleSpinBox()
         self.top_percent.setRange(0.1, 50.0)
@@ -62,8 +62,19 @@ class CohoSpaceMode(AbstractAnalysisMode):
         self.subsample.setRange(1, 100)
         self.subsample.setValue(2)
 
+        self.bins = QSpinBox()
+        self.bins.setRange(20, 501)
+        self.bins.setSingleStep(10)
+        self.bins.setValue(51)
+
+        self.smooth_sigma = QDoubleSpinBox()
+        self.smooth_sigma.setRange(0.0, 20.0)
+        self.smooth_sigma.setSingleStep(0.5)
+        self.smooth_sigma.setValue(1.0)
+
         self.unfold = PopupComboBox()
         self.unfold.addItems(["square", "skew"])
+        self.unfold.setCurrentText("skew")
 
         self.skew_show_grid = QCheckBox("Skew: show grid")
         self.skew_show_grid.setChecked(True)
@@ -120,6 +131,8 @@ class CohoSpaceMode(AbstractAnalysisMode):
 
         form.addRow(self._dims1d_label, self._dims1d_wrap)
         form.addRow(self._dims2d_label, self._dims2d_wrap)
+        form.addRow("EcohoSpace bins", self.bins)
+        form.addRow("EcohoSpace smooth σ", self.smooth_sigma)
         form.addRow("Unfold", self.unfold)
         form.addRow("", self.skew_show_grid)
         form.addRow("Skew tiles", self.skew_tiles)
@@ -151,6 +164,8 @@ class CohoSpaceMode(AbstractAnalysisMode):
             "top_percent": float(self.top_percent.value()),
             "view": str(self.view.currentData() or "single"),
             "subsample": int(self.subsample.value()),
+            "bins": int(self.bins.value()),
+            "smooth_sigma": float(self.smooth_sigma.value()),
             "unfold": str(self.unfold.currentText()),
             "skew_show_grid": bool(self.skew_show_grid.isChecked()),
             "skew_tiles": int(self.skew_tiles.value()),
@@ -203,6 +218,8 @@ class CohoSpaceMode(AbstractAnalysisMode):
             self.mode.setToolTip("spike 或 fr 模式。")
             self.top_percent.setToolTip("活跃点百分比阈值。")
             self.view.setToolTip("显示单神经元或群体。")
+            self.bins.setToolTip("EcohoSpace 相位空间分箱数量。")
+            self.smooth_sigma.setToolTip("EcohoSpace rate map 平滑强度。")
             self.subsample.setToolTip("轨迹下采样步长。")
             self.unfold.setToolTip("展开方式（square / skew）。")
             self.skew_show_grid.setToolTip("skew 模式下显示网格。")
@@ -220,6 +237,8 @@ class CohoSpaceMode(AbstractAnalysisMode):
             self.mode.setToolTip("spike or fr mode.")
             self.top_percent.setToolTip("Active percentile threshold.")
             self.view.setToolTip("Show single neuron or population.")
+            self.bins.setToolTip("Phase-space bin count for EcohoSpace maps.")
+            self.smooth_sigma.setToolTip("Smoothing sigma for EcohoSpace rate maps.")
             self.subsample.setToolTip("Trajectory subsample step.")
             self.unfold.setToolTip("Unfold mode (square / skew).")
             self.skew_show_grid.setToolTip("Show grid in skew mode.")

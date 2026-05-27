@@ -203,12 +203,15 @@ def cohomap(
 
     This mirrors GridCellTorus get_ang_hist: bin spatial positions and compute the
     circular mean of each decoded angle within spatial bins, then smooth in sin/cos
-    space. Optional toroidal alignment follows the GridCellTorus stripe fit + rotation.
-    You can gate alignment by valid fraction or fit error thresholds.
+    space. Optional toroidal alignment follows the GridCellTorus stripe fit + rotation
+    when at least two decoded angles are available. You can gate alignment by valid
+    fraction or fit error thresholds.
     """
     coords, times_box = _extract_coords_and_times(decoding_result, coords_key)
-    if coords.ndim != 2 or coords.shape[1] < 2:
-        raise ValueError(f"coords must be (N,2+) array, got {coords.shape}")
+    if coords.ndim == 1:
+        coords = coords[:, None]
+    if coords.ndim != 2 or coords.shape[1] < 1:
+        raise ValueError(f"coords must be (N,D) with D>=1, got {coords.shape}")
 
     xx = np.asarray(position_data["x"])
     yy = np.asarray(position_data["y"])
@@ -257,8 +260,18 @@ def cohomap(
         return mtot, x_edge, y_edge
 
     coords_use = np.asarray(coords, float)
-    m1_raw, x_edge, y_edge = _angle_hist(coords_use[:, 0])
-    m2_raw, _, _ = _angle_hist(coords_use[:, 1])
+    raw_maps: list[np.ndarray] = []
+    x_edge = y_edge = None
+    for dim in range(coords_use.shape[1]):
+        phase_map, x_edge_tmp, y_edge_tmp = _angle_hist(coords_use[:, dim])
+        raw_maps.append(phase_map)
+        if x_edge is None:
+            x_edge = x_edge_tmp
+            y_edge = y_edge_tmp
+    assert x_edge is not None and y_edge is not None
+
+    m1_raw = raw_maps[0]
+    m2_raw = raw_maps[1] if len(raw_maps) > 1 else None
     aligned = False
     align_error = None
     align_valid_frac1 = None
@@ -266,9 +279,10 @@ def cohomap(
     align_fit_error1 = None
     align_fit_error2 = None
 
-    if align_torus:
+    if align_torus and coords_use.shape[1] >= 2:
         try:
             align_valid_frac1 = _phase_map_valid_fraction(m1_raw)
+            assert m2_raw is not None
             align_valid_frac2 = _phase_map_valid_fraction(m2_raw)
             min_valid = min(align_valid_frac1, align_valid_frac2)
 
@@ -300,16 +314,27 @@ def cohomap(
             align_error = str(exc)
 
     if aligned:
-        m1, x_edge, y_edge = _angle_hist(coords_use[:, 0])
-        m2, _, _ = _angle_hist(coords_use[:, 1])
+        phase_maps = []
+        for dim in range(coords_use.shape[1]):
+            phase_map, x_edge_tmp, y_edge_tmp = _angle_hist(coords_use[:, dim])
+            phase_maps.append(phase_map)
+            if dim == 0:
+                x_edge = x_edge_tmp
+                y_edge = y_edge_tmp
     else:
-        m1, m2 = m1_raw, m2_raw
+        phase_maps = raw_maps
 
-    return {
+    phase_maps_arr = np.stack(phase_maps, axis=0)
+    phase_maps_raw_arr = np.stack(raw_maps, axis=0)
+    m1 = phase_maps_arr[0]
+    m2 = phase_maps_arr[1] if phase_maps_arr.shape[0] > 1 else None
+
+    result = {
+        "phase_maps": phase_maps_arr,
         "phase_map1": m1,
-        "phase_map2": m2,
+        "phase_maps_raw": phase_maps_raw_arr,
         "phase_map1_raw": m1_raw,
-        "phase_map2_raw": m2_raw,
+        "num_phase_maps": int(phase_maps_arr.shape[0]),
         "x_edge": x_edge,
         "y_edge": y_edge,
         "bins": bins,
@@ -327,6 +352,10 @@ def cohomap(
         "align_fit_error1": align_fit_error1,
         "align_fit_error2": align_fit_error2,
     }
+    if m2 is not None and m2_raw is not None:
+        result["phase_map2"] = m2
+        result["phase_map2_raw"] = m2_raw
+    return result
 
 
 def fit_cohomap_stripes(
@@ -390,35 +419,51 @@ def plot_cohomap(
     config: PlotConfig | None = None,
     save_path: str | None = None,
     show: bool = False,
-    figsize: tuple[int, int] = (10, 4),
+    figsize: tuple[float, float] | None = None,
     cmap: str = "viridis",
     mode: str = "cos",
 ) -> plt.Figure:
     """
-    Plot EcohoMap phase maps (two panels: phase_map1/phase_map2).
+    Plot EcohoMap phase maps.
 
     mode:
         "phase" to show raw phase (radians),
         "cos" or "sin" to show cosine/sine of phase like GridCellTorus.
     """
+    if "phase_maps" in cohomap_result:
+        phase_maps = np.asarray(cohomap_result["phase_maps"])
+    else:
+        phase_maps = np.stack(
+            [cohomap_result["phase_map1"], cohomap_result["phase_map2"]],
+            axis=0,
+        )
+    if phase_maps.ndim != 3:
+        raise ValueError(f"phase_maps must have shape (D,H,W), got {phase_maps.shape}")
+    num_maps = int(phase_maps.shape[0])
+    ncols = min(4, num_maps)
+    nrows = int(np.ceil(num_maps / ncols))
+    auto_figsize = (4.2 * ncols, 4.0 * nrows)
+    figsize_use = figsize or auto_figsize
+
     config = _ensure_plot_config(
         config,
         PlotConfig.for_static_plot,
         title="EcohoMap",
         xlabel="",
         ylabel="",
-        figsize=figsize,
+        figsize=figsize_use,
         save_path=save_path,
         show=show,
     )
+    if figsize is None and tuple(config.figsize) == (10, 4) and num_maps > 2:
+        config.figsize = auto_figsize
 
-    m1 = cohomap_result["phase_map1"]
-    m2 = cohomap_result["phase_map2"]
     x_edge = cohomap_result["x_edge"]
     y_edge = cohomap_result["y_edge"]
 
-    fig, ax = plt.subplots(1, 2, figsize=config.figsize)
-    for i, (mtot, title) in enumerate(((m1, "Phase Map 1"), (m2, "Phase Map 2"))):
+    fig, axes = plt.subplots(nrows, ncols, figsize=config.figsize, squeeze=False)
+    axes_flat = axes.ravel()
+    for i, mtot in enumerate(phase_maps):
         if mode == "phase":
             plot_map = mtot
             cbar_label = "Phase (rad)"
@@ -433,7 +478,7 @@ def plot_cohomap(
             vmin, vmax = -1.0, 1.0
         else:
             raise ValueError(f"Unknown mode '{mode}'. Use 'phase', 'cos', or 'sin'.")
-        im = ax[i].imshow(
+        im = axes_flat[i].imshow(
             plot_map,
             origin="lower",
             extent=[x_edge[0], x_edge[-1], y_edge[0], y_edge[-1]],
@@ -441,11 +486,14 @@ def plot_cohomap(
             vmin=vmin,
             vmax=vmax,
         )
-        ax[i].set_title(title, fontsize=10)
-        ax[i].set_aspect("equal", "box")
-        ax[i].set_xticks([])
-        ax[i].set_yticks([])
-        plt.colorbar(im, ax=ax[i], fraction=0.046, pad=0.04, label=cbar_label)
+        axes_flat[i].set_title(f"Phase Map {i + 1}", fontsize=10)
+        axes_flat[i].set_aspect("equal", "box")
+        axes_flat[i].set_xticks([])
+        axes_flat[i].set_yticks([])
+        plt.colorbar(im, ax=axes_flat[i], fraction=0.046, pad=0.04, label=cbar_label)
+
+    for ax in axes_flat[num_maps:]:
+        ax.axis("off")
 
     fig.tight_layout()
     _ensure_parent_dir(config.save_path)
