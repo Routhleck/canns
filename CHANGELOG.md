@@ -5,6 +5,28 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.0] - 2026-05-28
+
+### Added
+- ASA spatial TDA workflows with automated grid threshold detection
+- Phase center comparison workflow for cell population analysis
+- Spatial embedding module for coordinate embedding utilities
+- TDA null model comparison for statistical validation
+- New ASA GUI analysis mode updates and improvements
+
+### Changed
+- Enhanced cohomoap and cohospace analysis modes in ASA GUI
+- Updated ASA pipeline tutorials with spatial workflow examples
+- Expanded core concepts documentation (EN + ZH)
+
+### Files Added/Modified
+- `src/canns/analyzer/workflows/auto_grid_threshold.py`
+- `src/canns/analyzer/workflows/phase_center_comparison.py`
+- `src/canns/analyzer/data/asa/spatial_tda.py`
+- `src/canns/analyzer/data/asa/spatial_embedding.py`
+- `examples/asa/subcluster_grid_cells_asa.py`
+- `examples/asa/tda_null_model_compare.py`
+
 ## [1.0.2] - 2026-04-08
 
 ### Added
@@ -649,6 +671,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Initial release
 - Basic structure template
 - Core application structure
+
+[1.1.0]: https://github.com/routhleck/canns/compare/v1.0.2...v1.1.0
 
 [1.0.2]: https://github.com/routhleck/canns/compare/v1.0.1...v1.0.2
 
