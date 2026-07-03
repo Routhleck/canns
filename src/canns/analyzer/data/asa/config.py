@@ -71,15 +71,17 @@ class TDAConfig:
     num_shuffles : int
         Number of shuffles for null distribution.
     use_ffi_shuffle : bool
-        When True and canns-lib is recent enough, run the shuffle null model
-        via the Rust+rayon ``shuffle_null_model`` FFI (typically 100-3000x
-        faster on the shuffle loop). The FFI runs ripser on a Euclidean
-        distance matrix built directly from the raw (T, N) spike-train matrix,
-        skipping the timepoint downsampling/PCA/UMAP-denoising pipeline of
-        the legacy ``_compute_persistence`` path. The resulting null
-        distribution will therefore differ from the legacy path; enable only
-        when the simplified point cloud is acceptable. Falls back to the
-        legacy ``mp.Pool`` path automatically if the FFI is unavailable.
+        Run the shuffle null model via the Rust+rayon ``shuffle_null_model``
+        FFI shipped by ``canns-lib>=0.9.0`` (typically 100-3000x faster on
+        the shuffle loop). The FFI runs ripser on a Euclidean distance
+        matrix built directly from the raw (T, N) spike-train matrix,
+        skipping the timepoint downsampling / PCA / UMAP-denoising pipeline
+        of the legacy ``_compute_persistence`` path. The resulting null
+        distribution will therefore differ semantically from the legacy
+        path; this default is appropriate when the simplified point
+        cloud is acceptable. Falls back to the legacy ``mp.Pool`` path
+        automatically if the FFI is unavailable. Set to ``False`` to
+        force the legacy behaviour.
     progress_bar : bool
         Whether to show progress bars.
     standardize : bool
@@ -105,7 +107,7 @@ class TDAConfig:
     show: bool = True
     do_shuffle: bool = False
     num_shuffles: int = 1000
-    use_ffi_shuffle: bool = False
+    use_ffi_shuffle: bool = True
     progress_bar: bool = True
     standardize: bool = True
 

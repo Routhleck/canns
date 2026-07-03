@@ -5,17 +5,32 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.1] - 2026-07-04
+
+### Changed
+- **`TDAConfig.use_ffi_shuffle` default flipped from `False` to `True`.** The shuffle null-model loop now routes through `canns_lib._ripser_core.shuffle_null_model` (Rust+rayon) by default, instead of the per-shuffle `multiprocessing.Pool` + `_compute_persistence` legacy path. This was intentionally an opt-in in 1.2.0; with 1.3.0 we flip the default so the speedup is on by default for users on `canns-lib>=0.9.0`. Benchmark (maxdim=1, 24-cell matrix T∈{60,300}×N∈{20,40,80}×K∈{10,50,200,1000}, macOS arm64): median **2 321×** speedup, range 139×–28 555×, total wall time 4.5 s vs 2 175 s on the legacy path.
+- The `TDAConfig.use_ffi_shuffle` docstring and the `_run_shuffle_analysis` docstring now describe the legacy path as an opt-out. To force the legacy path, set `TDAConfig(use_ffi_shuffle=False)` or pass `force_legacy=True` to `_run_shuffle_analysis`.
+
+### Notes for users (important)
+- The FFI path computes a Euclidean distance matrix **directly from the raw (T, N) spike-train matrix** (no timepoint downsampling, PCA, UMAP denoising, nbs thresholding). The legacy path applies all of those. Consequently, the **null distribution shape will differ** between the two paths even at the same seed. This was an opt-in change in 1.2.0; it is now the default.
+- If you specifically need the legacy preprocessing for your study (or for reproducibility with published results computed under the v1.1.x pipeline), explicitly opt out:
+  ```python
+  config = TDAConfig(use_ffi_shuffle=False, do_shuffle=True, ...)
+  ```
+  or
+  ```python
+  _run_shuffle_analysis(..., force_legacy=True)
+  ```
+- The legacy path is still the automatic fallback whenever the FFI raises (e.g. `canns-lib<0.9.0`, `maxdim>2`, invalid shape, or any FFI exception). A `logging.warning` is emitted in that case.
+
 ## [1.2.0] - 2026-07-03
 
 ### Added
-- `TDAConfig.use_ffi_shuffle` (default `False`) — when True and `canns-lib>=0.9.0` is installed, the TDA shuffle null-model loop is routed through the new `canns_lib._ripser_core.shuffle_null_model` FFI. Internally parallelised with rayon, replacing the per-shuffle `multiprocessing.Pool` + `ripser` call with a single Rust call. Typically 100-3000× faster (T=100, N=40, 50 shuffles: 12 ms vs 31 s measured against the legacy path).
-- `_run_shuffle_analysis` now accepts `use_ffi_shuffle=True` and `force_legacy=True` kwargs. The legacy `mp.Pool` path remains the default and is also used automatically when the FFI raises (older `canns-lib`, shape mismatch, FFI exception).
+- `TDAConfig.use_ffi_shuffle` — when True and `canns-lib>=0.9.0` is installed, the TDA shuffle null-model loop is routed through the new `canns_lib._ripser_core.shuffle_null_model` FFI. Internally parallelised with rayon, replacing the per-shuffle `multiprocessing.Pool` + `ripser` call with a single Rust call. Typically 100-3000× faster (T=100, N=40, 50 shuffles: 12 ms vs 31 s measured against the legacy path).
+- `_run_shuffle_analysis` accepts `use_ffi_shuffle=True` and `force_legacy=True` kwargs. The legacy `mp.Pool` path is also used automatically when the FFI raises (older `canns-lib`, shape mismatch, FFI exception).
 
 ### Changed
 - `canns-lib` minimum version bumped from `>=0.6.2` to `>=0.9.0` in `pyproject.toml`. The FFI is only available from `canns-lib` 0.9.0 onward; older versions continue to work through the automatic fallback.
-
-### Notes for users
-- The FFI shuffle null-model computes a Euclidean distance matrix **directly from the raw (T, N) spike-train matrix** and runs ripser on that, skipping the timepoint downsampling, PCA, UMAP denoising, and nbs thresholding that `_compute_persistence` applies in the legacy path. The resulting null distribution **will differ** from the legacy path because the input point cloud is different. The FFI is exposed as opt-in only; users reproducing published null-model results should keep `use_ffi_shuffle=False` until they confirm the semantic difference is acceptable for their study.
 
 ## [Unreleased]
 

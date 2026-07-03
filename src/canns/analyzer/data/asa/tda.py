@@ -676,35 +676,35 @@ def _run_shuffle_analysis(sspikes, num_shuffles=1000, num_cores=4, progress_bar=
     Behavior depends on ``use_ffi_shuffle`` (in ``kwargs`` or in a global
     default — see ``TDAConfig.use_ffi_shuffle``):
 
-    - ``use_ffi_shuffle=False`` (default): legacy path, runs
-      ``_compute_persistence`` per shuffle under a ``mp.Pool``. Slow but
-      matches historical behavior exactly (timepoint downsampling, PCA, UMAP
-      denoising, nbs thresholding all included).
-    - ``use_ffi_shuffle=True``: fast Rust+rayon ``shuffle_null_model`` FFI from
-      canns-lib. Computes a Euclidean distance matrix **directly from the raw
-      (T, N) spike-train matrix** and runs ripser, skipping all preprocessing
-      (no downsampling, PCA, denoising, nbs). Typically 100-3000x faster on
-      the shuffle loop, but **distributions will differ from the legacy path**
-      because the input point cloud is different. Use only when:
-        1. The preprocessing in ``_compute_persistence`` is intentionally
-           undesired, or
-        2. You are reproducing a null model whose definition is "shuffle then
-           ripser on raw spike trains" (which is what the FFI computes).
-      Falls back to the legacy path if canns-lib lacks the FFI or if
-      ``maxdim > 2`` / shape is invalid for the FFI.
-
+    - ``use_ffi_shuffle=True`` (default): fast Rust+rayon ``shuffle_null_model``
+      FFI from ``canns-lib``. Computes a Euclidean distance matrix **directly
+      from the raw (T, N) spike-train matrix** and runs ripser, skipping
+      timepoint downsampling, PCA, UMAP denoising, and nbs thresholding.
+      Typically 100-3000x faster on the shuffle loop. The resulting null
+      distribution will differ semantically from the legacy path because
+      the input point cloud is different.
+    - ``use_ffi_shuffle=False``: legacy ``multiprocessing.Pool`` path, runs
+      ``_compute_persistence`` per shuffle (includes the full preprocessing
+      pipeline). Use only when you specifically need the legacy
+      preprocessing to be applied.
     Use ``force_legacy=True`` to unconditionally bypass the FFI.
+
+    Falls back to the legacy path if ``canns-lib`` lacks the FFI, or if
+    ``maxdim > 2`` / shape is invalid for the FFI, or on any FFI exception
+    (logged via ``logging.warning``).
     """
-    if not kwargs.get("use_ffi_shuffle", False) or kwargs.get("force_legacy", False):
-        # _process_single_shuffle does not know about the FFI control flags.
+    if kwargs.get("force_legacy", False) or not kwargs.get("use_ffi_shuffle", True):
+        # Strip FFI control flags from kwargs to avoid leaking them into the
+        # legacy path on any fallback (would otherwise recurse / crash).
         legacy_kwargs = {
             k: v for k, v in kwargs.items() if k not in {"use_ffi_shuffle", "force_legacy"}
         }
         return _run_shuffle_analysis_multiprocessing(
             sspikes, num_shuffles, num_cores, progress_bar, **legacy_kwargs
         )
-    # Strip FFI control flags from kwargs to avoid leaking them into the
-    # legacy path on any fallback (would otherwise recurse / crash).
+    # Strip FFI control flags so they don't leak into a legacy fallback (would
+    # otherwise recurse / crash). The fallback will use the same legacy path
+    # as in 1.1.x, preserving the public contract.
     legacy_kwargs = {
         k: v for k, v in kwargs.items() if k not in {"use_ffi_shuffle", "force_legacy"}
     }
