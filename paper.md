@@ -40,9 +40,12 @@ affiliations:
   - name: College of Mathematics and Statistics, Chongqing University, Chongqing, China
     index: 5
 
-date: 19 January 2026
+date: 26 June 2026
 bibliography: paper.bib
 ---
+> **Preprint notice.** A preprint of this manuscript has been deposited to arXiv as
+> [arXiv:2606.27783](https://arxiv.org/abs/2606.27783).
+
 # Summary
 
 CANNs (Continuous Attractor Neural Networks toolkit) is a Python library built on BrainPy, a powerful framework for brain dynamics 

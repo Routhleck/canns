@@ -77,8 +77,8 @@ identifiers:
     value: "10.5281/zenodo.17412545"
     description: "The concept DOI (always resolves to latest version)"
 preferred-citation:
-  type: software
-  title: "CANNs: Continuous Attractor Neural Networks Toolkit"
+  type: article
+  title: "CANNs: A Toolkit for Research on Continuous Attractor Neural Networks"
   authors:
     - family-names: "He"
       given-names: "Sichao"
@@ -132,8 +132,8 @@ preferred-citation:
         - "PKU-IDG/McGovern Institute for Brain Research, Peking University"
         - "Center of Quantitative Biology, Peking University"
       orcid: "https://orcid.org/0000-0001-9650-6935"
-  doi: "10.5281/zenodo.18453893"
-  url: "https://github.com/Routhleck/canns"
-  version: "v1.0.0"
+  journal: "arXiv"
   year: 2026
-  month: 2
+  month: 6
+  doi: "10.48550/arXiv.2606.27783"
+  url: "https://arxiv.org/abs/2606.27783"

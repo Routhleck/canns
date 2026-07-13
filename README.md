@@ -10,6 +10,7 @@
 <picture><img src="https://badges.ws/github/release/routhleck/canns" /></picture>
 <picture><img src="https://badges.ws/github/license/routhleck/canns" /></picture>
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.18453893.svg)](https://doi.org/10.5281/zenodo.18453893)
+[![arXiv](https://img.shields.io/badge/arXiv-2606.27783-b31b1b.svg)](https://arxiv.org/abs/2606.27783)
 
 
 <picture><img src="https://badges.ws/github/stars/routhleck/canns?logo=github" /></picture>
@@ -201,7 +202,28 @@ uv pip install canns
 
 ## Citation
 
-If you use CANNs in your research, please cite:
+If you use CANNs in your research, please cite the arXiv preprint:
+
+```bibtex
+@misc{he2026canns,
+  author       = {He, Sichao and
+                  Tuerhong, Aiersi and
+                  She, Shangjun and
+                  Chu, Tianhao and
+                  Wu, Yuling and
+                  Zuo, Junfeng and
+                  Wu, Si},
+  title        = {CANNs: A Toolkit for Research on Continuous Attractor Neural Networks},
+  year         = {2026},
+  eprint       = {2606.27783},
+  archivePrefix = {arXiv},
+  primaryClass = {q-bio.NC},
+  doi          = {10.48550/arXiv.2606.27783},
+  url          = {https://arxiv.org/abs/2606.27783}
+}
+```
+
+If you need to cite a specific version of the software, you may also include the Zenodo archive:
 
 ```bibtex
 @software{he_2026_canns,
@@ -214,7 +236,7 @@ If you use CANNs in your research, please cite:
                   Wu, Si},
   title        = {CANNs: Continuous Attractor Neural Networks Toolkit},
   month        = feb,
-  year         = 2026,
+  year         = {2026},
   publisher    = {Zenodo},
   version      = {v1.0.0},
   doi          = {10.5281/zenodo.18453893},
@@ -222,7 +244,10 @@ If you use CANNs in your research, please cite:
 }
 ```
 
-**Plain text:**
+**Plain text (primary):**
+> He, S., Tuerhong, A., She, S., Chu, T., Wu, Y., Zuo, J., & Wu, S. (2026). CANNs: A Toolkit for Research on Continuous Attractor Neural Networks. arXiv:2606.27783. https://arxiv.org/abs/2606.27783
+
+**Plain text (version-specific):**
 > He, S., Tuerhong, A., She, S., Chu, T., Wu, Y., Zuo, J., & Wu, S. (2026). CANNs: Continuous Attractor Neural Networks Toolkit (v1.0.0). Zenodo. https://doi.org/10.5281/zenodo.18453893
 
 ## Contributing & License

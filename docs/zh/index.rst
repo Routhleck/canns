@@ -25,6 +25,10 @@ CANNs 文档
    :target: https://doi.org/10.5281/zenodo.18453893
    :alt: DOI
 
+.. image:: https://img.shields.io/badge/arXiv-2606.27783-b31b1b.svg
+   :target: https://arxiv.org/abs/2606.27783
+   :alt: arXiv
+
 .. image:: https://badges.ws/github/stars/routhleck/canns?logo=github
    :target: https://github.com/routhleck/canns/stargazers
    :alt: GitHub Stars
@@ -352,7 +356,28 @@ ASA 流水线（GUI/TUI）
 引用
 --------
 
-如果您在研究中使用了 CANNs，请引用：
+如果您在研究中使用了 CANNs，请优先引用 arXiv 预印本：
+
+.. code-block:: bibtex
+
+   @misc{he2026canns,
+     author       = {He, Sichao and
+                     Tuerhong, Aiersi and
+                     She, Shangjun and
+                     Chu, Tianhao and
+                     Wu, Yuling and
+                     Zuo, Junfeng and
+                     Wu, Si},
+     title        = {CANNs: A Toolkit for Research on Continuous Attractor Neural Networks},
+     year         = {2026},
+     eprint       = {2606.27783},
+     archivePrefix = {arXiv},
+     primaryClass = {q-bio.NC},
+     doi          = {10.48550/arXiv.2606.27783},
+     url          = {https://arxiv.org/abs/2606.27783}
+   }
+
+如果您需要引用软件的特定版本，也可以补充 Zenodo 归档：
 
 .. code-block:: bibtex
 
@@ -366,7 +391,7 @@ ASA 流水线（GUI/TUI）
                      Wu, Si},
      title        = {CANNs: Continuous Attractor Neural Networks Toolkit},
      month        = feb,
-     year         = 2026,
+     year         = {2026},
      publisher    = {Zenodo},
      version      = {v1.0.0},
      doi          = {10.5281/zenodo.18453893},
