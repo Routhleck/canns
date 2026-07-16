@@ -16,9 +16,11 @@ benchmarks/
 ├── shuffle_null_model.py      # current benchmark: FFI vs mp.Pool
 ├── run_all.sh                 # one-shot re-runner (add new benchmarks here)
 └── results/
-    ├── v1.2.0-shuffle.csv     # raw data, version-keyed, immutable
-    ├── v1.2.0-shuffle.md      # human-readable writeup, immutable
-    └── ...                    # future: v1.3.0-shuffle.md, etc.
+    ├── v1.2.0-shuffle.csv         # macOS arm64 raw data, version-keyed, immutable
+    ├── v1.2.0-shuffle.md          # macOS arm64 writeup, immutable
+    ├── v1.2.0-shuffle-linux.csv   # Linux x86_64 16c raw data, immutable
+    ├── v1.2.0-shuffle-linux.md    # Linux x86_64 16c writeup, immutable
+    └── ...                        # future: v1.3.0-shuffle.md, etc.
 ```
 
 ## Immutability rule for `results/`
@@ -57,7 +59,15 @@ uv run python benchmarks/shuffle_null_model.py \
 Output: a timestamped CSV in `benchmarks/results/`, plus an aggregate
 median summary printed to stdout.
 
-## Adding a new result (release checklist)
+> **Linux + JAX systems:** the script calls
+> `multiprocessing.set_start_method("forkserver")` at import time. This
+> is **required** on Linux because the default `fork` start method
+> copies the parent's thread state into each worker — including JAX's
+> BLAS threadpool — and that combination deadlocks on the first
+> pickling barrier. See the comment block at the top of
+> `shuffle_null_model.py` for the full explanation. macOS is
+> unaffected (different default start method, no JAX BLAS contention
+> at module init).## Adding a new result (release checklist)
 
 When a release introduces (or re-tunes) a performance-sensitive path:
 
