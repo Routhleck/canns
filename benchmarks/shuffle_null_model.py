@@ -30,6 +30,19 @@ from pathlib import Path
 
 import numpy as np
 
+# The legacy shuffle path inside canns uses multiprocessing.Pool to fan out
+# the K shuffles. The default Linux start method is 'fork', which copies
+# the parent's full thread state into each worker — including JAX's BLAS
+# threadpool. That combination deadlocks on the first pickling barrier.
+# 'forkserver' forks from a clean helper process, so workers start
+# without the parent's auxiliary threads. This matches what the canns
+# maintainers recommend on Linux+JAX systems.
+import multiprocessing as mp
+try:
+    mp.set_start_method("forkserver")
+except RuntimeError:
+    pass  # start method already set (e.g. when run under a wrapper)
+
 # benchmarks/ is a sibling of src/, so go up one level to find src/.
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
 
