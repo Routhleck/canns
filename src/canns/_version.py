@@ -10,10 +10,10 @@ try:
         __version__ = version("canns")
     except PackageNotFoundError:
         # Fallback for development installs
-        __version__ = "0.5.1+dev"
+        __version__ = "1.2.2+dev"
 except ImportError:
     # Fallback for Python < 3.8
-    __version__ = "0.5.1+dev"
+    __version__ = "1.2.2+dev"
 
 
 def parse_version_info(version_string):

@@ -25,11 +25,11 @@ if os.environ.get('GITHUB_ACTIONS') == 'true':
             version = git_version
             release = git_version
         else:
-            version = '0.10.0'
-            release = '0.10.0'
+            version = '1.2.2'
+            release = '1.2.2'
     except Exception:
-        version = '0.10.0'
-        release = '0.10.0'
+        version = '1.2.2'
+        release = '1.2.2'
 else:
     # For local development, use the package version (includes dev info)
     try:
@@ -48,11 +48,11 @@ else:
                 version = git_version
                 release = git_version
             else:
-                version = '0.10.0'
-                release = '0.10.0'
+                version = '1.2.2'
+                release = '1.2.2'
         except Exception:
-            version = '0.10.0'
-            release = '0.10.0'
+            version = '1.2.2'
+            release = '1.2.2'
 
 # -- General configuration ---------------------------------------------------
 extensions = [

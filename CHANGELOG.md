@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.2] - 2026-08-10
+
+### Changed
+- **Relaxed the `numpy` upper bound from `<2.3` to `<3`.** The BrainX ecosystem (the umbrella pinned-release of BrainPy / BrainUnit / BrainState / … published by the chaobrain lab) bumped its floor to `numpy>=2.4.4` starting with brainx 2026.6.8, which made `canns 1.2.1` unresolvable in any environment that also pulled in a recent `brainx`. The new bound keeps `numpy>=1.24` for the legacy floor but lets the resolver pick 2.4.x or 2.5.x when downstream projects (or users with `pip install brainx[cpu] -U`) need it. No canns source code change was required — the whole test suite (113 unit + 22 integration + 9 visualization, 4 skipped) passes cleanly on the new resolution.
+- **Soft-bumped the BrainX ecosystem in `uv.lock`** as a consequence of `uv sync --upgrade`: `brainpy 2.7.6 → 2.8.2`, `brainunit 0.1.3 → 0.5.2`, `brainstate 0.2.9 → 0.5.3`, `brainevent 0.0.5 → 0.2.1`, `braintools 0.1.8 → 0.3.0`, `saiunit 0.1.3 → 0.5.2`, `canns-lib 0.9.0 → 0.10.1`, `numpy 2.2.6 → 2.4.6`, `numba 0.56.0 → 0.66.0`. `canns` itself is forward-compatible with all of these — no public API change.
+
+### Notes for users
+- Existing environments on `numpy<2.3` are unaffected: `>=1.24` still permits 1.24, 1.26, 2.0, 2.1, 2.2. The only practical difference is that a fresh `pip install canns` will now also resolve cleanly in environments that already have a newer numpy pulled in by another package (e.g. `brainx`, `jax>=0.11`, `canns-lib>=0.10`).
+- If you were on the previous canns and have been hitting the `canns 1.2.1 requires numpy<2.3,>=1.24 — brainx 2026.7.9 requires numpy>=2.4.4` resolver error, a plain `pip install -U canns` (or `uv sync --upgrade`) on 1.2.2 resolves it.
+
 ## [1.2.1] - 2026-07-04
 
 ### Changed
