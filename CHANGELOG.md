@@ -44,16 +44,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.3.1] - 2026-08-17
+
 ### Added
+- **`noise_level` parameter on `TemplateMatching` (and 1D/2D subclasses).** The per-step Gaussian noise added to the constant stimulus template was hard-coded to `0.1 * A * randn()` inside `TemplateMatching.get_data()`, with no way for callers to scale it. It is now an explicit constructor argument (`noise_level: float = 0.1`, validated as a finite non-negative scalar — `inf` / `nan` / non-numeric inputs raise `ValueError` / `TypeError` at construction time). The default preserves the prior behavior, so this is a backwards-compatible feature addition. PR #99.
 - arXiv preprint reference ([arXiv:2606.27783](https://arxiv.org/abs/2606.27783)) describing the CANNs toolkit
 - arXiv badge to README and documentation index pages
 
 ### Changed
+- `TemplateMatching` class docstring now lists `A` and `noise_level` under an `Attributes:` section so the parameters surface in IDE tooltips and Sphinx output (in addition to the `__init__` docstring and the instance attribute assignments).
 - Updated `CITATION.cff` `preferred-citation` to point to the arXiv preprint (was Zenodo software entry)
 - Updated `README.md` and `README_zh.md` Citation sections to recommend the arXiv paper as the primary citation, with Zenodo archive as an optional version-specific citation
 - Updated `docs/en/index.rst` and `docs/zh/index.rst` Citation sections to match the new README guidance
 - Added arXiv preprint entry (`he2026canns`) to `paper.bib` and `docs/refs/references.bib`
 - Updated `paper.md` frontmatter date to 26 June 2026 and added a preprint notice banner
+
+### Notes for users
+- Existing code that calls `TemplateMatching1D` / `TemplateMatching2D` / `TemplateMatching` without `noise_level` sees identical behavior — the default `0.1` matches the previous hard-coded factor. To explore noise robustness explicitly, pass `noise_level=0.0` for a clean stimulus, `0.05` for a quieter input, or `0.3` for a harsher denoising regime. Validation is strict: `noise_level=-0.1` raises `ValueError`; `noise_level=float("inf")`, `float("nan")`, or any value that cannot be coerced to a `float` is rejected at construction time.
+- The arXiv preprint ([arXiv:2606.27783](https://arxiv.org/abs/2606.27783)) is now the recommended primary citation; the Zenodo archive remains available for version-specific citation.
+
+### Test status
+- `uv run python devtools/lint.py` ✅
+- `uv run pytest -m "not slow"` → 139 passed, 4 skipped (plus 10 deselected by the `slow` marker).
 
 ## [1.1.0] - 2026-05-28
 
