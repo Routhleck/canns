@@ -276,8 +276,9 @@ class TemplateMatching(TrackingTask):
     time step. The network must denoise the input and converge to the clean template,
     testing its attractor dynamics and noise robustness.
 
-    The noisy stimulus is generated as: stimulus + 0.1 * A * randn()
-    where A is the network's stimulus amplitude parameter.
+    The noisy stimulus is generated as: stimulus + noise_level * A * randn()
+    where A is the network's stimulus amplitude parameter and ``noise_level`` controls
+    the relative noise strength (default ``0.1``).
     """
 
     def __init__(
@@ -287,6 +288,7 @@ class TemplateMatching(TrackingTask):
         Iext: Iext_type,
         duration: time_type,
         time_step: time_type = 0.1,
+        noise_level: float = 0.1,
     ):
         """
         Initializes the Template Matching task.
@@ -297,7 +299,11 @@ class TemplateMatching(TrackingTask):
             Iext (float | Quantity): The position of the external input.
             duration (float | Quantity): The duration for which the noisy stimulus is presented.
             time_step (float | Quantity, optional): The simulation time step. Defaults to 0.1.
+            noise_level (float, optional): Multiplier on the CANN amplitude ``A`` that
+                scales the per-step Gaussian noise. Must be non-negative. Defaults to 0.1.
         """
+        if noise_level < 0:
+            raise ValueError(f"noise_level must be non-negative, got {noise_level!r}")
         super().__init__(
             ndim=ndim,
             config={
@@ -308,6 +314,7 @@ class TemplateMatching(TrackingTask):
             },
         )
         self.A = cann_instance.A  # The amplitude of the noise to be added.
+        self.noise_level = noise_level  # Multiplier for the per-step Gaussian noise.
 
     def get_data(self, progress_bar: bool = True):
         """
@@ -336,7 +343,7 @@ class TemplateMatching(TrackingTask):
             desc=f"<{type(self).__name__}>Generating Task data",
             disable=not progress_bar,
         ):
-            noise = 0.1 * self.A * np.random.randn(*self.shape)
+            noise = self.noise_level * self.A * np.random.randn(*self.shape)
             data[i] = stimulus + noise
 
         self.data = data
@@ -530,6 +537,7 @@ class TemplateMatching1D(TemplateMatching):
         Iext: Iext_type,
         duration: time_type,
         time_step: time_type = 0.1,
+        noise_level: float = 0.1,
     ):
         """
         Initializes the Template Matching task.
@@ -539,6 +547,8 @@ class TemplateMatching1D(TemplateMatching):
             Iext (float | Quantity): The position of the external input.
             duration (float | Quantity): The duration for which the noisy stimulus is presented.
             time_step (float | Quantity, optional): The simulation time step. Defaults to 0.1.
+            noise_level (float, optional): Multiplier on the CANN amplitude ``A`` that
+                scales the per-step Gaussian noise. Must be non-negative. Defaults to 0.1.
         """
         super().__init__(
             cann_instance=cann_instance,
@@ -546,6 +556,7 @@ class TemplateMatching1D(TemplateMatching):
             Iext=Iext,
             duration=duration,
             time_step=time_step,
+            noise_level=noise_level,
         )
 
 
@@ -732,6 +743,7 @@ class TemplateMatching2D(TemplateMatching):
         Iext: Iext_pair_type,
         duration: time_type,
         time_step: time_type = 0.1,
+        noise_level: float = 0.1,
     ):
         """
         Initializes the Template Matching task.
@@ -741,6 +753,8 @@ class TemplateMatching2D(TemplateMatching):
             Iext (tuple[float, float] | Quantity): The 2D position of the external input.
             duration (float | Quantity): The duration for which the noisy stimulus is presented.
             time_step (float | Quantity, optional): The simulation time step. Defaults to 0.1.
+            noise_level (float, optional): Multiplier on the CANN amplitude ``A`` that
+                scales the per-step Gaussian noise. Must be non-negative. Defaults to 0.1.
         """
         assert len(Iext) == 2, "Iext must be a tuple of two values for 2D tracking."
         super().__init__(
@@ -749,6 +763,7 @@ class TemplateMatching2D(TemplateMatching):
             Iext=Iext,
             duration=duration,
             time_step=time_step,
+            noise_level=noise_level,
         )
 
 
