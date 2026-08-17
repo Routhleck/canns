@@ -1,4 +1,5 @@
 import inspect
+import math
 from collections.abc import Sequence
 
 import brainpy.math as bm
@@ -279,6 +280,12 @@ class TemplateMatching(TrackingTask):
     The noisy stimulus is generated as: stimulus + noise_level * A * randn()
     where A is the network's stimulus amplitude parameter and ``noise_level`` controls
     the relative noise strength (default ``0.1``).
+
+    Attributes:
+        A (float): Stimulus amplitude inherited from the underlying CANN
+            (``cann_instance.A``); sets the scale of the per-step Gaussian noise.
+        noise_level (float): Non-negative multiplier applied to ``A`` to set the
+            standard deviation of the per-step Gaussian noise.
     """
 
     def __init__(
@@ -300,10 +307,20 @@ class TemplateMatching(TrackingTask):
             duration (float | Quantity): The duration for which the noisy stimulus is presented.
             time_step (float | Quantity, optional): The simulation time step. Defaults to 0.1.
             noise_level (float, optional): Multiplier on the CANN amplitude ``A`` that
-                scales the per-step Gaussian noise. Must be non-negative. Defaults to 0.1.
+                scales the per-step Gaussian noise. Must be a finite, non-negative
+                scalar. Defaults to 0.1.
         """
-        if noise_level < 0:
-            raise ValueError(f"noise_level must be non-negative, got {noise_level!r}")
+        try:
+            noise_level = float(noise_level)
+        except (TypeError, ValueError) as exc:
+            raise TypeError(
+                f"noise_level must be a finite, non-negative float scalar, "
+                f"got {noise_level!r} of type {type(noise_level).__name__}"
+            ) from exc
+        if not math.isfinite(noise_level) or noise_level < 0.0:
+            raise ValueError(
+                f"noise_level must be a finite, non-negative float scalar, got {noise_level!r}"
+            )
         super().__init__(
             ndim=ndim,
             config={

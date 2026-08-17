@@ -94,8 +94,8 @@ def test_template_matching_1d_noise_level_zero_is_clean():
     # data has shape (T, *network_shape); compare each timestep to stimulus.
     for t in range(task.data.shape[0]):
         np.testing.assert_allclose(task.data[t], stimulus, atol=1e-12)
-    # And the across-time variance must be exactly zero (no noise term).
-    assert task.data.std(axis=0).max() == 0.0
+    # And the across-time std must be numerically zero (no noise term).
+    np.testing.assert_allclose(task.data.std(axis=0), 0.0, atol=1e-12)
 
 
 def test_template_matching_1d_noise_level_scales_std():
@@ -133,17 +133,41 @@ def test_template_matching_1d_noise_level_scales_std():
 
 
 def test_template_matching_1d_invalid_noise_level_rejected():
-    """Negative noise_level must be rejected at construction time."""
+    """Negative, non-finite, or non-numeric noise_level must be rejected."""
     bm.set_dt(dt=0.1)
     cann = CANN1D(num=64)
 
-    with pytest.raises(ValueError, match="noise_level must be non-negative"):
+    with pytest.raises(ValueError, match="noise_level must be a finite"):
         TemplateMatching1D(
             cann_instance=cann,
             Iext=0.0,
             duration=1.0,
             time_step=bm.get_dt(),
             noise_level=-0.01,
+        )
+    with pytest.raises(ValueError, match="noise_level must be a finite"):
+        TemplateMatching1D(
+            cann_instance=cann,
+            Iext=0.0,
+            duration=1.0,
+            time_step=bm.get_dt(),
+            noise_level=float("inf"),
+        )
+    with pytest.raises(ValueError, match="noise_level must be a finite"):
+        TemplateMatching1D(
+            cann_instance=cann,
+            Iext=0.0,
+            duration=1.0,
+            time_step=bm.get_dt(),
+            noise_level=float("nan"),
+        )
+    with pytest.raises(TypeError, match="noise_level must be a finite"):
+        TemplateMatching1D(
+            cann_instance=cann,
+            Iext=0.0,
+            duration=1.0,
+            time_step=bm.get_dt(),
+            noise_level="not a number",
         )
 
 

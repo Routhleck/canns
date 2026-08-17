@@ -87,21 +87,37 @@ def test_template_matching_2d_noise_level_zero_is_clean():
     stimulus = task.get_stimulus_by_pos(task.Iext_sequence[0])
     for t in range(task.data.shape[0]):
         np.testing.assert_allclose(task.data[t], stimulus, atol=1e-12)
-    assert task.data.std(axis=0).max() == 0.0
+    np.testing.assert_allclose(task.data.std(axis=0), 0.0, atol=1e-12)
 
 
 def test_template_matching_2d_invalid_noise_level_rejected():
-    """Negative noise_level must be rejected at construction time."""
+    """Negative, non-finite, or non-numeric noise_level must be rejected."""
     bm.set_dt(dt=0.1)
     cann = CANN2D(length=4)
 
-    with pytest.raises(ValueError, match="noise_level must be non-negative"):
+    with pytest.raises(ValueError, match="noise_level must be a finite"):
         TemplateMatching2D(
             cann_instance=cann,
             Iext=[0.0, 0.0],
             duration=1.0,
             time_step=bm.get_dt(),
             noise_level=-0.5,
+        )
+    with pytest.raises(ValueError, match="noise_level must be a finite"):
+        TemplateMatching2D(
+            cann_instance=cann,
+            Iext=[0.0, 0.0],
+            duration=1.0,
+            time_step=bm.get_dt(),
+            noise_level=float("inf"),
+        )
+    with pytest.raises(TypeError, match="noise_level must be a finite"):
+        TemplateMatching2D(
+            cann_instance=cann,
+            Iext=[0.0, 0.0],
+            duration=1.0,
+            time_step=bm.get_dt(),
+            noise_level="not a number",
         )
 
 
