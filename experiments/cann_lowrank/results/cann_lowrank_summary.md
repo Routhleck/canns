@@ -146,7 +146,7 @@ Per-step time of the *full* CANN update function. The matvec is only a fraction 
 
 2. **CANN2D needs more ranks but is still very compressible.** For `L ∈ [8, 64]`, the top-32 singular values capture 92% of the energy and the bump-position error stays below 5 mrad. The 2D Gaussian kernel has richer structure than 1D but is still smooth, so the SVD decays rapidly.
 
-3. **Matvec-only speedup is huge at large `n`.** At CANN1D `num=2048` with `k=8` the matvec is **80× faster** than dense. At CANN2D `length=64` (`n=4096`) with `k=8` it is **234× faster**; with `k=32` it is still **70× faster** while capturing 92% of the energy.
+3. **Matvec-only speedup is huge at large `n`.** At CANN1D `num=2048` with `k=8` the matvec is **~79× faster** than dense. At CANN2D `length=64` (`n=4096`) with `k=8` it is **~230× faster**; with `k=32` it is still **~70× faster** while capturing 92% of the energy.
 
 4. **Full-step speedup is muted at small `n` because of JAX dispatch overhead.** The divisive norm and Euler step together take ~7 μs regardless of `n`, so when the matvec is also sub-microsecond (small `n` or already-lowrank), the dispatch overhead of the JIT'd matvec call dominates. The full-step speedup grows with `n`: at CANN2D `length=64` (`n=4096`) the full step is ~1.2× faster with `k=8` because the dense matvec takes 800 μs while the lowrank matvec takes 3.5 μs.
 

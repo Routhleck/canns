@@ -257,9 +257,9 @@ def main() -> None:
     )
     out.append(
         "3. **Matvec-only speedup is huge at large `n`.** At "
-        "CANN1D `num=2048` with `k=8` the matvec is **80× faster** than "
+        "CANN1D `num=2048` with `k=8` the matvec is **~79× faster** than "
         "dense. At CANN2D `length=64` (`n=4096`) with `k=8` it is "
-        "**234× faster**; with `k=32` it is still **70× faster** while "
+        "**~230× faster**; with `k=32` it is still **~70× faster** while "
         "capturing 92% of the energy.\n"
     )
     out.append(
