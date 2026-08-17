@@ -1,10 +1,9 @@
-import brainpy as bp
 import brainpy.math as bm
 import numpy as np
+import pytest
 
-from canns.analyzer.visualization import energy_landscape_2d_animation
-from canns.task.tracking import PopulationCoding2D, TemplateMatching2D, SmoothTracking2D
 from canns.models.basic import CANN2D, CANN2D_SFA
+from canns.task.tracking import PopulationCoding2D, SmoothTracking2D, TemplateMatching2D
 
 
 def test_population_coding_2d():
@@ -69,6 +68,57 @@ def test_template_matching_2d():
     #     save_path='test_template_matching_2d.gif',
     #     show=False,
     # )
+
+
+def test_template_matching_2d_noise_level_zero_is_clean():
+    """noise_level=0 must produce the exact 2D stimulus at every time step."""
+    bm.set_dt(dt=0.1)
+    cann = CANN2D(length=4)
+
+    task = TemplateMatching2D(
+        cann_instance=cann,
+        Iext=[0.0, 0.0],
+        duration=2.0,
+        time_step=bm.get_dt(),
+        noise_level=0.0,
+    )
+    task.get_data(progress_bar=False)
+
+    stimulus = task.get_stimulus_by_pos(task.Iext_sequence[0])
+    for t in range(task.data.shape[0]):
+        np.testing.assert_allclose(task.data[t], stimulus, atol=1e-12)
+    np.testing.assert_allclose(task.data.std(axis=0), 0.0, atol=1e-12)
+
+
+def test_template_matching_2d_invalid_noise_level_rejected():
+    """Negative, non-finite, or non-numeric noise_level must be rejected."""
+    bm.set_dt(dt=0.1)
+    cann = CANN2D(length=4)
+
+    with pytest.raises(ValueError, match="noise_level must be a finite"):
+        TemplateMatching2D(
+            cann_instance=cann,
+            Iext=[0.0, 0.0],
+            duration=1.0,
+            time_step=bm.get_dt(),
+            noise_level=-0.5,
+        )
+    with pytest.raises(ValueError, match="noise_level must be a finite"):
+        TemplateMatching2D(
+            cann_instance=cann,
+            Iext=[0.0, 0.0],
+            duration=1.0,
+            time_step=bm.get_dt(),
+            noise_level=float("inf"),
+        )
+    with pytest.raises(TypeError, match="noise_level must be a finite"):
+        TemplateMatching2D(
+            cann_instance=cann,
+            Iext=[0.0, 0.0],
+            duration=1.0,
+            time_step=bm.get_dt(),
+            noise_level="not a number",
+        )
 
 
 def test_smooth_tracking_2d():

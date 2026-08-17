@@ -1,9 +1,9 @@
-import brainpy as bp
 import brainpy.math as bm
+import numpy as np
+import pytest
 
-from canns.analyzer.visualization import energy_landscape_1d_animation
-from canns.task.tracking import PopulationCoding1D, TemplateMatching1D, SmoothTracking1D
 from canns.models.basic import CANN1D
+from canns.task.tracking import PopulationCoding1D, SmoothTracking1D, TemplateMatching1D
 
 
 def test_population_coding_1d():
@@ -74,6 +74,101 @@ def test_template_matching_1d():
     #     save_path='test_template_matching_1d.gif',
     #     show=False,
     # )
+
+
+def test_template_matching_1d_noise_level_zero_is_clean():
+    """noise_level=0 must produce the exact stimulus at every time step."""
+    bm.set_dt(dt=0.1)
+    cann = CANN1D(num=64)
+
+    task = TemplateMatching1D(
+        cann_instance=cann,
+        Iext=0.0,
+        duration=2.0,
+        time_step=bm.get_dt(),
+        noise_level=0.0,
+    )
+    task.get_data(progress_bar=False)
+
+    stimulus = task.get_stimulus_by_pos(task.Iext_sequence[0])
+    # data has shape (T, *network_shape); compare each timestep to stimulus.
+    for t in range(task.data.shape[0]):
+        np.testing.assert_allclose(task.data[t], stimulus, atol=1e-12)
+    # And the across-time std must be numerically zero (no noise term).
+    np.testing.assert_allclose(task.data.std(axis=0), 0.0, atol=1e-12)
+
+
+def test_template_matching_1d_noise_level_scales_std():
+    """Doubling noise_level should roughly double the per-pixel noise std."""
+    bm.set_dt(dt=0.1)
+    cann = CANN1D(num=64)
+
+    np.random.seed(0)
+    task_low = TemplateMatching1D(
+        cann_instance=cann,
+        Iext=0.0,
+        duration=10.0,
+        time_step=bm.get_dt(),
+        noise_level=0.1,
+    )
+    task_low.get_data(progress_bar=False)
+
+    np.random.seed(0)
+    task_high = TemplateMatching1D(
+        cann_instance=cann,
+        Iext=0.0,
+        duration=10.0,
+        time_step=bm.get_dt(),
+        noise_level=0.3,
+    )
+    task_high.get_data(progress_bar=False)
+
+    # The per-time-step noise samples are drawn independently, so we compare
+    # the std of the *difference* between high-noise and low-noise data:
+    # (high - low) = (0.3 - 0.1) * A * randn() = 0.2 * A * randn().
+    diff = task_high.data - task_low.data
+    expected_std = 0.2 * cann.A
+    # Use a loose tolerance: ~5% on a 640-sample empirical std.
+    np.testing.assert_allclose(diff.std(), expected_std, rtol=0.10)
+
+
+def test_template_matching_1d_invalid_noise_level_rejected():
+    """Negative, non-finite, or non-numeric noise_level must be rejected."""
+    bm.set_dt(dt=0.1)
+    cann = CANN1D(num=64)
+
+    with pytest.raises(ValueError, match="noise_level must be a finite"):
+        TemplateMatching1D(
+            cann_instance=cann,
+            Iext=0.0,
+            duration=1.0,
+            time_step=bm.get_dt(),
+            noise_level=-0.01,
+        )
+    with pytest.raises(ValueError, match="noise_level must be a finite"):
+        TemplateMatching1D(
+            cann_instance=cann,
+            Iext=0.0,
+            duration=1.0,
+            time_step=bm.get_dt(),
+            noise_level=float("inf"),
+        )
+    with pytest.raises(ValueError, match="noise_level must be a finite"):
+        TemplateMatching1D(
+            cann_instance=cann,
+            Iext=0.0,
+            duration=1.0,
+            time_step=bm.get_dt(),
+            noise_level=float("nan"),
+        )
+    with pytest.raises(TypeError, match="noise_level must be a finite"):
+        TemplateMatching1D(
+            cann_instance=cann,
+            Iext=0.0,
+            duration=1.0,
+            time_step=bm.get_dt(),
+            noise_level="not a number",
+        )
 
 
 def test_smooth_tracking_1d():
