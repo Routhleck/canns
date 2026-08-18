@@ -243,9 +243,7 @@ class BaseCANN1D(BaseCANN):
         ``self._U_l @ self._V_l.T ≈ self.conn_mat``.
         """
         if accl_mode not in ACCL_MODES:
-            raise ValueError(
-                f"accl_mode must be one of {ACCL_MODES!r}, got {accl_mode!r}"
-            )
+            raise ValueError(f"accl_mode must be one of {ACCL_MODES!r}, got {accl_mode!r}")
         if accl_mode == "normal":
             if accl_k is not None:
                 # Don't error — just inform. Setting accl_k with mode='normal'
@@ -261,9 +259,7 @@ class BaseCANN1D(BaseCANN):
         if accl_k is None:
             accl_k = ACCL_DEFAULT_K[("CANN1D", accl_mode)]
         if not (isinstance(accl_k, int) and accl_k >= 1):
-            raise ValueError(
-                f"accl_k must be a positive int, got {accl_k!r}"
-            )
+            raise ValueError(f"accl_k must be a positive int, got {accl_k!r}")
         n = int(np.asarray(self.conn_mat).shape[0])
         if accl_k > n:
             # Truncate to full rank; matches numpy.linalg.svd semantics.
@@ -663,9 +659,7 @@ class BaseCANN2D(BaseCANN):
         ``(length² × length²)`` here).
         """
         if accl_mode not in ACCL_MODES:
-            raise ValueError(
-                f"accl_mode must be one of {ACCL_MODES!r}, got {accl_mode!r}"
-            )
+            raise ValueError(f"accl_mode must be one of {ACCL_MODES!r}, got {accl_mode!r}")
         if accl_mode == "normal":
             self.accl_mode = "normal"
             self.accl_k = -1
@@ -676,9 +670,7 @@ class BaseCANN2D(BaseCANN):
         if accl_k is None:
             accl_k = ACCL_DEFAULT_K[("CANN2D", accl_mode)]
         if not (isinstance(accl_k, int) and accl_k >= 1):
-            raise ValueError(
-                f"accl_k must be a positive int, got {accl_k!r}"
-            )
+            raise ValueError(f"accl_k must be a positive int, got {accl_k!r}")
         n = int(np.asarray(self.conn_mat).shape[0])
         if accl_k > n:
             accl_k = n
