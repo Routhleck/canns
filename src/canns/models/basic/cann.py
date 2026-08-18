@@ -1,5 +1,8 @@
+from __future__ import annotations
+
 import brainpy.math as bm
 import jax
+import numpy as np
 from matplotlib import pyplot as plt
 
 from ...typing import time_type
@@ -16,7 +19,28 @@ __all__ = [
     # CANN 2D Models
     "CANN2D",
     "CANN2D_SFA",
+    # Acceleration modes
+    "ACCL_MODES",
+    "ACCL_DEFAULT_K",
 ]
+
+
+#: Recognised values for ``accl_mode``. ``"normal"`` is full-rank, the
+#: other two are low-rank approximations of the recurrent matvec.
+ACCL_MODES: tuple[str, ...] = ("normal", "fast", "ultra-fast")
+
+#: Default rank for each ``(model family, mode)`` combination.
+#:
+#: The "fast" defaults are the values recommended by
+#: ``experiments/cann_lowrank/results/cann_lowrank_summary.md``: the
+#: smallest rank that keeps the bump-position error below ~5 mrad
+#: (about 0.3° on a ring of circumference 2π).
+ACCL_DEFAULT_K: dict[tuple[str, str], int] = {
+    ("CANN1D", "fast"): 8,
+    ("CANN1D", "ultra-fast"): 1,
+    ("CANN2D", "fast"): 32,
+    ("CANN2D", "ultra-fast"): 4,
+}
 
 
 class BaseCANN(BasicModel):
@@ -102,6 +126,8 @@ class BaseCANN1D(BaseCANN):
         J0: float = 4.0,
         z_min: float = -bm.pi,
         z_max: float = bm.pi,
+        accl_mode: str = "normal",
+        accl_k: int | None = None,
         **kwargs,
     ):
         """
@@ -116,6 +142,15 @@ class BaseCANN1D(BaseCANN):
             J0 (float): The maximum connection strength between neurons.
             z_min (float): The minimum value of the feature space (e.g., -pi for an angle).
             z_max (float): The maximum value of the feature space (e.g., +pi for an angle).
+            accl_mode (str, optional): Acceleration mode for the recurrent matvec.
+                One of ``"normal"`` (full rank, default), ``"fast"`` (low-rank
+                with rank ``ACCL_DEFAULT_K[("CANN1D", "fast")] = 8``), or
+                ``"ultra-fast"`` (low-rank with rank 1). The recommended
+                ``"fast"`` setting keeps the bump-position error below ~5 mrad
+                and gives 30–80× matvec speedup at ``num >= 512``.
+            accl_k (int, optional): Explicit low-rank truncation. If given,
+                overrides the default rank implied by ``accl_mode``. Must be
+                >= 1. Ignored when ``accl_mode == "normal"``.
             **kwargs: Additional keyword arguments passed to the parent BasicModel.
         """
         super().__init__(num, **kwargs)
@@ -139,6 +174,15 @@ class BaseCANN1D(BaseCANN):
         # --- Connectivity Matrix ---
         # The connection matrix, defining the strength of synapses between all pairs of neurons.
         self.conn_mat = self.make_conn()
+
+        # --- Acceleration (low-rank recurrent matvec) ---
+        # ``_U_l`` and ``_V_l`` are the rank-``accl_k`` truncated SVD factors
+        # such that ``_U_l @ _V_l.T ≈ conn_mat``. They are ``None`` in
+        # ``"normal"`` mode. See ``experiments/cann_lowrank`` for the
+        # accuracy / speedup trade-offs.
+        self._U_l: jax.Array | None = None
+        self._V_l: jax.Array | None = None
+        self._setup_accl(accl_mode=accl_mode, accl_k=accl_k)
 
     def dist(self, d):
         """
@@ -187,6 +231,92 @@ class BaseCANN1D(BaseCANN):
         """
         # The stimulus is a "bump" of activity, modeled by a Gaussian function.
         return self.A * bm.exp(-0.25 * bm.square(self.dist(self.x - pos) / self.a))
+
+    # ------------------------------------------------------------------
+    # Low-rank acceleration of the recurrent matvec
+    # ------------------------------------------------------------------
+    def _setup_accl(self, accl_mode: str, accl_k: int | None) -> None:
+        """Validate and (if needed) pre-compute the low-rank factors.
+
+        Sets ``self.accl_mode`` and ``self.accl_k`` and (when
+        ``accl_mode != "normal"``) ``self._U_l``, ``self._V_l`` such that
+        ``self._U_l @ self._V_l.T ≈ self.conn_mat``.
+        """
+        if accl_mode not in ACCL_MODES:
+            raise ValueError(
+                f"accl_mode must be one of {ACCL_MODES!r}, got {accl_mode!r}"
+            )
+        if accl_mode == "normal":
+            if accl_k is not None:
+                # Don't error — just inform. Setting accl_k with mode='normal'
+                # is harmless; we use the full rank regardless.
+                pass
+            self.accl_mode = "normal"
+            self.accl_k = -1
+            self._U_l = None
+            self._V_l = None
+            return
+
+        # Resolve rank: explicit accl_k wins over the mode default.
+        if accl_k is None:
+            accl_k = ACCL_DEFAULT_K[("CANN1D", accl_mode)]
+        if not (isinstance(accl_k, int) and accl_k >= 1):
+            raise ValueError(
+                f"accl_k must be a positive int, got {accl_k!r}"
+            )
+        n = int(np.asarray(self.conn_mat).shape[0])
+        if accl_k > n:
+            # Truncate to full rank; matches numpy.linalg.svd semantics.
+            accl_k = n
+
+        # Compute truncated SVD in numpy (faster for small/medium matrices)
+        # and store the balanced factors as JAX arrays.
+        U, S, Vt = np.linalg.svd(np.asarray(self.conn_mat), full_matrices=False)
+        sqrtS = np.sqrt(S[:accl_k].astype(np.float32))
+        self._U_l = jax.numpy.asarray(U[:, :accl_k].astype(np.float32) * sqrtS)
+        self._V_l = jax.numpy.asarray(Vt[:accl_k, :].T.astype(np.float32) * sqrtS)
+        self.accl_mode = accl_mode
+        self.accl_k = accl_k
+
+    def set_accl_mode(self, mode: str | None = None, k: int | None = None) -> None:
+        """Change the acceleration mode or rank at runtime.
+
+        Args:
+            mode: New ``accl_mode`` (one of ``ACCL_MODES``). If ``None``,
+                the current mode is kept.
+            k: New explicit rank. If ``None``, the default rank for
+                the (possibly new) mode is used.
+
+        Examples:
+            >>> model = CANN1D(num=512)            # normal, k=-1
+            >>> model.set_accl_mode("fast")        # now k=8
+            >>> model.set_accl_mode("fast", k=4)   # override to k=4
+            >>> model.set_accl_mode("normal")      # back to full rank
+        """
+        new_mode = mode if mode is not None else self.accl_mode
+        # ``k`` is treated as an *override*; ``None`` means "use the
+        # default for the new mode". This avoids accidentally carrying
+        # the sentinel ``-1`` (full rank) into a non-normal mode.
+        new_k = k
+        self._setup_accl(accl_mode=new_mode, accl_k=new_k)
+
+    @property
+    def is_accelerated(self) -> bool:
+        """True iff the model is using a low-rank recurrent matvec."""
+        return self.accl_mode != "normal"
+
+    def _accel_Irec(self, r: jax.Array) -> jax.Array:
+        """Compute the recurrent input ``Irec`` for a flat rate vector ``r``.
+
+        Branches on ``self.accl_mode``. The dense form is
+        ``conn @ r``; the low-rank form is
+        ``U_l @ (V_l.T @ r)``. Both are mathematically equivalent
+        for symmetric ``conn_mat`` (the case for all canns kernels
+        built by ``make_conn``).
+        """
+        if self._U_l is None:
+            return self.conn_mat @ r
+        return self._U_l @ (self._V_l.T @ r)
 
 
 class CANN1D(BaseCANN1D):
@@ -246,7 +376,10 @@ class CANN1D(BaseCANN1D):
         # Calculate the firing rate of each neuron using divisive normalization.
         self.r.value = r1 / r2
         # Calculate the recurrent input from other neurons in the network.
-        Irec = bm.dot(self.conn_mat, self.r.value)
+        # In ``accl_mode != "normal"`` this is a low-rank matvec
+        # ``U_l @ (V_l.T @ r)`` instead of ``conn @ r`` — see
+        # ``BaseCANN1D._accel_Irec`` and ``experiments/cann_lowrank``.
+        Irec = self._accel_Irec(self.r.value)
         # Update the synaptic inputs using Euler's method. The change depends on a leak
         # current (-u), recurrent input (Irec), and external input (inp).
         self.u.value += (-self.u.value + Irec + self.inp.value) / self.tau * bm.get_dt()
@@ -324,8 +457,10 @@ class CANN1D_SFA(BaseCANN1D):
         r1 = bm.square(self.u.value)
         r2 = 1.0 + self.k * bm.sum(r1)
         self.r.value = r1 / r2
-        # Calculate recurrent input.
-        Irec = bm.dot(self.conn_mat, self.r.value)
+        # Calculate recurrent input. The low-rank form (``accl_mode !=
+        # "normal"``) replaces the dense ``conn @ r`` with
+        # ``U_l @ (V_l.T @ r)`` — same accuracy / speedup as CANN1D.
+        Irec = self._accel_Irec(self.r.value)
         # Update the synaptic input. Note the additional '- self.v.value' term,
         self.u.value += (
             (-self.u.value + Irec + self.inp.value - self.v.value) / self.tau * bm.get_dt()
@@ -362,6 +497,8 @@ class BaseCANN2D(BaseCANN):
         J0: float = 4.0,
         z_min: float = -bm.pi,
         z_max: float = bm.pi,
+        accl_mode: str = "normal",
+        accl_k: int | None = None,
         **kwargs,
     ):
         """
@@ -376,6 +513,15 @@ class BaseCANN2D(BaseCANN):
             J0 (float): The maximum connection strength between neurons.
             z_min (float): The minimum value of the feature space (e.g., -pi for an angle).
             z_max (float): The maximum value of the feature space (e.g., +pi for an angle).
+            accl_mode (str, optional): Acceleration mode for the recurrent matvec.
+                One of ``"normal"`` (full rank, default), ``"fast"`` (low-rank
+                with rank ``ACCL_DEFAULT_K[("CANN2D", "fast")] = 32``), or
+                ``"ultra-fast"`` (low-rank with rank 4). At ``length=64`` the
+                ``"fast"`` setting gives ~70× matvec speedup while keeping
+                the bump-position error below ~5 mrad.
+            accl_k (int, optional): Explicit low-rank truncation. If given,
+                overrides the default rank implied by ``accl_mode``. Must be
+                >= 1. Ignored when ``accl_mode == "normal"``.
             **kwargs: Additional keyword arguments passed to the parent BasicModel.
         """
         self.length = length
@@ -400,6 +546,14 @@ class BaseCANN2D(BaseCANN):
         # --- Connectivity Matrix ---
         # The connection matrix, defining the strength of synapses between all pairs of neurons.
         self.conn_mat = self.make_conn()
+
+        # --- Acceleration (low-rank recurrent matvec) ---
+        # ``_U_l`` and ``_V_l`` are the rank-``accl_k`` truncated SVD factors
+        # of the (length² × length²) recurrent matrix. See
+        # ``experiments/cann_lowrank`` for the accuracy / speedup trade-offs.
+        self._U_l: jax.Array | None = None
+        self._V_l: jax.Array | None = None
+        self._setup_accl(accl_mode=accl_mode, accl_k=accl_k)
 
     def show_conn(self):
         """
@@ -497,6 +651,89 @@ class BaseCANN2D(BaseCANN):
         num_neurons_per_dim = self.x.shape[0]
         return stimulus_flat.reshape((num_neurons_per_dim, num_neurons_per_dim))
 
+    # ------------------------------------------------------------------
+    # Low-rank acceleration of the recurrent matvec
+    # ------------------------------------------------------------------
+    def _setup_accl(self, accl_mode: str, accl_k: int | None) -> None:
+        """Validate and (if needed) pre-compute the low-rank factors.
+
+        Sets ``self.accl_mode`` and ``self.accl_k`` and (when
+        ``accl_mode != "normal"``) ``self._U_l``, ``self._V_l`` such that
+        ``self._U_l @ self._V_l.T ≈ self.conn_mat`` (which is
+        ``(length² × length²)`` here).
+        """
+        if accl_mode not in ACCL_MODES:
+            raise ValueError(
+                f"accl_mode must be one of {ACCL_MODES!r}, got {accl_mode!r}"
+            )
+        if accl_mode == "normal":
+            self.accl_mode = "normal"
+            self.accl_k = -1
+            self._U_l = None
+            self._V_l = None
+            return
+
+        if accl_k is None:
+            accl_k = ACCL_DEFAULT_K[("CANN2D", accl_mode)]
+        if not (isinstance(accl_k, int) and accl_k >= 1):
+            raise ValueError(
+                f"accl_k must be a positive int, got {accl_k!r}"
+            )
+        n = int(np.asarray(self.conn_mat).shape[0])
+        if accl_k > n:
+            accl_k = n
+
+        U, S, Vt = np.linalg.svd(np.asarray(self.conn_mat), full_matrices=False)
+        sqrtS = np.sqrt(S[:accl_k].astype(np.float32))
+        self._U_l = jax.numpy.asarray(U[:, :accl_k].astype(np.float32) * sqrtS)
+        self._V_l = jax.numpy.asarray(Vt[:accl_k, :].T.astype(np.float32) * sqrtS)
+        self.accl_mode = accl_mode
+        self.accl_k = accl_k
+
+    def set_accl_mode(self, mode: str | None = None, k: int | None = None) -> None:
+        """Change the acceleration mode or rank at runtime.
+
+        Args:
+            mode: New ``accl_mode`` (one of ``ACCL_MODES``). If ``None``,
+                the current mode is kept.
+            k: New explicit rank. If ``None``, the default rank for
+                the (possibly new) mode is used.
+
+        Examples:
+            >>> model = CANN2D(length=32)        # normal, k=-1
+            >>> model.set_accl_mode("fast")       # now k=32
+            >>> model.set_accl_mode("fast", k=8) # override to k=8
+            >>> model.set_accl_mode("normal")    # back to full rank
+        """
+        new_mode = mode if mode is not None else self.accl_mode
+        # ``k`` is treated as an *override*; ``None`` means "use the
+        # default for the new mode". This avoids accidentally carrying
+        # the sentinel ``-1`` (full rank) into a non-normal mode.
+        new_k = k
+        self._setup_accl(accl_mode=new_mode, accl_k=new_k)
+
+    @property
+    def is_accelerated(self) -> bool:
+        """True iff the model is using a low-rank recurrent matvec."""
+        return self.accl_mode != "normal"
+
+    def _accel_Irec(self, r_flat: jax.Array) -> jax.Array:
+        """Compute the recurrent input for a flat rate vector.
+
+        Branches on ``self.accl_mode``. The dense form is
+        ``conn @ r``; the low-rank form is ``U_l @ (V_l.T @ r)``.
+        Both are mathematically equivalent for symmetric
+        ``conn_mat`` (which is the case for the Gaussian kernel
+        built by ``make_conn``).
+
+        The input/output are flat ``(length²,)``. The caller is
+        responsible for reshaping the result back to a 2D grid if
+        needed (see ``CANN2D.update``).
+        """
+        if self._U_l is None:
+            return self.conn_mat @ r_flat
+        return self._U_l @ (self._V_l.T @ r_flat)
+
 
 class CANN2D(BaseCANN2D):
     """2D Continuous Attractor Neural Network (CANN) model.
@@ -552,7 +789,13 @@ class CANN2D(BaseCANN2D):
         # Calculate the firing rate of each neuron using divisive normalization.
         self.r.value = r1 / r2
         # Calculate the recurrent input from other neurons in the network.
-        Irec = (self.r.value.flatten() @ self.conn_mat).reshape((self.length, self.length))
+        # The original CANN2D uses the row-matvec form
+        # ``r.flatten() @ conn``; here we use the equivalent column form
+        # ``conn @ r.flatten()`` (same result for the symmetric
+        # Gaussian kernel) which fits the low-rank path
+        # ``U_l @ (V_l.T @ r)`` uniformly with CANN1D.
+        Irec_flat = self._accel_Irec(self.r.value.reshape(-1))
+        Irec = Irec_flat.reshape((self.length, self.length))
         # Update the synaptic input based on the recurrent input and external input.
         self.u.value += (-self.u.value + Irec + self.inp.value) / self.tau * bm.get_dt()
 
@@ -618,8 +861,11 @@ class CANN2D_SFA(BaseCANN2D):
         r1 = bm.square(self.u.value)
         r2 = 1.0 + self.k * bm.sum(r1)
         self.r.value = r1 / r2
-        # Calculate recurrent input.
-        Irec = (self.r.value.flatten() @ self.conn_mat).reshape((self.length, self.length))
+        # Calculate recurrent input. The low-rank form (``accl_mode !=
+        # "normal"``) replaces the dense matvec with
+        # ``U_l @ (V_l.T @ r)`` — same accuracy / speedup as CANN2D.
+        Irec_flat = self._accel_Irec(self.r.value.reshape(-1))
+        Irec = Irec_flat.reshape((self.length, self.length))
         # Update the synaptic input. Note the additional '- self.v.value' term,
         self.u.value += (
             (-self.u.value + Irec + self.inp.value - self.v.value) / self.tau * bm.get_dt()

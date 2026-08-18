@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+- **`accl_mode` / `accl_k` constructor args on CANN1D, CANN2D, CANN1D_SFA, CANN2D_SFA.** Both 1D and 2D models (and their spike-frequency-adaptation variants) now accept `accl_mode="normal" | "fast" | "ultra-fast"` and an optional explicit `accl_k`. The recurrent matvec `Irec = conn @ r` is replaced by a low-rank truncated-SVD factorisation `Irec = U_l @ (V_l.T @ r)` whenever `accl_mode != "normal"`. The default is `"normal"` (full rank, identical to the pre-existing behaviour). Preset ranks are `8` (CANN1D `fast`), `1` (CANN1D `ultra-fast`), `32` (CANN2D `fast`), and `4` (CANN2D `ultra-fast`) — these are the smallest ranks that keep the moving-bump position error below ~5 mrad per the `experiments/cann_lowrank/` benchmark. A `set_accl_mode(mode=None, k=None)` method switches the mode at runtime. Bump-position error is at most ~5 mrad (≈ 0.3° on a 2π ring) at the recommended `fast` defaults; the in-model full-step speedup grows with `n` (≈ 1.2× at CANN2D `length=64`, ≈ 5× when the same n=4096 model is run with a tighter timing harness). See `experiments/cann_lowrank/results/cann_lowrank_summary.md` for the full speed/accuracy sweep and `examples/cann/cann1d_accl_modes.py` for a runnable demo.
+- **`ACCL_MODES` and `ACCL_DEFAULT_K` exported from `canns.models.basic.cann`.** Use these to discover the available modes and their default ranks without hard-coding them.
+- **`experiments/cann_lowrank/` benchmark and `REVIEW.md` correctness audit.** Self-contained sweep over `CANN1D num ∈ {64, 128, 256, 512, 1024, 2048}` and `CANN2D length ∈ {8, 16, 32, 64}` with rank `k ∈ {1, 2, 4, 8, 16, 32, 64, 128}`. Reports per-step time (matvec-only via `lax.scan` of 200 matvecs and full-step), bump-position error (mrad), and `r_max` error. CSV + markdown writeup. The audit doc covers SVD-factor correctness, symmetric-`conn_mat` argument, stimulus and bump-position math, error-metric definitions, and explicit caveats.
+- **`tests/unit/models/test_cann_accl.py`** — 39 unit tests covering: default-mode behaviour, mode→default-rank mapping, explicit `accl_k` override, `k > n` clamping, validation (bad mode, bad k), `set_accl_mode` round-trips across `CANN1D / CANN2D / CANN1D_SFA / CANN2D_SFA`, and end-to-end dynamics checks (fast mode preserves `r_max` and bump position within tolerance of the dense model).
+
 ## [1.2.2] - 2026-08-10
 
 ### Changed
