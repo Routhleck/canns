@@ -146,7 +146,7 @@ Figure 6 plots every `(n, k)` cell on the matvec-speedup vs position-error plane
 
 ![CANN2D Pareto](figures/fig_pareto_cann2d.png)
 
-**Figure 6.** Speed-accuracy Pareto. Each point is one `(n, k)` cell. Color encodes n (dark = small, light = large). The `k = 8` (CANN1D) and `k = 32` (CANN2D) points consistently sit on the Pareto frontier.
+**Figure 6.** *Speed-accuracy Pareto, small multiples.* Each panel is one `n_neurons` value (sorted left-to-right, top-to-bottom). The points along each curve are the rank `k` values 1, 2, 4, … (color by `k`, plasma). The dense reference is at speedup = 1 (vertical dotted line) and error = 0. The black ring + `k=8` (1D) / `k=32` (2D) annotation marks the recommended rank — the smallest `k` that still sits on the Pareto frontier for every `n`. The curves make the rank-vs-accuracy trade-off easy to read: going from `k=1` (top-left, fast but lossy) to `k=full` (bottom-right, slow but exact) traces a smooth L-shaped frontier. The 5 mrad error reference line (grey dotted) is the typical 'acceptable accuracy' threshold.
 
 
 ### 3.6 Accuracy summary table

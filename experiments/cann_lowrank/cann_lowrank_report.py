@@ -481,74 +481,163 @@ def fig_pareto(
     model: str,
     title: str,
     out: Path,
+    recommended_k: int = 8,
 ) -> None:
     """Speed-accuracy Pareto frontier: matvec speedup vs max pos err.
 
-    Marker shape encodes the rank k (one shape per k).
-    Marker color encodes n_neurons (continuous viridis).
+    Small multiples — one panel per ``n_neurons``, sorted ascending.
+    Each panel shows the Pareto curve for that ``n`` (one point per
+    rank ``k``, connected by a line in k-order; the recommended rank
+    is highlighted). The dense (k = full) point is at speedup = 1.
+
+    Parameters
+    ----------
+    by_cell : dict
+        ``{(model, n): {k: row}}`` mapping, as in ``group_by_cell``.
+        The key ``n`` is the 1D ``num`` for CANN1D and the 2D ``L`` for
+        CANN2D; ``n_neurons`` is read from the dense row's CSV column
+        (so for 2D this is ``L*L``, not ``L``).
+    model : str
+        ``"CANN1D"`` or ``"CANN2D"``.
+    title : str
+        Figure suptitle.
+    out : Path
+        Output path for the figure.
+    recommended_k : int
+        The rank to highlight in each panel (defaults to 8, the
+        spectral-analysis recommendation for CANN1D; pass 32 for
+        CANN2D).
     """
-    fig, ax = plt.subplots(figsize=(6.5, 4.0))
-
-    # Collect all k values present
-    ks_present = sorted({
-        k for (m, _), cell in by_cell.items()
-        if m == model for k in cell if k != -1
-    })
-    # Marker pool: cycle through a few shapes so k=1, 2, 4, 8, 16, 32 are
-    # all distinguishable in print.
-    marker_pool = ["o", "s", "^", "D", "v", "P", "*", "X"]
-    k_to_marker = {k: marker_pool[i % len(marker_pool)]
-                   for i, k in enumerate(ks_present)}
-
-    n_list = sorted(nv for (m, nv) in by_cell if m == model)
-    cmap_n = plt.get_cmap("viridis")
-    n_min, n_max = min(n_list), max(n_list)
-
-    for nv in n_list:
-        cell = by_cell.get((model, nv), {})
+    # Collect (n_neurons, cell) pairs, sorted by n_neurons ascending
+    pairs: list[tuple[int, dict]] = []
+    for (m, _n_key), cell in by_cell.items():
+        if m != model:
+            continue
         dense = cell.get(-1)
         if dense is None:
             continue
-        dense_mv = float(dense["matvec_per_step_ms"])
         n_neurons = int(dense["n_neurons"])
-        color = cmap_n((n_neurons - n_min) / max(n_max - n_min, 1))
-        for k, r in cell.items():
-            if k == -1:
-                continue
-            sp = dense_mv / float(r["matvec_per_step_ms"])
-            err = float(r["max_pos_err"]) * 1000  # to mrad
-            ax.scatter(sp, err, s=60,
-                       marker=k_to_marker[k],
-                       color=color, alpha=0.75,
-                       edgecolor="black", lw=0.5)
+        pairs.append((n_neurons, cell))
+    pairs.sort(key=lambda p: p[0])
+    n_panels = len(pairs)
+    if n_panels == 0:
+        return
 
-    ax.set_xscale("log")
-    ax.set_yscale("log")
-    ax.set_xlabel("matvec speedup vs dense")
-    ax.set_ylabel("max position error (mrad)")
-    ax.set_title(title, fontsize=10)
-    ax.grid(True, which="both", ls=":", lw=0.5, alpha=0.5)
+    # Grid: pick 3 or 4 columns based on panel count, so each panel is
+    # roughly square and the figure isn't too wide.
+    if n_panels <= 4:
+        ncols = n_panels
+    else:
+        ncols = 4 if n_panels <= 8 else 3
+    nrows = (n_panels + ncols - 1) // ncols
+    # Extra bottom margin for the horizontal cbar row
+    fig, axes = plt.subplots(
+        nrows, ncols,
+        figsize=(2.6 * ncols, 2.4 * nrows),
+        sharey=True,
+    )
+    axes = np.atleast_1d(axes).ravel()
 
-    # Colorbar for n_neurons
-    sm = plt.cm.ScalarMappable(cmap=cmap_n, norm=plt.Normalize(vmin=n_min, vmax=n_max))
+    # k color: plasma so it pairs with the trajectory / drift figures
+    cmap_k = plt.get_cmap("plasma")
+
+    # Collect all k values across panels for the global legend
+    all_ks: set[int] = set()
+    # Recommended k color (constant across panels) — black ring
+    for ax_idx, (n_neurons, cell) in enumerate(pairs):
+        ax = axes[ax_idx]
+        dense = cell.get(-1)
+        dense_mv = float(dense["matvec_per_step_ms"])
+        # Per-k rows, sorted by k
+        k_rows = sorted(
+            ((k, r) for k, r in cell.items() if k != -1),
+            key=lambda x: x[0],
+        )
+        all_ks.update(k for k, _ in k_rows)
+
+        if not k_rows:
+            ax.text(0.5, 0.5, "no data", transform=ax.transAxes,
+                    ha="center", va="center", fontsize=8)
+            ax.set_title(f"n = {n_neurons}", fontsize=9)
+            continue
+
+        ks = [k for k, _ in k_rows]
+        sps = [dense_mv / float(r["matvec_per_step_ms"]) for _, r in k_rows]
+        errs = [float(r["max_pos_err"]) * 1000 for _, r in k_rows]  # mrad
+
+        # Color each segment of the k-trajectory by k (darker for larger k).
+        # Use a single plasma colormap across the full k range so the
+        # figure-level legend is meaningful.
+        if len(ks) >= 1:
+            for i, (k, sp, er) in enumerate(zip(ks, sps, errs)):
+                color = cmap_k((k - 1) / max(max(all_ks) - 1, 1))
+                # Draw a line to the next k (so the curve is continuous)
+                if i + 1 < len(ks):
+                    sp_next = sps[i + 1]
+                    er_next = errs[i + 1]
+                    ax.plot([sp, sp_next], [er, er_next],
+                            color=color, lw=1.2, alpha=0.7)
+                # Draw the point
+                ax.scatter([sp], [er], s=55, color=color, alpha=0.9,
+                           edgecolor="black", lw=0.5, zorder=3)
+                # Highlight the recommended k with a black ring
+                if k == recommended_k:
+                    ax.scatter([sp], [er], s=200, facecolors="none",
+                               edgecolors="black", lw=1.8, zorder=4)
+                    # Annotate ABOVE the point with a small white bbox
+                    # so it doesn't overlap with the k-trajectory line
+                    # (which goes left-to-right through this point) or
+                    # the panel title.
+                    ax.annotate(f"k={k}", (sp, er),
+                                xytext=(0, 10), textcoords="offset points",
+                                fontsize=7, ha="center", va="bottom",
+                                color="black",
+                                bbox=dict(boxstyle="round,pad=0.2",
+                                          fc="white", ec="grey", lw=0.4))
+
+        # Reference: 1× speedup (dense) and 5 mrad error (typical threshold)
+        ax.axvline(1.0, ls=":", color="grey", lw=0.6, alpha=0.6)
+        ax.axhline(5.0, ls=":", color="grey", lw=0.6, alpha=0.6)
+        ax.set_xscale("log")
+        ax.set_yscale("log")
+        # Pad the title so the k=annotation (which floats above the
+        # recommended-k point) never collides with the panel title.
+        ax.set_title(f"n = {n_neurons}", fontsize=9, pad=12)
+        ax.grid(True, which="both", ls=":", lw=0.4, alpha=0.4)
+        ax.tick_params(labelsize=7)
+        # Suppress cluttered minor ticks (same fix as fig_speedup)
+        from matplotlib.ticker import LogLocator, NullLocator
+        ax.xaxis.set_major_locator(LogLocator(base=10.0, numticks=4))
+        ax.xaxis.set_minor_locator(NullLocator())
+        ax.yaxis.set_major_locator(LogLocator(base=10.0, numticks=4))
+        ax.yaxis.set_minor_locator(NullLocator())
+
+    # Hide unused axes (if any)
+    for j in range(n_panels, len(axes)):
+        axes[j].set_visible(False)
+
+    # Per-panel labels
+    for j, ax in enumerate(axes[:n_panels]):
+        if j % ncols == 0:
+            ax.set_ylabel("max position error (mrad)", fontsize=8)
+        if j // ncols == nrows - 1 or j + ncols >= n_panels:
+            ax.set_xlabel("matvec speedup vs dense", fontsize=8)
+
+    # Figure-level legend: horizontal k colorbar in a dedicated axis
+    # at the very bottom (using add_axes), so it doesn't overlap the
+    # panels no matter how many rows.
+    sm = plt.cm.ScalarMappable(
+        cmap=cmap_k,
+        norm=plt.Normalize(vmin=0, vmax=max(all_ks) if all_ks else 1),
+    )
     sm.set_array([])
-    cbar = fig.colorbar(sm, ax=ax, fraction=0.04, pad=0.02)
-    cbar.set_label("n_neurons", fontsize=8)
+    cbar_ax = fig.add_axes([0.25, 0.02, 0.5, 0.025])  # [left, bottom, width, height]
+    cbar = fig.colorbar(sm, cax=cbar_ax, orientation="horizontal")
+    cbar.set_label("rank k", fontsize=8)
     cbar.ax.tick_params(labelsize=7)
 
-    # Legend for marker shape (rank k)
-    legend_handles = [
-        plt.Line2D([0], [0], marker=k_to_marker[k], color="grey",
-                   markerfacecolor="grey", markersize=8, lw=0,
-                   label=f"k={k}")
-        for k in ks_present
-    ]
-    leg = ax.legend(handles=legend_handles, loc="upper right",
-                    title="rank k", fontsize=7, title_fontsize=8,
-                    frameon=True, ncol=1)
-    leg.get_frame().set_edgecolor("grey")
-
-    fig.tight_layout()
+    fig.suptitle(title, fontsize=10, y=0.995)
+    fig.tight_layout(rect=(0, 0.06, 1, 0.96))  # leave room for the bottom cbar
     _save(fig, out)
     plt.close(fig)
 
@@ -653,9 +742,9 @@ def main() -> None:
         fig_speedup(gpu_by, "CANN2D", "CANN2D — matvec speedup (A100 80GB)",
                     figdir / "fig_speedup_gpu_cann2d.png")
     fig_pareto(cpu_by, "CANN1D", "CANN1D — speed/accuracy Pareto (CPU)",
-               figdir / "fig_pareto_cann1d.png")
+               figdir / "fig_pareto_cann1d.png", recommended_k=8)
     fig_pareto(cpu_by, "CANN2D", "CANN2D — speed/accuracy Pareto (CPU)",
-               figdir / "fig_pareto_cann2d.png")
+               figdir / "fig_pareto_cann2d.png", recommended_k=32)
 
     if traj_npz:
         # 1D trajectory
@@ -1007,10 +1096,19 @@ def render_markdown(
     md.append(f"\n![CANN1D Pareto]({fig('fig_pareto_cann1d.png')})\n")
     md.append(f"\n![CANN2D Pareto]({fig('fig_pareto_cann2d.png')})\n")
     md.append(
-        "**Figure 6.** Speed-accuracy Pareto. Each point is one "
-        "`(n, k)` cell. Color encodes n (dark = small, light = large). "
-        "The `k = 8` (CANN1D) and `k = 32` (CANN2D) points consistently "
-        "sit on the Pareto frontier.\n"
+        "**Figure 6.** *Speed-accuracy Pareto, small multiples.* Each "
+        "panel is one `n_neurons` value (sorted left-to-right, "
+        "top-to-bottom). The points along each curve are the rank "
+        "`k` values 1, 2, 4, … (color by `k`, plasma). The dense "
+        "reference is at speedup = 1 (vertical dotted line) and "
+        "error = 0. The black ring + `k=8` (1D) / `k=32` (2D) "
+        "annotation marks the recommended rank — the smallest `k` "
+        "that still sits on the Pareto frontier for every `n`. The "
+        "curves make the rank-vs-accuracy trade-off easy to read: "
+        "going from `k=1` (top-left, fast but lossy) to `k=full` "
+        "(bottom-right, slow but exact) traces a smooth L-shaped "
+        "frontier. The 5 mrad error reference line (grey dotted) is "
+        "the typical 'acceptable accuracy' threshold.\n"
     )
 
     # 3.6 Error table
