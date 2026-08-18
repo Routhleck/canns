@@ -81,7 +81,7 @@ def fig_svd_spectrum(sv_1d: np.ndarray, sv_2d: np.ndarray, out: Path) -> None:
     Top row: log-scale singular values.
     Bottom row: cumulative energy fraction, with 99% / 99.9% / 99.99% lines.
     """
-    fig, axes = plt.subplots(2, 2, figsize=(8.5, 5.5), sharex=False)
+    fig, axes = plt.subplots(2, 2, figsize=(7.5, 4.8), sharex=False)
 
     # Short titles to avoid horizontal overlap
     titles = [
@@ -144,7 +144,7 @@ def fig_speedup(
     out: Path,
 ) -> None:
     """Log-log matvec speedup vs n_neurons for each rank k."""
-    fig, ax = plt.subplots(figsize=(5.5, 3.5))
+    fig, ax = plt.subplots(figsize=(5.0, 3.2))
 
     # Collect (k, n_neurons, matvec_speedup) tuples
     per_k: dict[int, list[tuple[int, float]]] = defaultdict(list)
@@ -203,7 +203,7 @@ def fig_trajectory_1d(traj: dict, out: Path) -> None:
     t = np.arange(T) * 0.1
     stim_pos = np.pi * t / max(T - 1, 1)
 
-    fig, axes = plt.subplots(2, 1, figsize=(7.5, 5.5), sharex=True)
+    fig, axes = plt.subplots(2, 1, figsize=(6.5, 4.6), sharex=True)
 
     # Top: trajectory
     ax = axes[0]
@@ -264,7 +264,7 @@ def fig_trajectory_2d(traj: dict, out: Path) -> None:
     )
     T = len(traj["k_full"])
 
-    fig, axes = plt.subplots(1, 2, figsize=(8.0, 3.5))
+    fig, axes = plt.subplots(1, 2, figsize=(6.8, 3.2))
 
     # Left: 2D trajectory
     ax = axes[0]
@@ -357,7 +357,7 @@ def fig_long_drift_1d(drift: dict, out: Path) -> None:
     t = np.arange(len(drift["dense"])) * sample_step * 0.1  # dt=0.1
     stim_pos = _unwrap_ring(drift["stim_pos"])
 
-    fig, axes = plt.subplots(2, 1, figsize=(7.5, 5.5), sharex=True)
+    fig, axes = plt.subplots(2, 1, figsize=(6.5, 4.6), sharex=True)
 
     # Top: trajectory (unwrapped)
     ax = axes[0]
@@ -422,7 +422,7 @@ def fig_long_drift_2d(drift: dict, out: Path) -> None:
     sample_step = int(drift["sample_step"])
     t = np.arange(len(drift["dense"])) * sample_step * 0.1
 
-    fig, axes = plt.subplots(1, 2, figsize=(8.5, 4.0))
+    fig, axes = plt.subplots(1, 2, figsize=(7.0, 3.4))
 
     # Left: 2D trajectory
     ax = axes[0]
@@ -510,7 +510,7 @@ def fig_pareto(
     if not pairs:
         return
 
-    fig, ax = plt.subplots(figsize=(7.0, 4.5))
+    fig, ax = plt.subplots(figsize=(6.0, 4.0))
 
     # k → marker shape (cycle through enough shapes for k=1..64)
     ks_present = sorted({
@@ -644,6 +644,12 @@ def main() -> None:
                    help="results dir (default: experiments/cann_lowrank/results)")
     p.add_argument("--tag", type=str, default="cpu",
                    help="which tag to use for the trajectory npz (cpu or gpu)")
+    p.add_argument("--html", action="store_true",
+                   help="also write a styled HTML version (NeurIPS-like) of the report")
+    p.add_argument("--pdf", action="store_true",
+                   help="also write a PDF version of the report (NeurIPS-like, requires weasyprint)")
+    p.add_argument("--pdf-only", action="store_true",
+                   help="write only the PDF (no MD, no HTML); implies --pdf")
     args = p.parse_args()
 
     results = Path(args.results) if args.results else _HERE / "results"
@@ -747,8 +753,33 @@ def main() -> None:
         figdir=figdir,
         results_dir=results,
     )
-    out_md.write_text(md)
-    print(f"Wrote {out_md}")
+
+    # Determine what to write
+    write_md = not args.pdf_only
+    write_html = args.html or args.pdf or args.pdf_only
+    write_pdf = args.pdf or args.pdf_only
+
+    if write_md:
+        out_md.write_text(md)
+        print(f"Wrote {out_md}")
+
+    html_text = None
+    if write_html:
+        out_html = results / f"cann_lowrank_summary.html"
+        html_text = render_html(md, figdir=figdir)
+        out_html.write_text(html_text, encoding="utf-8")
+        print(f"Wrote {out_html}")
+
+    if write_pdf:
+        if html_text is None:
+            html_text = render_html(md, figdir=figdir)
+        out_pdf = results / f"cann_lowrank_summary.pdf"
+        try:
+            render_pdf(html_text, out_pdf, base_url=results)
+            print(f"Wrote {out_pdf}")
+        except Exception as e:
+            print(f"  (PDF export failed: {e})")
+
     print(f"Figures in {figdir}")
 
 
@@ -1349,6 +1380,420 @@ def _accuracy_table(by_cell: dict) -> str:
                     row.append(fmt_err(float(r["max_pos_err"])))
             out.append("| " + " | ".join(row) + " |")
     return "\n".join(out)
+
+
+# ---------------------------------------------------------------------------
+# HTML + PDF rendering (NeurIPS-style academic paper)
+# ---------------------------------------------------------------------------
+
+# CSS theme: NeurIPS-inspired. Serif body (Times), sans-serif headings,
+# single column, page numbers in the bottom margin. Intentionally minimal
+# — no two-column layout, no fancy headers, just a clean small-paper look.
+NEURIPS_CSS = r"""
+@page {
+  size: letter;
+  margin: 1in 0.85in 1in 0.85in;
+  @bottom-center {
+    content: counter(page);
+    font-family: 'Times New Roman', Times, serif;
+    font-size: 10pt;
+    color: #555;
+  }
+}
+
+body {
+  font-family: 'Times New Roman', Times, serif;
+  font-size: 10pt;
+  line-height: 1.25;
+  color: #111;
+  max-width: 7.0in;
+  margin: 0 auto;
+  padding: 0;
+}
+
+.paper-title {
+  font-family: 'Helvetica', Arial, sans-serif;
+  font-size: 17pt;
+  font-weight: bold;
+  text-align: center;
+  margin: 0 0 0.3em 0;
+  line-height: 1.2;
+}
+
+.paper-authors {
+  text-align: center;
+  font-size: 11pt;
+  margin: 0 0 0.5em 0;
+  color: #444;
+  font-family: 'Helvetica', Arial, sans-serif;
+}
+
+.paper-meta {
+  text-align: center;
+  font-size: 9pt;
+  color: #777;
+  font-style: italic;
+  margin: 0 0 2em 0;
+  font-family: 'Helvetica', Arial, sans-serif;
+}
+
+h1 {
+  font-family: 'Helvetica', Arial, sans-serif;
+  font-size: 14pt;
+  font-weight: bold;
+  margin-top: 1.6em;
+  margin-bottom: 0.6em;
+  page-break-after: avoid;
+}
+
+h2 {
+  font-family: 'Helvetica', Arial, sans-serif;
+  font-size: 11pt;
+  font-weight: bold;
+  margin-top: 1.2em;
+  margin-bottom: 0.4em;
+  page-break-after: avoid;
+}
+
+h3 {
+  font-family: 'Helvetica', Arial, sans-serif;
+  font-size: 10pt;
+  font-weight: bold;
+  font-style: italic;
+  margin-top: 1em;
+  margin-bottom: 0.3em;
+  page-break-after: avoid;
+}
+
+p {
+  margin: 0.4em 0;
+  text-align: justify;
+}
+
+.abstract {
+  margin: 1em 0.4in 1.4em 0.4in;
+  font-size: 9.5pt;
+  line-height: 1.3;
+}
+
+.abstract h2 {
+  text-align: center;
+  font-style: normal;
+  font-size: 11pt;
+  margin: 0 0 0.4em 0;
+}
+
+.abstract p {
+  text-align: justify;
+}
+
+code {
+  font-family: 'Courier New', 'Liberation Mono', monospace;
+  font-size: 9pt;
+  background: #f4f4f4;
+  padding: 0.05em 0.25em;
+  border-radius: 2px;
+}
+
+pre {
+  background: #f4f4f4;
+  padding: 0.6em 0.8em;
+  border-left: 3px solid #888;
+  font-size: 9pt;
+  line-height: 1.25;
+  margin: 0.6em 0;
+  border-radius: 0 3px 3px 0;
+  page-break-inside: avoid;
+}
+
+pre code {
+  background: transparent;
+  padding: 0;
+  font-size: 9pt;
+}
+
+figure {
+  margin: 1.2em 0;
+  text-align: center;
+  page-break-inside: avoid;
+  break-inside: avoid-page;
+}
+
+figure img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+  margin: 0 auto;
+}
+
+figcaption {
+  font-size: 9pt;
+  text-align: left;
+  margin-top: 0.4em;
+  line-height: 1.3;
+  color: #222;
+  page-break-before: avoid;
+  break-before: avoid-page;
+}
+
+table {
+  border-collapse: collapse;
+  margin: 1em auto;
+  font-size: 9pt;
+  font-family: 'Times New Roman', Times, serif;
+}
+
+table th, table td {
+  padding: 0.3em 0.6em;
+  border-top: 1px solid #888;
+  border-bottom: 1px solid #888;
+  text-align: center;
+}
+
+table th {
+  font-weight: bold;
+  border-bottom: 2px solid #000;
+}
+
+table tr:first-child th {
+  border-top: 2px solid #000;
+}
+
+ul, ol {
+  margin: 0.4em 0;
+  padding-left: 1.5em;
+}
+
+li {
+  margin: 0.2em 0;
+  text-align: justify;
+}
+
+hr {
+  border: none;
+  border-top: 1px solid #ccc;
+  margin: 2em 0;
+}
+
+a {
+  color: #003366;
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+strong {
+  font-weight: bold;
+}
+
+em {
+  font-style: italic;
+}
+"""
+
+
+def _split_abstract(md_text: str) -> tuple[str, str]:
+    """Split the MD into (abstract_block, rest) on the first '## '.
+
+    The first '## Abstract' block (and the title above it) is the
+    abstract; everything after the first non-Abstract H2 is the body.
+    """
+    lines = md_text.split("\n")
+    title_lines = []
+    body_start = 0
+    for i, line in enumerate(lines):
+        if line.strip() == "## Abstract":
+            # Title is everything up to this line
+            title_lines = lines[:i]
+            body_start = i
+            break
+    if not title_lines:
+        return "", md_text
+    # Find the first H1 or H2 after the abstract
+    rest_lines = lines[body_start:]
+    abs_end = 0
+    for j, line in enumerate(rest_lines):
+        if j > 0 and line.startswith("## ") and line.strip() != "## Abstract":
+            abs_end = j
+            break
+    abstract_block = "\n".join(rest_lines[:abs_end])
+    rest_block = "\n".join(rest_lines[abs_end:])
+    return abstract_block, rest_block
+
+
+def _post_process_figures(soup) -> None:
+    """Combine <p><img></p>(<p><img></p>)*<p><strong>Figure N.</strong> caption</p>
+    patterns into <figure><img>...<figcaption>caption</figcaption></figure>.
+
+    Handles *consecutive* image paragraphs (e.g., 1D + 2D side-by-side
+    speedup figures) so they all share one caption.
+
+    Mutates ``soup`` in place.
+    """
+    # Iterate over a snapshot of <p> tags; rebuild as we go.
+    for p in list(soup.find_all("p")):
+        # Single <img> child?
+        if not (len(p.contents) == 1 and getattr(p.contents[0], "name", None) == "img"):
+            continue
+        # Walk forward through consecutive image-only <p> siblings,
+        # collecting them.
+        image_ps = [p]
+        scan = p
+        while True:
+            nxt = scan.find_next_sibling("p")
+            if nxt is None:
+                break
+            if len(nxt.contents) == 1 and getattr(nxt.contents[0], "name", None) == "img":
+                image_ps.append(nxt)
+                scan = nxt
+                continue
+            break
+        # The first non-image <p> after the images should be the caption
+        caption_p = scan.find_next_sibling("p")
+        if caption_p is None:
+            continue
+        strong = caption_p.find("strong")
+        if strong is None:
+            continue
+        if not strong.get_text().strip().startswith("Figure"):
+            continue
+        # Build <figure> with all images + the caption <p> → <figcaption>
+        fig = soup.new_tag("figure")
+        first_p = image_ps[0]
+        first_p.insert_before(fig)
+        for img_p in image_ps:
+            img = img_p.contents[0]
+            fig.append(img.extract())
+            img_p.decompose()  # remove the now-empty <p>
+        fig.append(caption_p.extract())
+        caption_p.name = "figcaption"
+
+
+def _post_process_headings(soup) -> None:
+    """Style headings: H1 (title) becomes title block, H2 (##) becomes
+    section heading, H3 (###) becomes subsection heading.
+
+    Also extract the first paragraph after H2 'Abstract' into the
+    abstract block. (We do the abstract extraction in _split_abstract
+    before this is called.)
+    """
+    # Find the H1 (the paper title) and remove it from the body — the
+    # title is rendered separately in the page header.
+    h1 = soup.find("h1")
+    if h1 is not None:
+        h1.decompose()
+
+
+def render_html(md_text: str, figdir: Path) -> str:
+    """Convert the markdown report to a styled HTML page (NeurIPS-style).
+
+    Pipeline:
+    1. Split the MD into abstract + body on the first H2 boundary.
+    2. Use python-markdown to convert each part to HTML.
+    3. Post-process with BeautifulSoup: combine image+caption pairs
+       into <figure> blocks; mark the abstract paragraphs.
+    4. Wrap in an HTML template with the NEURIPS_CSS theme.
+
+    Parameters
+    ----------
+    md_text : str
+        The full markdown report, as produced by :func:`render_markdown`.
+    figdir : Path
+        Directory containing the figures. The HTML uses ``base_url =
+        figdir.parent`` so relative paths like ``figures/fig_*.png``
+        resolve correctly when rendered to PDF.
+    """
+    import markdown as md_lib
+    from bs4 import BeautifulSoup
+
+    # 1. Split abstract from body
+    abs_md, body_md = _split_abstract(md_text)
+    # Body's leading H1 is the page title; strip it from the body
+    # (it's already in the page <header>).
+    body_lines = body_md.split("\n")
+    while body_lines and not body_lines[0].strip():
+        body_lines.pop(0)
+    if body_lines and body_lines[0].startswith("# "):
+        body_lines = body_lines[1:]
+    body_md = "\n".join(body_lines)
+
+    # 2. Convert each part to HTML
+    abs_html = md_lib.markdown(
+        abs_md,
+        extensions=["fenced_code", "tables", "sane_lists", "nl2br"],
+    )
+    body_html = md_lib.markdown(
+        body_md,
+        extensions=["fenced_code", "tables", "sane_lists", "nl2br"],
+    )
+
+    # 3. Post-process each
+    abs_soup = BeautifulSoup(abs_html, "html.parser")
+    body_soup = BeautifulSoup(body_html, "html.parser")
+
+    # Strip the "## Abstract" heading (it's redundant inside the
+    # abstract block — we'll re-add it below).
+    for h in abs_soup.find_all("h2"):
+        if h.get_text().strip() == "Abstract":
+            h.decompose()
+    abstract_div = (
+        '<section class="abstract">'
+        "<h2>Abstract</h2>"
+        + "".join(str(p) for p in abs_soup.find_all("p"))
+        + "</section>"
+    )
+
+    # Combine image + caption into <figure> in the body
+    _post_process_figures(body_soup)
+    # Strip the body's first H1 if any slipped through
+    _post_process_headings(body_soup)
+    # Use the post-processed body (not the raw body_html) so the
+    # <figure> blocks are actually included in the output.
+    body_html = str(body_soup)
+
+    # 4. Full HTML page
+    title = "Low-rank approximation of the recurrent matvec in CANN1D and CANN2D"
+    html = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>{title}</title>
+  <style>{NEURIPS_CSS}</style>
+</head>
+<body>
+  <header>
+    <h1 class="paper-title">{title}</h1>
+    <p class="paper-authors">sichaohe &middot; canns low-rank benchmark</p>
+    <p class="paper-meta">canns-lowrank-bench branch &middot; generated from
+    <code>experiments/cann_lowrank/cann_lowrank_report.py</code></p>
+  </header>
+  {abstract_div}
+  <main>
+    {body_html}
+  </main>
+</body>
+</html>
+"""
+    return html
+
+
+def render_pdf(html_text: str, output_path: Path, base_url: Path) -> None:
+    """Render HTML to PDF using weasyprint.
+
+    Parameters
+    ----------
+    html_text : str
+        Full HTML document (from :func:`render_html`).
+    output_path : Path
+        Destination PDF path.
+    base_url : Path
+        Used to resolve relative image paths. Should be the parent of
+        the figures directory (e.g., the results dir).
+    """
+    from weasyprint import HTML
+    HTML(string=html_text, base_url=str(base_url)).write_pdf(str(output_path))
 
 
 if __name__ == "__main__":

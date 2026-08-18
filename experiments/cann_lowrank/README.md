@@ -114,8 +114,14 @@ python experiments/cann_lowrank/cann_lowrank_bench.py --T 200 --long-trajectory 
 CUDA_VISIBLE_DEVICES=1 JAX_PLATFORMS=cuda \
   python experiments/cann_lowrank/cann_lowrank_bench.py --gpu-sweep --T 200 --tag gpu
 
-# Format the paper-style report (figures + markdown):
-python experiments/cann_lowrank/cann_lowrank_report.py
+# Format the paper-style report (figures + markdown only):
+python experiments/cann_lowrank/cann_lowrank_report.py --tag cpu
+
+# Also write a styled HTML version (NeurIPS-like):
+python experiments/cann_lowrank/cann_lowrank_report.py --tag cpu --html
+
+# Also write a PDF version (NeurIPS-like, requires weasyprint):
+python experiments/cann_lowrank/cann_lowrank_report.py --tag cpu --pdf
 ```
 
 The report is reproducible as long as at least the CPU sweep has
