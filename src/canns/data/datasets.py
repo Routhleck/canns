@@ -6,6 +6,7 @@ with specialized support for CANNs example datasets.
 """
 
 import hashlib
+import os
 import tempfile
 import warnings
 from pathlib import Path
@@ -37,7 +38,19 @@ DEFAULT_DATA_DIR = Path.home() / ".canns" / "data"
 
 # URLs for datasets on Hugging Face
 HUGGINGFACE_REPO = "canns-team/data-analysis-datasets"
-BASE_URL = f"https://huggingface.co/datasets/{HUGGINGFACE_REPO}/resolve/main/"
+
+# Honor the standard HF_ENDPOINT env var so users in mainland China can switch to
+# the community mirror without code changes, e.g.:
+#   export HF_ENDPOINT=https://hf-mirror.com
+# Falls back to the official hub when HF_ENDPOINT is unset.
+HF_ENDPOINT = os.environ.get("HF_ENDPOINT", "https://huggingface.co").rstrip("/")
+BASE_URL = f"{HF_ENDPOINT}/datasets/{HUGGINGFACE_REPO}/resolve/main/"
+
+# Mirrors tried in order when the primary URL fails (timeout, DNS, 5xx, etc.).
+# Only used as a download fallback — never re-routed silently on success.
+# Entries are bare hosts; the original path is preserved by _build_download_urls.
+HF_MIRRORS = ("https://hf-mirror.com",)
+
 LEFT_RIGHT_DATASET_DIR = "Left_Right_data_of"
 
 # Dataset registry with metadata
@@ -98,41 +111,65 @@ def compute_file_hash(filepath: Path) -> str:
     return sha256_hash.hexdigest()
 
 
-def download_file_with_progress(url: str, filepath: Path, chunk_size: int = 8192) -> bool:
-    """Download a file with progress bar."""
+def download_file_with_progress(
+    url: str | list[str], filepath: Path, chunk_size: int = 8192
+) -> bool:
+    """Download a file with progress bar.
+
+    Parameters
+    ----------
+    url : str or list[str]
+        Primary URL to try first. If a list is given, remaining entries are
+        tried in order as mirror fallbacks when the primary URL fails
+        (network error, 4xx, 5xx). All entries must point to the same file.
+    filepath : Path
+        Destination path.
+    """
     if not HAS_DOWNLOAD_DEPS:
         raise ImportError(
             "requests and tqdm are required for downloading. "
             "Install with: pip install requests tqdm"
         )
 
-    try:
-        response = requests.get(url, stream=True)
-        response.raise_for_status()
+    urls = [url] if isinstance(url, str) else list(url)
+    if not urls:
+        raise ValueError("download_file_with_progress requires at least one URL")
 
-        total_size = int(response.headers.get("content-length", 0))
+    last_error: Exception | None = None
+    for attempt, candidate in enumerate(urls):
+        try:
+            response = requests.get(candidate, stream=True, timeout=30)
+            response.raise_for_status()
 
-        with (
-            open(filepath, "wb") as f,
-            tqdm(
-                desc=filepath.name,
-                total=total_size,
-                unit="iB",
-                unit_scale=True,
-                unit_divisor=1024,
-            ) as pbar,
-        ):
-            for chunk in response.iter_content(chunk_size=chunk_size):
-                size = f.write(chunk)
-                pbar.update(size)
+            total_size = int(response.headers.get("content-length", 0))
 
-        return True
+            with (
+                open(filepath, "wb") as f,
+                tqdm(
+                    desc=filepath.name,
+                    total=total_size,
+                    unit="iB",
+                    unit_scale=True,
+                    unit_divisor=1024,
+                ) as pbar,
+            ):
+                for chunk in response.iter_content(chunk_size=chunk_size):
+                    size = f.write(chunk)
+                    pbar.update(size)
 
-    except Exception as e:
-        print(f"Download failed: {e}")
-        if filepath.exists():
-            filepath.unlink()
-        return False
+            if attempt > 0:
+                print(f"  ↳ succeeded via mirror: {candidate}")
+            return True
+
+        except Exception as e:
+            last_error = e
+            if filepath.exists():
+                filepath.unlink()
+            label = "primary" if attempt == 0 else f"mirror #{attempt}"
+            print(f"  ↳ {label} download failed ({candidate}): {e}")
+
+    print(f"All download attempts failed for {filepath.name}: {last_error}")
+    return False
 
 
 def list_datasets() -> None:
@@ -206,11 +243,35 @@ def download_dataset(dataset_key: str, force: bool = False) -> Path | None:
     print(f"Downloading {dataset_key} ({info['size_mb']} MB)...")
 
     url = info["url"]
-    if download_file_with_progress(url, filepath):
+    # Build a primary-then-mirror URL list so download_file_with_progress can
+    # transparently fall back to community mirrors when the primary host
+    # is unreachable (e.g. huggingface.co from mainland China).
+    urls = _build_download_urls(url)
+    if download_file_with_progress(urls, filepath):
         print(f"Download completed: {filepath}")
         return filepath
     else:
         return None
+
+
+def _build_download_urls(primary_url: str) -> list[str]:
+    """Return [primary, mirror_1, mirror_2, ...] preserving order, deduplicated.
+
+    Mirrors are added only if the primary host differs from them; this keeps the
+    final URL list short and avoids double-trying the same endpoint.
+    """
+    urls = [primary_url]
+    for mirror in HF_MIRRORS:
+        mirror_root = mirror.rstrip("/")
+        if primary_url.startswith(mirror_root + "/") or primary_url == mirror_root:
+            continue
+        # Rewrite the scheme+host of the primary URL to the mirror root,
+        # keeping the original path intact.
+        parsed = urlparse(primary_url)
+        rewritten = f"{mirror_root}{parsed.path}"
+        if rewritten not in urls:
+            urls.append(rewritten)
+    return urls
 
 
 def get_dataset_path(dataset_key: str, auto_setup: bool = True) -> Path | None:
@@ -290,7 +351,8 @@ def get_left_right_data_session(
     manifest_path = session_dir / manifest_filename
 
     if auto_download and (force or not manifest_path.exists()):
-        if not download_file_with_progress(manifest_url, manifest_path):
+        manifest_urls = _build_download_urls(manifest_url)
+        if not download_file_with_progress(manifest_urls, manifest_path):
             print(f"Failed to download manifest for session {session_id}")
             return None
 
@@ -327,7 +389,8 @@ def get_left_right_data_session(
         file_path = session_dir / filename
         if auto_download and (force or not file_path.exists()):
             file_url = f"{BASE_URL}{LEFT_RIGHT_DATASET_DIR}/{session_id}/{filename}"
-            if not download_file_with_progress(file_url, file_path):
+            file_urls = _build_download_urls(file_url)
+            if not download_file_with_progress(file_urls, file_path):
                 print(f"Failed to download {filename} for session {session_id}")
                 return None
 
@@ -382,7 +445,8 @@ def get_left_right_npz(
         return None
 
     file_url = f"{BASE_URL}{LEFT_RIGHT_DATASET_DIR}/{session_id}/{safe_name}"
-    if not download_file_with_progress(file_url, file_path):
+    file_urls = _build_download_urls(file_url)
+    if not download_file_with_progress(file_urls, file_path):
         print(f"Failed to download {safe_name} for session {session_id}")
         return None
 
