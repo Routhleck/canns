@@ -14,6 +14,35 @@ import numpy as np
 from . import datasets as _datasets
 
 
+def _print_offline_hint(dataset_key: str) -> None:
+    """Tell the user how to load the dataset fully offline.
+
+    Used when an automatic download fails (e.g. behind the GFW or on an
+    air-gapped machine). The dataset is a regular ``.npz`` with ``spike``,
+    ``t``, ``x``, ``y`` keys; once placed in the default cache directory,
+    ``load_grid_data(dataset_key=...)`` reads it locally with no network.
+    """
+    from .datasets import get_data_dir
+
+    target = get_data_dir() / f"{dataset_key}.npz"
+    mirror_url = (
+        "https://hf-mirror.com/datasets/canns-team/data-analysis-datasets/"
+        f"resolve/main/{dataset_key}.npz"
+    )
+    print(
+        f"\n[loaders] Could not auto-download {dataset_key}. To load fully "
+        "offline, do ONE of:\n"
+        f"  1. Manually download to: {target}\n"
+        f"     (China mainland mirror: {mirror_url})\n"
+        f"     Then re-run: load_grid_data(dataset_key='{dataset_key}') — "
+        "no network is used once the file is in place.\n"
+        "  2. Or set the env var before running your script:\n"
+        "       export HF_ENDPOINT=https://hf-mirror.com\n"
+        "  3. Or call with an explicit local path: "
+        f"load_grid_data(source='{target}').\n"
+    )
+
+
 def load_roi_data(source: str | Path | None = None) -> np.ndarray | None:
     """
     Load ROI data for 1D CANN analysis.
@@ -127,6 +156,7 @@ def load_grid_data(
         # Use default CANNs dataset
         dataset_path = _datasets.get_dataset_path(dataset_key)
         if dataset_path is None:
+            _print_offline_hint(dataset_key)
             return None
 
         try:
