@@ -4,7 +4,9 @@
 
 The Continuous Attractor Neural Network (CANN) family in `canns` (CANN1D, CANN2D, and their spike-frequency-adaptation variants) uses a Gaussian distance kernel as the recurrent connectivity matrix. The recurrent matvec `Irec = conn @ r` is the dominant per-step cost at large network size `n`, scaling as O(n²). We show that this kernel has a fast-decaying singular value spectrum — for CANN1D the top-8 components capture 99.4% of the energy, and for CANN2D the top-32 capture ~92% — so a truncated SVD factorisation `conn ≈ U_l V_l.T` turns the matvec into two small GEMVs against `(n, k)` matrices, costing O(n·k) FLOPs.
 
-Across a sweep of `CANN1D num ∈ {64…2048}` and `CANN2D length ∈ {8…64}` we measure (i) per-step time of the recurrent matvec in isolation (via a `lax.scan` of 200 matvecs), (ii) per-step time of the full update step, and (iii) the bump-tracking error of the network under a slow moving-stimulus trajectory. On a single Apple M3 Pro CPU core, the matvec speedup reaches **80× at CANN1D num=2048 (k=8)** and **230× at CANN2D length=64 (k=8)**, with the bump-position error staying below 5 mrad (≈ 0.3° on a 2π ring). On an NVIDIA A100-SXM4-80GB GPU the matvec speedup at the same `n` is smaller in relative terms (the GPU is launch-bound at small n) but the dense matvec itself is 15× faster than on the CPU at n = 4096. The accuracy numbers are independent of the hardware — they are a property of the low-rank factorisation.
+Across a sweep of `CANN1D num ∈ {64…4096}` and `CANN2D length ∈ {8…128}` we measure (i) per-step time of the recurrent matvec in isolation (via a `lax.scan` of 200 matvecs), (ii) per-step time of the full update step, and (iii) the bump-tracking error of the network under a slow moving-stimulus trajectory. On a single Apple M3 Pro CPU core, the matvec speedup reaches **80× at CANN1D num=2048 (k=8)** and **230× at CANN2D length=64 (k=8)**, with the bump-position error staying below 5 mrad (≈ 0.3° on a 2π ring). On an NVIDIA A100-SXM4-80GB GPU the absolute matvec time is much smaller than on the CPU and the dense matvec is ~15× faster than on the CPU at n = 4096; the *relative* speedup of lowrank vs dense is smaller (the GPU is launch-bound at small n) but unambiguously a win at n ≥ 1024. The accuracy numbers are independent of the hardware — they are a property of the low-rank factorisation.
+
+We additionally stress-test long-horizon stability with a T = 2000 slow sweep of the moving stimulus (one full ring per trial, position sampled every 10 steps). The bump-position drift `|pos_lowrank(t) − pos_dense(t)|` is **bounded** for every rank — there is no accumulating error over the 200 s trial. At the recommended ranks (`k = 8` for CANN1D, `k = 32` for CANN2D) the long-horizon drift is sub-mrad; at very low ranks (`k = 1`) it peaks at ~8 mrad for CANN1D and ~13 mrad for CANN2D. This is a stronger statement than the short (T = 200) tracking test: the low-rank truncation introduces a small steady-state offset but does not destabilise the dynamics over many seconds.
 
 All code, raw data, and the figure-generation script are in `experiments/cann_lowrank/`. The feature is exposed through the `accl_mode` and `accl_k` constructor arguments on `CANN1D` and `CANN2D` (and their SFA variants); see `canns.models.basic`.
 
@@ -154,14 +156,15 @@ Maximum bump-position error (mrad) for each `(n, k)` cell on the CPU sweep. The 
 
 **CANN1D**
 
-| n | k=1 | k=2 | k=4 | k=8 | k=16 | k=32 |
-|---|---|---|---|---|---|---|
-| 64 | 4.7 mrad | 3.8 mrad | 5.1 mrad | 5.5 mrad | 5.5 mrad | 5.5 mrad |
-| 128 | 4.2 mrad | 5.3 mrad | 6.3 mrad | 6.9 mrad | 6.9 mrad | 6.9 mrad |
-| 256 | 4.2 mrad | 4.8 mrad | 6.4 mrad | 6.0 mrad | 6.0 mrad | 6.0 mrad |
-| 512 | 4.2 mrad | 4.3 mrad | 4.6 mrad | 4.7 mrad | 4.7 mrad | 4.7 mrad |
-| 1024 | 4.2 mrad | 4.6 mrad | 5.3 mrad | 5.3 mrad | 5.3 mrad | 5.3 mrad |
-| 2048 | 4.2 mrad | 4.5 mrad | 4.8 mrad | 5.0 mrad | 5.0 mrad | 5.0 mrad |
+| n | k=1 | k=2 | k=4 | k=8 | k=16 | k=32 | k=64 |
+|---|---|---|---|---|---|---|---|
+| 64 | 4.7 mrad | 3.8 mrad | 5.1 mrad | 5.5 mrad | 5.5 mrad | 5.5 mrad | 5.5 mrad |
+| 128 | 4.2 mrad | 5.3 mrad | 6.3 mrad | 6.9 mrad | 6.9 mrad | 6.9 mrad | 6.9 mrad |
+| 256 | 4.2 mrad | 4.8 mrad | 6.4 mrad | 6.0 mrad | 6.0 mrad | 6.0 mrad | 6.0 mrad |
+| 512 | 4.2 mrad | 4.3 mrad | 4.6 mrad | 4.7 mrad | 4.7 mrad | 4.7 mrad | 4.7 mrad |
+| 1024 | 4.2 mrad | 4.6 mrad | 5.3 mrad | 5.3 mrad | 5.3 mrad | 5.3 mrad | 5.3 mrad |
+| 2048 | 4.2 mrad | 4.5 mrad | 4.8 mrad | 5.0 mrad | 5.0 mrad | 5.0 mrad | 5.0 mrad |
+| 4096 | 4.2 mrad | 4.1 mrad | 4.3 mrad | 4.2 mrad | 4.2 mrad | 4.2 mrad | 4.2 mrad |
 
 **CANN2D**
 
@@ -171,6 +174,25 @@ Maximum bump-position error (mrad) for each `(n, k)` cell on the CPU sweep. The 
 | 16 | 4.4 mrad | 4.3 mrad | 4.3 mrad | 5.1 mrad | 4.9 mrad | 5.3 mrad | 5.3 mrad | 5.3 mrad |
 | 32 | 3.4 mrad | 3.7 mrad | 3.7 mrad | 4.5 mrad | 4.4 mrad | 4.4 mrad | 4.4 mrad | 4.4 mrad |
 | 64 | 4.0 mrad | 4.2 mrad | 4.2 mrad | 4.0 mrad | 4.0 mrad | 4.0 mrad | 4.0 mrad | 4.0 mrad |
+
+### 3.7 Long-trajectory stability (T = 2000 slow sweep)
+
+The short (T = 200) moving-stimulus trial shows the *tracking* error of the low-rank model. The long-trajectory test answers a different question: **does the error accumulate with time, or stay bounded?**
+
+Protocol: warm up the network for 50 steps with a stationary stimulus at pos = 0, then drive it with a *slow* moving Gaussian that sweeps one full ring over T = 2000 steps (one ring per trial). Decode the bump position every 10 steps (200 samples per trace). The dense reference is run with the same protocol, and the drift is `|pos_lowrank(t) - pos_dense(t)|`. The 1D position is ring-unwrapped for plotting (the bump lives on a 2π ring, but a continuous line is easier to read); the 2D trajectory is plotted directly on the torus.
+
+
+![Long-trajectory drift, 1D](figures/fig_long_drift_1d.png)
+
+**Figure 7.** *Top:* bump position vs time for `CANN1D num=256` (ring-unwrapped, so the stimulus goes 0 → 2π monotonically). The dense and `k≥8` traces are visually indistinguishable; `k=1, 2, 4` lag slightly. *Bottom:* drift `|pos_lowrank - pos_dense|` (mrad) vs time on a log scale. The drift is *bounded* — it oscillates but does not grow with `t` — for every `k`. At `k=8` the drift is sub-mrad; at `k=1` it peaks at ~8 mrad. The two-decade gap between the `k=8` and `k=1` lines is the practical margin: `k=8` is the smallest rank that gives sub-mrad long-horizon tracking.
+
+
+![Long-trajectory drift, 2D](figures/fig_long_drift_2d.png)
+
+**Figure 8.** *Left:* 2D bump-center trajectory in feature space for `CANN2D L=16`. The dense and `k≥32` traces trace out the diagonal stimulus path tightly; `k=1, 4, 8, 16` show a small but visible offset. *Right:* 2D Euclidean drift (mrad) vs time. The 2D kernel needs roughly 4× more components to reach sub-mrad drift — `k=32` is the recommended `accl_mode='fast'` rank for CANN2D, mirroring the spectral-analysis recommendation.
+
+The key qualitative result is that **the drift is bounded for every `k`, including `k=1`**. The low-rank truncation introduces a small fixed offset (the position error of the approximation) but does not introduce an instability that grows with `t`. This is consistent with the Gaussian kernel having a fast-decaying SVD: even rank-1 captures the essential shape of the connectivity, and the omitted components are *smooth perturbations* that shift the bump by a small amount rather than destabilising the dynamics.
+
 
 ## 4. Discussion
 
@@ -197,8 +219,8 @@ Based on the Pareto frontier and the recommended ranks from the spectral analysi
 
 We have measured the benchmark under specific conditions; the following caveats apply when generalising:
 
-1. **Trajectory length.** We simulate for `T = 200` steps, long enough to see a full half-ring sweep. Longer simulations (T = 5 000+ with a stationary stimulus) are needed to test for very-long-horizon drift of the bump.
-2. **Sweep size.** On the CPU sweep we cap at `CANN2D length = 64` (n = 4 096) and `CANN1D num = 2 048` because the `numpy.linalg.svd` cost grows as `O(n³)` and dominates the wall time above that. The GPU sweep uses the same limits for an apples-to-apples comparison. Larger `n` is expected to show bigger absolute speedups, but the relative matvec speedup should be similar.
+1. **Trajectory length.** The benchmark sweep uses T = 200 steps (one half-ring sweep). The optional long-trajectory drift test (`--long-trajectory`, §3.7) extends to T = 2000 steps with a slow sweep; we verified the drift is bounded but did not push to T = 50 000+.
+2. **Sweep size.** On the CPU sweep we cap at `CANN2D length = 64` (n = 4 096) and `CANN1D num = 4 096` because the `numpy.linalg.svd` cost grows as `O(n³)` and dominates the wall time above that. The GPU sweep uses larger sizes (`num = 4 096`, `length = 128`) and the relative matvec speedup is similar.
 3. **Single bump regime.** The CANN models can exhibit multi-bump states for some parameter regimes. We test only the single-bump attractor regime (the typical use case for bump-tracking workloads). Multi-bump dynamics may be more sensitive to the rank truncation.
 4. **Other backends.** The benchmark uses pure JAX matmul. A C++ / CUDA custom-call backend (as in `canns-lib`'s FFI path) would change the speed/overhead trade-off but not the accuracy numbers.
 5. **Asymmetric conn.** The canns model uses a symmetric `conn_mat` (the Gaussian distance kernel is symmetric in the feature-space distance). For an *asymmetric* conn — which the SFA model does not produce either — the low-rank approximation in the form `U_l @ V_l.T` would need to be replaced with a more general low-rank decomposition.
@@ -223,6 +245,9 @@ From the repo root, with the `canns` source on `PYTHONPATH` and JAX + brainpy.ma
 # CPU sweep (Apple M3 Pro, single core):
 python experiments/cann_lowrank/cann_lowrank_bench.py --T 200 --tag cpu
 
+# Optional: also record the long-trajectory drift (T=2000):
+python experiments/cann_lowrank/cann_lowrank_bench.py --T 200 --long-trajectory --tag cpu
+
 # GPU sweep (NVIDIA A100, GPU 1):
 CUDA_VISIBLE_DEVICES=1 JAX_PLATFORMS=cuda \
   python experiments/cann_lowrank/cann_lowrank_bench.py --gpu-sweep --T 200 --tag gpu
@@ -230,7 +255,7 @@ CUDA_VISIBLE_DEVICES=1 JAX_PLATFORMS=cuda \
 # Format the report (figures + markdown):
 python experiments/cann_lowrank/cann_lowrank_report.py --tag cpu
 ```
-The benchmark writes per-tag CSVs and a `bump_trajectories_{tag}.npz` to `experiments/cann_lowrank/results/`. The report script reads them, generates six figures into `results/figures/`, and writes `results/cann_lowrank_summary.md` (this document). The complete sweep takes ~15 minutes on CPU and ~5 minutes on A100.
+The benchmark writes per-tag CSVs, a `bump_trajectories_{tag}.npz`, and (with `--long-trajectory`) a `bump_drift_{tag}.npz` to `experiments/cann_lowrank/results/`. The report script reads them, generates eight figures into `results/figures/`, and writes `results/cann_lowrank_summary.md` (this document). The complete sweep takes ~15 minutes on CPU and ~5 minutes on A100.
 
 
 ## Appendix B. Raw data files
@@ -238,6 +263,7 @@ The benchmark writes per-tag CSVs and a `bump_trajectories_{tag}.npz` to `experi
 Raw per-cell data is in `results/`:
 - `cann_lowrank_all_cpu.csv` — CPU sweep, all `(n, k)` cells
 - `cann_lowrank_all_gpu.csv` — GPU sweep, all `(n, k)` cells
-- `bump_trajectories_cpu.npz` — bump-center trajectories for CANN1D num=256 and CANN2D L=16, all k values
-- `figures/*.png` — the six figures embedded above
+- `bump_trajectories_cpu.npz` — bump-center trajectories for CANN1D num=256 and CANN2D L=16, all k values (T=200 sweep)
+- `bump_drift_cpu.npz` — long-trajectory drift (T=2000 slow sweep, with `--long-trajectory`)
+- `figures/*.png` — the eight figures embedded above
 

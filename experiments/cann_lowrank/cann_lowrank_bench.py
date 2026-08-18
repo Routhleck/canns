@@ -892,6 +892,252 @@ def record_bump_trajectories_2d(
 
 
 # ---------------------------------------------------------------------------
+# Long-trajectory stability test (drift over T=2000 with a slow sweep)
+# ---------------------------------------------------------------------------
+#
+# Protocol: warm up the network for ``T_warm`` steps with a stationary
+# stimulus at pos=0, then drive it with a *slow* moving Gaussian that
+# sweeps the full ring over ``T`` steps (one ring per trial). Decode the
+# bump position at every step. Compare each ``k`` to the dense
+# reference — the per-step circular distance is the *drift* of the
+# low-rank model relative to the dense one. A stable low-rank model has
+# drift that stays bounded over the whole trial; an unstable one
+# accumulates drift at the same rate as time (or faster).
+#
+# Why not stationary stimulus? With a symmetric conn and a stationary
+# stimulus, the bump is a fixed point of the dynamics and the decoded
+# position is at floating-point noise for every k — there's nothing to
+# see. A slow sweep exercises the tracking dynamics continuously so any
+# bias or lag of the low-rank approximation shows up as a *time-constant
+# position error* relative to the dense reference.
+
+def _slow_sweep_1d(
+    num: int, T: int, x: np.ndarray, a: float, A: float, z_range: float,
+    pos_start: float = 0.0, pos_end: float = 2 * math.pi,
+) -> np.ndarray:
+    """Linear sweep from ``pos_start`` to ``pos_end`` over ``T`` steps.
+
+    Default is one full ring in ``T`` steps (slow enough that the bump
+    can track with ``τ = 1``).
+    """
+    out = np.empty((T, num), dtype=np.float32)
+    for t in range(T):
+        pos = pos_start + (pos_end - pos_start) * t / max(T - 1, 1)
+        d = (x - pos) % z_range
+        d = np.where(d > z_range / 2, d - z_range, d)
+        out[t] = A * np.exp(-0.25 * (d / a) ** 2)
+    return out
+
+
+def _slow_sweep_2d(
+    length: int, T: int, x: np.ndarray, a: float, A: float, z_range: float,
+) -> np.ndarray:
+    """2D diagonal sweep: both axes go from 0 to 2π over ``T`` steps."""
+    L = length
+    xx, yy = np.meshgrid(x, x)
+    out = np.empty((T, L, L), dtype=np.float32)
+    for t in range(T):
+        pos = 2 * math.pi * t / max(T - 1, 1)
+        dx = (xx - pos) % z_range
+        dy = (yy - pos) % z_range
+        dx = np.where(dx > z_range / 2, dx - z_range, dx)
+        dy = np.where(dy > z_range / 2, dy - z_range, dy)
+        out[t] = (A * np.exp(-0.25 * ((dx ** 2 + dy ** 2) ** 0.5) / a) ** 2).astype(np.float32)
+    return out
+
+
+def record_long_drift_1d(
+    num: int, k_list: list[int], T: int = 2000, dt: float = 0.1,
+    T_warm: int = 50,
+) -> dict:
+    """Long-trajectory drift test for CANN1D.
+
+    A bump is formed at ``pos=0`` (``T_warm`` warm-up steps with a
+    stationary stimulus), then a slow moving stimulus sweeps one full
+    ring over ``T`` steps. The bump position is recorded at every step
+    (downsampled to ~200 points in the returned dict for plotting). A
+    stable low-rank model tracks the dense reference within a few mrad
+    over the whole trial; instability would show as growing error vs t.
+
+    Returns a dict with keys:
+        ``dense``     — array of shape ``(T_sample,)``
+        ``k_full``    — same as ``dense``
+        ``k{ki}``     — array of shape ``(T_sample,)`` for each rank
+        ``stim_pos``  — array of shape ``(T_sample,)``, the stimulus
+                        position at each sampled step (for plotting)
+        ``x``         — feature-space coordinates
+        ``n``         — ``num`` (echoed back for the report)
+        ``T``         — full simulation length (echoed)
+        ``sample_step`` — sampling interval (every Nth step was kept)
+    """
+    bm.set_dt(dt)
+    model = CANN1D(num=num, accl_mode="normal")
+    conn_np = np.asarray(model.conn_mat)
+    x_np = np.asarray(model.x)
+    tau = float(model.tau)
+    k_global = float(model.k)
+    a, A, z_range = float(model.a), float(model.A), float(model.z_range)
+
+    U_full, S_full, Vt_full = np.linalg.svd(conn_np, full_matrices=False)
+
+    step_dense = _make_dense_step()
+    step_low = _make_lowrank_step()
+
+    # Slow sweep stimulus
+    stim_np = _slow_sweep_1d(num, T, x_np, a, A, z_range)
+    # Warm-up stimulus (stationary at pos=0)
+    warm_stim = np.broadcast_to(
+        (A * np.exp(-0.25 * (x_np / a) ** 2)).astype(np.float32),
+        (T_warm, num),
+    ).copy()
+
+    # Pre-build lowrank factors
+    factors = {}
+    for ki in k_list:
+        sqrtS = np.sqrt(S_full[:ki].astype(np.float32))
+        factors[ki] = (
+            jnp.asarray(U_full[:, :ki].astype(np.float32) * sqrtS),
+            jnp.asarray(Vt_full[:ki, :].T.astype(np.float32) * sqrtS),
+        )
+
+    sample_every = max(1, T // 200)
+    sample_t = np.arange(0, T, sample_every)
+    n_sample = len(sample_t)
+
+    def run_traj(initial_u, initial_r, step_fn, *extra_args):
+        u, r = initial_u, initial_r
+        for t in range(T_warm):
+            u, r = step_fn(u, r, *extra_args, jnp.asarray(warm_stim[t]), tau, k_global, dt)
+        pos = np.empty(n_sample, dtype=np.float64)
+        for i, t in enumerate(sample_t):
+            u, r = step_fn(u, r, *extra_args, jnp.asarray(stim_np[t]), tau, k_global, dt)
+            pos[i] = bump_position_1d(np.asarray(r), x_np, z_range)
+        return pos
+
+    out: dict = {
+        "x": x_np, "n": num, "T": T,
+        "sample_step": sample_every,
+        "stim_pos": np.array([math.pi * 2 * t / max(T - 1, 1) for t in sample_t]),
+    }
+
+    dense_pos = run_traj(
+        np.zeros(num, dtype=np.float32),
+        np.zeros(num, dtype=np.float32),
+        step_dense,
+        jnp.asarray(conn_np),
+    )
+    out["dense"] = dense_pos
+    out["k_full"] = dense_pos.copy()
+
+    for ki, (U_l, V_l) in factors.items():
+        out[f"k{ki}"] = run_traj(
+            np.zeros(num, dtype=np.float32),
+            np.zeros(num, dtype=np.float32),
+            step_low,
+            U_l, V_l,
+        )
+
+    return out
+
+
+def record_long_drift_2d(
+    length: int, k_list: list[int], T: int = 2000, dt: float = 0.1,
+    T_warm: int = 50,
+) -> dict:
+    """Long-trajectory drift test for CANN2D — 2D mirror of the 1D test.
+
+    A bump is formed at the origin (``T_warm`` steps with a stationary
+    Gaussian at pos=(0,0)), then a diagonal moving stimulus sweeps one
+    full ring in each axis over ``T`` steps. The bump center is decoded
+    in 2D at every sampled step.
+
+    Returns a dict with keys:
+        ``dense``     — array of shape ``(T_sample, 2)``
+        ``k_full``    — same as ``dense``
+        ``k{ki}``     — array of shape ``(T_sample, 2)`` for each rank
+        ``stim_pos``  — array of shape ``(T_sample, 2)``
+        ``x``         — feature-space coordinates
+        ``L``         — ``length`` (echoed)
+        ``T``         — full simulation length
+        ``sample_step`` — sampling interval
+    """
+    bm.set_dt(dt)
+    model = CANN2D(length=length, accl_mode="normal")
+    conn_np = np.asarray(model.conn_mat)
+    x_np = np.asarray(model.x)
+    tau = float(model.tau)
+    k_global = float(model.k)
+    a, A, z_range = float(model.a), float(model.A), float(model.z_range)
+    L = length
+    n = L * L
+
+    U_full, S_full, Vt_full = np.linalg.svd(conn_np, full_matrices=False)
+
+    step_dense = _make_dense_step()
+    step_low = _make_lowrank_step()
+
+    stim_np = _slow_sweep_2d(L, T, x_np, a, A, z_range)
+
+    # Warm-up stimulus (stationary Gaussian at origin)
+    xx, yy = np.meshgrid(x_np, x_np)
+    warm_stim_flat = (
+        A * np.exp(-0.25 * ((xx ** 2 + yy ** 2) ** 0.5) / a) ** 2
+    ).astype(np.float32).reshape(-1)
+    warm_stim = np.broadcast_to(warm_stim_flat, (T_warm, n)).copy()
+
+    factors = {}
+    for ki in k_list:
+        sqrtS = np.sqrt(S_full[:ki].astype(np.float32))
+        factors[ki] = (
+            jnp.asarray(U_full[:, :ki].astype(np.float32) * sqrtS),
+            jnp.asarray(Vt_full[:ki, :].T.astype(np.float32) * sqrtS),
+        )
+
+    sample_every = max(1, T // 200)
+    sample_t = np.arange(0, T, sample_every)
+    n_sample = len(sample_t)
+
+    def run_traj(initial_u, initial_r, step_fn, *extra_args):
+        u, r = initial_u, initial_r
+        for t in range(T_warm):
+            u, r = step_fn(u, r, *extra_args, jnp.asarray(warm_stim[t]), tau, k_global, dt)
+        pos = np.empty((n_sample, 2), dtype=np.float64)
+        for i, t in enumerate(sample_t):
+            u, r = step_fn(u, r, *extra_args, jnp.asarray(stim_np[t].reshape(-1)), tau, k_global, dt)
+            cx, cy = bump_position_2d(np.asarray(r).reshape(L, L), x_np, z_range)
+            pos[i] = (cx, cy)
+        return pos
+
+    out: dict = {
+        "x": x_np, "L": length, "T": T,
+        "sample_step": sample_every,
+        "stim_pos": np.array([
+            [2 * math.pi * t / max(T - 1, 1), 2 * math.pi * t / max(T - 1, 1)]
+            for t in sample_t
+        ]),
+    }
+
+    dense_pos = run_traj(
+        np.zeros(n, dtype=np.float32),
+        np.zeros(n, dtype=np.float32),
+        step_dense,
+        jnp.asarray(conn_np),
+    )
+    out["dense"] = dense_pos
+    out["k_full"] = dense_pos.copy()
+
+    for ki, (U_l, V_l) in factors.items():
+        out[f"k{ki}"] = run_traj(
+            np.zeros(n, dtype=np.float32),
+            np.zeros(n, dtype=np.float32),
+            step_low,
+            U_l, V_l,
+        )
+
+    return out
+
+
+# ---------------------------------------------------------------------------
 # CLI
 # ---------------------------------------------------------------------------
 
@@ -914,6 +1160,11 @@ def main() -> None:
                         "forcing 'gpu'.")
     p.add_argument("--no-trajectories", action="store_true",
                    help="skip recording bump center trajectories (faster, less output)")
+    p.add_argument("--long-trajectory", action="store_true",
+                   help="also record a long-trajectory drift test (T=2000 slow sweep) "
+                        "for both CANN1D num=256 and CANN2D L=16. Writes a separate "
+                        "bump_drift_{tag}.npz and a section in the report. Off by "
+                        "default because it costs ~30 s extra on CPU.")
     args = p.parse_args()
 
     outdir = Path(args.outdir) if args.outdir else _HERE / "results"
@@ -932,19 +1183,23 @@ def main() -> None:
         ranks_1d = [1, 2, 4, 8, 16]
         ranks_2d = [1, 2, 4, 8, 16, 32, 64]
     elif args.gpu_sweep:
-        # Same n as default CPU; the A100 advantage comes through
-        # with more iters, not larger sizes. L=128 / n=4096 is
-        # already past the size where GPU matvec time dominates
-        # dispatch overhead. Going to n=16384 is dominated by the
-        # numpy SVD cost (5+ min per cell on CPU) so we cap here.
-        cann1d_sizes = [64, 128, 256, 512, 1024, 2048]
-        cann2d_sizes = [8, 16, 32, 64]
-        ranks_1d = [1, 2, 4, 8, 16, 32]
-        ranks_2d = [1, 2, 4, 8, 16, 32, 64, 128]
+        # Larger sweep suitable for a GPU. L=128 (n=16384) is
+        # included because the A100's matvec at n=16k runs in a
+        # few hundred microseconds — the SVD cost (numpy, ~5 min
+        # for n=16384) still dominates the cell, but the matvec
+        # speedup at that size is the most compelling GPU number.
+        cann1d_sizes = [64, 128, 256, 512, 1024, 2048, 4096]
+        cann2d_sizes = [8, 16, 32, 64, 128]
+        ranks_1d = [1, 2, 4, 8, 16, 32, 64]
+        ranks_2d = [1, 2, 4, 8, 16, 32, 64, 128, 256]
     else:
-        cann1d_sizes = [64, 128, 256, 512, 1024, 2048]
+        # Default CPU sweep: extends 1D to num=4096. 2D is still
+        # capped at L=64 (n=4096) because L=128 (n=16384) is
+        # dominated by the numpy SVD cost (~5 min per cell) and
+        # is left to --gpu-sweep.
+        cann1d_sizes = [64, 128, 256, 512, 1024, 2048, 4096]
         cann2d_sizes = [8, 16, 32, 64]
-        ranks_1d = [1, 2, 4, 8, 16, 32]
+        ranks_1d = [1, 2, 4, 8, 16, 32, 64]
         ranks_2d = [1, 2, 4, 8, 16, 32, 64, 128]
 
     all_rows: list[CellResult] = []
@@ -1035,6 +1290,53 @@ def main() -> None:
             traj_data[f"traj_2d_{k_name}"] = arr
         np.savez(traj_npz, **traj_data)
         print(f"  Wrote {traj_npz}")
+
+    # Long-trajectory drift test (T=2000 slow sweep) — opt-in
+    if args.long_trajectory:
+        print()
+        print("=" * 70)
+        print("Long-trajectory drift test (T=2000 slow sweep)")
+        print("=" * 70)
+        drift_npz = outdir / f"bump_drift_{tag}.npz"
+        drift_data: dict = {}
+        # Same representative sizes as the trajectory figure, so the
+        # two figures line up visually
+        drift_1d_n = 256
+        drift_2d_L = 16
+        drift_1d_ks = [1, 2, 4, 8, 16, 32]
+        drift_2d_ks = [1, 4, 8, 16, 32, 64]
+        drift_T = 2000
+        drift_T_warm = 50
+        print(f"  CANN1D num={drift_1d_n}, T={drift_T} ...", flush=True)
+        drift_1d = record_long_drift_1d(
+            drift_1d_n, drift_1d_ks, T=drift_T, T_warm=drift_T_warm, dt=args.dt,
+        )
+        drift_data["drift_1d_n"] = drift_1d_n
+        drift_data["drift_1d_ks"] = np.array(drift_1d_ks)
+        drift_data["drift_1d_T"] = drift_1d["T"]
+        drift_data["drift_1d_sample_step"] = drift_1d["sample_step"]
+        drift_data["drift_1d_x"] = drift_1d["x"]
+        drift_data["drift_1d_stim_pos"] = drift_1d["stim_pos"]
+        for k_name, arr in drift_1d.items():
+            if k_name in ("x", "n", "T", "sample_step", "stim_pos"):
+                continue
+            drift_data[f"drift_1d_{k_name}"] = arr
+        print(f"  CANN2D L={drift_2d_L}, T={drift_T} ...", flush=True)
+        drift_2d = record_long_drift_2d(
+            drift_2d_L, drift_2d_ks, T=drift_T, T_warm=drift_T_warm, dt=args.dt,
+        )
+        drift_data["drift_2d_L"] = drift_2d_L
+        drift_data["drift_2d_ks"] = np.array(drift_2d_ks)
+        drift_data["drift_2d_T"] = drift_2d["T"]
+        drift_data["drift_2d_sample_step"] = drift_2d["sample_step"]
+        drift_data["drift_2d_x"] = drift_2d["x"]
+        drift_data["drift_2d_stim_pos"] = drift_2d["stim_pos"]
+        for k_name, arr in drift_2d.items():
+            if k_name in ("x", "L", "T", "sample_step", "stim_pos"):
+                continue
+            drift_data[f"drift_2d_{k_name}"] = arr
+        np.savez(drift_npz, **drift_data)
+        print(f"  Wrote {drift_npz}")
 
     print()
     print(f"  Wrote {speed_csv}")

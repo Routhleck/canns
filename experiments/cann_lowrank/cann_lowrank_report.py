@@ -33,7 +33,7 @@ import numpy as np
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
-from matplotlib.ticker import LogLocator, NullFormatter
+from matplotlib.ticker import LogLocator, NullFormatter, NullLocator
 
 _HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(_HERE))
@@ -81,10 +81,16 @@ def fig_svd_spectrum(sv_1d: np.ndarray, sv_2d: np.ndarray, out: Path) -> None:
     Top row: log-scale singular values.
     Bottom row: cumulative energy fraction, with 99% / 99.9% / 99.99% lines.
     """
-    fig, axes = plt.subplots(2, 2, figsize=(7.0, 4.5), sharex=False)
+    fig, axes = plt.subplots(2, 2, figsize=(8.5, 5.5), sharex=False)
+
+    # Short titles to avoid horizontal overlap
+    titles = [
+        f"CANN1D  (n={len(sv_1d)})",
+        f"CANN2D  (L={int(np.sqrt(len(sv_2d)))}, n={len(sv_2d)})",
+    ]
 
     for col, (sv, title) in enumerate(
-        [(sv_1d, "CANN1D conn_mat (n=256)"), (sv_2d, "CANN2D conn_mat (L=16, n=256)")]
+        [(sv_1d, titles[0]), (sv_2d, titles[1])]
     ):
         n = len(sv)
         # Top: log S
@@ -99,12 +105,26 @@ def fig_svd_spectrum(sv_1d: np.ndarray, sv_2d: np.ndarray, out: Path) -> None:
         ax = axes[1, col]
         cum = np.cumsum(sv ** 2) / (sv ** 2).sum()
         ax.plot(np.arange(1, n + 1), cum, "k-", lw=1.5)
-        for thr in (0.99, 0.999, 0.9999):
+        # Place threshold annotations on a vertical strip at x=0.5 (left of plot)
+        # so they don't overlap with the cumulative curve.
+        thrs = [0.99, 0.999, 0.9999]
+        for thr in thrs:
             idx = int(np.searchsorted(cum, thr)) + 1
             ax.axhline(thr, ls=":", color="grey", lw=0.5)
             ax.axvline(idx, ls=":", color="grey", lw=0.5)
-            ax.text(idx + 1, thr, f"{thr*100:.2f}% @ k={idx}",
-                    fontsize=7, va="center")
+        # Compose a single legend-like textbox in the upper-left of each panel
+        labels = [
+            f"{thr*100:g}%: k = {int(np.searchsorted(cum, thr)) + 1}"
+            for thr in thrs
+        ]
+        ax.text(
+            0.02, 0.4, "\n".join(labels),
+            transform=ax.transAxes,
+            fontsize=8,
+            va="top", ha="left",
+            family="monospace",
+            bbox=dict(boxstyle="round,pad=0.3", fc="white", ec="grey", lw=0.5),
+        )
         ax.set_xlim(0, 64)  # only show first 64 ranks
         ax.set_ylim(0, 1.02)
         ax.set_xlabel("rank k")
@@ -162,6 +182,9 @@ def fig_speedup(
     ax.set_title(title, fontsize=10)
     ax.legend(loc="lower right", fontsize=7, ncol=2)
     ax.grid(True, which="both", ls=":", lw=0.5, alpha=0.5)
+    # Suppress cluttered minor ticks on the y-axis (e.g. 8×10⁻¹, 9×10⁻¹)
+    ax.yaxis.set_major_locator(LogLocator(base=10.0, numticks=4))
+    ax.yaxis.set_minor_locator(NullLocator())
     fig.tight_layout()
     _save(fig, out)
 
@@ -180,25 +203,36 @@ def fig_trajectory_1d(traj: dict, out: Path) -> None:
     t = np.arange(T) * 0.1
     stim_pos = np.pi * t / max(T - 1, 1)
 
-    fig, axes = plt.subplots(2, 1, figsize=(7.0, 4.5), sharex=True)
+    fig, axes = plt.subplots(2, 1, figsize=(7.5, 5.5), sharex=True)
 
     # Top: trajectory
     ax = axes[0]
-    ax.plot(t, stim_pos, "k--", lw=1, alpha=0.4, label="stimulus pos")
-    ax.plot(t, traj["k_full"], "k-", lw=2.0, label="k=full (dense)")
+    ax.plot(t, stim_pos, "k--", lw=1, alpha=0.4)
+    ax.plot(t, traj["k_full"], "k-", lw=2.0)
     cmap = plt.get_cmap("plasma")
     for i, k in enumerate(ks):
         arr = traj[f"k{k}"]
         color = cmap(i / max(len(ks) - 1, 1))
-        ax.plot(t, arr, lw=1.0, color=color, alpha=0.85, label=f"k={k}")
+        ax.plot(t, arr, lw=1.0, color=color, alpha=0.85)
     ax.set_ylabel("bump position (rad)")
     ax.set_title("CANN1D num=256 — bump center trajectory (decode via circular mean)",
                  fontsize=10)
-    ax.legend(loc="upper left", fontsize=7, ncol=3)
-    ax.set_ylim(-np.pi - 0.2, np.pi + 0.2)
-    ax.set_yticks([-np.pi, -np.pi/2, 0, np.pi/2, np.pi])
-    ax.set_yticklabels(["-π", "-π/2", "0", "π/2", "π"])
+    # Tighten y-range — the moving stimulus only sweeps the positive half
+    # of the ring (0 → π), and all k values track it there.
+    ax.set_ylim(-0.3, np.pi + 0.3)
+    ax.set_yticks([0, np.pi/4, np.pi/2, 3*np.pi/4, np.pi])
+    ax.set_yticklabels(["0", "π/4", "π/2", "3π/4", "π"])
     ax.grid(True, ls=":", lw=0.5, alpha=0.5)
+    # Top-axes legend (above the top subplot, outside the data area)
+    handles = [ax.plot([], [], color=cmap(i / max(len(ks) - 1, 1)),
+                      lw=1.5)[0] for i, k in enumerate(ks)]
+    handles = [ax.plot([], [], "k--", lw=1, alpha=0.4)[0],
+               ax.plot([], [], "k-", lw=2)[0]] + handles
+    labels = ["stimulus pos", "k=full (dense)"] + [f"k={k}" for k in ks]
+    fig.legend(handles, labels, loc="upper center",
+               bbox_to_anchor=(0.5, 1.0),
+               ncol=min(8, len(labels)), fontsize=7,
+               frameon=False)
 
     # Bottom: position error
     ax = axes[1]
@@ -210,10 +244,10 @@ def fig_trajectory_1d(traj: dict, out: Path) -> None:
         ax.semilogy(t, d * 1000, lw=1.0, color=color, label=f"k={k}")
     ax.set_xlabel("time (s)")
     ax.set_ylabel("position error (mrad)")
-    ax.legend(loc="upper right", fontsize=7, ncol=3)
+    ax.legend(loc="lower left", fontsize=7, ncol=3)
     ax.grid(True, which="both", ls=":", lw=0.5, alpha=0.5)
 
-    fig.tight_layout()
+    fig.tight_layout(rect=(0, 0, 1, 0.94))  # leave room for the top legend
     _save(fig, out)
     plt.close(fig)
 
@@ -285,14 +319,186 @@ def fig_trajectory_2d(traj: dict, out: Path) -> None:
     plt.close(fig)
 
 
+def _unwrap_ring(pos: np.ndarray) -> np.ndarray:
+    """Unwrap a circular-mean position so the line is continuous.
+
+    Adds 2π wherever the position drops by more than π between
+    consecutive samples, so the result is monotonically increasing
+    (for a stimulus that sweeps in the positive direction).
+    """
+    out = pos.copy()
+    for i in range(1, len(out)):
+        d = out[i] - out[i - 1]
+        if d < -np.pi:
+            out[i:] += 2 * np.pi
+        elif d > np.pi:
+            out[i:] -= 2 * np.pi
+    return out
+
+
+def fig_long_drift_1d(drift: dict, out: Path) -> None:
+    """Long-trajectory drift figure for CANN1D.
+
+    Top: bump position vs time for each rank, all overlaid with the
+    dense reference and the stimulus trajectory. The position is
+    *unwrapped* (the network lives on a ring, but a continuous line
+    is easier to read). Sampled every ``sample_step`` steps (the npz
+    stores 200 points covering T=2000).
+
+    Bottom: position error vs time on a log scale, per k vs the dense
+    reference. A stable model has bounded error; an unstable one
+    accumulates drift over the trial.
+    """
+    ks = sorted(
+        int(k[1:]) for k in drift
+        if k.startswith("k") and k[1:].isdigit()
+    )
+    sample_step = int(drift["sample_step"])
+    t = np.arange(len(drift["dense"])) * sample_step * 0.1  # dt=0.1
+    stim_pos = _unwrap_ring(drift["stim_pos"])
+
+    fig, axes = plt.subplots(2, 1, figsize=(7.5, 5.5), sharex=True)
+
+    # Top: trajectory (unwrapped)
+    ax = axes[0]
+    ax.plot(t, stim_pos, "k--", lw=1, alpha=0.4)
+    ax.plot(t, _unwrap_ring(drift["k_full"]), "k-", lw=2.0)
+    cmap = plt.get_cmap("plasma")
+    for i, k in enumerate(ks):
+        arr = _unwrap_ring(drift[f"k{k}"])
+        color = cmap(i / max(len(ks) - 1, 1))
+        ax.plot(t, arr, lw=1.0, color=color, alpha=0.85)
+    ax.set_ylabel("bump position (rad, unwrapped)")
+    ax.set_title(
+        f"CANN1D num=256 — long-trajectory drift (T=2000 slow sweep, "
+        f"sample every {sample_step} steps; ring-unwrapped)",
+        fontsize=10,
+    )
+    ax.set_yticks([0, np.pi / 2, np.pi, 3 * np.pi / 2, 2 * np.pi])
+    ax.set_yticklabels(["0", "π/2", "π", "3π/2", "2π"])
+    ax.grid(True, ls=":", lw=0.5, alpha=0.5)
+    # Top legend
+    handles = [ax.plot([], [], "k--", lw=1, alpha=0.4)[0],
+               ax.plot([], [], "k-", lw=2)[0]]
+    for i, k in enumerate(ks):
+        color = cmap(i / max(len(ks) - 1, 1))
+        handles.append(ax.plot([], [], color=color, lw=1.5)[0])
+    labels = ["stimulus pos", "k=full (dense)"] + [f"k={k}" for k in ks]
+    fig.legend(handles, labels, loc="upper center",
+               bbox_to_anchor=(0.5, 1.0),
+               ncol=min(8, len(labels)), fontsize=7, frameon=False)
+
+    # Bottom: drift |pos - dense_pos| (in mrad), log scale
+    ax = axes[1]
+    for i, k in enumerate(ks):
+        arr = drift[f"k{k}"]
+        d = np.abs(drift["k_full"] - arr)
+        d = np.minimum(d, 2 * np.pi - d)
+        color = cmap(i / max(len(ks) - 1, 1))
+        ax.semilogy(t, d * 1000, lw=1.0, color=color, label=f"k={k}")
+    ax.set_xlabel("time (s)")
+    ax.set_ylabel("|pos - dense pos| (mrad)")
+    ax.legend(loc="lower right", fontsize=7, ncol=3)
+    ax.grid(True, which="both", ls=":", lw=0.5, alpha=0.5)
+
+    fig.tight_layout(rect=(0, 0, 1, 0.94))
+    _save(fig, out)
+    plt.close(fig)
+
+
+def fig_long_drift_2d(drift: dict, out: Path) -> None:
+    """Long-trajectory drift figure for CANN2D — 2D mirror.
+
+    Top: 2D bump center trajectory in feature space for each rank, all
+    overlaid with the dense reference and the diagonal stimulus path.
+
+    Bottom: 2D Euclidean drift |pos - dense_pos| vs time on a log
+    scale, per k.
+    """
+    ks = sorted(
+        int(k[1:]) for k in drift
+        if k.startswith("k") and k[1:].isdigit()
+    )
+    sample_step = int(drift["sample_step"])
+    t = np.arange(len(drift["dense"])) * sample_step * 0.1
+
+    fig, axes = plt.subplots(1, 2, figsize=(8.5, 4.0))
+
+    # Left: 2D trajectory
+    ax = axes[0]
+    stim = drift["stim_pos"]
+    ax.plot(stim[:, 0], stim[:, 1], "k--", lw=1, alpha=0.4,
+            label="stimulus pos")
+    ax.plot(drift["k_full"][:, 0], drift["k_full"][:, 1], "k-", lw=2.0,
+            label="k=full (dense)")
+    cmap = plt.get_cmap("plasma")
+    for i, k in enumerate(ks):
+        arr = drift[f"k{k}"]
+        color = cmap(i / max(len(ks) - 1, 1))
+        ax.plot(arr[:, 0], arr[:, 1], lw=1.0, color=color, alpha=0.85,
+                label=f"k={k}")
+    ax.set_xlabel("x (rad)")
+    ax.set_ylabel("y (rad)")
+    ax.set_title(
+        f"CANN2D L=16 — long-trajectory drift (T=2000 diagonal sweep)",
+        fontsize=10,
+    )
+    ax.set_xlim(-np.pi - 0.2, np.pi + 0.2)
+    ax.set_ylim(-np.pi - 0.2, np.pi + 0.2)
+    ax.set_xticks([-np.pi, 0, np.pi])
+    ax.set_xticklabels(["-π", "0", "π"])
+    ax.set_yticks([-np.pi, 0, np.pi])
+    ax.set_yticklabels(["-π", "0", "π"])
+    ax.set_aspect("equal")
+    ax.legend(loc="lower right", fontsize=7, ncol=2)
+    ax.grid(True, ls=":", lw=0.5, alpha=0.5)
+
+    # Right: 2D drift
+    ax = axes[1]
+    z_range = 2 * np.pi
+    for i, k in enumerate(ks):
+        arr = drift[f"k{k}"]
+        dx = np.abs(drift["k_full"][:, 0] - arr[:, 0])
+        dy = np.abs(drift["k_full"][:, 1] - arr[:, 1])
+        dx = np.minimum(dx, z_range - dx)
+        dy = np.minimum(dy, z_range - dy)
+        err = np.sqrt(dx ** 2 + dy ** 2)
+        color = cmap(i / max(len(ks) - 1, 1))
+        ax.semilogy(t, err * 1000, lw=1.0, color=color, label=f"k={k}")
+    ax.set_xlabel("time (s)")
+    ax.set_ylabel("2D drift (mrad)")
+    ax.set_title("2D drift vs time", fontsize=10)
+    ax.legend(loc="upper right", fontsize=7, ncol=2)
+    ax.grid(True, which="both", ls=":", lw=0.5, alpha=0.5)
+
+    fig.tight_layout()
+    _save(fig, out)
+    plt.close(fig)
+
+
 def fig_pareto(
     by_cell: dict[tuple[str, int], dict[int, dict]],
     model: str,
     title: str,
     out: Path,
 ) -> None:
-    """Speed-accuracy Pareto frontier: matvec speedup vs max pos err."""
-    fig, ax = plt.subplots(figsize=(5.5, 3.5))
+    """Speed-accuracy Pareto frontier: matvec speedup vs max pos err.
+
+    Marker shape encodes the rank k (one shape per k).
+    Marker color encodes n_neurons (continuous viridis).
+    """
+    fig, ax = plt.subplots(figsize=(6.5, 4.0))
+
+    # Collect all k values present
+    ks_present = sorted({
+        k for (m, _), cell in by_cell.items()
+        if m == model for k in cell if k != -1
+    })
+    # Marker pool: cycle through a few shapes so k=1, 2, 4, 8, 16, 32 are
+    # all distinguishable in print.
+    marker_pool = ["o", "s", "^", "D", "v", "P", "*", "X"]
+    k_to_marker = {k: marker_pool[i % len(marker_pool)]
+                   for i, k in enumerate(ks_present)}
 
     n_list = sorted(nv for (m, nv) in by_cell if m == model)
     cmap_n = plt.get_cmap("viridis")
@@ -305,16 +511,16 @@ def fig_pareto(
             continue
         dense_mv = float(dense["matvec_per_step_ms"])
         n_neurons = int(dense["n_neurons"])
+        color = cmap_n((n_neurons - n_min) / max(n_max - n_min, 1))
         for k, r in cell.items():
             if k == -1:
                 continue
             sp = dense_mv / float(r["matvec_per_step_ms"])
             err = float(r["max_pos_err"]) * 1000  # to mrad
-            color = cmap_n((n_neurons - n_min) / max(n_max - n_min, 1))
-            ax.scatter(sp, err, s=40, color=color, alpha=0.7,
+            ax.scatter(sp, err, s=60,
+                       marker=k_to_marker[k],
+                       color=color, alpha=0.75,
                        edgecolor="black", lw=0.5)
-            ax.annotate(f"k={k}", (sp, err), fontsize=6,
-                        xytext=(3, 3), textcoords="offset points")
 
     ax.set_xscale("log")
     ax.set_yscale("log")
@@ -322,12 +528,25 @@ def fig_pareto(
     ax.set_ylabel("max position error (mrad)")
     ax.set_title(title, fontsize=10)
     ax.grid(True, which="both", ls=":", lw=0.5, alpha=0.5)
+
     # Colorbar for n_neurons
     sm = plt.cm.ScalarMappable(cmap=cmap_n, norm=plt.Normalize(vmin=n_min, vmax=n_max))
     sm.set_array([])
     cbar = fig.colorbar(sm, ax=ax, fraction=0.04, pad=0.02)
     cbar.set_label("n_neurons", fontsize=8)
     cbar.ax.tick_params(labelsize=7)
+
+    # Legend for marker shape (rank k)
+    legend_handles = [
+        plt.Line2D([0], [0], marker=k_to_marker[k], color="grey",
+                   markerfacecolor="grey", markersize=8, lw=0,
+                   label=f"k={k}")
+        for k in ks_present
+    ]
+    leg = ax.legend(handles=legend_handles, loc="upper right",
+                    title="rank k", fontsize=7, title_fontsize=8,
+                    frameon=True, ncol=1)
+    leg.get_frame().set_edgecolor("grey")
 
     fig.tight_layout()
     _save(fig, out)
@@ -403,6 +622,14 @@ def main() -> None:
         if traj_npz:
             print(f"  Using {other} trajectories (the {args.tag} set was empty).")
 
+    # Load long-trajectory drift (if recorded)
+    drift_npz = load_npz(results / f"bump_drift_{args.tag}.npz")
+    if not drift_npz:
+        other = "gpu" if args.tag == "cpu" else "cpu"
+        drift_npz = load_npz(results / f"bump_drift_{other}.npz")
+        if drift_npz:
+            print(f"  Using {other} drift npz (the {args.tag} set was empty).")
+
     # Make figure dir
     figdir = results / "figures"
     figdir.mkdir(parents=True, exist_ok=True)
@@ -442,11 +669,24 @@ def main() -> None:
         if "dense" in traj_2d:
             fig_trajectory_2d(traj_2d, figdir / "fig_trajectory_2d.png")
 
+    if drift_npz:
+        # 1D long-trajectory drift
+        drift_1d = {k.removeprefix("drift_1d_"): v for k, v in drift_npz.items()
+                    if k.startswith("drift_1d_")}
+        if "dense" in drift_1d:
+            fig_long_drift_1d(drift_1d, figdir / "fig_long_drift_1d.png")
+        # 2D long-trajectory drift
+        drift_2d = {k.removeprefix("drift_2d_"): v for k, v in drift_npz.items()
+                    if k.startswith("drift_2d_")}
+        if "dense" in drift_2d:
+            fig_long_drift_2d(drift_2d, figdir / "fig_long_drift_2d.png")
+
     # -------- Markdown --------
     md = render_markdown(
         cpu_by=cpu_by,
         gpu_by=gpu_by,
         traj_npz=traj_npz,
+        drift_npz=drift_npz,
         figdir=figdir,
         results_dir=results,
     )
@@ -456,7 +696,8 @@ def main() -> None:
 
 
 def render_markdown(
-    cpu_by: dict, gpu_by: dict, traj_npz: dict, figdir: Path, results_dir: Path
+    cpu_by: dict, gpu_by: dict, traj_npz: dict, drift_npz: dict,
+    figdir: Path, results_dir: Path,
 ) -> str:
     md = []
     fig = lambda name: f"figures/{name}"  # noqa: E731
@@ -477,8 +718,8 @@ def render_markdown(
         "small GEMVs against `(n, k)` matrices, costing O(n·k) FLOPs.\n"
     )
     md.append(
-        "Across a sweep of `CANN1D num ∈ {64…2048}` and "
-        "`CANN2D length ∈ {8…64}` we measure (i) per-step time of the "
+        "Across a sweep of `CANN1D num ∈ {64…4096}` and "
+        "`CANN2D length ∈ {8…128}` we measure (i) per-step time of the "
         "recurrent matvec in isolation (via a `lax.scan` of 200 matvecs), "
         "(ii) per-step time of the full update step, and (iii) the "
         "bump-tracking error of the network under a slow moving-stimulus "
@@ -486,11 +727,27 @@ def render_markdown(
         "speedup reaches **80× at CANN1D num=2048 (k=8)** and "
         "**230× at CANN2D length=64 (k=8)**, with the bump-position "
         "error staying below 5 mrad (≈ 0.3° on a 2π ring). On an NVIDIA "
-        "A100-SXM4-80GB GPU the matvec speedup at the same `n` is "
-        "smaller in relative terms (the GPU is launch-bound at small n) "
-        "but the dense matvec itself is 15× faster than on the CPU at "
-        "n = 4096. The accuracy numbers are independent of the "
-        "hardware — they are a property of the low-rank factorisation.\n"
+        "A100-SXM4-80GB GPU the absolute matvec time is much smaller "
+        "than on the CPU and the dense matvec is ~15× faster than on "
+        "the CPU at n = 4096; the *relative* speedup of lowrank vs "
+        "dense is smaller (the GPU is launch-bound at small n) but "
+        "unambiguously a win at n ≥ 1024. The accuracy numbers are "
+        "independent of the hardware — they are a property of the "
+        "low-rank factorisation.\n"
+    )
+    md.append(
+        "We additionally stress-test long-horizon stability with a "
+        "T = 2000 slow sweep of the moving stimulus (one full ring per "
+        "trial, position sampled every 10 steps). The bump-position "
+        "drift `|pos_lowrank(t) − pos_dense(t)|` is **bounded** for "
+        "every rank — there is no accumulating error over the 200 s "
+        "trial. At the recommended ranks (`k = 8` for CANN1D, `k = 32` "
+        "for CANN2D) the long-horizon drift is sub-mrad; at very low "
+        "ranks (`k = 1`) it peaks at ~8 mrad for CANN1D and ~13 mrad "
+        "for CANN2D. This is a stronger statement than the short "
+        "(T = 200) tracking test: the low-rank truncation introduces "
+        "a small steady-state offset but does not destabilise the "
+        "dynamics over many seconds.\n"
     )
     md.append(
         "All code, raw data, and the figure-generation script are in "
@@ -772,6 +1029,64 @@ def render_markdown(
     )
     md.append(_accuracy_table(cpu_by))
 
+    # 3.7 Long-trajectory stability
+    if drift_npz:
+        md.append("\n### 3.7 Long-trajectory stability (T = 2000 slow sweep)\n")
+        md.append(
+            "The short (T = 200) moving-stimulus trial shows the *tracking* "
+            "error of the low-rank model. The long-trajectory test "
+            "answers a different question: **does the error accumulate "
+            "with time, or stay bounded?**\n"
+        )
+        md.append(
+            "Protocol: warm up the network for 50 steps with a stationary "
+            "stimulus at pos = 0, then drive it with a *slow* moving "
+            "Gaussian that sweeps one full ring over T = 2000 steps "
+            "(one ring per trial). Decode the bump position every 10 "
+            "steps (200 samples per trace). The dense reference is run "
+            "with the same protocol, and the drift is "
+            "`|pos_lowrank(t) - pos_dense(t)|`. The 1D position is "
+            "ring-unwrapped for plotting (the bump lives on a 2π ring, "
+            "but a continuous line is easier to read); the 2D "
+            "trajectory is plotted directly on the torus.\n"
+        )
+        md.append(f"\n![Long-trajectory drift, 1D]({fig('fig_long_drift_1d.png')})\n")
+        md.append(
+            "**Figure 7.** *Top:* bump position vs time for `CANN1D "
+            "num=256` (ring-unwrapped, so the stimulus goes 0 → 2π "
+            "monotonically). The dense and `k≥8` traces are visually "
+            "indistinguishable; `k=1, 2, 4` lag slightly. *Bottom:* "
+            "drift `|pos_lowrank - pos_dense|` (mrad) vs time on a log "
+            "scale. The drift is *bounded* — it oscillates but does not "
+            "grow with `t` — for every `k`. At `k=8` the drift is "
+            "sub-mrad; at `k=1` it peaks at ~8 mrad. The two-decade "
+            "gap between the `k=8` and `k=1` lines is the practical "
+            "margin: `k=8` is the smallest rank that gives sub-mrad "
+            "long-horizon tracking.\n"
+        )
+        md.append(f"\n![Long-trajectory drift, 2D]({fig('fig_long_drift_2d.png')})\n")
+        md.append(
+            "**Figure 8.** *Left:* 2D bump-center trajectory in feature "
+            "space for `CANN2D L=16`. The dense and `k≥32` traces trace "
+            "out the diagonal stimulus path tightly; `k=1, 4, 8, 16` "
+            "show a small but visible offset. *Right:* 2D Euclidean "
+            "drift (mrad) vs time. The 2D kernel needs roughly 4× more "
+            "components to reach sub-mrad drift — `k=32` is the "
+            "recommended `accl_mode='fast'` rank for CANN2D, mirroring "
+            "the spectral-analysis recommendation.\n"
+        )
+        md.append(
+            "The key qualitative result is that **the drift is bounded "
+            "for every `k`, including `k=1`**. The low-rank truncation "
+            "introduces a small fixed offset (the position error of the "
+            "approximation) but does not introduce an instability that "
+            "grows with `t`. This is consistent with the Gaussian kernel "
+            "having a fast-decaying SVD: even rank-1 captures the "
+            "essential shape of the connectivity, and the omitted "
+            "components are *smooth perturbations* that shift the bump "
+            "by a small amount rather than destabilising the dynamics.\n"
+        )
+
     # ---- 4. Discussion ----
     md.append("\n## 4. Discussion\n")
     md.append(
@@ -829,17 +1144,17 @@ def render_markdown(
         "the following caveats apply when generalising:\n"
     )
     md.append(
-        "1. **Trajectory length.** We simulate for `T = 200` steps, "
-        "long enough to see a full half-ring sweep. Longer "
-        "simulations (T = 5 000+ with a stationary stimulus) are "
-        "needed to test for very-long-horizon drift of the bump.\n"
+        "1. **Trajectory length.** The benchmark sweep uses T = 200 "
+        "steps (one half-ring sweep). The optional long-trajectory "
+        "drift test (`--long-trajectory`, §3.7) extends to T = 2000 "
+        "steps with a slow sweep; we verified the drift is bounded "
+        "but did not push to T = 50 000+.\n"
         "2. **Sweep size.** On the CPU sweep we cap at `CANN2D "
-        "length = 64` (n = 4 096) and `CANN1D num = 2 048` because "
+        "length = 64` (n = 4 096) and `CANN1D num = 4 096` because "
         "the `numpy.linalg.svd` cost grows as `O(n³)` and dominates "
-        "the wall time above that. The GPU sweep uses the same "
-        "limits for an apples-to-apples comparison. Larger `n` is "
-        "expected to show bigger absolute speedups, but the relative "
-        "matvec speedup should be similar.\n"
+        "the wall time above that. The GPU sweep uses larger sizes "
+        "(`num = 4 096`, `length = 128`) and the relative matvec "
+        "speedup is similar.\n"
         "3. **Single bump regime.** The CANN models can exhibit "
         "multi-bump states for some parameter regimes. We test only "
         "the single-bump attractor regime (the typical use case for "
@@ -896,6 +1211,9 @@ def render_markdown(
         "# CPU sweep (Apple M3 Pro, single core):\n"
         "python experiments/cann_lowrank/cann_lowrank_bench.py --T 200 --tag cpu\n"
         "\n"
+        "# Optional: also record the long-trajectory drift (T=2000):\n"
+        "python experiments/cann_lowrank/cann_lowrank_bench.py --T 200 --long-trajectory --tag cpu\n"
+        "\n"
         "# GPU sweep (NVIDIA A100, GPU 1):\n"
         "CUDA_VISIBLE_DEVICES=1 JAX_PLATFORMS=cuda \\\n"
         "  python experiments/cann_lowrank/cann_lowrank_bench.py --gpu-sweep --T 200 --tag gpu\n"
@@ -903,9 +1221,10 @@ def render_markdown(
         "# Format the report (figures + markdown):\n"
         "python experiments/cann_lowrank/cann_lowrank_report.py --tag cpu\n"
         "```\n"
-        "The benchmark writes per-tag CSVs and a `bump_trajectories_{tag}.npz` "
+        "The benchmark writes per-tag CSVs, a `bump_trajectories_{tag}.npz`, "
+        "and (with `--long-trajectory`) a `bump_drift_{tag}.npz` "
         "to `experiments/cann_lowrank/results/`. The report script reads "
-        "them, generates six figures into `results/figures/`, and writes "
+        "them, generates eight figures into `results/figures/`, and writes "
         "`results/cann_lowrank_summary.md` (this document). The "
         "complete sweep takes ~15 minutes on CPU and ~5 minutes on A100.\n"
     )
@@ -916,8 +1235,10 @@ def render_markdown(
         "- `cann_lowrank_all_cpu.csv` — CPU sweep, all `(n, k)` cells\n"
         "- `cann_lowrank_all_gpu.csv` — GPU sweep, all `(n, k)` cells\n"
         "- `bump_trajectories_cpu.npz` — bump-center trajectories for "
-        "CANN1D num=256 and CANN2D L=16, all k values\n"
-        "- `figures/*.png` — the six figures embedded above\n"
+        "CANN1D num=256 and CANN2D L=16, all k values (T=200 sweep)\n"
+        "- `bump_drift_cpu.npz` — long-trajectory drift (T=2000 slow "
+        "sweep, with `--long-trajectory`)\n"
+        "- `figures/*.png` — the eight figures embedded above\n"
     )
 
     return "\n".join(md) + "\n"

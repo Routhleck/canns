@@ -44,6 +44,11 @@ For each `(model, n, k)` cell:
 - **bump center trajectory** (1D and 2D) — recorded for one
   representative cell per model, decoded via circular mean, for
   every k value plus the dense reference.
+- **long-trajectory drift** (optional, `--long-trajectory`) — a
+  T = 2000 slow-sweep protocol that measures the *boundedness* of
+  the low-rank error over a long horizon (one full ring per trial).
+  Reported as `|pos_lowrank(t) - pos_dense(t)|` on a log scale for
+  each k. See §3.7 in the report.
 
 ## Paper-style writeup
 
@@ -55,13 +60,17 @@ and follows a small-paper structure:
 - **§1 Introduction** — background, motivation, the cost question.
 - **§2 Methods** — CANN dynamics, low-rank SVD factorisation, bump
   decoding, stimulus protocol, metrics, hardware.
-- **§3 Results** — six figures:
+- **§3 Results** — eight figures:
   1. SVD spectrum of the Gaussian kernel (1D + 2D)
   2. 1D bump center trajectory over time (all k values overlaid)
   3. 2D bump center trajectory in feature space (all k values overlaid)
   4. CPU matvec speedup vs n (1D + 2D)
   5. GPU matvec speedup vs n (1D + 2D) — only if a GPU sweep was run
   6. Speed-accuracy Pareto frontier (1D + 2D)
+  7. 1D long-trajectory drift (T = 2000 slow sweep) — only with
+     `--long-trajectory`
+  8. 2D long-trajectory drift (T = 2000 slow sweep) — only with
+     `--long-trajectory`
 - **§4 Discussion** — when low-rank helps, when it doesn't, recommended
   strategy.
 - **§5 Limitations** — what was *not* measured.
@@ -80,11 +89,12 @@ PDF (for paper inclusion).
 | File | Purpose |
 | --- | --- |
 | `cann_lowrank_bench.py` | Main benchmark. Runs the full sweep, records bump trajectories, writes CSVs and npz. |
-| `cann_lowrank_report.py` | Reads the CSVs + npz, generates 9 figures, writes the paper-style markdown. |
+| `cann_lowrank_report.py` | Reads the CSVs + npz, generates 11 figures, writes the paper-style markdown. |
 | `REVIEW.md` | Correctness audit of the benchmark (SVD math, symmetric conn_mat argument, stimulus, bump-position, error metrics, timing methodology, edge cases). |
 | `_smoke/explore_conn.py` | Initial spectrum exploration that informed the rank sweep. |
 | `results/cann_lowrank_all_{cpu,gpu}.csv` | Raw per-cell numbers (one row per `(model, n, k)`). |
 | `results/bump_trajectories_{cpu,gpu}.npz` | Bump center trajectories for one representative cell per model, at all k values plus the dense reference. |
+| `results/bump_drift_{cpu,gpu}.npz` | Long-trajectory drift (T = 2000 slow sweep), one representative cell per model. |
 | `results/figures/fig_*.{png,pdf}` | The figures embedded in the report. |
 | `results/cann_lowrank_summary.md` | The paper-style writeup. |
 
@@ -96,6 +106,9 @@ From the repo root, with the `canns` source on `PYTHONPATH` and
 ```bash
 # CPU sweep (Apple M3 Pro, single core, ~15 min wall):
 python experiments/cann_lowrank/cann_lowrank_bench.py --T 200 --tag cpu
+
+# Optional: also run the long-trajectory drift test (T=2000):
+python experiments/cann_lowrank/cann_lowrank_bench.py --T 200 --long-trajectory --tag cpu
 
 # GPU sweep (NVIDIA A100, GPU 1, ~5 min wall):
 CUDA_VISIBLE_DEVICES=1 JAX_PLATFORMS=cuda \
