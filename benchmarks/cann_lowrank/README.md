@@ -82,8 +82,9 @@ and follows a small-paper structure:
 - **Appendix B** — raw data files.
 
 The figures are in
-[`results/figures/`](results/figures/) as both PNG (for web) and
-PDF (for paper inclusion).
+[`results/figures/`](results/figures/) as PNG (for web) and PDF
+(for paper inclusion). The PDFs are gitignored (regenerate with
+`--pdf`); only the PNGs and the `.md`/`.html` summary are tracked.
 
 ## Files
 
@@ -96,7 +97,7 @@ PDF (for paper inclusion).
 | `results/cann_lowrank_all_{cpu,gpu}.csv` | Raw per-cell numbers (one row per `(model, n, k)`). |
 | `results/bump_trajectories_{cpu,gpu}.npz` | Bump center trajectories for one representative cell per model, at all k values plus the dense reference. |
 | `results/bump_drift_{cpu,gpu}.npz` | Long-trajectory drift (T = 2000 slow sweep), one representative cell per model. |
-| `results/figures/fig_*.{png,pdf}` | The figures embedded in the report. |
+| `results/figures/fig_*.png` | The figures embedded in the report (PNGs are tracked; PDFs are gitignored). |
 | `results/cann_lowrank_summary.md` | The paper-style writeup. |
 
 ## Reproducing
