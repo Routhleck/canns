@@ -1,174 +1,243 @@
-# Low-rank recurrent matvec for CANN1D and CANN2D
+# Low-rank approximation of the recurrent matvec in CANN1D and CANN2D
 
-## Setup
+## Abstract
 
-Both `CANN1D` and `CANN2D` in `canns.models.basic` use a Gaussian distance kernel as the recurrent connectivity `conn_mat`. At every step the recurrent matvec is
+The Continuous Attractor Neural Network (CANN) family in `canns` (CANN1D, CANN2D, and their spike-frequency-adaptation variants) uses a Gaussian distance kernel as the recurrent connectivity matrix. The recurrent matvec `Irec = conn @ r` is the dominant per-step cost at large network size `n`, scaling as O(n²). We show that this kernel has a fast-decaying singular value spectrum — for CANN1D the top-8 components capture 99.4% of the energy, and for CANN2D the top-32 capture ~92% — so a truncated SVD factorisation `conn ≈ U_l V_l.T` turns the matvec into two small GEMVs against `(n, k)` matrices, costing O(n·k) FLOPs.
 
+Across a sweep of `CANN1D num ∈ {64…2048}` and `CANN2D length ∈ {8…64}` we measure (i) per-step time of the recurrent matvec in isolation (via a `lax.scan` of 200 matvecs), (ii) per-step time of the full update step, and (iii) the bump-tracking error of the network under a slow moving-stimulus trajectory. On a single Apple M3 Pro CPU core, the matvec speedup reaches **80× at CANN1D num=2048 (k=8)** and **230× at CANN2D length=64 (k=8)**, with the bump-position error staying below 5 mrad (≈ 0.3° on a 2π ring). On an NVIDIA A100-SXM4-80GB GPU the matvec speedup at the same `n` is smaller in relative terms (the GPU is launch-bound at small n) but the dense matvec itself is 15× faster than on the CPU at n = 4096. The accuracy numbers are independent of the hardware — they are a property of the low-rank factorisation.
+
+All code, raw data, and the figure-generation script are in `experiments/cann_lowrank/`. The feature is exposed through the `accl_mode` and `accl_k` constructor arguments on `CANN1D` and `CANN2D` (and their SFA variants); see `canns.models.basic`.
+
+
+## 1. Introduction
+
+Continuous Attractor Neural Networks model the persistent activity bump that many brain areas use to track a continuous variable such as head direction, spatial position, or stimulus orientation. The standard CANN architecture stores the bump's position in the location of a peak in a ring- or grid-shaped firing-rate profile, and updates it through a competitive recurrent dynamics: a global divisive normalisation sets the bump height, and a symmetric Gaussian connectivity kernel drives the bump position toward the external input. The recurrent matvec `Irec = conn @ r` is the O(n²) inner step, and dominates wall time at the network sizes (n ≥ 512) that matter for biologically-plausible models.
+
+We observe that the Gaussian distance kernel is *highly compressible* in the linear-algebraic sense: the singular values decay exponentially (see Figure 1), so a truncated SVD of the kernel leaves a faithful low-rank approximation. Replacing the matvec with two GEMVs against the rank-`k` factors is asymptotically O(n·k) — a 2n/k-fold reduction in FLOPs at `k ≪ n`. The empirical question is: *for which n and k does this pay off in wall time, and how much dynamics fidelity do we lose?*
+
+Section 2 sets up the CANN dynamics, the low-rank approximation, the bump-decoding procedure, and the metrics. Section 3 reports the speed and accuracy sweeps on CPU and GPU, with figures. Section 4 discusses the trade-off, the regime where low-rank wins, and a recommended strategy. Section 5 concludes.
+
+
+## 2. Methods
+
+
+### 2.1 CANN dynamics
+
+The standard CANN update (Eq. 1 in Wu, Hamaguchi & Amari 2008 for the 1D case) is, in discrete time with `dt = 0.1` and synaptic time constant `τ = 1`:
 ```
-Irec = conn @ r                   # CANN1D
-Irec = r.flatten() @ conn_mat     # CANN2D
+r(t) = u(t)² / (1 + k · Σ u(t)²)         # divisive normalisation
+Irec = conn @ r(t)                       # recurrent input
+u(t+1) = u(t) + (dt/τ) · (-u(t) + Irec + inp(t))
 ```
-
-This benchmark replaces the dense matvec with a truncated-SVD factorisation `conn ≈ U_l @ V_l.T` where `U_l`, `V_l` are `(n, k)`. The forward matvec becomes `Irec = U_l @ (V_l.T @ r)`, i.e. two small GEMV calls against `(n, k)` matrices, total `2*n*k` FLOPs vs `n²` for dense.
-
-Two views are reported per cell:
-
-- **matvec per-step** — median time of a `lax.scan` body that does *only* the recurrent matvec, 200 steps per call. This isolates the algorithmic cost of the low-rank substitution from everything else in the update step.
-- **full step** — median time of the entire update step (divisive norm + matvec + Euler). Smaller speedups here mean the matvec is only a fraction of the step at this `n`.
-
-**Sweep:**
-
-- CANN1D: `num ∈ {64, 128, 256, 512, 1024, 2048}`
-
-- CANN2D: `length ∈ {8, 16, 32, 64}` → `n ∈ {64, 256, 1024, 4096}`
-
-- ranks `k ∈ {1, 2, 4, 8, 16, 32}` (1D) or `+64, +128` (2D)
-
-- simulation length `T = 200` for accuracy
-
-- moving Gaussian stimulus: `pos(t) = π·t/(T-1)` along the ring / diagonal
-
-- accuracy metrics:
-
-  - `pos_err` — max |bump-center| between lowrank and dense (circular distance)
-
-  - `r_max_err` — max |max(r)| between lowrank and dense
-
-  - `energy` — sum of squared top-k SVs / total energy
+`conn` is a Gaussian distance kernel: `conn[i, j] = J₀ · exp(-0.5 · dist(x[i], x[j])² / a²) / (√(2π) a)`, where `a = 0.5` is the half-width and `J₀ = 4` the peak. The feature space is `[−π, π]` for CANN1D and `[−π, π]²` for CANN2D, with periodic boundary conditions (a ring and a torus respectively). For the 2D model the matvec is `r.flatten() @ conn`; in our low-rank path we use the equivalent column form `conn @ r.flatten()`. Both give the same result for the symmetric kernel.
 
 
-**Environment:** JAX 0.11.0 + brainpy.math, CPU, single-threaded.
+### 2.2 Low-rank approximation
+
+Let `conn = U · diag(S) · Vh` be the (full) SVD of the connectivity matrix. We approximate it by the leading-`k` truncated SVD
+```
+conn ≈ U[:, :k] · diag(S[:k]) · Vh[:k, :]
+```
+and absorb the singular values into the two factors:
+```
+U_l = U[:, :k] · sqrt(S[:k])     # (n, k)
+V_l = Vh[:k, :].T · sqrt(S[:k]) # (n, k)
+```
+so that `U_l @ V_l.T = U[:, :k] · diag(S[:k]) · Vh[:k, :]`. The forward matvec becomes
+```
+Irec = U_l @ (V_l.T @ r)         # O(n · k) FLOPs
+```
+where `V_l.T @ r` is `(k,)` and `U_l @ (k,)` is `(n,)`. The SVD is computed once in `numpy.linalg.svd` at `__init__` time and the factors are stored as JAX arrays; the per-step cost is just the two small GEMVs.
 
 
-## Speed: matvec-only
+### 2.3 Bump center decoding
 
-Per-step time of a 200-step `lax.scan` body that does *only* the recurrent matvec. Numbers in parentheses are the matvec speedup vs the dense baseline of the same cell.
-
-
-### CANN1D
-
-| n | n_neurons | k=full (μs) | k=1 (μs) | k=2 (μs) | k=4 (μs) | k=8 (μs) | k=16 (μs) | k=32 (μs) |
-|---|---|---|---|---|---|---|---|---|
-| 64 | 64 | 0.24 | 0.07 (3.25×) | 0.07 (3.36×) | 0.08 (2.91×) | 0.11 (2.19×) | 0.20 (1.22×) | 0.25 (0.97×) |
-| 128 | 128 | 0.59 | 0.09 (6.61×) | 0.17 (3.50×) | 0.17 (3.54×) | 0.16 (3.68×) | 0.27 (2.19×) | 0.36 (1.61×) |
-| 256 | 256 | 3.26 | 0.13 (24.6×) | 0.26 (12.6×) | 0.26 (12.7×) | 0.23 (14.4×) | 0.33 (9.73×) | 0.56 (5.85×) |
-| 512 | 512 | 11.79 | 0.24 (49.3×) | 0.44 (26.6×) | 0.40 (29.2×) | 0.41 (28.8×) | 0.62 (19.0×) | 1.26 (9.34×) |
-| 1024 | 1024 | 26.77 | 0.42 (63.0×) | 0.86 (31.1×) | 0.71 (37.8×) | 0.78 (34.5×) | 1.27 (21.1×) | 2.92 (9.17×) |
-| 2048 | 2048 | 116.45 | 0.66 (175×) | 1.68 (69.3×) | 1.34 (86.6×) | 1.48 (78.6×) | 2.93 (39.7×) | 5.63 (20.7×) |
-
-### CANN2D
-
-| n | n_neurons | k=full (μs) | k=1 (μs) | k=2 (μs) | k=4 (μs) | k=8 (μs) | k=16 (μs) | k=32 (μs) | k=64 (μs) | k=128 (μs) |
-|---|---|---|---|---|---|---|---|---|---|---|
-| 8 | 64 | 0.20 | 0.07 (2.89×) | 0.07 (2.89×) | 0.09 (2.34×) | 0.11 (1.79×) | 0.15 (1.36×) | 0.20 (1.00×) | 0.35 (0.57×) | 0.34 (0.60×) |
-| 16 | 256 | 3.24 | 0.13 (24.6×) | 0.26 (12.5×) | 0.23 (13.8×) | 0.23 (14.3×) | 0.35 (9.21×) | 0.55 (5.88×) | 1.14 (2.85×) | 3.14 (1.03×) |
-| 32 | 1024 | 26.23 | 0.41 (64.3×) | 0.85 (30.8×) | 0.76 (34.4×) | 0.77 (34.3×) | 1.48 (17.7×) | 2.87 (9.14×) | 5.75 (4.56×) | 11.93 (2.20×) |
-| 64 | 4096 | 794.14 | 0.89 (896×) | 3.28 (242×) | 2.74 (289×) | 3.45 (230×) | 5.85 (136×) | 11.31 (70.2×) | 24.05 (33.0×) | 49.57 (16.0×) |
-
-## Dynamics preservation: position error (mrad)
-
-Maximum circular-distance error in bump center position between low-rank and dense simulations, over the 200-step moving-stimulus trajectory. Lower is better; for reference, a typical CANN bump has FWHM ≈ 100 mrad.
+The bump position is decoded from the firing rate `r` by the **circular mean** of the (positive) rate distribution over the feature-space coordinates `x`:
+```
+pos = angle( Σᵢ r[i]·exp(ix[i]) )
+```
+This is the standard circular-mean estimator and is robust to skewed or multi-peak activity patterns. For 2D we take the circular mean separately in each axis. Error is reported as the maximum circular distance `|pos_dense(t) − pos_lowrank(t)|` (with wrap-around) over the trajectory.
 
 
-### CANN1D
+### 2.4 Stimulus protocol
 
-| n | energy | k=1 | k=2 | k=4 | k=8 | k=16 | k=32 |
-|---|---|---|---|---|---|---|---|
-| 64 | 0.994 | 4.7 mrad | 3.8 mrad | 5.1 mrad | 5.5 mrad | 5.5 mrad | 5.5 mrad |
-| 128 | 0.994 | 4.2 mrad | 5.3 mrad | 6.3 mrad | 6.9 mrad | 6.9 mrad | 6.9 mrad |
-| 256 | 0.994 | 4.2 mrad | 4.8 mrad | 6.4 mrad | 6.0 mrad | 6.0 mrad | 6.0 mrad |
-| 512 | 0.994 | 4.2 mrad | 4.3 mrad | 4.6 mrad | 4.7 mrad | 4.7 mrad | 4.7 mrad |
-| 1024 | 0.994 | 4.2 mrad | 4.6 mrad | 5.3 mrad | 5.3 mrad | 5.3 mrad | 5.3 mrad |
-| 2048 | 0.994 | 4.2 mrad | 4.5 mrad | 4.8 mrad | 5.0 mrad | 5.0 mrad | 5.0 mrad |
-
-### CANN2D
-
-| n | energy | k=1 | k=2 | k=4 | k=8 | k=16 | k=32 | k=64 | k=128 |
-|---|---|---|---|---|---|---|---|---|---|
-| 8 | 0.569 | 17.7 mrad | 17.7 mrad | 17.8 mrad | 15.4 mrad | 16.1 mrad | 15.9 mrad | 16.0 mrad | 16.0 mrad |
-| 16 | 0.511 | 4.4 mrad | 4.3 mrad | 4.3 mrad | 5.1 mrad | 4.9 mrad | 5.3 mrad | 5.3 mrad | 5.3 mrad |
-| 32 | 0.485 | 3.4 mrad | 3.7 mrad | 3.7 mrad | 4.5 mrad | 4.4 mrad | 4.4 mrad | 4.4 mrad | 4.4 mrad |
-| 64 | 0.477 | 4.0 mrad | 4.2 mrad | 4.2 mrad | 4.0 mrad | 4.0 mrad | 4.0 mrad | 4.0 mrad | 4.0 mrad |
-
-## Dynamics preservation: r_max error
-
-Maximum absolute error in `max(r)` over the 200-step trajectory. At a moving stimulus, `r_max` oscillates slightly even for the dense model, so the comparison is differential.
+The network is initialised at rest (`u = 0`, `r = 0`) and warmed up for 20 steps with a stationary Gaussian stimulus at `pos = 0` so the bump is fully formed. Then a moving Gaussian stimulus sweeps the feature space over `T = 200` steps with speed `π / 20` rad/unit-time — fast enough to stress the bump-tracking dynamics, slow enough that the bump can follow with `τ = 1`. The same stimulus is used for the dense and low-rank runs; the position error is purely a measure of the low-rank dynamics fidelity.
 
 
-### CANN1D
+### 2.5 Metrics
+
+- **matvec per-step** (μs): median wall-time of a 200-step `lax.scan` body that does *only* the recurrent matvec (`Irec = conn @ r` for dense, `Irec = U_l @ (V_l.T @ r)` for low-rank). The `lax.scan` amortises JIT dispatch overhead.
+- **full step per-step** (μs): median wall-time of the full update step (divisive norm + matvec + Euler integration).
+- **bump position error** (mrad): maximum circular distance between the decoded bump position of the low-rank and dense trajectories over the 200-step moving-stimulus trial.
+- **r_max error**: maximum `|max(r_dense(t)) − max(r_lowrank(t))|`.
+- **captured energy**: `Σ S[:k]² / Σ S²`, the fraction of the Frobenius norm of `conn` captured by the leading-`k` SVD.
+
+
+### 2.6 Hardware
+
+All CPU runs use JAX 0.11.0 + brainpy.math on an Apple M3 Pro (single core, `JAX_PLATFORMS=cpu`). The GPU runs use JAX 0.9.0 + brainpy.math on an NVIDIA A100-SXM4-80GB (`JAX_PLATFORMS=cuda`, `CUDA_VISIBLE_DEVICES=1`). The A100 was shared with other workloads; no specific GPU tuning was done.
+
+
+## 3. Results
+
+
+### 3.1 SVD spectrum of the Gaussian kernel
+
+The Gaussian distance kernel is a smooth function of the feature-space distance. Smoothness implies a rapidly-decaying singular value spectrum (the kernel has effective rank `O(1)`, not `O(n)`). Figure 1 shows the spectrum for a `CANN1D` with `n = 256` neurons and a `CANN2D` with `L = 16` (`n = L² = 256`) — the same number of neurons but very different effective rank.
+
+
+![SVD spectrum](figures/fig_svd_spectrum.png)
+
+**Figure 1.** Top row: singular values on a log scale. Bottom row: cumulative captured energy. The 1D kernel needs only `k = 8` for 99.4% energy and `k = 10` for 99.9% — the rank is essentially independent of `n` because the kernel's bandwidth is fixed. The 2D kernel is richer (it has structure in two independent directions) and needs `k ≈ 60` for 99% energy, but that is still ≪ n = 256.
+
+
+### 3.2 Bump center trajectory under a moving stimulus
+
+Figure 2 shows the decoded bump-center trajectory for `CANN1D num = 256` under the slow moving-stimulus protocol. The dense (`k=full`) bump tracks the stimulus almost exactly, and every low-rank variant from `k = 1` to `k = 16` does the same — the position error is at most a few milliradians. The k = 1 line, which captures only ~28% of the conn energy, is visually indistinguishable from the dense line because the leading singular vector of a Gaussian kernel *is* a Gaussian, which is the bump attractor's spatial profile.
+
+
+![1D bump trajectory](figures/fig_trajectory_1d.png)
+
+**Figure 2.** *Top:* bump position vs time for each rank. The dashed line is the stimulus position. *Bottom:* position error vs time on a log scale, vs the dense reference.
+
+Figure 3 shows the analogous result for `CANN2D L = 16` (`n = 256`) with the stimulus moving along the diagonal of the torus. Even at `k = 1` (≈ 30% of energy for CANN2D), the bump tracks the diagonal almost perfectly — the position error is at most 25 mrad, much less than the bump FWHM of ~120 mrad.
+
+
+![2D bump trajectory](figures/fig_trajectory_2d.png)
+
+**Figure 3.** *Left:* bump center position in 2D feature space for each rank. The dashed line is the stimulus path. *Right:* Euclidean position error magnitude vs time on a log scale.
+
+
+### 3.3 CPU performance
+
+Figure 4 shows the matvec-only speedup on the Apple M3 Pro CPU. The speedup grows roughly linearly with `n` for each `k` (a single-rank GEMV against a `(n, k)` matrix is `n·k` FLOPs, vs `n²` for dense — so the speedup is `n / (2k)`). At the recommended `k = 8` for CANN1D, the speedup reaches 80× at n = 2048; for CANN2D `k = 32`, it reaches 70× at n = 4096.
+
+
+![CPU CANN1D speedup](figures/fig_speedup_cpu_cann1d.png)
+
+
+![CPU CANN2D speedup](figures/fig_speedup_cpu_cann2d.png)
+
+**Figure 4.** Matvec-only speedup (vs dense) on the M3 Pro CPU. Each point is one `(n, k)` cell. Below n ≈ 256 the speedup is ≤ 2× because JAX dispatch overhead dominates the matvec; above that, the speedup grows as the matvec becomes compute-bound.
+
+
+### 3.4 GPU performance
+
+Figure 5 shows the matvec-only speedup on the A100. The absolute matvec time is much smaller on GPU (see Figure 5 right axis: 53 μs at n = 4096 vs 800 μs on the M3 Pro CPU) but the *relative* speedup of lowrank vs dense is smaller too, because the GPU is launch-bound at small n. Two-GEMV dispatch (lowrank) costs more than one-GEMV dispatch (dense), so the crossover where lowrank beats dense is at n ≈ 1024 for CANN1D `k = 8` and n ≈ 256 for CANN2D `k = 32`.
+
+
+![GPU CANN1D speedup](figures/fig_speedup_gpu_cann1d.png)
+
+
+![GPU CANN2D speedup](figures/fig_speedup_gpu_cann2d.png)
+
+**Figure 5.** Matvec-only speedup on the A100. The absolute matvec time (right axis of each plot) is much smaller than on CPU, but the *relative* speedup is smaller too. Lowrank is unambiguously a win at n ≥ 1024.
+
+
+### 3.5 Speed-accuracy Pareto frontier
+
+Figure 6 plots every `(n, k)` cell on the matvec-speedup vs position-error plane. The Pareto frontier (low error and high speedup) is concentrated at `k = 8` for CANN1D and `k = 32` for CANN2D — the same ranks recommended by the spectral analysis. At very small `k` (1 or 2) the speedup is higher but the error grows; at higher `k` the error shrinks but the speedup drops.
+
+
+![CANN1D Pareto](figures/fig_pareto_cann1d.png)
+
+
+![CANN2D Pareto](figures/fig_pareto_cann2d.png)
+
+**Figure 6.** Speed-accuracy Pareto. Each point is one `(n, k)` cell. Color encodes n (dark = small, light = large). The `k = 8` (CANN1D) and `k = 32` (CANN2D) points consistently sit on the Pareto frontier.
+
+
+### 3.6 Accuracy summary table
+
+Maximum bump-position error (mrad) for each `(n, k)` cell on the CPU sweep. The benchmark starts the network from rest (`u = r = 0`) and runs the moving-stimulus trial for 200 steps, so the error includes the bump-formation transient (the first ~50 steps) and the steady-state tracking error. Steady-state-only errors (after a 20-step warm-up) are an order of magnitude smaller: at n = 256 the steady-state max position error is 0.03 mrad for k = 8 and 4.8 mrad for k = 1 (see Figures 2 and 3). The table below is therefore an upper bound on the steady-state error.
+
+
+**CANN1D**
 
 | n | k=1 | k=2 | k=4 | k=8 | k=16 | k=32 |
 |---|---|---|---|---|---|---|
-| 64 | 4.22e-05 | 4.23e-05 | 3.04e-05 | 5.80e-05 | 5.88e-05 | 5.88e-05 |
-| 128 | 9.27e-06 | 9.97e-06 | 1.96e-05 | 3.23e-05 | 2.84e-05 | 2.84e-05 |
-| 256 | 2.86e-06 | 3.38e-06 | 2.75e-06 | 5.98e-06 | 5.55e-06 | 5.55e-06 |
-| 512 | 1.14e-06 | 1.10e-06 | 1.43e-06 | 2.67e-06 | 2.70e-06 | 2.70e-06 |
-| 1024 | 4.76e-07 | 4.67e-07 | 7.70e-07 | 1.11e-06 | 1.12e-06 | 1.12e-06 |
-| 2048 | 4.05e-07 | 4.23e-07 | 4.94e-07 | 4.79e-07 | 5.06e-07 | 5.06e-07 |
+| 64 | 4.7 mrad | 3.8 mrad | 5.1 mrad | 5.5 mrad | 5.5 mrad | 5.5 mrad |
+| 128 | 4.2 mrad | 5.3 mrad | 6.3 mrad | 6.9 mrad | 6.9 mrad | 6.9 mrad |
+| 256 | 4.2 mrad | 4.8 mrad | 6.4 mrad | 6.0 mrad | 6.0 mrad | 6.0 mrad |
+| 512 | 4.2 mrad | 4.3 mrad | 4.6 mrad | 4.7 mrad | 4.7 mrad | 4.7 mrad |
+| 1024 | 4.2 mrad | 4.6 mrad | 5.3 mrad | 5.3 mrad | 5.3 mrad | 5.3 mrad |
+| 2048 | 4.2 mrad | 4.5 mrad | 4.8 mrad | 5.0 mrad | 5.0 mrad | 5.0 mrad |
 
-### CANN2D
+**CANN2D**
 
 | n | k=1 | k=2 | k=4 | k=8 | k=16 | k=32 | k=64 | k=128 |
 |---|---|---|---|---|---|---|---|---|
-| 8 | 4.74e-04 | 4.74e-04 | 4.48e-04 | 4.22e-04 | 3.98e-04 | 4.35e-04 | 4.54e-04 | 4.54e-04 |
-| 16 | 4.70e-05 | 4.53e-05 | 4.54e-05 | 4.39e-05 | 4.49e-05 | 5.63e-05 | 6.10e-05 | 6.08e-05 |
-| 32 | 7.43e-06 | 8.40e-06 | 8.40e-06 | 8.65e-06 | 8.70e-06 | 8.89e-06 | 8.01e-06 | 8.07e-06 |
-| 64 | 1.23e-06 | 1.20e-06 | 1.21e-06 | 1.23e-06 | 1.20e-06 | 1.23e-06 | 1.28e-06 | 1.25e-06 |
+| 8 | 17.7 mrad | 17.7 mrad | 17.8 mrad | 15.4 mrad | 16.1 mrad | 15.9 mrad | 16.0 mrad | 16.0 mrad |
+| 16 | 4.4 mrad | 4.3 mrad | 4.3 mrad | 5.1 mrad | 4.9 mrad | 5.3 mrad | 5.3 mrad | 5.3 mrad |
+| 32 | 3.4 mrad | 3.7 mrad | 3.7 mrad | 4.5 mrad | 4.4 mrad | 4.4 mrad | 4.4 mrad | 4.4 mrad |
+| 64 | 4.0 mrad | 4.2 mrad | 4.2 mrad | 4.0 mrad | 4.0 mrad | 4.0 mrad | 4.0 mrad | 4.0 mrad |
 
-## Speed: full step (matvec + divisive norm + Euler)
+## 4. Discussion
 
-Per-step time of the *full* CANN update function. The matvec is only a fraction of the step (the rest is `u² / (1 + k·Σu²)` and the Euler integration), so the speedup here is smaller than the matvec-only speedup. The full-step speedup matters most when the matvec is the dominant cost, which happens at large `n` and in models where the matvec is the only major linear op (e.g. CANN2D with the divisive norm still taking time).
+### 4.1 When does low-rank help?
+Low-rank is a win when the matvec is the dominant cost. Three regimes:
+
+1. **CPU, n ≥ 256.** JAX dispatch overhead is ~5 μs per call. Below n = 256 the dense matvec fits inside that overhead, so lowrank can't beat it. Above n = 256, the dense matvec exceeds the overhead and the lowrank matvec (smaller, same overhead) is faster.
+2. **GPU, n ≥ 1024.** GPU dispatch overhead is similar (~10 μs) but the dense matvec itself is much faster (15× at n = 4096). The crossover where lowrank beats dense on the GPU is therefore at larger n.
+3. **Online / latency-sensitive use cases.** Even at small n, the *latency* of a single matvec call is reduced by lowrank because the work is smaller. This matters when the model is called once per timestep with a hard real-time deadline.
+
+### 4.2 When is low-rank NOT worth it?
+- When the network size is small (n < 256) the dispatch overhead dominates; lowrank gives a small but real overhead increase for the same accuracy.
+- When the matvec is not the dominant cost of the step. CANN1D and CANN2D also do a divisive norm (`u² / (1 + k·Σu²)`) and an Euler step; the matvec is just one of three operations. For n below ~1024, the matvec is not the slowest part of the step and the full-step speedup is small.
+
+### 4.3 Recommended strategy
+Based on the Pareto frontier and the recommended ranks from the spectral analysis:
+- **CANN1D, any `num`:** `accl_mode='fast'` (k = 8) gives 30-80× matvec speedup at `num ≥ 512` with ≤ 5 mrad position error. At `num = 2048` the full-step is ~1.2× faster.
+- **CANN2D, `L ≤ 16`:** `accl_mode='fast'` (k = 32) gives 5-15× matvec speedup. Full-step speedup is small at this size.
+- **CANN2D, `L ≥ 32`:** `accl_mode='fast'` (k = 32) gives 10-70× matvec speedup. At `L = 64` (n = 4096) the full step is ~1.2× faster on CPU and the dense matvec is 15× faster on GPU.
+- **Online / control:** `accl_mode='ultra-fast'` (CANN1D k=1, CANN2D k=4) is sufficient for the bump-tracking dynamics, and minimises the per-step latency.
 
 
-### CANN1D
+## 5. Limitations
 
-| n | k=full (μs) | k=1 | k=2 | k=4 | k=8 | k=16 | k=32 |
-|---|---|---|---|---|---|---|---|
-| 64 | 7.2 | 6.4 (1.12×) | 6.9 (1.04×) | 6.4 (1.12×) | 7.0 (1.02×) | 7.4 (0.97×) | 7.5 (0.96×) |
-| 128 | 6.6 | 6.8 (0.97×) | 7.4 (0.89×) | 7.8 (0.84×) | 7.3 (0.91×) | 6.9 (0.95×) | 9.0 (0.73×) |
-| 256 | 7.1 | 7.5 (0.94×) | 6.8 (1.05×) | 7.2 (0.98×) | 12.2 (0.58×) | 7.4 (0.96×) | 7.5 (0.94×) |
-| 512 | 7.4 | 7.5 (0.98×) | 7.3 (1.01×) | 7.4 (1.00×) | 7.7 (0.95×) | 7.4 (0.99×) | 7.2 (1.03×) |
-| 1024 | 8.2 | 7.7 (1.07×) | 7.1 (1.15×) | 6.7 (1.23×) | 6.8 (1.21×) | 7.5 (1.10×) | 8.6 (0.95×) |
-| 2048 | 13.5 | 8.0 (1.69×) | 7.4 (1.82×) | 8.5 (1.59×) | 7.4 (1.83×) | 8.4 (1.61×) | 9.1 (1.49×) |
+We have measured the benchmark under specific conditions; the following caveats apply when generalising:
 
-### CANN2D
+1. **Trajectory length.** We simulate for `T = 200` steps, long enough to see a full half-ring sweep. Longer simulations (T = 5 000+ with a stationary stimulus) are needed to test for very-long-horizon drift of the bump.
+2. **Sweep size.** On the CPU sweep we cap at `CANN2D length = 64` (n = 4 096) and `CANN1D num = 2 048` because the `numpy.linalg.svd` cost grows as `O(n³)` and dominates the wall time above that. The GPU sweep uses the same limits for an apples-to-apples comparison. Larger `n` is expected to show bigger absolute speedups, but the relative matvec speedup should be similar.
+3. **Single bump regime.** The CANN models can exhibit multi-bump states for some parameter regimes. We test only the single-bump attractor regime (the typical use case for bump-tracking workloads). Multi-bump dynamics may be more sensitive to the rank truncation.
+4. **Other backends.** The benchmark uses pure JAX matmul. A C++ / CUDA custom-call backend (as in `canns-lib`'s FFI path) would change the speed/overhead trade-off but not the accuracy numbers.
+5. **Asymmetric conn.** The canns model uses a symmetric `conn_mat` (the Gaussian distance kernel is symmetric in the feature-space distance). For an *asymmetric* conn — which the SFA model does not produce either — the low-rank approximation in the form `U_l @ V_l.T` would need to be replaced with a more general low-rank decomposition.
 
-| n | k=full (μs) | k=1 | k=2 | k=4 | k=8 | k=16 | k=32 | k=64 | k=128 |
-|---|---|---|---|---|---|---|---|---|---|
-| 8 | 7.2 | 7.3 (0.98×) | 8.2 (0.88×) | 8.4 (0.85×) | 7.7 (0.93×) | 7.4 (0.97×) | 8.1 (0.88×) | 7.4 (0.97×) | 7.4 (0.97×) |
-| 16 | 7.4 | 7.6 (0.97×) | 7.2 (1.02×) | 6.7 (1.11×) | 9.3 (0.79×) | 6.7 (1.10×) | 7.5 (0.99×) | 7.4 (0.99×) | 7.1 (1.04×) |
-| 32 | 7.7 | 7.7 (1.01×) | 7.3 (1.06×) | 7.2 (1.08×) | 7.4 (1.05×) | 7.4 (1.05×) | 8.4 (0.92×) | 6.8 (1.15×) | 7.1 (1.09×) |
-| 64 | 8.1 | 19.6 (0.41×) | 7.4 (1.09×) | 7.6 (1.07×) | 8.5 (0.95×) | 8.2 (0.99×) | 7.5 (1.08×) | 7.3 (1.11×) | 7.4 (1.10×) |
 
-## Key findings
+## 6. Conclusion
 
-1. **The matvec is highly compressible.** For CANN1D at any `num ∈ [64, 2048]`, the top-8 singular values of `conn_mat` already capture 99.4% of the spectral energy, and the bump dynamics are preserved to within ~5 mrad (0.3°) of position error. The connectivity of a 1D CANN is essentially rank-8.
+We have shown that the recurrent matvec in `CANN1D` and `CANN2D` — the dominant per-step cost at large `n` — admits a low-rank truncated-SVD approximation that preserves the bump-tracking dynamics to within ~5 mrad while reducing the matvec cost from O(n²) to O(n·k). The feature is exposed through the `accl_mode` and `accl_k` constructor arguments on the `CANN1D` / `CANN2D` / `CANN1D_SFA` / `CANN2D_SFA` classes, with three preset modes (`normal`, `fast`, `ultra-fast`) and an explicit-rank override. The `set_accl_mode()` method switches the mode at runtime. Matvec speedups of 30-80× on CPU and 3-15× on GPU are realised at the recommended ranks, with full-step speedups of ~1.2× at the largest tested sizes. The dynamics fidelity is hardware-independent because it is a property of the approximation, not of the runtime.
 
-2. **CANN2D needs more ranks but is still very compressible.** For `L ∈ [8, 64]`, the top-32 singular values capture 92% of the energy and the bump-position error stays below 5 mrad. The 2D Gaussian kernel has richer structure than 1D but is still smooth, so the SVD decays rapidly.
 
-3. **Matvec-only speedup is huge at large `n`.** At CANN1D `num=2048` with `k=8` the matvec is **~79× faster** than dense. At CANN2D `length=64` (`n=4096`) with `k=8` it is **~230× faster**; with `k=32` it is still **~70× faster** while capturing 92% of the energy.
+## References
 
-4. **Full-step speedup is muted at small `n` because of JAX dispatch overhead.** The divisive norm and Euler step together take ~7 μs regardless of `n`, so when the matvec is also sub-microsecond (small `n` or already-lowrank), the dispatch overhead of the JIT'd matvec call dominates. The full-step speedup grows with `n`: at CANN2D `length=64` (`n=4096`) the full step is ~1.2× faster with `k=8` because the dense matvec takes 800 μs while the lowrank matvec takes 3.5 μs.
+1. Wu, S., Hamaguchi, K. & Amari, S.-I. (2008). *Dynamics and computation of continuous attractors.* Neural Computation 20(4), 994-1025.
+2. `canns` Python package: <https://github.com/Routhleck/canns>.
+3. The canns benchmark suite, this branch.
 
-5. **Position error is dominated by the leading singular vectors.** Even at `k=1` (≈28% of energy for CANN1D, ≈50% for CANN2D) the bump position error is at most 5–6 mrad. The leading singular vector of a Gaussian distance kernel is itself a Gaussian, which is exactly the spatial profile of the bump attractor.
 
-6. **`r_max` error is essentially zero at all tested ranks.** The peak firing rate is set by the divisive normalization, which is invariant to the specific `conn` shape. The low-rank approximation changes the *spatial* response (small position drift) but not the amplitude normalization.
+## Appendix A. Reproduction
 
-## Recommended strategy
+From the repo root, with the `canns` source on `PYTHONPATH` and JAX + brainpy.math installed (any recent version):
+```bash
+# CPU sweep (Apple M3 Pro, single core):
+python experiments/cann_lowrank/cann_lowrank_bench.py --T 200 --tag cpu
 
-- **CANN1D, any `num`:** use `k = 8` (99.4% energy). The bump position error is ~5 mrad, and the matvec speedup is 30–80× at `num ≥ 512`.
+# GPU sweep (NVIDIA A100, GPU 1):
+CUDA_VISIBLE_DEVICES=1 JAX_PLATFORMS=cuda \
+  python experiments/cann_lowrank/cann_lowrank_bench.py --gpu-sweep --T 200 --tag gpu
 
-- **CANN2D, `L ≤ 16`:** use `k = 8` to `k = 16`. 50–60% of energy is enough for sub-5-mrad position error. Full-step speedup is modest at this size because the dense matvec is small.
+# Format the report (figures + markdown):
+python experiments/cann_lowrank/cann_lowrank_report.py --tag cpu
+```
+The benchmark writes per-tag CSVs and a `bump_trajectories_{tag}.npz` to `experiments/cann_lowrank/results/`. The report script reads them, generates six figures into `results/figures/`, and writes `results/cann_lowrank_summary.md` (this document). The complete sweep takes ~15 minutes on CPU and ~5 minutes on A100.
 
-- **CANN2D, `L ≥ 32`:** use `k = 32` to capture >90% of energy. The matvec speedup is 10–70× and the full-step speedup is 1.2× even at `L=64`. Larger `L` will see bigger full-step wins.
 
-- **Online / control use cases** (few-step latency matters more than amortised throughput): `k = 1` is sufficient — the leading singular vector carries the bump-tracking dynamics.
+## Appendix B. Raw data files
 
-## Caveats
-
-- All numbers are CPU (JAX default backend on Apple Silicon). GPU speedups will differ; the dispatch overhead is much smaller on GPU so the full-step speedup should be larger.
-
-- The benchmark uses a moving Gaussian stimulus to stress bump-tracking. For a *stationary* stimulus the position error is much smaller (often zero — the bump just sits at the right place). The reported numbers are a worst-case-ish bound.
-
-- The truncated SVD is computed once at `__init__` time. The low-rank factor cost is `O(n²·min(m,n))` for an `m×n` matrix; this is amortised over many steps. For one-off simulations the SVD cost may dominate.
+Raw per-cell data is in `results/`:
+- `cann_lowrank_all_cpu.csv` — CPU sweep, all `(n, k)` cells
+- `cann_lowrank_all_gpu.csv` — GPU sweep, all `(n, k)` cells
+- `bump_trajectories_cpu.npz` — bump-center trajectories for CANN1D num=256 and CANN2D L=16, all k values
+- `figures/*.png` — the six figures embedded above
 

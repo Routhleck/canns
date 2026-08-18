@@ -1,8 +1,11 @@
 # Low-rank recurrent matvec for CANN1D / CANN2D
 
-This directory contains a self-contained benchmark of the
-**low-rank approximation of the recurrent matvec** in the standard
-`CANN1D` and `CANN2D` models from `canns.models.basic`.
+This directory contains a self-contained, paper-style benchmark of
+the **low-rank approximation of the recurrent matvec** in the
+standard `CANN1D` and `CANN2D` models from `canns.models.basic`,
+plus the correctness audit of the benchmark and the API
+documentation for the `accl_mode` / `accl_k` feature that is
+exposed on the model classes.
 
 ## What it tests
 
@@ -38,31 +41,73 @@ For each `(model, n, k)` cell:
   trajectory.
 - **captured energy** — `Σ S[:k]² / Σ S²`, where `S` is the SVD of
   `conn_mat`.
+- **bump center trajectory** (1D and 2D) — recorded for one
+  representative cell per model, decoded via circular mean, for
+  every k value plus the dense reference.
+
+## Paper-style writeup
+
+The benchmark report is at
+[`results/cann_lowrank_summary.md`](results/cann_lowrank_summary.md)
+and follows a small-paper structure:
+
+- **Abstract** — one-paragraph motivation, methods, headline numbers.
+- **§1 Introduction** — background, motivation, the cost question.
+- **§2 Methods** — CANN dynamics, low-rank SVD factorisation, bump
+  decoding, stimulus protocol, metrics, hardware.
+- **§3 Results** — six figures:
+  1. SVD spectrum of the Gaussian kernel (1D + 2D)
+  2. 1D bump center trajectory over time (all k values overlaid)
+  3. 2D bump center trajectory in feature space (all k values overlaid)
+  4. CPU matvec speedup vs n (1D + 2D)
+  5. GPU matvec speedup vs n (1D + 2D) — only if a GPU sweep was run
+  6. Speed-accuracy Pareto frontier (1D + 2D)
+- **§4 Discussion** — when low-rank helps, when it doesn't, recommended
+  strategy.
+- **§5 Limitations** — what was *not* measured.
+- **§6 Conclusion** — recap and API pointer.
+- **References** — Wu et al. 2008 (the original CANN paper), the
+  `canns` package.
+- **Appendix A** — reproduction commands.
+- **Appendix B** — raw data files.
+
+The figures are in
+[`results/figures/`](results/figures/) as both PNG (for web) and
+PDF (for paper inclusion).
 
 ## Files
 
 | File | Purpose |
 | --- | --- |
-| `cann_lowrank_bench.py` | Main benchmark. Runs the full sweep and writes CSVs. |
-| `cann_lowrank_report.py` | Reads the CSVs and writes the markdown writeup. |
+| `cann_lowrank_bench.py` | Main benchmark. Runs the full sweep, records bump trajectories, writes CSVs and npz. |
+| `cann_lowrank_report.py` | Reads the CSVs + npz, generates 9 figures, writes the paper-style markdown. |
+| `REVIEW.md` | Correctness audit of the benchmark (SVD math, symmetric conn_mat argument, stimulus, bump-position, error metrics, timing methodology, edge cases). |
 | `_smoke/explore_conn.py` | Initial spectrum exploration that informed the rank sweep. |
-| `results/cann_lowrank_all.csv` | Raw per-cell numbers (one row per `(model, n, k)`). |
-| `results/cann_lowrank_summary.md` | Human-readable writeup with tables and findings. |
+| `results/cann_lowrank_all_{cpu,gpu}.csv` | Raw per-cell numbers (one row per `(model, n, k)`). |
+| `results/bump_trajectories_{cpu,gpu}.npz` | Bump center trajectories for one representative cell per model, at all k values plus the dense reference. |
+| `results/figures/fig_*.{png,pdf}` | The figures embedded in the report. |
+| `results/cann_lowrank_summary.md` | The paper-style writeup. |
 
 ## Reproducing
 
-From the repo root, with the canns-accel venv active (it has
-`brainpy`, `jax`, and an editable `canns` install):
+From the repo root, with the `canns` source on `PYTHONPATH` and
+`brainpy.math` + `jax` installed:
 
 ```bash
-python experiments/cann_lowrank/cann_lowrank_bench.py --T 200
+# CPU sweep (Apple M3 Pro, single core, ~15 min wall):
+python experiments/cann_lowrank/cann_lowrank_bench.py --T 200 --tag cpu
+
+# GPU sweep (NVIDIA A100, GPU 1, ~5 min wall):
+CUDA_VISIBLE_DEVICES=1 JAX_PLATFORMS=cuda \
+  python experiments/cann_lowrank/cann_lowrank_bench.py --gpu-sweep --T 200 --tag gpu
+
+# Format the paper-style report (figures + markdown):
 python experiments/cann_lowrank/cann_lowrank_report.py
 ```
 
-The full sweep (CANN1D `num ∈ {64..2048}`, CANN2D `length ∈ {8..64}`,
-ranks `k ∈ {1, 2, 4, 8, 16, 32}` and `+64, +128` for 2D) takes
-~10 minutes on a CPU-only machine. Pass `--fast` for a smaller
-sweep (1D up to 512, 2D up to L=32).
+The report is reproducible as long as at least the CPU sweep has
+been run. The GPU sweep adds the two GPU-speedup figures; if it
+hasn't been run, the report falls back to the CPU data.
 
 ## Branch
 

@@ -689,6 +689,209 @@ def write_csv(path: Path, rows: list[CellResult]) -> None:
 
 
 # ---------------------------------------------------------------------------
+# Bump center trajectory recording (for the "decode over time" figure)
+# ---------------------------------------------------------------------------
+
+def _moving_stimulus_1d(x: np.ndarray, a: float, A: float, z_range: float, T: int) -> np.ndarray:
+    """Sweep a Gaussian across the ring over ``T`` steps."""
+    num = len(x)
+    out = np.empty((T, num), dtype=np.float32)
+    for t in range(T):
+        pos = math.pi * t / max(T - 1, 1)
+        d = (x - pos) % z_range
+        d = np.where(d > z_range / 2, d - z_range, d)
+        out[t] = A * np.exp(-0.25 * (d / a) ** 2)
+    return out
+
+
+def _moving_stimulus_2d(x: np.ndarray, a: float, A: float, z_range: float, T: int) -> np.ndarray:
+    L = len(x)
+    xx, yy = np.meshgrid(x, x)
+    out = np.empty((T, L, L), dtype=np.float32)
+    for t in range(T):
+        pos = math.pi * t / max(T - 1, 1)
+        dx = (xx - pos) % z_range
+        dy = (yy - pos) % z_range
+        dx = np.where(dx > z_range / 2, dx - z_range, dx)
+        dy = np.where(dy > z_range / 2, dy - z_range, dy)
+        out[t] = (A * np.exp(-0.25 * ((dx ** 2 + dy ** 2) ** 0.5) / a) ** 2).astype(np.float32)
+    return out
+
+
+def record_bump_trajectories_1d(
+    num: int, k_list: list[int], T: int, dt: float = 0.1,
+    T_warm: int = 20,
+) -> dict:
+    """Record the bump center trajectory over T steps for a CANN1D at each
+    rank in ``k_list`` (plus the dense baseline).
+
+    A pre-warm phase of ``T_warm`` steps with a *stationary* stimulus at
+    ``pos=0`` is run first so the bump is fully formed before the moving
+    stimulus starts. This matches the realistic use case where the
+    network is initialised with a bump already in place.
+
+    Returns a dict with keys:
+        ``dense``     — array of shape ``(T,)``
+        ``k{ki}``     — array of shape ``(T,)`` for each rank
+        ``k_full``    — same as ``dense``, kept for naming consistency
+        ``sv``        — full SVD spectrum of the conn matrix
+        ``x``         — feature-space coordinates
+    """
+    bm.set_dt(dt)
+    model = CANN1D(num=num, accl_mode="normal")
+    conn_np = np.asarray(model.conn_mat)
+    x_np = np.asarray(model.x)
+    tau = float(model.tau)
+    k_global = float(model.k)
+    a, A, z_range = float(model.a), float(model.A), float(model.z_range)
+
+    U_full, S_full, Vt_full = np.linalg.svd(conn_np, full_matrices=False)
+    sv = S_full.astype(np.float32)
+
+    step_dense = _make_dense_step()
+    step_low = _make_lowrank_step()
+
+    # Moving stimulus (for the recorded trajectory)
+    stim_np = _moving_stimulus_1d(x_np, a, A, z_range, T)
+    # Stationary stimulus at pos=0 (for warm-up)
+    warm_stim = np.broadcast_to(
+        (A * np.exp(-0.25 * ((x_np / a) ** 2))).astype(np.float32),
+        (T_warm, num),
+    ).copy()
+
+    # Pre-build lowrank factors
+    factors = {}
+    for ki in k_list:
+        sqrtS = np.sqrt(S_full[:ki].astype(np.float32))
+        factors[ki] = (
+            jnp.asarray(U_full[:, :ki].astype(np.float32) * sqrtS),
+            jnp.asarray(Vt_full[:ki, :].T.astype(np.float32) * sqrtS),
+        )
+
+    def warm_and_record(initial_u, initial_r, step_fn, *extra_args, flat=False):
+        u, r = initial_u, initial_r
+        # Warm-up
+        for t in range(T_warm):
+            inp = jnp.asarray(warm_stim[t])
+            u, r = step_fn(u, r, *extra_args, inp, tau, k_global, dt)
+        # Recorded trajectory
+        pos = np.empty(T, dtype=np.float64)
+        for t in range(T):
+            inp = jnp.asarray(stim_np[t])
+            u, r = step_fn(u, r, *extra_args, inp, tau, k_global, dt)
+            if flat:
+                r_2d = np.asarray(r).reshape(num, num)
+            else:
+                r_2d = np.asarray(r)
+            pos[t] = bump_position_1d(r_2d, x_np, z_range)
+        return pos
+
+    # Dense reference
+    dense_pos = warm_and_record(
+        np.zeros(num, dtype=np.float32),
+        np.zeros(num, dtype=np.float32),
+        step_dense,
+        jnp.asarray(conn_np),
+    )
+
+    out: dict = {"dense": dense_pos, "sv": sv, "x": x_np}
+    out["k_full"] = dense_pos.copy()
+
+    for ki, (U_l, V_l) in factors.items():
+        out[f"k{ki}"] = warm_and_record(
+            np.zeros(num, dtype=np.float32),
+            np.zeros(num, dtype=np.float32),
+            step_low,
+            U_l, V_l,
+        )
+
+    return out
+
+
+def record_bump_trajectories_2d(
+    length: int, k_list: list[int], T: int, dt: float = 0.1,
+    T_warm: int = 20,
+) -> dict:
+    """Record the bump center trajectory over T steps for a CANN2D at each
+    rank in ``k_list`` (plus the dense baseline).
+
+    A pre-warm phase of ``T_warm`` steps with a *stationary* stimulus at
+    ``pos=(0, 0)`` is run first so the bump is fully formed before the
+    moving stimulus starts.
+
+    Returns a dict with keys:
+        ``dense``     — array of shape ``(T, 2)``
+        ``k{ki}``     — array of shape ``(T, 2)`` for each rank
+        ``k_full``    — same as ``dense``
+        ``sv``        — full SVD spectrum of the conn matrix
+        ``x``         — feature-space coordinates
+    """
+    bm.set_dt(dt)
+    model = CANN2D(length=length, accl_mode="normal")
+    conn_np = np.asarray(model.conn_mat)
+    x_np = np.asarray(model.x)
+    tau = float(model.tau)
+    k_global = float(model.k)
+    a, A, z_range = float(model.a), float(model.A), float(model.z_range)
+    L = length
+    n = L * L
+
+    U_full, S_full, Vt_full = np.linalg.svd(conn_np, full_matrices=False)
+    sv = S_full.astype(np.float32)
+
+    step_dense = _make_dense_step()
+    step_low = _make_lowrank_step()
+
+    stim_np = _moving_stimulus_2d(x_np, a, A, z_range, T)
+
+    # Stationary warm-up stimulus
+    xx, yy = np.meshgrid(x_np, x_np)
+    warm_stim_flat = (A * np.exp(-0.25 * ((xx ** 2 + yy ** 2) ** 0.5) / a) ** 2).astype(np.float32).reshape(-1)
+    warm_stim = np.broadcast_to(warm_stim_flat, (T_warm, n)).copy()
+
+    factors = {}
+    for ki in k_list:
+        sqrtS = np.sqrt(S_full[:ki].astype(np.float32))
+        factors[ki] = (
+            jnp.asarray(U_full[:, :ki].astype(np.float32) * sqrtS),
+            jnp.asarray(Vt_full[:ki, :].T.astype(np.float32) * sqrtS),
+        )
+
+    def warm_and_record(initial_u, initial_r, step_fn, *extra_args):
+        u, r = initial_u, initial_r
+        for t in range(T_warm):
+            inp = jnp.asarray(warm_stim[t])
+            u, r = step_fn(u, r, *extra_args, inp, tau, k_global, dt)
+        pos = np.empty((T, 2), dtype=np.float64)
+        for t in range(T):
+            inp = jnp.asarray(stim_np[t].reshape(-1))
+            u, r = step_fn(u, r, *extra_args, inp, tau, k_global, dt)
+            cx, cy = bump_position_2d(np.asarray(r).reshape(L, L), x_np, z_range)
+            pos[t] = (cx, cy)
+        return pos
+
+    dense_pos = warm_and_record(
+        np.zeros(n, dtype=np.float32),
+        np.zeros(n, dtype=np.float32),
+        step_dense,
+        jnp.asarray(conn_np),
+    )
+
+    out: dict = {"dense": dense_pos, "sv": sv, "x": x_np}
+    out["k_full"] = dense_pos.copy()
+
+    for ki, (U_l, V_l) in factors.items():
+        out[f"k{ki}"] = warm_and_record(
+            np.zeros(n, dtype=np.float32),
+            np.zeros(n, dtype=np.float32),
+            step_low,
+            U_l, V_l,
+        )
+
+    return out
+
+
+# ---------------------------------------------------------------------------
 # CLI
 # ---------------------------------------------------------------------------
 
@@ -696,39 +899,63 @@ def main() -> None:
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument("--fast", action="store_true",
                    help="smaller sweep (quick smoke test, ~1 min)")
+    p.add_argument("--gpu-sweep", action="store_true",
+                   help="use the larger n sweep suitable for a GPU (n up to 4096 for 1D, "
+                        "L up to 128 for 2D). Implies a tag of 'gpu' if --tag is not given.")
     p.add_argument("--T", type=int, default=200,
                    help="simulation length for accuracy (default 200)")
     p.add_argument("--dt", type=float, default=0.1,
                    help="simulation timestep (default 0.1, matches canns default)")
     p.add_argument("--outdir", type=str, default=None,
                    help="results dir (default: experiments/cann_lowrank/results)")
+    p.add_argument("--tag", type=str, default=None,
+                   help="filename suffix (e.g. 'cpu', 'gpu'). Default: 'cpu' or 'gpu' "
+                        "auto-detected from JAX_PLATFORMS env var, with --gpu-sweep "
+                        "forcing 'gpu'.")
+    p.add_argument("--no-trajectories", action="store_true",
+                   help="skip recording bump center trajectories (faster, less output)")
     args = p.parse_args()
 
     outdir = Path(args.outdir) if args.outdir else _HERE / "results"
     outdir.mkdir(parents=True, exist_ok=True)
 
+    # Tag: cpu or gpu. auto-detect from JAX_PLATFORMS, allow --tag override.
+    if args.tag is not None:
+        tag = args.tag
+    else:
+        platforms = os.environ.get("JAX_PLATFORMS", "").lower()
+        tag = "gpu" if "cuda" in platforms or args.gpu_sweep else "cpu"
+
     if args.fast:
-        # Tight sweep: 1D up to 512, 2D up to L=32
         cann1d_sizes = [64, 128, 256, 512]
         cann2d_sizes = [8, 16, 32]
         ranks_1d = [1, 2, 4, 8, 16]
         ranks_2d = [1, 2, 4, 8, 16, 32, 64]
+    elif args.gpu_sweep:
+        # Same n as default CPU; the A100 advantage comes through
+        # with more iters, not larger sizes. L=128 / n=4096 is
+        # already past the size where GPU matvec time dominates
+        # dispatch overhead. Going to n=16384 is dominated by the
+        # numpy SVD cost (5+ min per cell on CPU) so we cap here.
+        cann1d_sizes = [64, 128, 256, 512, 1024, 2048]
+        cann2d_sizes = [8, 16, 32, 64]
+        ranks_1d = [1, 2, 4, 8, 16, 32]
+        ranks_2d = [1, 2, 4, 8, 16, 32, 64, 128]
     else:
         cann1d_sizes = [64, 128, 256, 512, 1024, 2048]
-        cann2d_sizes = [8, 16, 32, 64]  # L=128 → n=16384 is multi-min per cell
+        cann2d_sizes = [8, 16, 32, 64]
         ranks_1d = [1, 2, 4, 8, 16, 32]
         ranks_2d = [1, 2, 4, 8, 16, 32, 64, 128]
 
     all_rows: list[CellResult] = []
 
     print("=" * 70)
-    print("CANN1D — speed + accuracy")
+    print(f"CANN1D — speed + accuracy  [tag={tag}]")
     print("=" * 70)
     for num in cann1d_sizes:
         print(f"  num={num} ...", flush=True)
         rows = benchmark_cann1d(num=num, ranks=ranks_1d, T=args.T, dt=args.dt)
         all_rows.extend(rows)
-        # Print a one-line summary for the dense and k=8
         for r in rows:
             if r.k in (-1, 8):
                 klabel = 'full' if r.k == -1 else str(r.k)
@@ -745,7 +972,7 @@ def main() -> None:
 
     print()
     print("=" * 70)
-    print("CANN2D — speed + accuracy")
+    print(f"CANN2D — speed + accuracy  [tag={tag}]")
     print("=" * 70)
     for length in cann2d_sizes:
         print(f"  length={length} (n={length*length}) ...", flush=True)
@@ -765,15 +992,49 @@ def main() -> None:
                     f"energy={r.captured_energy:.4f}"
                 )
 
-    speed_csv = outdir / "cann_lowrank_speed.csv"
-    acc_csv = outdir / "cann_lowrank_accuracy.csv"
-    full_csv = outdir / "cann_lowrank_all.csv"
-
-    # The two CSVs share the same rows; "speed" and "accuracy" are just
-    # different view conventions. We write both plus a combined one.
+    # Output CSV files
+    speed_csv = outdir / f"cann_lowrank_speed_{tag}.csv"
+    acc_csv = outdir / f"cann_lowrank_accuracy_{tag}.csv"
+    full_csv = outdir / f"cann_lowrank_all_{tag}.csv"
     write_csv(speed_csv, all_rows)
     write_csv(acc_csv, all_rows)
     write_csv(full_csv, all_rows)
+
+    # Bump center trajectory recording (for the "decode over time" figure)
+    if not args.no_trajectories:
+        print()
+        print("=" * 70)
+        print("Bump center trajectory recording")
+        print("=" * 70)
+        traj_npz = outdir / f"bump_trajectories_{tag}.npz"
+        traj_data: dict = {}
+        # Pick representative sizes for the figures
+        traj_1d_n = 256
+        traj_2d_L = 16
+        traj_1d_ks = [1, 2, 4, 8, 16, 32]
+        traj_2d_ks = [1, 4, 8, 16, 32, 64]
+        print(f"  CANN1D num={traj_1d_n} ...", flush=True)
+        traj_1d = record_bump_trajectories_1d(traj_1d_n, traj_1d_ks, T=args.T, dt=args.dt)
+        traj_data["traj_1d_n"] = traj_1d_n
+        traj_data["traj_1d_ks"] = np.array(traj_1d_ks)
+        traj_data["sv_1d"] = traj_1d["sv"]
+        traj_data["x_1d"] = traj_1d["x"]
+        for k_name, arr in traj_1d.items():
+            if k_name in ("sv", "x"):
+                continue
+            traj_data[f"traj_1d_{k_name}"] = arr
+        print(f"  CANN2D L={traj_2d_L} ...", flush=True)
+        traj_2d = record_bump_trajectories_2d(traj_2d_L, traj_2d_ks, T=args.T, dt=args.dt)
+        traj_data["traj_2d_L"] = traj_2d_L
+        traj_data["traj_2d_ks"] = np.array(traj_2d_ks)
+        traj_data["sv_2d"] = traj_2d["sv"]
+        traj_data["x_2d"] = traj_2d["x"]
+        for k_name, arr in traj_2d.items():
+            if k_name in ("sv", "x"):
+                continue
+            traj_data[f"traj_2d_{k_name}"] = arr
+        np.savez(traj_npz, **traj_data)
+        print(f"  Wrote {traj_npz}")
 
     print()
     print(f"  Wrote {speed_csv}")
@@ -781,7 +1042,7 @@ def main() -> None:
     print(f"  Wrote {full_csv}")
     print()
     print("Done. Run the analysis companion to format the writeup:")
-    print(f"  python experiments/cann_lowrank/cann_lowrank_report.py")
+    print(f"  python experiments/cann_lowrank/cann_lowrank_report.py --tag {tag}")
 
 
 if __name__ == "__main__":
