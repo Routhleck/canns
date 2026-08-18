@@ -60,16 +60,17 @@ and follows a small-paper structure:
 - **§1 Introduction** — background, motivation, the cost question.
 - **§2 Methods** — CANN dynamics, low-rank SVD factorisation, bump
   decoding, stimulus protocol, metrics, hardware.
-- **§3 Results** — eight figures:
-  1. SVD spectrum of the Gaussian kernel (1D + 2D)
+- **§3 Results** — 11 figures total:
+  1. SVD spectrum of the Gaussian kernel (1D + 2D, one figure)
   2. 1D bump center trajectory over time (all k values overlaid)
   3. 2D bump center trajectory in feature space (all k values overlaid)
-  4. CPU matvec speedup vs n (1D + 2D)
-  5. GPU matvec speedup vs n (1D + 2D) — only if a GPU sweep was run
-  6. Speed-accuracy Pareto frontier (1D + 2D)
-  7. 1D long-trajectory drift (T = 2000 slow sweep) — only with
+  4. CPU matvec speedup vs n — 2 figures (1D + 2D)
+  5. GPU matvec speedup vs n — 2 figures (1D + 2D), only if a GPU
+     sweep was run
+  6. Speed-accuracy Pareto frontier — 2 figures (1D + 2D)
+  7. 1D long-trajectory drift (T = 2000 slow sweep), only with
      `--long-trajectory`
-  8. 2D long-trajectory drift (T = 2000 slow sweep) — only with
+  8. 2D long-trajectory drift (T = 2000 slow sweep), only with
      `--long-trajectory`
 - **§4 Discussion** — when low-rank helps, when it doesn't, recommended
   strategy.
@@ -110,7 +111,8 @@ python experiments/cann_lowrank/cann_lowrank_bench.py --T 200 --tag cpu
 # Optional: also run the long-trajectory drift test (T=2000):
 python experiments/cann_lowrank/cann_lowrank_bench.py --T 200 --long-trajectory --tag cpu
 
-# GPU sweep (NVIDIA A100, GPU 1, ~5 min wall):
+# GPU sweep (NVIDIA A100, GPU 1, ~13 min wall — includes n=6144/8192
+# which need ~100s of numpy SVD on CPU, plus all the 2D sizes):
 CUDA_VISIBLE_DEVICES=1 JAX_PLATFORMS=cuda \
   python experiments/cann_lowrank/cann_lowrank_bench.py --gpu-sweep --T 200 --tag gpu
 

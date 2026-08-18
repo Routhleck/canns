@@ -10,8 +10,9 @@ can be replaced by a low-rank factorisation
 
     Irec = U_l @ (V_l.T @ r)
 
-where ``U_l`` and ``V_l`` are ``(n, k)`` matrices. This gives 30-80x
-matvec speedup at ``num >= 512`` with bump-position error below 5 mrad.
+where ``U_l`` and ``V_l`` are ``(n, k)`` matrices. This gives 30-245x
+matvec speedup at ``num >= 512`` (CPU) with bump-position error below
+5 mrad.
 
 ``canns.models.basic.CANN1D`` and ``CANN2D`` expose this through the
 ``accl_mode`` and ``accl_k`` constructor arguments. Three presets are
