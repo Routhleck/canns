@@ -106,24 +106,24 @@ From the repo root, with the `canns` source on `PYTHONPATH` and
 
 ```bash
 # CPU sweep (Apple M3 Pro, single core, ~15 min wall):
-python experiments/cann_lowrank/cann_lowrank_bench.py --T 200 --tag cpu
+python benchmarks/cann_lowrank/cann_lowrank_bench.py --T 200 --tag cpu
 
 # Optional: also run the long-trajectory drift test (T=2000):
-python experiments/cann_lowrank/cann_lowrank_bench.py --T 200 --long-trajectory --tag cpu
+python benchmarks/cann_lowrank/cann_lowrank_bench.py --T 200 --long-trajectory --tag cpu
 
 # GPU sweep (NVIDIA A100, GPU 1, ~13 min wall — includes n=6144/8192
 # which need ~100s of numpy SVD on CPU, plus all the 2D sizes):
 CUDA_VISIBLE_DEVICES=1 JAX_PLATFORMS=cuda \
-  python experiments/cann_lowrank/cann_lowrank_bench.py --gpu-sweep --T 200 --tag gpu
+  python benchmarks/cann_lowrank/cann_lowrank_bench.py --gpu-sweep --T 200 --tag gpu
 
 # Format the paper-style report (figures + markdown only):
-python experiments/cann_lowrank/cann_lowrank_report.py --tag cpu
+python benchmarks/cann_lowrank/cann_lowrank_report.py --tag cpu
 
 # Also write a styled HTML version (NeurIPS-like):
-python experiments/cann_lowrank/cann_lowrank_report.py --tag cpu --html
+python benchmarks/cann_lowrank/cann_lowrank_report.py --tag cpu --html
 
 # Also write a PDF version (NeurIPS-like, requires weasyprint):
-python experiments/cann_lowrank/cann_lowrank_report.py --tag cpu --pdf
+python benchmarks/cann_lowrank/cann_lowrank_report.py --tag cpu --pdf
 ```
 
 The report is reproducible as long as at least the CPU sweep has

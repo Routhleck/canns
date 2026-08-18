@@ -8,7 +8,7 @@ Across a sweep of `CANN1D num ∈ {64…4096}` (CPU) / `{64…8192}` (GPU) and `
 
 We additionally stress-test long-horizon stability with a T = 2000 slow sweep of the moving stimulus (one full ring per trial, position sampled every 10 steps). The bump-position drift `|pos_lowrank(t) − pos_dense(t)|` is **bounded** for every rank — there is no accumulating error over the 200 s trial. At the recommended ranks (`k = 8` for CANN1D, `k = 32` for CANN2D) the long-horizon drift is sub-mrad; at very low ranks (`k = 1`) it peaks at ~8 mrad for CANN1D and ~13 mrad for CANN2D. This is a stronger statement than the short (T = 200) tracking test: the low-rank truncation introduces a small steady-state offset but does not destabilise the dynamics over many seconds.
 
-All code, raw data, and the figure-generation script are in `experiments/cann_lowrank/`. The feature is exposed through the `accl_mode` and `accl_k` constructor arguments on `CANN1D` and `CANN2D` (and their SFA variants); see `canns.models.basic`.
+All code, raw data, and the figure-generation script are in `benchmarks/cann_lowrank/`. The feature is exposed through the `accl_mode` and `accl_k` constructor arguments on `CANN1D` and `CANN2D` (and their SFA variants); see `canns.models.basic`.
 
 
 ## 1. Introduction
@@ -245,19 +245,19 @@ We have shown that the recurrent matvec in `CANN1D` and `CANN2D` — the dominan
 From the repo root, with the `canns` source on `PYTHONPATH` and JAX + brainpy.math installed (any recent version):
 ```bash
 # CPU sweep (Apple M3 Pro, single core):
-python experiments/cann_lowrank/cann_lowrank_bench.py --T 200 --tag cpu
+python benchmarks/cann_lowrank/cann_lowrank_bench.py --T 200 --tag cpu
 
 # Optional: also record the long-trajectory drift (T=2000):
-python experiments/cann_lowrank/cann_lowrank_bench.py --T 200 --long-trajectory --tag cpu
+python benchmarks/cann_lowrank/cann_lowrank_bench.py --T 200 --long-trajectory --tag cpu
 
 # GPU sweep (NVIDIA A100, GPU 1):
 CUDA_VISIBLE_DEVICES=1 JAX_PLATFORMS=cuda \
-  python experiments/cann_lowrank/cann_lowrank_bench.py --gpu-sweep --T 200 --tag gpu
+  python benchmarks/cann_lowrank/cann_lowrank_bench.py --gpu-sweep --T 200 --tag gpu
 
 # Format the report (figures + markdown):
-python experiments/cann_lowrank/cann_lowrank_report.py --tag cpu
+python benchmarks/cann_lowrank/cann_lowrank_report.py --tag cpu
 ```
-The benchmark writes per-tag CSVs, a `bump_trajectories_{tag}.npz`, and (with `--long-trajectory`) a `bump_drift_{tag}.npz` to `experiments/cann_lowrank/results/`. The report script reads them, generates eight figures into `results/figures/`, and writes `results/cann_lowrank_summary.md` (this document). The complete sweep takes ~15 minutes on CPU and ~5 minutes on A100.
+The benchmark writes per-tag CSVs, a `bump_trajectories_{tag}.npz`, and (with `--long-trajectory`) a `bump_drift_{tag}.npz` to `benchmarks/cann_lowrank/results/`. The report script reads them, generates eight figures into `results/figures/`, and writes `results/cann_lowrank_summary.md` (this document). The complete sweep takes ~15 minutes on CPU and ~5 minutes on A100.
 
 
 ## Appendix B. Raw data files

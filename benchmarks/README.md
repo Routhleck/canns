@@ -14,6 +14,18 @@ performance-sensitive path should add a new result file here.
 benchmarks/
 ├── README.md                  # this file
 ├── shuffle_null_model.py      # current benchmark: FFI vs mp.Pool
+├── canns_lowrank/             # sub-benchmark for the accl_mode / accl_k
+│   │                              # low-rank matvec feature on CANN1D/2D
+│   ├── cann_lowrank_bench.py
+│   ├── cann_lowrank_report.py
+│   ├── REVIEW.md
+│   ├── README.md
+│   └── results/
+│       ├── cann_lowrank_summary.{md,html,pdf}   # paper-style writeup
+│       ├── cann_lowrank_*.csv
+│       ├── bump_trajectories_*.npz
+│       ├── bump_drift_*.npz
+│       └── figures/fig_*.{png,pdf}
 ├── run_all.sh                 # one-shot re-runner (add new benchmarks here)
 └── results/
     ├── v1.2.0-shuffle.csv         # macOS arm64 raw data, version-keyed, immutable

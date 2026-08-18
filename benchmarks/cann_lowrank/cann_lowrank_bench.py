@@ -27,8 +27,8 @@ The benchmark writes:
   - results/cann_lowrank_summary.md  — writeup of the headline numbers
 
 Run:
-    uv run python experiments/cann_lowrank/cann_lowrank_bench.py            # full sweep
-    uv run python experiments/cann_lowrank/cann_lowrank_bench.py --fast     # smaller sweep
+    uv run python benchmarks/cann_lowrank/cann_lowrank_bench.py            # full sweep
+    uv run python benchmarks/cann_lowrank/cann_lowrank_bench.py --fast     # smaller sweep
 """
 from __future__ import annotations
 
@@ -1153,7 +1153,7 @@ def main() -> None:
     p.add_argument("--dt", type=float, default=0.1,
                    help="simulation timestep (default 0.1, matches canns default)")
     p.add_argument("--outdir", type=str, default=None,
-                   help="results dir (default: experiments/cann_lowrank/results)")
+                   help="results dir (default: benchmarks/cann_lowrank/results)")
     p.add_argument("--tag", type=str, default=None,
                    help="filename suffix (e.g. 'cpu', 'gpu'). Default: 'cpu' or 'gpu' "
                         "auto-detected from JAX_PLATFORMS env var, with --gpu-sweep "
@@ -1350,7 +1350,7 @@ def main() -> None:
     print(f"  Wrote {full_csv}")
     print()
     print("Done. Run the analysis companion to format the writeup:")
-    print(f"  python experiments/cann_lowrank/cann_lowrank_report.py --tag {tag}")
+    print(f"  python benchmarks/cann_lowrank/cann_lowrank_report.py --tag {tag}")
 
 
 if __name__ == "__main__":

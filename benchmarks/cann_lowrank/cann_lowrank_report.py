@@ -641,7 +641,7 @@ def fmt_err(e: float) -> str:
 def main() -> None:
     p = argparse.ArgumentParser()
     p.add_argument("--results", type=str, default=None,
-                   help="results dir (default: experiments/cann_lowrank/results)")
+                   help="results dir (default: benchmarks/cann_lowrank/results)")
     p.add_argument("--tag", type=str, default="cpu",
                    help="which tag to use for the trajectory npz (cpu or gpu)")
     p.add_argument("--html", action="store_true",
@@ -839,7 +839,7 @@ def render_markdown(
     )
     md.append(
         "All code, raw data, and the figure-generation script are in "
-        "`experiments/cann_lowrank/`. The feature is exposed through the "
+        "`benchmarks/cann_lowrank/`. The feature is exposed through the "
         "`accl_mode` and `accl_k` constructor arguments on `CANN1D` and "
         "`CANN2D` (and their SFA variants); see `canns.models.basic`.\n"
     )
@@ -1313,21 +1313,21 @@ def render_markdown(
         "and JAX + brainpy.math installed (any recent version):\n"
         "```bash\n"
         "# CPU sweep (Apple M3 Pro, single core):\n"
-        "python experiments/cann_lowrank/cann_lowrank_bench.py --T 200 --tag cpu\n"
+        "python benchmarks/cann_lowrank/cann_lowrank_bench.py --T 200 --tag cpu\n"
         "\n"
         "# Optional: also record the long-trajectory drift (T=2000):\n"
-        "python experiments/cann_lowrank/cann_lowrank_bench.py --T 200 --long-trajectory --tag cpu\n"
+        "python benchmarks/cann_lowrank/cann_lowrank_bench.py --T 200 --long-trajectory --tag cpu\n"
         "\n"
         "# GPU sweep (NVIDIA A100, GPU 1):\n"
         "CUDA_VISIBLE_DEVICES=1 JAX_PLATFORMS=cuda \\\n"
-        "  python experiments/cann_lowrank/cann_lowrank_bench.py --gpu-sweep --T 200 --tag gpu\n"
+        "  python benchmarks/cann_lowrank/cann_lowrank_bench.py --gpu-sweep --T 200 --tag gpu\n"
         "\n"
         "# Format the report (figures + markdown):\n"
-        "python experiments/cann_lowrank/cann_lowrank_report.py --tag cpu\n"
+        "python benchmarks/cann_lowrank/cann_lowrank_report.py --tag cpu\n"
         "```\n"
         "The benchmark writes per-tag CSVs, a `bump_trajectories_{tag}.npz`, "
         "and (with `--long-trajectory`) a `bump_drift_{tag}.npz` "
-        "to `experiments/cann_lowrank/results/`. The report script reads "
+        "to `benchmarks/cann_lowrank/results/`. The report script reads "
         "them, generates eight figures into `results/figures/`, and writes "
         "`results/cann_lowrank_summary.md` (this document). The "
         "complete sweep takes ~15 minutes on CPU and ~5 minutes on A100.\n"
@@ -1772,7 +1772,7 @@ def render_html(md_text: str, figdir: Path) -> str:
     <h1 class="paper-title">{title}</h1>
     <p class="paper-authors">sichaohe &middot; canns low-rank benchmark</p>
     <p class="paper-meta">canns-lowrank-bench branch &middot; generated from
-    <code>experiments/cann_lowrank/cann_lowrank_report.py</code></p>
+    <code>benchmarks/cann_lowrank/cann_lowrank_report.py</code></p>
   </header>
   {abstract_div}
   <main>

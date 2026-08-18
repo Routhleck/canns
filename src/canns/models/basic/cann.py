@@ -32,7 +32,7 @@ ACCL_MODES: tuple[str, ...] = ("normal", "fast", "ultra-fast")
 #: Default rank for each ``(model family, mode)`` combination.
 #:
 #: The "fast" defaults are the values recommended by
-#: ``experiments/cann_lowrank/results/cann_lowrank_summary.md``: the
+#: ``benchmarks/cann_lowrank/results/cann_lowrank_summary.md``: the
 #: smallest rank that keeps the bump-position error below ~5 mrad
 #: (about 0.3° on a ring of circumference 2π).
 ACCL_DEFAULT_K: dict[tuple[str, str], int] = {
@@ -178,7 +178,7 @@ class BaseCANN1D(BaseCANN):
         # --- Acceleration (low-rank recurrent matvec) ---
         # ``_U_l`` and ``_V_l`` are the rank-``accl_k`` truncated SVD factors
         # such that ``_U_l @ _V_l.T ≈ conn_mat``. They are ``None`` in
-        # ``"normal"`` mode. See ``experiments/cann_lowrank`` for the
+        # ``"normal"`` mode. See ``benchmarks/cann_lowrank`` for the
         # accuracy / speedup trade-offs.
         self._U_l: jax.Array | None = None
         self._V_l: jax.Array | None = None
@@ -378,7 +378,7 @@ class CANN1D(BaseCANN1D):
         # Calculate the recurrent input from other neurons in the network.
         # In ``accl_mode != "normal"`` this is a low-rank matvec
         # ``U_l @ (V_l.T @ r)`` instead of ``conn @ r`` — see
-        # ``BaseCANN1D._accel_Irec`` and ``experiments/cann_lowrank``.
+        # ``BaseCANN1D._accel_Irec`` and ``benchmarks/cann_lowrank``.
         Irec = self._accel_Irec(self.r.value)
         # Update the synaptic inputs using Euler's method. The change depends on a leak
         # current (-u), recurrent input (Irec), and external input (inp).
@@ -550,7 +550,7 @@ class BaseCANN2D(BaseCANN):
         # --- Acceleration (low-rank recurrent matvec) ---
         # ``_U_l`` and ``_V_l`` are the rank-``accl_k`` truncated SVD factors
         # of the (length² × length²) recurrent matrix. See
-        # ``experiments/cann_lowrank`` for the accuracy / speedup trade-offs.
+        # ``benchmarks/cann_lowrank`` for the accuracy / speedup trade-offs.
         self._U_l: jax.Array | None = None
         self._V_l: jax.Array | None = None
         self._setup_accl(accl_mode=accl_mode, accl_k=accl_k)
