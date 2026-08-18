@@ -1188,7 +1188,11 @@ def main() -> None:
         # few hundred microseconds — the SVD cost (numpy, ~5 min
         # for n=16384) still dominates the cell, but the matvec
         # speedup at that size is the most compelling GPU number.
-        cann1d_sizes = [64, 128, 256, 512, 1024, 2048, 4096]
+        # 1D also extends to n=6144 / n=8192 to bridge the gap
+        # between n=4096 (where the 1D GPU speedup is still ~3x)
+        # and n=16384 (the 2D-only max). Both 1D SVDs are
+        # affordable on CPU (~40 s and ~100 s respectively).
+        cann1d_sizes = [64, 128, 256, 512, 1024, 2048, 4096, 6144, 8192]
         cann2d_sizes = [8, 16, 32, 64, 128]
         ranks_1d = [1, 2, 4, 8, 16, 32, 64]
         ranks_2d = [1, 2, 4, 8, 16, 32, 64, 128, 256]
