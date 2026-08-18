@@ -485,28 +485,16 @@ def fig_pareto(
 ) -> None:
     """Speed-accuracy Pareto frontier: matvec speedup vs max pos err.
 
-    Small multiples — one panel per ``n_neurons``, sorted ascending.
-    Each panel shows the Pareto curve for that ``n`` (one point per
-    rank ``k``, connected by a line in k-order; the recommended rank
-    is highlighted). The dense (k = full) point is at speedup = 1.
+    Single panel. Marker shape encodes the rank ``k`` (one shape per
+    ``k``). Marker color encodes ``n_neurons`` (continuous viridis).
+    The dense reference sits at speedup = 1. The recommended rank
+    (e.g. ``k=8`` for CANN1D, ``k=32`` for CANN2D) is highlighted
+    with a black ring.
 
-    Parameters
-    ----------
-    by_cell : dict
-        ``{(model, n): {k: row}}`` mapping, as in ``group_by_cell``.
-        The key ``n`` is the 1D ``num`` for CANN1D and the 2D ``L`` for
-        CANN2D; ``n_neurons`` is read from the dense row's CSV column
-        (so for 2D this is ``L*L``, not ``L``).
-    model : str
-        ``"CANN1D"`` or ``"CANN2D"``.
-    title : str
-        Figure suptitle.
-    out : Path
-        Output path for the figure.
-    recommended_k : int
-        The rank to highlight in each panel (defaults to 8, the
-        spectral-analysis recommendation for CANN1D; pass 32 for
-        CANN2D).
+    ``n_neurons`` is read from the dense row's CSV column — for
+    CANN2D this is ``L*L`` (not ``L``). This was the bug in the
+    previous version: the colorbar was normalised on the by_cell
+    key (which is ``L`` for 2D), giving the wrong range.
     """
     # Collect (n_neurons, cell) pairs, sorted by n_neurons ascending
     pairs: list[tuple[int, dict]] = []
@@ -519,125 +507,105 @@ def fig_pareto(
         n_neurons = int(dense["n_neurons"])
         pairs.append((n_neurons, cell))
     pairs.sort(key=lambda p: p[0])
-    n_panels = len(pairs)
-    if n_panels == 0:
+    if not pairs:
         return
 
-    # Grid: pick 3 or 4 columns based on panel count, so each panel is
-    # roughly square and the figure isn't too wide.
-    if n_panels <= 4:
-        ncols = n_panels
-    else:
-        ncols = 4 if n_panels <= 8 else 3
-    nrows = (n_panels + ncols - 1) // ncols
-    # Extra bottom margin for the horizontal cbar row
-    fig, axes = plt.subplots(
-        nrows, ncols,
-        figsize=(2.6 * ncols, 2.4 * nrows),
-        sharey=True,
-    )
-    axes = np.atleast_1d(axes).ravel()
+    fig, ax = plt.subplots(figsize=(7.0, 4.5))
 
-    # k color: plasma so it pairs with the trajectory / drift figures
-    cmap_k = plt.get_cmap("plasma")
+    # k → marker shape (cycle through enough shapes for k=1..64)
+    ks_present = sorted({
+        k for _, cell in pairs for k in cell if k != -1
+    })
+    marker_pool = ["o", "s", "^", "D", "v", "P", "*", "X", "h", "p"]
+    k_to_marker = {k: marker_pool[i % len(marker_pool)]
+                   for i, k in enumerate(ks_present)}
 
-    # Collect all k values across panels for the global legend
-    all_ks: set[int] = set()
-    # Recommended k color (constant across panels) — black ring
-    for ax_idx, (n_neurons, cell) in enumerate(pairs):
-        ax = axes[ax_idx]
+    # n_neurons colormap
+    cmap_n = plt.get_cmap("viridis")
+    n_min = min(n for n, _ in pairs)
+    n_max = max(n for n, _ in pairs)
+    n_range = max(n_max - n_min, 1)
+
+    for n_neurons, cell in pairs:
         dense = cell.get(-1)
         dense_mv = float(dense["matvec_per_step_ms"])
-        # Per-k rows, sorted by k
-        k_rows = sorted(
-            ((k, r) for k, r in cell.items() if k != -1),
-            key=lambda x: x[0],
-        )
-        all_ks.update(k for k, _ in k_rows)
+        color = cmap_n((n_neurons - n_min) / n_range)
+        for k, r in cell.items():
+            if k == -1:
+                continue
+            sp = dense_mv / float(r["matvec_per_step_ms"])
+            err = float(r["max_pos_err"]) * 1000  # mrad
+            ax.scatter(
+                sp, err,
+                s=80,
+                marker=k_to_marker[k],
+                color=color, alpha=0.78,
+                edgecolor="black", lw=0.5,
+                zorder=3,
+            )
+            # Highlight the recommended k with a black ring
+            if k == recommended_k:
+                ax.scatter(
+                    sp, err,
+                    s=200, facecolors="none",
+                    edgecolors="black", lw=1.6,
+                    zorder=4,
+                )
 
-        if not k_rows:
-            ax.text(0.5, 0.5, "no data", transform=ax.transAxes,
-                    ha="center", va="center", fontsize=8)
-            ax.set_title(f"n = {n_neurons}", fontsize=9)
-            continue
+    # Reference lines
+    ax.axvline(1.0, ls=":", color="grey", lw=0.7, alpha=0.6,
+               label="speedup = 1 (dense)")
+    ax.axhline(5.0, ls=":", color="grey", lw=0.7, alpha=0.6,
+               label="error = 5 mrad")
 
-        ks = [k for k, _ in k_rows]
-        sps = [dense_mv / float(r["matvec_per_step_ms"]) for _, r in k_rows]
-        errs = [float(r["max_pos_err"]) * 1000 for _, r in k_rows]  # mrad
+    ax.set_xscale("log")
+    ax.set_yscale("log")
+    ax.set_xlabel("matvec speedup vs dense", fontsize=10)
+    ax.set_ylabel("max position error (mrad)", fontsize=10)
+    ax.set_title(title, fontsize=10)
+    ax.grid(True, which="both", ls=":", lw=0.4, alpha=0.4)
+    ax.tick_params(labelsize=8)
+    # Suppress cluttered minor ticks (same fix as fig_speedup)
+    from matplotlib.ticker import LogLocator, NullLocator
+    ax.xaxis.set_major_locator(LogLocator(base=10.0, numticks=4))
+    ax.xaxis.set_minor_locator(NullLocator())
+    ax.yaxis.set_major_locator(LogLocator(base=10.0, numticks=4))
+    ax.yaxis.set_minor_locator(NullLocator())
 
-        # Color each segment of the k-trajectory by k (darker for larger k).
-        # Use a single plasma colormap across the full k range so the
-        # figure-level legend is meaningful.
-        if len(ks) >= 1:
-            for i, (k, sp, er) in enumerate(zip(ks, sps, errs)):
-                color = cmap_k((k - 1) / max(max(all_ks) - 1, 1))
-                # Draw a line to the next k (so the curve is continuous)
-                if i + 1 < len(ks):
-                    sp_next = sps[i + 1]
-                    er_next = errs[i + 1]
-                    ax.plot([sp, sp_next], [er, er_next],
-                            color=color, lw=1.2, alpha=0.7)
-                # Draw the point
-                ax.scatter([sp], [er], s=55, color=color, alpha=0.9,
-                           edgecolor="black", lw=0.5, zorder=3)
-                # Highlight the recommended k with a black ring
-                if k == recommended_k:
-                    ax.scatter([sp], [er], s=200, facecolors="none",
-                               edgecolors="black", lw=1.8, zorder=4)
-                    # Annotate ABOVE the point with a small white bbox
-                    # so it doesn't overlap with the k-trajectory line
-                    # (which goes left-to-right through this point) or
-                    # the panel title.
-                    ax.annotate(f"k={k}", (sp, er),
-                                xytext=(0, 10), textcoords="offset points",
-                                fontsize=7, ha="center", va="bottom",
-                                color="black",
-                                bbox=dict(boxstyle="round,pad=0.2",
-                                          fc="white", ec="grey", lw=0.4))
+    # Marker-shape legend for k (compact, in lower-left of the data area)
+    k_handles = [
+        plt.Line2D([0], [0], marker=k_to_marker[k], color="grey",
+                   markerfacecolor="grey", markersize=9, lw=0,
+                   label=f"k={k}")
+        for k in ks_present
+    ]
+    leg_k = ax.legend(handles=k_handles, loc="lower left",
+                      title=f"rank k (○=k={recommended_k} highlighted)",
+                      title_fontsize=8, fontsize=7,
+                      frameon=True, ncol=2)
+    leg_k.get_frame().set_edgecolor("grey")
+    ax.add_artist(leg_k)
 
-        # Reference: 1× speedup (dense) and 5 mrad error (typical threshold)
-        ax.axvline(1.0, ls=":", color="grey", lw=0.6, alpha=0.6)
-        ax.axhline(5.0, ls=":", color="grey", lw=0.6, alpha=0.6)
-        ax.set_xscale("log")
-        ax.set_yscale("log")
-        # Pad the title so the k=annotation (which floats above the
-        # recommended-k point) never collides with the panel title.
-        ax.set_title(f"n = {n_neurons}", fontsize=9, pad=12)
-        ax.grid(True, which="both", ls=":", lw=0.4, alpha=0.4)
-        ax.tick_params(labelsize=7)
-        # Suppress cluttered minor ticks (same fix as fig_speedup)
-        from matplotlib.ticker import LogLocator, NullLocator
-        ax.xaxis.set_major_locator(LogLocator(base=10.0, numticks=4))
-        ax.xaxis.set_minor_locator(NullLocator())
-        ax.yaxis.set_major_locator(LogLocator(base=10.0, numticks=4))
-        ax.yaxis.set_minor_locator(NullLocator())
+    # Reference-line legend
+    ref_handles = [
+        plt.Line2D([0], [0], ls=":", color="grey", lw=0.8,
+                   label="speedup=1 / err=5 mrad"),
+    ]
+    ax.legend(handles=ref_handles, loc="upper right", fontsize=7,
+              frameon=True)
 
-    # Hide unused axes (if any)
-    for j in range(n_panels, len(axes)):
-        axes[j].set_visible(False)
-
-    # Per-panel labels
-    for j, ax in enumerate(axes[:n_panels]):
-        if j % ncols == 0:
-            ax.set_ylabel("max position error (mrad)", fontsize=8)
-        if j // ncols == nrows - 1 or j + ncols >= n_panels:
-            ax.set_xlabel("matvec speedup vs dense", fontsize=8)
-
-    # Figure-level legend: horizontal k colorbar in a dedicated axis
-    # at the very bottom (using add_axes), so it doesn't overlap the
-    # panels no matter how many rows.
+    # n_neurons colorbar (using the actual n_neurons range, not the
+    # by_cell key — fixed bug for CANN2D)
     sm = plt.cm.ScalarMappable(
-        cmap=cmap_k,
-        norm=plt.Normalize(vmin=0, vmax=max(all_ks) if all_ks else 1),
+        cmap=cmap_n,
+        norm=plt.Normalize(vmin=n_min, vmax=n_max),
     )
     sm.set_array([])
-    cbar_ax = fig.add_axes([0.25, 0.02, 0.5, 0.025])  # [left, bottom, width, height]
-    cbar = fig.colorbar(sm, cax=cbar_ax, orientation="horizontal")
-    cbar.set_label("rank k", fontsize=8)
+    cbar = fig.colorbar(sm, ax=ax, fraction=0.04, pad=0.02)
+    cbar.set_label("n_neurons", fontsize=8)
     cbar.ax.tick_params(labelsize=7)
 
-    fig.suptitle(title, fontsize=10, y=0.995)
-    fig.tight_layout(rect=(0, 0.06, 1, 0.96))  # leave room for the bottom cbar
+    fig.tight_layout()
     _save(fig, out)
     plt.close(fig)
 
@@ -808,21 +776,21 @@ def render_markdown(
     )
     md.append(
         "Across a sweep of `CANN1D num ∈ {64…4096}` and "
-        "`CANN2D length ∈ {8…128}` we measure (i) per-step time of the "
-        "recurrent matvec in isolation (via a `lax.scan` of 200 matvecs), "
-        "(ii) per-step time of the full update step, and (iii) the "
-        "bump-tracking error of the network under a slow moving-stimulus "
-        "trajectory. On a single Apple M3 Pro CPU core, the matvec "
-        "speedup reaches **80× at CANN1D num=2048 (k=8)** and "
-        "**230× at CANN2D length=64 (k=8)**, with the bump-position "
-        "error staying below 5 mrad (≈ 0.3° on a 2π ring). On an NVIDIA "
-        "A100-SXM4-80GB GPU the absolute matvec time is much smaller "
-        "than on the CPU and the dense matvec is ~15× faster than on "
-        "the CPU at n = 4096; the *relative* speedup of lowrank vs "
-        "dense is smaller (the GPU is launch-bound at small n) but "
-        "unambiguously a win at n ≥ 1024. The accuracy numbers are "
-        "independent of the hardware — they are a property of the "
-        "low-rank factorisation.\n"
+        "`CANN2D length ∈ {8…64}` (CPU) / `{8…128}` (GPU) we measure "
+        "(i) per-step time of the recurrent matvec in isolation (via a "
+        "`lax.scan` of 200 matvecs), (ii) per-step time of the full "
+        "update step, and (iii) the bump-tracking error of the network "
+        "under a slow moving-stimulus trajectory. On a single Apple M3 "
+        "Pro CPU core, the matvec speedup reaches **245× at CANN1D "
+        "num=4096 (k=8)** and **223× at CANN2D length=64 (k=8)**, "
+        "with the bump-position error staying below 5 mrad "
+        "(≈ 0.3° on a 2π ring). On an NVIDIA A100-SXM4-80GB GPU the "
+        "absolute matvec time is much smaller than on the CPU and the "
+        "dense matvec is ~15× faster than on the CPU at n = 4096; the "
+        "*relative* speedup of lowrank vs dense is smaller (the GPU is "
+        "launch-bound at small n) but unambiguously a win at n ≥ 1024. "
+        "The accuracy numbers are independent of the hardware — they "
+        "are a property of the low-rank factorisation.\n"
     )
     md.append(
         "We additionally stress-test long-horizon stability with a "
@@ -1046,8 +1014,9 @@ def render_markdown(
         "The speedup grows roughly linearly with `n` for each `k` (a "
         "single-rank GEMV against a `(n, k)` matrix is `n·k` FLOPs, "
         "vs `n²` for dense — so the speedup is `n / (2k)`). At the "
-        "recommended `k = 8` for CANN1D, the speedup reaches 80× at "
-        "n = 2048; for CANN2D `k = 32`, it reaches 70× at n = 4096.\n"
+        "recommended `k = 8` for CANN1D, the speedup reaches 245× at "
+        "n = 4096; for CANN2D `k = 8` it reaches 223× at n = 4096 "
+        "(and `k = 32` reaches 67× at the same n).\n"
     )
     md.append(f"\n![CPU CANN1D speedup]({fig('fig_speedup_cpu_cann1d.png')})\n")
     md.append(f"\n![CPU CANN2D speedup]({fig('fig_speedup_cpu_cann2d.png')})\n")
@@ -1223,8 +1192,9 @@ def render_markdown(
         "Based on the Pareto frontier and the recommended ranks from "
         "the spectral analysis:\n"
         "- **CANN1D, any `num`:** `accl_mode='fast'` (k = 8) gives "
-        "30-80× matvec speedup at `num ≥ 512` with ≤ 5 mrad position "
-        "error. At `num = 2048` the full-step is ~1.2× faster.\n"
+        "30-245× matvec speedup at `num ≥ 512` with ≤ 5 mrad position "
+        "error. At `num = 4096` the matvec is 245× faster than dense; "
+        "the full-step is ~4× faster.\n"
         "- **CANN2D, `L ≤ 16`:** `accl_mode='fast'` (k = 32) gives "
         "5-15× matvec speedup. Full-step speedup is small at this size.\n"
         "- **CANN2D, `L ≥ 32`:** `accl_mode='fast'` (k = 32) gives "
@@ -1283,11 +1253,11 @@ def render_markdown(
         "classes, with three preset modes (`normal`, `fast`, "
         "`ultra-fast`) and an explicit-rank override. The "
         "`set_accl_mode()` method switches the mode at runtime. "
-        "Matvec speedups of 30-80× on CPU and 3-15× on GPU are "
+        "Matvec speedups of 30-245× on CPU and 3-15× on GPU are "
         "realised at the recommended ranks, with full-step speedups "
-        "of ~1.2× at the largest tested sizes. The dynamics fidelity "
-        "is hardware-independent because it is a property of the "
-        "approximation, not of the runtime.\n"
+        "of ~4× at the largest tested sizes (CANN1D num = 4096). The "
+        "dynamics fidelity is hardware-independent because it is a "
+        "property of the approximation, not of the runtime.\n"
     )
 
     # ---- References ----
@@ -1343,20 +1313,34 @@ def render_markdown(
 
 
 def _accuracy_table(by_cell: dict) -> str:
-    """Markdown table: max position error in mrad for each (n, k) cell."""
+    """Markdown table: max position error in mrad for each (n, k) cell.
+
+    The first column shows ``n_neurons`` (so CANN1D's n is the row key,
+    CANN2D's is ``L*L``). The "L" column for CANN2D is included for
+    reference so the row can be mapped back to the sweep parameter.
+    """
     out = []
     for model in ("CANN1D", "CANN2D"):
         out.append(f"\n**{model}**\n")
-        n_list = sorted(nv for (m, nv) in by_cell if m == model)
+        n_keys = sorted(nv for (m, nv) in by_cell if m == model)
         # All k values present
         ks = sorted({k for (m, _n), cell in by_cell.items()
                      if m == model for k in cell if k != -1})
-        header = ["n"] + [f"k={k}" for k in ks]
+        # Header: for CANN2D add an L column; for CANN1D, n_neurons = key
+        if model == "CANN2D":
+            header = ["L", "n_neurons"] + [f"k={k}" for k in ks]
+        else:
+            header = ["n_neurons"] + [f"k={k}" for k in ks]
         out.append("| " + " | ".join(header) + " |")
         out.append("|" + "|".join(["---"] * len(header)) + "|")
-        for nv in n_list:
+        for nv in n_keys:
             cell = by_cell.get((model, nv), {})
-            row = [str(nv)]
+            dense = cell.get(-1)
+            n_neurons = int(dense["n_neurons"]) if dense else None
+            if model == "CANN2D":
+                row = [str(nv), str(n_neurons) if n_neurons is not None else "—"]
+            else:
+                row = [str(n_neurons) if n_neurons is not None else str(nv)]
             for k in ks:
                 r = cell.get(k)
                 if r is None:

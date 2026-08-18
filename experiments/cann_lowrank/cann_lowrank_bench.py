@@ -1193,12 +1193,14 @@ def main() -> None:
         ranks_1d = [1, 2, 4, 8, 16, 32, 64]
         ranks_2d = [1, 2, 4, 8, 16, 32, 64, 128, 256]
     else:
-        # Default CPU sweep: extends 1D to num=4096. 2D is still
-        # capped at L=64 (n=4096) because L=128 (n=16384) is
-        # dominated by the numpy SVD cost (~5 min per cell) and
-        # is left to --gpu-sweep.
-        cann1d_sizes = [64, 128, 256, 512, 1024, 2048, 4096]
-        cann2d_sizes = [8, 16, 32, 64]
+        # Default CPU sweep. 1D extends to num=4096 with an extra
+        # intermediate 3072 to bridge the 2× jump from 2048. 2D
+        # includes L=48 to bridge the L=32 → L=64 gap (otherwise
+        # there's no point between n=1024 and n=4096 on the CPU).
+        # L=80 is too slow on CPU (SVD ~40 s per cell); L=128 is
+        # left to --gpu-sweep.
+        cann1d_sizes = [64, 128, 256, 512, 1024, 2048, 3072, 4096]
+        cann2d_sizes = [8, 16, 32, 48, 64]
         ranks_1d = [1, 2, 4, 8, 16, 32, 64]
         ranks_2d = [1, 2, 4, 8, 16, 32, 64, 128]
 

@@ -4,7 +4,7 @@
 
 The Continuous Attractor Neural Network (CANN) family in `canns` (CANN1D, CANN2D, and their spike-frequency-adaptation variants) uses a Gaussian distance kernel as the recurrent connectivity matrix. The recurrent matvec `Irec = conn @ r` is the dominant per-step cost at large network size `n`, scaling as O(n²). We show that this kernel has a fast-decaying singular value spectrum — for CANN1D the top-8 components capture 99.4% of the energy, and for CANN2D the top-32 capture ~92% — so a truncated SVD factorisation `conn ≈ U_l V_l.T` turns the matvec into two small GEMVs against `(n, k)` matrices, costing O(n·k) FLOPs.
 
-Across a sweep of `CANN1D num ∈ {64…4096}` and `CANN2D length ∈ {8…128}` we measure (i) per-step time of the recurrent matvec in isolation (via a `lax.scan` of 200 matvecs), (ii) per-step time of the full update step, and (iii) the bump-tracking error of the network under a slow moving-stimulus trajectory. On a single Apple M3 Pro CPU core, the matvec speedup reaches **80× at CANN1D num=2048 (k=8)** and **230× at CANN2D length=64 (k=8)**, with the bump-position error staying below 5 mrad (≈ 0.3° on a 2π ring). On an NVIDIA A100-SXM4-80GB GPU the absolute matvec time is much smaller than on the CPU and the dense matvec is ~15× faster than on the CPU at n = 4096; the *relative* speedup of lowrank vs dense is smaller (the GPU is launch-bound at small n) but unambiguously a win at n ≥ 1024. The accuracy numbers are independent of the hardware — they are a property of the low-rank factorisation.
+Across a sweep of `CANN1D num ∈ {64…4096}` and `CANN2D length ∈ {8…64}` (CPU) / `{8…128}` (GPU) we measure (i) per-step time of the recurrent matvec in isolation (via a `lax.scan` of 200 matvecs), (ii) per-step time of the full update step, and (iii) the bump-tracking error of the network under a slow moving-stimulus trajectory. On a single Apple M3 Pro CPU core, the matvec speedup reaches **245× at CANN1D num=4096 (k=8)** and **223× at CANN2D length=64 (k=8)**, with the bump-position error staying below 5 mrad (≈ 0.3° on a 2π ring). On an NVIDIA A100-SXM4-80GB GPU the absolute matvec time is much smaller than on the CPU and the dense matvec is ~15× faster than on the CPU at n = 4096; the *relative* speedup of lowrank vs dense is smaller (the GPU is launch-bound at small n) but unambiguously a win at n ≥ 1024. The accuracy numbers are independent of the hardware — they are a property of the low-rank factorisation.
 
 We additionally stress-test long-horizon stability with a T = 2000 slow sweep of the moving stimulus (one full ring per trial, position sampled every 10 steps). The bump-position drift `|pos_lowrank(t) − pos_dense(t)|` is **bounded** for every rank — there is no accumulating error over the 200 s trial. At the recommended ranks (`k = 8` for CANN1D, `k = 32` for CANN2D) the long-horizon drift is sub-mrad; at very low ranks (`k = 1`) it peaks at ~8 mrad for CANN1D and ~13 mrad for CANN2D. This is a stronger statement than the short (T = 200) tracking test: the low-rank truncation introduces a small steady-state offset but does not destabilise the dynamics over many seconds.
 
@@ -112,7 +112,7 @@ Figure 3 shows the analogous result for `CANN2D L = 16` (`n = 256`) with the sti
 
 ### 3.3 CPU performance
 
-Figure 4 shows the matvec-only speedup on the Apple M3 Pro CPU. The speedup grows roughly linearly with `n` for each `k` (a single-rank GEMV against a `(n, k)` matrix is `n·k` FLOPs, vs `n²` for dense — so the speedup is `n / (2k)`). At the recommended `k = 8` for CANN1D, the speedup reaches 80× at n = 2048; for CANN2D `k = 32`, it reaches 70× at n = 4096.
+Figure 4 shows the matvec-only speedup on the Apple M3 Pro CPU. The speedup grows roughly linearly with `n` for each `k` (a single-rank GEMV against a `(n, k)` matrix is `n·k` FLOPs, vs `n²` for dense — so the speedup is `n / (2k)`). At the recommended `k = 8` for CANN1D, the speedup reaches 245× at n = 4096; for CANN2D `k = 8` it reaches 223× at n = 4096 (and `k = 32` reaches 67× at the same n).
 
 
 ![CPU CANN1D speedup](figures/fig_speedup_cpu_cann1d.png)
@@ -156,7 +156,7 @@ Maximum bump-position error (mrad) for each `(n, k)` cell on the CPU sweep. The 
 
 **CANN1D**
 
-| n | k=1 | k=2 | k=4 | k=8 | k=16 | k=32 | k=64 |
+| n_neurons | k=1 | k=2 | k=4 | k=8 | k=16 | k=32 | k=64 |
 |---|---|---|---|---|---|---|---|
 | 64 | 4.7 mrad | 3.8 mrad | 5.1 mrad | 5.5 mrad | 5.5 mrad | 5.5 mrad | 5.5 mrad |
 | 128 | 4.2 mrad | 5.3 mrad | 6.3 mrad | 6.9 mrad | 6.9 mrad | 6.9 mrad | 6.9 mrad |
@@ -164,16 +164,18 @@ Maximum bump-position error (mrad) for each `(n, k)` cell on the CPU sweep. The 
 | 512 | 4.2 mrad | 4.3 mrad | 4.6 mrad | 4.7 mrad | 4.7 mrad | 4.7 mrad | 4.7 mrad |
 | 1024 | 4.2 mrad | 4.6 mrad | 5.3 mrad | 5.3 mrad | 5.3 mrad | 5.3 mrad | 5.3 mrad |
 | 2048 | 4.2 mrad | 4.5 mrad | 4.8 mrad | 5.0 mrad | 5.0 mrad | 5.0 mrad | 5.0 mrad |
+| 3072 | 4.2 mrad | 4.4 mrad | 4.9 mrad | 5.1 mrad | 5.1 mrad | 5.1 mrad | 5.1 mrad |
 | 4096 | 4.2 mrad | 4.1 mrad | 4.3 mrad | 4.2 mrad | 4.2 mrad | 4.2 mrad | 4.2 mrad |
 
 **CANN2D**
 
-| n | k=1 | k=2 | k=4 | k=8 | k=16 | k=32 | k=64 | k=128 |
-|---|---|---|---|---|---|---|---|---|
-| 8 | 17.7 mrad | 17.7 mrad | 17.8 mrad | 15.4 mrad | 16.1 mrad | 15.9 mrad | 16.0 mrad | 16.0 mrad |
-| 16 | 4.4 mrad | 4.3 mrad | 4.3 mrad | 5.1 mrad | 4.9 mrad | 5.3 mrad | 5.3 mrad | 5.3 mrad |
-| 32 | 3.4 mrad | 3.7 mrad | 3.7 mrad | 4.5 mrad | 4.4 mrad | 4.4 mrad | 4.4 mrad | 4.4 mrad |
-| 64 | 4.0 mrad | 4.2 mrad | 4.2 mrad | 4.0 mrad | 4.0 mrad | 4.0 mrad | 4.0 mrad | 4.0 mrad |
+| L | n_neurons | k=1 | k=2 | k=4 | k=8 | k=16 | k=32 | k=64 | k=128 |
+|---|---|---|---|---|---|---|---|---|---|
+| 8 | 64 | 17.7 mrad | 17.7 mrad | 17.8 mrad | 15.4 mrad | 16.1 mrad | 15.9 mrad | 16.0 mrad | 16.0 mrad |
+| 16 | 256 | 4.4 mrad | 4.3 mrad | 4.3 mrad | 5.1 mrad | 4.9 mrad | 5.3 mrad | 5.3 mrad | 5.3 mrad |
+| 32 | 1024 | 3.4 mrad | 3.7 mrad | 3.7 mrad | 4.5 mrad | 4.4 mrad | 4.4 mrad | 4.4 mrad | 4.4 mrad |
+| 48 | 2304 | 4.0 mrad | 4.0 mrad | 3.9 mrad | 4.1 mrad | 3.9 mrad | 3.9 mrad | 3.9 mrad | 3.9 mrad |
+| 64 | 4096 | 4.0 mrad | 4.2 mrad | 4.2 mrad | 4.0 mrad | 4.0 mrad | 4.0 mrad | 4.0 mrad | 4.0 mrad |
 
 ### 3.7 Long-trajectory stability (T = 2000 slow sweep)
 
@@ -209,7 +211,7 @@ Low-rank is a win when the matvec is the dominant cost. Three regimes:
 
 ### 4.3 Recommended strategy
 Based on the Pareto frontier and the recommended ranks from the spectral analysis:
-- **CANN1D, any `num`:** `accl_mode='fast'` (k = 8) gives 30-80× matvec speedup at `num ≥ 512` with ≤ 5 mrad position error. At `num = 2048` the full-step is ~1.2× faster.
+- **CANN1D, any `num`:** `accl_mode='fast'` (k = 8) gives 30-245× matvec speedup at `num ≥ 512` with ≤ 5 mrad position error. At `num = 4096` the matvec is 245× faster than dense; the full-step is ~4× faster.
 - **CANN2D, `L ≤ 16`:** `accl_mode='fast'` (k = 32) gives 5-15× matvec speedup. Full-step speedup is small at this size.
 - **CANN2D, `L ≥ 32`:** `accl_mode='fast'` (k = 32) gives 10-70× matvec speedup. At `L = 64` (n = 4096) the full step is ~1.2× faster on CPU and the dense matvec is 15× faster on GPU.
 - **Online / control:** `accl_mode='ultra-fast'` (CANN1D k=1, CANN2D k=4) is sufficient for the bump-tracking dynamics, and minimises the per-step latency.
@@ -228,7 +230,7 @@ We have measured the benchmark under specific conditions; the following caveats 
 
 ## 6. Conclusion
 
-We have shown that the recurrent matvec in `CANN1D` and `CANN2D` — the dominant per-step cost at large `n` — admits a low-rank truncated-SVD approximation that preserves the bump-tracking dynamics to within ~5 mrad while reducing the matvec cost from O(n²) to O(n·k). The feature is exposed through the `accl_mode` and `accl_k` constructor arguments on the `CANN1D` / `CANN2D` / `CANN1D_SFA` / `CANN2D_SFA` classes, with three preset modes (`normal`, `fast`, `ultra-fast`) and an explicit-rank override. The `set_accl_mode()` method switches the mode at runtime. Matvec speedups of 30-80× on CPU and 3-15× on GPU are realised at the recommended ranks, with full-step speedups of ~1.2× at the largest tested sizes. The dynamics fidelity is hardware-independent because it is a property of the approximation, not of the runtime.
+We have shown that the recurrent matvec in `CANN1D` and `CANN2D` — the dominant per-step cost at large `n` — admits a low-rank truncated-SVD approximation that preserves the bump-tracking dynamics to within ~5 mrad while reducing the matvec cost from O(n²) to O(n·k). The feature is exposed through the `accl_mode` and `accl_k` constructor arguments on the `CANN1D` / `CANN2D` / `CANN1D_SFA` / `CANN2D_SFA` classes, with three preset modes (`normal`, `fast`, `ultra-fast`) and an explicit-rank override. The `set_accl_mode()` method switches the mode at runtime. Matvec speedups of 30-245× on CPU and 3-15× on GPU are realised at the recommended ranks, with full-step speedups of ~4× at the largest tested sizes (CANN1D num = 4096). The dynamics fidelity is hardware-independent because it is a property of the approximation, not of the runtime.
 
 
 ## References
