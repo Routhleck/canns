@@ -3,12 +3,15 @@
 Covers:
   - default (normal) mode matches the historical dense behaviour
   - "fast" / "ultra-fast" modes give the recommended defaults
+  - "auto" mode picks k from the SVD spectrum to satisfy
+    ``accl_target_err_mrad``
   - accl_k overrides the mode default
   - set_accl_mode round-trips correctly
   - validation rejects bad mode / bad k
   - the integrated update() preserves dynamics under low-rank
     (matches the standalone benchmark within tolerance)
 """
+
 from __future__ import annotations
 
 import os
@@ -26,17 +29,21 @@ warnings.filterwarnings(
     category=RuntimeWarning,
 )
 
+import brainpy.math as bm
 import numpy as np
 import pytest
-import brainpy.math as bm
 
-from canns.models.basic import CANN1D, CANN2D, CANN1D_SFA, CANN2D_SFA
-from canns.models.basic.cann import ACCL_MODES, ACCL_DEFAULT_K
-
+from canns.models.basic import CANN1D, CANN1D_SFA, CANN2D, CANN2D_SFA
+from canns.models.basic.cann import (
+    ACCL_DEFAULT_K,
+    ACCL_MODES,
+    _pick_k_for_err_target,
+)
 
 # ---------------------------------------------------------------------------
 # Default-mode (normal) behaviour
 # ---------------------------------------------------------------------------
+
 
 class TestNormalModeDefault:
     def test_cann1d_default_is_normal(self):
@@ -69,6 +76,7 @@ class TestNormalModeDefault:
 # ---------------------------------------------------------------------------
 # Mode → default k mapping
 # ---------------------------------------------------------------------------
+
 
 class TestModeDefaults:
     @pytest.mark.parametrize(
@@ -108,6 +116,7 @@ class TestModeDefaults:
 # Explicit accl_k override
 # ---------------------------------------------------------------------------
 
+
 class TestAcclKOverride:
     def test_explicit_k_overrides_fast_default(self):
         m = CANN1D(num=128, accl_mode="fast", accl_k=4)
@@ -138,6 +147,7 @@ class TestAcclKOverride:
 # Validation
 # ---------------------------------------------------------------------------
 
+
 class TestValidation:
     def test_bad_mode_raises(self):
         with pytest.raises(ValueError, match="accl_mode must be one of"):
@@ -156,12 +166,13 @@ class TestValidation:
             CANN1D(num=64, accl_mode="fast", accl_k=1.5)
 
     def test_accl_modes_exported(self):
-        assert ACCL_MODES == ("normal", "fast", "ultra-fast")
+        assert ACCL_MODES == ("normal", "fast", "ultra-fast", "auto")
 
 
 # ---------------------------------------------------------------------------
 # set_accl_mode
 # ---------------------------------------------------------------------------
+
 
 class TestSetAcclMode:
     def test_set_fast_from_normal(self):
@@ -215,12 +226,145 @@ class TestSetAcclMode:
 # Integrated dynamics: fast mode preserves the dense dynamics
 # ---------------------------------------------------------------------------
 
+
 def _bump_pos_1d(r: np.ndarray, x: np.ndarray, z_range: float) -> float:
     """Circular-mean bump position (matches the benchmark helper)."""
     weights = np.maximum(r, 0)
     if weights.sum() < 1e-12:
         return float("nan")
     return float(np.angle(np.sum(weights * np.exp(1j * x))))
+
+
+# ---------------------------------------------------------------------------
+# "auto" mode: pick k from the SVD spectrum to satisfy accl_target_err_mrad
+# ---------------------------------------------------------------------------
+
+
+class TestPickKHelper:
+    """Direct tests for the spectrum-based rank picker."""
+
+    def test_default_target_picks_k1(self):
+        # For any non-trivial spectrum, the most permissive budget picks k=1
+        spectrum = np.array([1.0, 0.5, 0.25, 0.125, 0.0625])
+        assert _pick_k_for_err_target(spectrum, target_err_mrad=10.0) == 1
+        assert _pick_k_for_err_target(spectrum, target_err_mrad=5.0) == 1
+        assert _pick_k_for_err_target(spectrum, target_err_mrad=4.0) == 1
+
+    def test_tighter_target_picks_higher_k(self):
+        # Realistic-ish Gaussian spectrum: S_k decays fast. cum_energy
+        # at k=1 already 0.5+ for tight bands; pick accordingly.
+        # Use a slower-decaying spectrum so the threshold steps up k.
+        spectrum = np.array([1.0, 0.9, 0.85, 0.8, 0.75, 0.7, 0.65, 0.6, 0.55, 0.5])
+        sq = spectrum**2
+        cum = np.cumsum(sq) / sq.sum()
+        # 50% threshold: smallest k with cum[k-1] >= 0.5
+        k_50 = int(np.searchsorted(cum, 0.5, side="left")) + 1
+        assert _pick_k_for_err_target(spectrum, target_err_mrad=1.0) == k_50
+        # 90% threshold
+        k_90 = int(np.searchsorted(cum, 0.9, side="left")) + 1
+        assert _pick_k_for_err_target(spectrum, target_err_mrad=0.5) == k_90
+        # 99% threshold (most k; the spectrum is long-tailed)
+        k_99 = int(np.searchsorted(cum, 0.99, side="left")) + 1
+        assert _pick_k_for_err_target(spectrum, target_err_mrad=0.1) == k_99
+        # Monotone non-decreasing in tightness.
+        assert k_50 <= k_90 <= k_99
+
+    def test_impossible_target_returns_minus_one(self):
+        spectrum = np.array([1.0, 0.5, 0.25])
+        # target < 0.1 always falls back (caller interprets -1 as dense)
+        assert _pick_k_for_err_target(spectrum, target_err_mrad=0.05) == -1
+        assert _pick_k_for_err_target(spectrum, target_err_mrad=0.0) == -1
+
+    def test_handles_degenerate_spectrum(self):
+        # All-zeros conn has zero singular values; the per-rank-1
+        # approximation is still exact (0 ≈ 0), so the helper
+        # short-circuits to k=1. Empty spectrum → -1 (caller decides).
+        assert _pick_k_for_err_target(np.zeros(5), target_err_mrad=5.0) == 1
+        assert _pick_k_for_err_target(np.array([]), target_err_mrad=5.0) == -1
+        # But if the budget is impossible (target < 0.1), even a
+        # zero spectrum returns -1.
+        assert _pick_k_for_err_target(np.zeros(5), target_err_mrad=0.0) == -1
+
+
+class TestAutoMode:
+    """``accl_mode='auto'`` picks k from the spectrum at __init__."""
+
+    def test_cann1d_auto_default_target_picks_k1(self):
+        # Default target 5.0 mrad → k=1 (matches the leading-Gaussian
+        # argument: even rank-1 preserves the bump-tracking dynamics).
+        m = CANN1D(num=128, accl_mode="auto")
+        assert m.accl_mode == "auto"
+        assert m.accl_k == 1
+        assert m._U_l.shape == (128, 1)
+        assert m._V_l.shape == (128, 1)
+
+    def test_cann2d_auto_default_target_picks_k1(self):
+        m = CANN2D(length=8, accl_mode="auto")
+        assert m.accl_mode == "auto"
+        assert m.accl_k == 1
+        # 2D conn is length² × length² = 64 × 64
+        assert m._U_l.shape == (64, 1)
+        assert m._V_l.shape == (64, 1)
+
+    @pytest.mark.parametrize(
+        "target_mrad,model_cls,num_arg,expected_k_range",
+        [
+            # Tighter budgets should pick higher k (or fall back to dense).
+            # 1D: k=8 is the 'fast' default (captures 99% of 1D spectrum).
+            (5.0, CANN1D, 128, (1, 4)),
+            (1.0, CANN1D, 128, (1, 8)),
+            (0.5, CANN1D, 128, (4, 16)),
+            # 2D: needs more components to reach the same captured energy.
+            (5.0, CANN2D, 8, (1, 8)),
+            (1.0, CANN2D, 8, (4, 16)),
+            (0.5, CANN2D, 8, (16, 64)),
+        ],
+    )
+    def test_tighter_target_picks_higher_k(self, target_mrad, model_cls, num_arg, expected_k_range):
+        m = model_cls(num_arg, accl_mode="auto", accl_target_err_mrad=target_mrad)
+        assert m.accl_mode == "auto"
+        lo, hi = expected_k_range
+        # Allow ±1 slack for spectrum quirks.
+        assert lo - 1 <= m.accl_k <= hi + 1, (
+            f"target={target_mrad} mrad → k={m.accl_k}, expected in [{lo},{hi}]"
+        )
+
+    def test_impossible_target_falls_back_to_dense(self):
+        # target < 0.1 mrad cannot be satisfied by any lowrank CANN.
+        m = CANN1D(num=128, accl_mode="auto", accl_target_err_mrad=0.05)
+        assert m.accl_mode == "normal"  # silently downgraded
+        assert m.accl_k == -1
+        assert m._U_l is None
+        assert m._V_l is None
+
+    def test_explicit_k_overrides_auto_pick(self):
+        # accl_k wins over the spectrum pick even in 'auto' mode.
+        m = CANN1D(num=128, accl_mode="auto", accl_target_err_mrad=0.5, accl_k=2)
+        assert m.accl_mode == "auto"
+        assert m.accl_k == 2
+        assert m._U_l.shape == (128, 2)
+
+    def test_set_accl_mode_auto(self):
+        m = CANN1D(num=128)
+        m.set_accl_mode("auto")
+        assert m.accl_mode == "auto"
+        assert m.accl_k == 1
+        # Tighten the budget at runtime.
+        m.set_accl_mode("auto", target_err_mrad=0.5)
+        assert m.accl_k >= 4
+        # Back to dense.
+        m.set_accl_mode("normal")
+        assert m.accl_mode == "normal"
+        assert m.accl_k == -1
+        # And back to auto again, without passing target_err_mrad
+        # (should keep the previously stored 0.5 budget).
+        m.set_accl_mode("auto")
+        assert m.accl_k >= 4
+
+    def test_sfa_inherits_auto(self):
+        m = CANN1D_SFA(num=64, accl_mode="auto")
+        assert m.accl_mode == "auto"
+        assert m.accl_k == 1
 
 
 class TestIntegratedDynamics:
@@ -258,7 +402,7 @@ class TestIntegratedDynamics:
         max_pos_err = float(np.nanmax(dpos))
         # The standalone benchmark reports < 10 mrad for n=256, k=8.
         # Allow a 2x slack for this smaller T=100 run.
-        assert max_pos_err < 0.020, f"pos_err={max_pos_err*1000:.2f} mrad"
+        assert max_pos_err < 0.020, f"pos_err={max_pos_err * 1000:.2f} mrad"
         # r_max should be virtually identical.
         rmax_diff = np.abs(r_normal.max(axis=1) - r_fast.max(axis=1))
         assert float(rmax_diff.max()) < 1e-3, f"r_max_diff={float(rmax_diff.max()):.2e}"
@@ -306,7 +450,7 @@ class TestIntegratedDynamics:
                 dy = (Ly - pos) % z_range
                 dx = np.where(dx > z_range / 2, dx - z_range, dx)
                 dy = np.where(dy > z_range / 2, dy - z_range, dy)
-                inp = (m.A * np.exp(-0.25 * ((dx ** 2 + dy ** 2) ** 0.5) / m.a) ** 2).astype(np.float32)
+                inp = (m.A * np.exp(-0.25 * ((dx**2 + dy**2) ** 0.5) / m.a) ** 2).astype(np.float32)
                 m.update(inp)
 
         run(m_normal)
@@ -334,6 +478,7 @@ class TestIntegratedDynamics:
 # Dense-vs-lowrank match: lowrank output approximates the dense output
 # ---------------------------------------------------------------------------
 
+
 class TestLowrankApproximation:
     """The low-rank factor should approximate ``conn_mat`` to within
     the expected spectral truncation error."""
@@ -348,9 +493,7 @@ class TestLowrankApproximation:
             (CANN2D, 16, 256),
         ],
     )
-    def test_lowrank_reconstructs_conn_within_spectral_tail(
-        self, cls, num_arg, n_neurons
-    ):
+    def test_lowrank_reconstructs_conn_within_spectral_tail(self, cls, num_arg, n_neurons):
         m = cls(num_arg, accl_mode="fast")
         # Numpy emits a spurious ``RuntimeWarning: divide by zero
         # encountered in matmul`` on perfectly fine float32 matmuls
@@ -383,6 +526,7 @@ class TestLowrankApproximation:
 # ---------------------------------------------------------------------------
 # Docstring example sanity (the docstrings claim `model.update(inp=0.5)` works)
 # ---------------------------------------------------------------------------
+
 
 class TestDocstringExample:
     def test_cann1d_docstring_example_runs(self):
