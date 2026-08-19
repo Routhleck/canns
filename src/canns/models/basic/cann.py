@@ -1,7 +1,10 @@
 from __future__ import annotations
 
+import warnings
+
 import brainpy.math as bm
 import jax
+import jax.numpy as jnp
 import numpy as np
 from matplotlib import pyplot as plt
 
@@ -28,8 +31,11 @@ __all__ = [
 #: Recognised values for ``accl_mode``. ``"normal"`` is full-rank, the
 #: others are low-rank approximations of the recurrent matvec.
 #: ``"auto"`` selects the rank dynamically from the SVD spectrum
-#: to satisfy the ``accl_target_err_mrad`` budget.
-ACCL_MODES: tuple[str, ...] = ("normal", "fast", "ultra-fast", "auto")
+#: to satisfy the ``accl_target_err_mrad`` budget; ``"fft"`` exploits
+#: the circulant structure of the Gaussian distance kernel on a
+#: uniform ring/torus and uses FFT to compute the matvec exactly
+#: in O(n log n).
+ACCL_MODES: tuple[str, ...] = ("normal", "fast", "ultra-fast", "auto", "fft")
 
 #: Default rank for each ``(model family, mode)`` combination.
 #:
@@ -245,10 +251,14 @@ class BaseCANN1D(BaseCANN):
         # --- Acceleration (low-rank recurrent matvec) ---
         # ``_U_l`` and ``_V_l`` are the rank-``accl_k`` truncated SVD factors
         # such that ``_U_l @ _V_l.T ≈ conn_mat``. They are ``None`` in
-        # ``"normal"`` mode. See ``benchmarks/cann_lowrank`` for the
-        # accuracy / speedup trade-offs.
+        # ``"normal"`` mode. ``_K_fft`` is the precomputed FFT of the
+        # first row of ``conn_mat`` for the ``"fft"`` mode (circulant
+        # matvec). At most one of the two paths is active at a time.
+        # See ``benchmarks/cann_lowrank`` for the SVD speed/accuracy
+        # trade-offs and ``benchmarks/cann_fft`` for the FFT comparison.
         self._U_l: jax.Array | None = None
         self._V_l: jax.Array | None = None
+        self._K_fft: jax.Array | None = None
         self._setup_accl(
             accl_mode=accl_mode, accl_k=accl_k, accl_target_err_mrad=accl_target_err_mrad
         )
@@ -314,7 +324,9 @@ class BaseCANN1D(BaseCANN):
 
         Sets ``self.accl_mode`` and ``self.accl_k`` and (when
         ``accl_mode != "normal"``) ``self._U_l``, ``self._V_l`` such that
-        ``self._U_l @ self._V_l.T ≈ self.conn_mat``.
+        ``self._U_l @ self._V_l.T ≈ self.conn_mat`` (or, for ``"fft"``,
+        ``self._K_fft`` such that ``ifft(K_fft ⊙ fft(r))`` is the
+        circulant matvec).
 
         For ``accl_mode == "auto"`` and ``accl_k is None``, the rank is
         chosen from the SVD spectrum to satisfy
@@ -333,6 +345,51 @@ class BaseCANN1D(BaseCANN):
             self.accl_k = -1
             self._U_l = None
             self._V_l = None
+            self._K_fft = None
+            return
+
+        if accl_mode == "fft":
+            # Exploit the circulant structure of the Gaussian distance
+            # kernel on a uniform ring. The FFT approach requires a
+            # *clean* circulant: the grid must be ``endpoint=False``
+            # (i.e. ``x[0] != x[-1]`` on the torus). The canns default
+            # uses ``endpoint=True``, which means the wrap brings both
+            # ``x[i] - x[0]`` and ``x[i] - x[-1]`` to 0 for ``i = 0`` but
+            # to *different* values for ``i > 0`` — the resulting
+            # ``conn_mat`` is not circulant, so the FFT formula does
+            # not apply. We detect this case and silently fall back
+            # to dense (with a warning) so the model still works.
+            if accl_k is not None:
+                # accl_k is meaningless in 'fft' (the matvec is exact).
+                # Accept silently, like we do for 'normal'.
+                pass
+            first_row = np.asarray(self.conn_mat[0, :], dtype=np.float32)
+            n = first_row.shape[0]
+            if n > 1 and np.isclose(first_row[0], first_row[-1]):
+                # endpoint=True (canns default): the connectivity is
+                # not circulant under canns's wrap convention, so the
+                # FFT formula would be wrong. Fall back to dense.
+                warnings.warn(
+                    "accl_mode='fft' requested but the grid appears to "
+                    "use endpoint=True (x[0] = x[-1] on the torus), which "
+                    "breaks the circulant structure. Falling back to "
+                    "dense. To use FFT acceleration, set a custom grid "
+                    "with endpoint=False, e.g. "
+                    "`model.x = bm.linspace(-bm.pi, bm.pi, num, endpoint=False)`.",
+                    stacklevel=2,
+                )
+                self.accl_mode = "normal"
+                self.accl_k = -1
+                self._U_l = None
+                self._V_l = None
+                self._K_fft = None
+                return
+            self._fft_duplicate = False
+            self._K_fft = jax.numpy.asarray(jnp.fft.fft(jnp.asarray(first_row)))
+            self._U_l = None
+            self._V_l = None
+            self.accl_mode = "fft"
+            self.accl_k = -1
             return
 
         # Compute the SVD once. We need it both for the 'auto' rank
@@ -349,6 +406,7 @@ class BaseCANN1D(BaseCANN):
                 self.accl_k = -1
                 self._U_l = None
                 self._V_l = None
+                self._K_fft = None
                 return
             accl_k = picked
         if accl_k is None:
@@ -363,6 +421,7 @@ class BaseCANN1D(BaseCANN):
         sqrtS = np.sqrt(S[:accl_k].astype(np.float32))
         self._U_l = jax.numpy.asarray(U[:, :accl_k].astype(np.float32) * sqrtS)
         self._V_l = jax.numpy.asarray(Vt[:accl_k, :].T.astype(np.float32) * sqrtS)
+        self._K_fft = None
         self.accl_mode = accl_mode
         self.accl_k = accl_k
 
@@ -420,10 +479,22 @@ class BaseCANN1D(BaseCANN):
 
         Branches on ``self.accl_mode``. The dense form is
         ``conn @ r``; the low-rank form is
-        ``U_l @ (V_l.T @ r)``. Both are mathematically equivalent
-        for symmetric ``conn_mat`` (the case for all canns kernels
-        built by ``make_conn``).
+        ``U_l @ (V_l.T @ r)``; the circulant-FFT form is
+        ``real(ifft(K_fft ⊙ fft(r)))`` for a clean circulant
+        (i.e. ``endpoint=False`` uniform grid; the canns
+        default ``endpoint=True`` grid is *not* circulant
+        and ``_setup_accl`` falls back to ``"normal"`` for
+        that case with a warning). The low-rank and FFT
+        forms are mathematically equivalent to the dense
+        form for symmetric ``conn_mat`` (the case for all
+        canns kernels built by ``make_conn``). The FFT form
+        is exact; the low-rank form has approximation
+        error controlled by ``accl_k``.
         """
+        if self._K_fft is not None:
+            return jax.numpy.real(
+                jax.numpy.fft.ifft(self._K_fft * jax.numpy.fft.fft(r))
+            )
         if self._U_l is None:
             return self.conn_mat @ r
         return self._U_l @ (self._V_l.T @ r)
@@ -668,10 +739,14 @@ class BaseCANN2D(BaseCANN):
 
         # --- Acceleration (low-rank recurrent matvec) ---
         # ``_U_l`` and ``_V_l`` are the rank-``accl_k`` truncated SVD factors
-        # of the (length² × length²) recurrent matrix. See
-        # ``benchmarks/cann_lowrank`` for the accuracy / speedup trade-offs.
+        # of the (length² × length²) recurrent matrix. ``_K_fft2`` is
+        # the precomputed 2D FFT of the first row reshaped to ``(L, L)``
+        # for the ``"fft"`` mode (doubly-circulant matvec). See
+        # ``benchmarks/cann_lowrank`` for the SVD trade-offs and
+        # ``benchmarks/cann_fft`` for the FFT comparison.
         self._U_l: jax.Array | None = None
         self._V_l: jax.Array | None = None
+        self._K_fft: jax.Array | None = None
         self._setup_accl(
             accl_mode=accl_mode, accl_k=accl_k, accl_target_err_mrad=accl_target_err_mrad
         )
@@ -801,6 +876,58 @@ class BaseCANN2D(BaseCANN):
             self.accl_k = -1
             self._U_l = None
             self._V_l = None
+            self._K_fft = None
+            return
+
+        if accl_mode == "fft":
+            # Exploit the doubly-circulant structure of the 2D radial
+            # Gaussian on a uniform torus: conn @ r is a 2D convolution
+            # computed exactly via 2D FFT in O(L² log L). The canns
+            # default uses endpoint=True which means x[0] = x[L-1] and
+            # y[0] = y[L-1]; in that case the doubly-circulant kernel
+            # has duplicated corner indices, and we fall back to dense
+            # (with a warning) since the (L-1)²-sized reduction is
+            # non-trivial. To get FFT acceleration for CANN2D, override
+            # ``model.x`` with a custom ``bm.linspace(z_min, z_max, L,
+            # endpoint=False)`` array.
+            if accl_k is not None:
+                # accl_k is meaningless in 'fft' (the matvec is exact).
+                # Accept silently, like we do for 'normal'.
+                pass
+            L = self.length
+            K_first_row = np.asarray(self.conn_mat[0, :], dtype=np.float32).reshape(L, L)
+            # Detect endpoint=True duplicate. With canns's default grid
+            # (bm.linspace with endpoint=True), the four corners of the
+            # L×L kernel are all f(0, 0) = max, so K[0, 0] ≈ K[0, L-1] ≈
+            # K[L-1, 0] ≈ K[L-1, L-1] ≈ max. We detect by checking the
+            # first row's first and last element.
+            if L > 1 and np.isclose(K_first_row[0, 0], K_first_row[0, L - 1]):
+                # Fall back to dense for the endpoint=True default —
+                # the corner-duplicate handling for 2D is non-trivial
+                # and not worth implementing for an off-by-one artifact.
+                warnings.warn(
+                    "accl_mode='fft' requested but the grid appears to "
+                    "use endpoint=True (x[0] = x[-1] on the torus), which "
+                    "breaks the doubly-circulant structure. Falling back "
+                    "to dense. To use FFT acceleration for CANN2D, set a "
+                    "custom grid with endpoint=False, e.g. "
+                    "`model.x = bm.linspace(-bm.pi, bm.pi, L, endpoint=False)`.",
+                    stacklevel=2,
+                )
+                self.accl_mode = "normal"
+                self.accl_k = -1
+                self._U_l = None
+                self._V_l = None
+                self._K_fft = None
+                return
+            self._K_fft = jax.numpy.asarray(
+                jax.numpy.fft.fft2(jax.numpy.asarray(K_first_row))
+            )
+            self._fft_duplicate = False
+            self._U_l = None
+            self._V_l = None
+            self.accl_mode = "fft"
+            self.accl_k = -1
             return
 
         # Compute the SVD once. We need it both for the 'auto' rank
@@ -817,6 +944,7 @@ class BaseCANN2D(BaseCANN):
                 self.accl_k = -1
                 self._U_l = None
                 self._V_l = None
+                self._K_fft = None
                 return
             accl_k = picked
         if accl_k is None:
@@ -829,6 +957,7 @@ class BaseCANN2D(BaseCANN):
         sqrtS = np.sqrt(S[:accl_k].astype(np.float32))
         self._U_l = jax.numpy.asarray(U[:, :accl_k].astype(np.float32) * sqrtS)
         self._V_l = jax.numpy.asarray(Vt[:accl_k, :].T.astype(np.float32) * sqrtS)
+        self._K_fft = None
         self.accl_mode = accl_mode
         self.accl_k = accl_k
 
@@ -883,15 +1012,25 @@ class BaseCANN2D(BaseCANN):
         """Compute the recurrent input for a flat rate vector.
 
         Branches on ``self.accl_mode``. The dense form is
-        ``conn @ r``; the low-rank form is ``U_l @ (V_l.T @ r)``.
-        Both are mathematically equivalent for symmetric
-        ``conn_mat`` (which is the case for the Gaussian kernel
-        built by ``make_conn``).
+        ``conn @ r``; the low-rank form is ``U_l @ (V_l.T @ r)``;
+        the doubly-circulant-FFT form is
+        ``real(ifft2(K_fft2 ⊙ fft2(r_2d))).ravel()``. The
+        low-rank and FFT forms are mathematically equivalent to
+        the dense form for the symmetric ``conn_mat`` built by
+        ``make_conn``. The FFT form is exact; the low-rank form
+        has approximation error controlled by ``accl_k``.
 
         The input/output are flat ``(length²,)``. The caller is
         responsible for reshaping the result back to a 2D grid if
         needed (see ``CANN2D.update``).
         """
+        if self._K_fft is not None:
+            L = self.length
+            r_2d = r_flat.reshape(L, L)
+            out_2d = jax.numpy.real(
+                jax.numpy.fft.ifft2(self._K_fft * jax.numpy.fft.fft2(r_2d))
+            )
+            return out_2d.ravel()
         if self._U_l is None:
             return self.conn_mat @ r_flat
         return self._U_l @ (self._V_l.T @ r_flat)

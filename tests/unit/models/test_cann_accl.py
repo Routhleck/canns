@@ -5,6 +5,8 @@ Covers:
   - "fast" / "ultra-fast" modes give the recommended defaults
   - "auto" mode picks k from the SVD spectrum to satisfy
     ``accl_target_err_mrad``
+  - "fft" mode gives an exact circulant matvec (when the grid is
+    endpoint=False; otherwise it falls back to dense with a warning)
   - accl_k overrides the mode default
   - set_accl_mode round-trips correctly
   - validation rejects bad mode / bad k
@@ -166,7 +168,7 @@ class TestValidation:
             CANN1D(num=64, accl_mode="fast", accl_k=1.5)
 
     def test_accl_modes_exported(self):
-        assert ACCL_MODES == ("normal", "fast", "ultra-fast", "auto")
+        assert ACCL_MODES == ("normal", "fast", "ultra-fast", "auto", "fft")
 
 
 # ---------------------------------------------------------------------------
@@ -542,3 +544,171 @@ class TestDocstringExample:
         m.update(stim)  # works
         # Keyword form
         m.update(inp=stim)  # also works
+
+
+# ---------------------------------------------------------------------------
+# FFT mode (accl_mode="fft"): exact circulant matvec
+# ---------------------------------------------------------------------------
+
+
+def _force_endpoint_false(model_1d, n):
+    """Override the default endpoint=True grid to a clean periodic grid
+    (endpoint=False) and rebuild the connectivity matrix. The resulting
+    K is right-circulant (1D) or doubly-circulant (2D), so the FFT
+    matvec formula K @ r = IFFT(FFT(c) ⊙ FFT(r)) is exact.
+    """
+    model_1d.x = bm.linspace(-bm.pi, bm.pi, n, endpoint=False)
+    model_1d.conn_mat = model_1d.make_conn()
+
+
+def _force_endpoint_false_2d(model_2d, L):
+    model_2d.x = bm.linspace(-bm.pi, bm.pi, L, endpoint=False)
+    model_2d.y = bm.linspace(-bm.pi, bm.pi, L, endpoint=False)
+    model_2d.conn_mat = model_2d.make_conn()
+
+
+class TestFFTMode:
+    """The FFT mode exploits the circulant structure of the Gaussian
+    distance kernel on a uniform ring (1D) or torus (2D). On a clean
+    circulant (endpoint=False grid) the matvec is exact up to float
+    precision; on the canns default endpoint=True grid the structure
+    is not circulant and we fall back to dense (with a warning).
+    """
+
+    # ---- 1D clean circulant ----
+
+    @pytest.mark.parametrize("n", [32, 64, 128, 256])
+    def test_1d_clean_circulant_matches_dense(self, n):
+        bm.random.seed(0)
+        m = CANN1D(num=n, accl_mode="normal")
+        _force_endpoint_false(m, n)
+        r = bm.random.rand(n)
+        dense = np.asarray(m.conn_mat @ r)
+        m._setup_accl(accl_mode="fft", accl_k=None)
+        fft_out = np.asarray(m._accel_Irec(r))
+        np.testing.assert_allclose(fft_out, dense, rtol=1e-5, atol=1e-6)
+        assert m.accl_mode == "fft"
+
+    def test_1d_clean_circulant_via_constructor(self):
+        bm.random.seed(0)
+        # Build the model with the default grid, then rebuild on
+        # endpoint=False via make_conn, then ask for FFT.
+        m = CANN1D(num=128, accl_mode="normal")
+        _force_endpoint_false(m, 128)
+        m._setup_accl(accl_mode="fft", accl_k=None)
+        assert m.accl_mode == "fft"
+        assert m._K_fft is not None
+        assert m._U_l is None  # FFT path uses K_fft, not the SVD factors
+
+    def test_1d_clean_circulant_accl_k_ignored(self):
+        # accl_k is meaningless for FFT (the matvec is exact).
+        # The setup accepts any accl_k silently.
+        bm.random.seed(0)
+        m = CANN1D(num=64, accl_mode="normal")
+        _force_endpoint_false(m, 64)
+        m._setup_accl(accl_mode="fft", accl_k=7)
+        assert m.accl_mode == "fft"
+        assert m.accl_k == -1
+        assert m._K_fft is not None
+
+    # ---- 1D default (endpoint=True) — falls back to dense ----
+
+    def test_1d_default_grid_falls_back_to_normal(self):
+        bm.random.seed(0)
+        m = CANN1D(num=64, accl_mode="normal")
+        # Default grid: endpoint=True. The wrap convention is not
+        # circulant, so the FFT formula does not apply.
+        with warnings.catch_warnings(record=True) as caught:
+            warnings.simplefilter("always")
+            m._setup_accl(accl_mode="fft", accl_k=None)
+        assert m.accl_mode == "normal"
+        assert m._K_fft is None
+        assert m._U_l is None
+        # The warning mentions endpoint=True and the fallback.
+        msgs = [str(w.message) for w in caught]
+        assert any("endpoint=True" in s for s in msgs)
+        assert any("Falling back" in s for s in msgs)
+
+    def test_1d_constructor_with_fft_on_default_falls_back(self):
+        bm.random.seed(0)
+        with warnings.catch_warnings(record=True):
+            warnings.simplefilter("always")
+            m = CANN1D(num=64, accl_mode="fft")
+        assert m.accl_mode == "normal"
+        assert m._K_fft is None
+
+    # ---- 2D clean doubly-circulant ----
+
+    @pytest.mark.parametrize("L", [4, 8, 16, 32])
+    def test_2d_clean_circulant_matches_dense(self, L):
+        bm.random.seed(0)
+        m = CANN2D(length=L, accl_mode="normal")
+        _force_endpoint_false_2d(m, L)
+        r = bm.random.rand(L * L)
+        dense = np.asarray(m.conn_mat @ r)
+        m._setup_accl(accl_mode="fft", accl_k=None)
+        fft_out = np.asarray(m._accel_Irec(r))
+        np.testing.assert_allclose(fft_out, dense, rtol=1e-5, atol=1e-6)
+        assert m.accl_mode == "fft"
+
+    # ---- 2D default (endpoint=True) — falls back to dense ----
+
+    def test_2d_default_grid_falls_back_to_normal(self):
+        bm.random.seed(0)
+        m = CANN2D(length=8, accl_mode="normal")
+        with warnings.catch_warnings(record=True) as caught:
+            warnings.simplefilter("always")
+            m._setup_accl(accl_mode="fft", accl_k=None)
+        assert m.accl_mode == "normal"
+        assert m._K_fft is None
+        msgs = [str(w.message) for w in caught]
+        assert any("Falling back" in s for s in msgs)
+
+    # ---- set_accl_mode round-trip ----
+
+    def test_set_accl_mode_fft_clean_1d(self):
+        bm.random.seed(0)
+        m = CANN1D(num=64, accl_mode="normal")
+        _force_endpoint_false(m, 64)
+        m.set_accl_mode("fft")
+        assert m.accl_mode == "fft"
+        assert m._K_fft is not None
+        # Now switch back: the K_fft cache should be cleared.
+        m.set_accl_mode("normal")
+        assert m.accl_mode == "normal"
+        assert m._K_fft is None
+
+    def test_set_accl_mode_fft_default_1d_falls_back(self):
+        bm.random.seed(0)
+        m = CANN1D(num=64, accl_mode="normal")
+        with warnings.catch_warnings(record=True):
+            warnings.simplefilter("always")
+            m.set_accl_mode("fft")
+        assert m.accl_mode == "normal"
+        assert m._K_fft is None
+
+    # ---- End-to-end update still works under FFT mode ----
+
+    def test_cann1d_fft_update_runs(self):
+        bm.random.seed(0)
+        bm.set_dt(0.1)
+        m = CANN1D(num=64, accl_mode="normal")
+        _force_endpoint_false(m, 64)
+        m._setup_accl(accl_mode="fft", accl_k=None)
+        assert m.accl_mode == "fft"
+        # Run a few update steps; the model should not raise.
+        for _ in range(5):
+            stim = m.get_stimulus_by_pos(0.0)
+            m.update(stim)
+
+    def test_cann2d_fft_update_runs(self):
+        bm.random.seed(0)
+        bm.set_dt(0.1)
+        m = CANN2D(length=8, accl_mode="normal")
+        _force_endpoint_false_2d(m, 8)
+        m._setup_accl(accl_mode="fft", accl_k=None)
+        assert m.accl_mode == "fft"
+        for _ in range(5):
+            stim = m.get_stimulus_by_pos(bm.asarray([0.0, 0.0]))
+            m.update(stim)
+
