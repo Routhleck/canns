@@ -1,4 +1,4 @@
-"""Compare the three acceleration modes on CANN1D.
+"""Compare the four acceleration modes on CANN1D / CANN2D.
 
 The recurrent connectivity of CANN1D is a Gaussian distance kernel. Its
 singular values decay extremely fast: the top-8 components already
@@ -15,15 +15,21 @@ matvec speedup at ``num >= 512`` (CPU) with bump-position error below
 5 mrad.
 
 ``canns.models.basic.CANN1D`` and ``CANN2D`` expose this through the
-``accl_mode`` and ``accl_k`` constructor arguments. Three presets are
+``accl_mode`` and ``accl_k`` constructor arguments. Four presets are
 defined:
 
   - ``"normal"``     — full rank (default)
   - ``"fast"``       — low-rank, rank-8 for CANN1D / rank-32 for CANN2D
   - ``"ultra-fast"`` — low-rank, rank-1 for CANN1D / rank-4 for CANN2D
+  - ``"auto"``       — pick the smallest k from the SVD spectrum that
+                       keeps the bump-position error within
+                       ``accl_target_err_mrad`` (default 5.0 mrad).
+                       Pass ``accl_target_err_mrad=<float>`` to
+                       tighten or relax the budget.
 
 Or pass an explicit ``accl_k`` to override the mode's default.
 """
+
 import time
 
 import brainpy.math as bm
@@ -46,7 +52,6 @@ def run(model, T: int) -> float:
     z_range = float(model.z_range)
     is_2d = hasattr(model, "length")
     if is_2d:
-        L = int(model.length)
         xx, yy = np.meshgrid(x, x)
     for t in range(T):
         pos = np.pi * t / max(T - 1, 1)
@@ -90,6 +95,8 @@ if __name__ == "__main__":
         ("fast   (k=8)   ", lambda: CANN1D(num=2048, accl_mode="fast")),
         ("fast   (k=4)   ", lambda: CANN1D(num=2048, accl_mode="fast", accl_k=4)),
         ("ultra-fast (k=1)", lambda: CANN1D(num=2048, accl_mode="ultra-fast")),
+        ("auto   (5mrad) ", lambda: CANN1D(num=2048, accl_mode="auto")),
+        ("auto   (0.5mrad)", lambda: CANN1D(num=2048, accl_mode="auto", accl_target_err_mrad=0.5)),
     ]:
         rmax, ms, accel = time_model(build, T=T)
         print(f"  {label}  r.max={rmax:.4f}  step={ms:7.3f} ms  accel={accel}")
@@ -102,6 +109,8 @@ if __name__ == "__main__":
         ("fast   (k=32)   ", lambda: CANN2D(length=64, accl_mode="fast")),
         ("fast   (k=8)    ", lambda: CANN2D(length=64, accl_mode="fast", accl_k=8)),
         ("ultra-fast (k=4)", lambda: CANN2D(length=64, accl_mode="ultra-fast")),
+        ("auto   (5mrad)  ", lambda: CANN2D(length=64, accl_mode="auto")),
+        ("auto   (0.5mrad)", lambda: CANN2D(length=64, accl_mode="auto", accl_target_err_mrad=0.5)),
     ]:
         rmax, ms, accel = time_model(build, T=T)
         print(f"  {label}  r.max={rmax:.4f}  step={ms:7.3f} ms  accel={accel}")
@@ -110,14 +119,31 @@ if __name__ == "__main__":
     print("Runtime mode-switching via set_accl_mode:")
     print("-" * 60)
     model = CANN1D(num=1024)
-    print(f"  before: mode={model.accl_mode}, k={model.accl_k}, "
-          f"is_accelerated={model.is_accelerated}")
+    print(
+        f"  before: mode={model.accl_mode}, k={model.accl_k}, is_accelerated={model.is_accelerated}"
+    )
     model.set_accl_mode("fast")
-    print(f"  set_accl_mode('fast'): mode={model.accl_mode}, "
-          f"k={model.accl_k}, is_accelerated={model.is_accelerated}")
+    print(
+        f"  set_accl_mode('fast'): mode={model.accl_mode}, "
+        f"k={model.accl_k}, is_accelerated={model.is_accelerated}"
+    )
     model.set_accl_mode("fast", k=16)
-    print(f"  set_accl_mode('fast', k=16): mode={model.accl_mode}, "
-          f"k={model.accl_k}, is_accelerated={model.is_accelerated}")
+    print(
+        f"  set_accl_mode('fast', k=16): mode={model.accl_mode}, "
+        f"k={model.accl_k}, is_accelerated={model.is_accelerated}"
+    )
+    model.set_accl_mode("auto")
+    print(
+        f"  set_accl_mode('auto'): mode={model.accl_mode}, "
+        f"k={model.accl_k}, is_accelerated={model.is_accelerated}"
+    )
+    model.set_accl_mode("auto", target_err_mrad=0.5)
+    print(
+        f"  set_accl_mode('auto', target_err_mrad=0.5): mode={model.accl_mode}, "
+        f"k={model.accl_k}, is_accelerated={model.is_accelerated}"
+    )
     model.set_accl_mode("normal")
-    print(f"  set_accl_mode('normal'): mode={model.accl_mode}, "
-          f"k={model.accl_k}, is_accelerated={model.is_accelerated}")
+    print(
+        f"  set_accl_mode('normal'): mode={model.accl_mode}, "
+        f"k={model.accl_k}, is_accelerated={model.is_accelerated}"
+    )
