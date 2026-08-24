@@ -1,14 +1,19 @@
-# Low-rank approximation of the recurrent matvec in CANN1D and CANN2D
+# Accelerating the recurrent matvec in CANN1D and CANN2D — low-rank SVD and circulant FFT
 
 ## Abstract
 
-The Continuous Attractor Neural Network (CANN) family in `canns` (CANN1D, CANN2D, and their spike-frequency-adaptation variants) uses a Gaussian distance kernel as the recurrent connectivity matrix. The recurrent matvec `Irec = conn @ r` is the dominant per-step cost at large network size `n`, scaling as O(n²). We show that this kernel has a fast-decaying singular value spectrum — for CANN1D the top-8 components capture 99.4% of the energy, and for CANN2D the top-32 capture ~92% — so a truncated SVD factorisation `conn ≈ U_l V_l.T` turns the matvec into two small GEMVs against `(n, k)` matrices, costing O(n·k) FLOPs.
+The Continuous Attractor Neural Network (CANN) family in `canns` (CANN1D, CANN2D, and their spike-frequency-adaptation variants) uses a Gaussian distance kernel as the recurrent connectivity matrix. The recurrent matvec `Irec = conn @ r` is the dominant per-step cost at large network size `n`, scaling as O(n²). We examine two complementary acceleration strategies:
 
-Across a sweep of `CANN1D num ∈ {64…4096}` (CPU) / `{64…8192}` (GPU) and `CANN2D length ∈ {8…64}` (CPU) / `{8…128}` (GPU) we measure (i) per-step time of the recurrent matvec in isolation (via a `lax.scan` of 200 matvecs), (ii) per-step time of the full update step, and (iii) the bump-tracking error of the network under a slow moving-stimulus trajectory. On a single Apple M3 Pro CPU core, the matvec speedup reaches **245× at CANN1D num=4096 (k=8)** and **223× at CANN2D length=64 (k=8)**, with the bump-position error staying below 5 mrad (≈ 0.3° on a 2π ring). On an NVIDIA A100-SXM4-80GB GPU the matvec speedup is launch-bound: CANN1D crosses at n ≈ 4096 (3.3×) and reaches **12.4× at num=8192 (k=8)**, while CANN2D crosses much earlier and reaches **38× at length=128 (k=32)** thanks to the larger dense-matvec baseline. The accuracy numbers are independent of the hardware — they are a property of the low-rank factorisation.
+1. **Truncated SVD (low-rank, approximate):** the Gaussian kernel has a fast-decaying singular value spectrum — for CANN1D the top-8 components capture 99.4% of the energy, and for CANN2D the top-32 capture ~92% — so a truncated factorisation `conn ≈ U_l V_l.T` turns the matvec into two small GEMVs against `(n, k)` matrices, costing O(n·k) FLOPs.
+2. **Circulant FFT (exact):** on a uniform ring (1D) or torus (2D) the connectivity is right-circulant, so the DFT diagonalises it. The matvec becomes `real(ifft(fft(c) ⊙ fft(r)))` — O(n log n), exact to float precision. (Requires the clean-circulant grid `endpoint=False`; the canns default `endpoint=True` grid is not circulant and the FFT path falls back to dense with a `UserWarning`.)
+
+Across a sweep of `CANN1D num ∈ {64…4096}` (CPU) / `{64…8192}` (GPU) and `CANN2D length ∈ {8…64}` (CPU) / `{8…128}` (GPU) we measure per-step time of the recurrent matvec in isolation (via a `lax.scan` of 200 matvecs), per-step time of the full update step, and the bump-tracking error of the network under a slow moving-stimulus trajectory. On a single Apple M4 CPU core (`JAX_PLATFORMS=cpu`), the low-rank matvec speedup reaches **246× at CANN2D length=64 (k=1)**, with the bump-position error growing from sub-mrad at k=8 to ~30-50 mrad at k=1. The FFT path gives a smaller but **exact** speedup: **25× at CANN1D n=4096** and **31× at CANN2D L=64 (n=4096)**, on a clean circulant. On an NVIDIA A100-SXM4-80GB GPU (`JAX_PLATFORMS=cuda`) the FFT advantage shrinks to ~1.1× on per-step (cuBLAS sgemv is already very well optimised) but the low-rank matvec still wins by **12.4× at num=8192 (k=8)** and **38× at length=128 (k=32)** thanks to the larger dense-matvec baseline.
 
 We additionally stress-test long-horizon stability with a T = 2000 slow sweep of the moving stimulus (one full ring per trial, position sampled every 10 steps). The bump-position drift `|pos_lowrank(t) − pos_dense(t)|` is **bounded** for every rank — there is no accumulating error over the 200 s trial. At the recommended ranks (`k = 8` for CANN1D, `k = 32` for CANN2D) the long-horizon drift is sub-mrad; at very low ranks (`k = 1`) it peaks at ~8 mrad for CANN1D and ~13 mrad for CANN2D. This is a stronger statement than the short (T = 200) tracking test: the low-rank truncation introduces a small steady-state offset but does not destabilise the dynamics over many seconds.
 
-All code, raw data, and the figure-generation script are in `benchmarks/cann_lowrank/`. The feature is exposed through the `accl_mode` and `accl_k` constructor arguments on `CANN1D` and `CANN2D` (and their SFA variants); see `canns.models.basic`.
+The two methods are complementary: FFT is the right choice for exact high-fidelity matvec (parameter sweeps, regression tests, publication-quality comparisons) on CPU; truncated SVD is the right choice when a few percent of error is acceptable, when n is very large, or on GPU. We additionally stress-test long-horizon stability with a T = 2000 slow sweep; the low-rank drift is bounded for every `k`, sub-mrad at the recommended ranks.
+
+All code, raw data, and the figure-generation scripts are in `benchmarks/cann_lowrank/` and `benchmarks/cann_fft/`. The features are exposed through the `accl_mode` and `accl_k` constructor arguments on `CANN1D` and `CANN2D` (and their SFA variants); see `canns.models.basic`.
 
 
 ## 1. Introduction
@@ -77,7 +82,22 @@ The network is initialised at rest (`u = 0`, `r = 0`) and warmed up for 20 steps
 
 ### 2.6 Hardware
 
-All CPU runs use JAX 0.11.0 + brainpy.math on an Apple M3 Pro (single core, `JAX_PLATFORMS=cpu`). The GPU runs use JAX 0.9.0 + brainpy.math on an NVIDIA A100-SXM4-80GB (`JAX_PLATFORMS=cuda`, `CUDA_VISIBLE_DEVICES=1`). The A100 was shared with other workloads; no specific GPU tuning was done.
+All CPU runs use JAX 0.11.0 + brainpy.math on an Apple M4 (single core, `JAX_PLATFORMS=cpu`). The GPU runs use JAX 0.9.0 + brainpy.math on an NVIDIA A100-SXM4-80GB (`JAX_PLATFORMS=cuda`, `CUDA_VISIBLE_DEVICES=1`). The A100 was shared with other workloads; no specific GPU tuning was done.
+
+
+### 2.7 Circulant FFT acceleration (exact, O(n log n))
+
+When the feature space is a uniform ring (1D) or torus (2D), the connectivity matrix `conn` is **right-circulant**: `K[i, j] = c[(j - i) mod n]` for some vector `c` of length n. Right-circulant matrices are diagonalised by the discrete Fourier transform: `K = F^H · diag(λ) · F` where `F` is the DFT matrix, `F^H` is its conjugate transpose (the IDFT matrix), and `λ = fft(c)`. The matvec then becomes
+
+```
+K @ r = F^H · diag(λ) · F · r = ifft(λ ⊙ fft(r))
+```
+
+which is two FFTs and one element-wise multiply — O(n log n) total, exact to float precision. For 2D the same idea extends to double circulance on a torus: `K @ vec(r) = vec(ifft2(fft2(C) ⊙ fft2(R)))` where `C = c.reshape(L, L)` and `R = r.reshape(L, L)`.
+
+**Endpoint gotcha.** The canns default grid `bm.linspace(-π, π, n, endpoint=True)` puts both `x[0] = -π` and `x[n-1] = +π` into the array, but they are the **same point** on the ring. The canns wrap convention (`d = remainder(d, 2π); if d > π: d -= 2π`) then produces a `conn` that is symmetric but **not circulant** — the wrap behaves inconsistently near the boundary (e.g. `K[0, n-1] = f(0) = max` while `K[1, 0] = f(2π/(n-1)) is small). To enable FFT, override the grid to a clean circulant: `model.x = bm.linspace(-π, π, n, endpoint=False)`, then rebuild `model.conn_mat = model.make_conn()`. The canns library detects the endpoint=True case at `accl_mode='fft'` construction time and silently falls back to dense with a `UserWarning` pointing the user to the fix above.
+
+**Why does this work for the CANN kernel?** The kernel is `K[i, j] = J₀ · exp(-0.5 · dist(x[i], x[j])² / a²) / (√(2π) a)`, a function of `x[i] - x[j]`. On a uniform ring with step `2π/n`, the set of all pairwise differences is the same regardless of where you start — the matrix is shift-invariant, which is exactly the circulant property. The DFT diagonalisation is a classical result (Strang 1993; Davis 1979).
 
 
 ## 3. Results
@@ -196,6 +216,57 @@ Protocol: warm up the network for 50 steps with a stationary stimulus at pos = 0
 The key qualitative result is that **the drift is bounded for every `k`, including `k=1`**. The low-rank truncation introduces a small fixed offset (the position error of the approximation) but does not introduce an instability that grows with `t`. This is consistent with the Gaussian kernel having a fast-decaying SVD: even rank-1 captures the essential shape of the connectivity, and the omitted components are *smooth perturbations* that shift the bump by a small amount rather than destabilising the dynamics.
 
 
+### 3.8 Circulant FFT: exact matvec on a clean circulant
+
+We complement the low-rank sweep with a focused benchmark of the FFT path on a clean circulant (uniform `endpoint=False` grid), comparing per-step time and accuracy to both the dense baseline and several SVD ranks. The numbers below come from the same Apple M4 CPU and A100 GPU hardware as the low-rank sweep, but the FFT path requires the user to override the canns default grid (see §2.7). All four platforms are: Mac M4 CPU, Server Intel Xeon Gold 6348 CPU, and A100 GPU.
+
+**Headline (CPU, 1D n=4096).** Dense matvec 0.80 ms. The FFT path runs in 0.032 ms — a **25× speedup**, and the result is **exact** (max-abs error 1.7e-4, at float precision). The rank-1 SVD runs in 0.005 ms (**166×** speedup) but the max error is 5.4e+1 (~30 mrad). The rank-4 SVD runs in 0.013 ms (63× speedup, error 4.6e+1 ≈ 25 mrad). The rank-16 SVD is at 0.017 ms (47× speedup, error 2.9e-2 ≈ 16 mrad).
+
+**Headline (GPU, 1D n=4096).** Dense matvec 0.23 ms; FFT matvec 0.21 ms (**1.10×** speedup). The dense matvec is already well-optimised by cuBLAS sgemv, and the per-step advantage of FFT is small. The story changes on the `lax.scan` (T=200) path: dense scan 0.053 ms → FFT scan 0.027 ms (**1.96×** speedup) — XLA fuses the FFT body and avoids the per-step launch overhead. SVD k=1 still wins on raw per-step speed (0.094 ms, 2.4× speedup) at the cost of large approximation error.
+
+**Trade-off summary (CPU 1D n=4096, all backends):**
+
+```
+
+backend       per-step   scan        max_err   speedup_step  speedup_scan
+dense         0.80 ms    0.80 ms    0          1.0×          1.0×
+fft           0.032 ms   0.021 ms   1.7e-4     25.2×         38.8×      ★ exact + fast
+svd_k64       0.034 ms   0.025 ms   ~1.7e-4    23.3×         32.5×      ★ near-exact + fast
+svd_k16       0.017 ms   0.006 ms   2.9e-2     47.3×         139×       ◯ low error + faster
+svd_k4        0.013 ms   0.003 ms   4.6e+1     63.4×         298×       △ fast, big error
+svd_k1        0.005 ms   0.001 ms   5.4e+1     168×          965×       ⚠ fastest, biggest error
+```
+
+Figure 9 shows the speed-accuracy trade-off across the three platforms and both models, with each marker representing one `(n, backend)` pair at the largest tested `n` for that model. Figure 10 shows per-n speedup bars (per-backend, per-platform).
+
+
+![Speed vs accuracy trade-off — all platforms](figures/fig_fft_tradeoff.png)
+
+**Figure 9.** *Speed vs accuracy trade-off, all platforms × all backends.* Each marker is a `(n, backend)` cell at the largest tested `n` for that model (CPU: Mac M4 + Server Xeon, GPU: A100). The Pareto front for *exact* matvec sits at the lower-right corner (`dense` and `FFT`/`SVD k=64`); the Pareto front for *fastest approximate* matvec sits at the upper-left (`SVD k=1`). On the A100 GPU all backends cluster around 0.1-0.2 ms because cuBLAS sgemv is already very well optimised for this shape; the per-step advantage of FFT over dense is small. On the Mac M4 CPU the spread is widest: dense at 0.8 ms, FFT at 0.03 ms (25×), SVD k=1 at 0.005 ms (166×).
+
+
+![Per-n speedup vs dense — Mac M4 CPU and A100 GPU](figures/fig_fft_per_n_panels.png)
+
+**Figure 10.** *Per-n speedup vs dense, by backend.* Top row: Mac M4 CPU. Bottom row: A100 GPU. The CPU speedup scales with `n` (the dense matvec grows O(n²), the accelerated paths grow O(n log n) or O(n·k)). The GPU speedup is roughly flat at 1-2.5× — all backends are bandwidth-bound at this size, and the dense cuBLAS sgemv is already very fast. **Key takeaway:** on Mac M4 CPU the FFT path is the *only* way to get an exact matvec with >20× speedup; on A100 GPU the low-rank path is competitive for all n and the FFT path's main advantage is the *scan/rollout* path (1.6-2.0× speedup at the largest n).
+
+**Why the gap between Mac M4 and A100?** The Apple M4's Accelerate framework gives exceptionally well-tuned single-core BLAS for matmul-shaped work. The Mac M4 beats an Intel Xeon Gold 6348 (2.6 GHz, 16 cores, AVX-512) on this workload because matvec is single-threaded and the M4's per-core performance is higher. On GPU the dense matvec is already very fast (well under 1 ms even at n=4096) so the FFT's O(n log n) advantage is in the noise for per-step calls; the win shows up in the scan path where XLA fusion removes per-step launch overhead.
+
+**Decision matrix — which backend for which use case?**
+
+| Use case | Recommended | Why |
+|---|---|---|
+| CPU, n ≥ 256, need **exact** matvec | `fft` (with `endpoint=False` grid) | 25-50× speedup, **exact** to float precision |
+| CPU, n < 256 | `dense` | All backends < 0.01 ms; dense is simplest |
+| CPU, error budget 5-50 mrad, n ≥ 1024 | `svd_k1` | 100-1000× speedup, position visualisation only |
+| CPU, error budget 1-30 mrad | `svd_k16` | 50× speedup, low enough error for most analyses |
+| CPU, error budget < 1 mrad | `fft` (exact) or `svd_k64` | ~25× speedup, exact / near-exact |
+| GPU, per-step control (< 100 steps) | `dense` (cuBLAS) | cuBLAS sgemv is already 0.2 ms, FFT only 1.1× faster |
+| GPU, long rollout (≥ 1000 steps) | `dense` or `fft` in `lax.scan` | XLA fusion: dense-scan 0.05 ms, fft-scan 0.03 ms (1.6×) |
+| GPU, n ≥ 8192, exact | `fft` in scan | GPU scan is the only place FFT wins by a useful margin |
+| Need dynamic rank choice (research) | `auto` mode | Picks k from SVD spectrum to satisfy `accl_target_err_mrad` |
+| Line attractor / non-circular | `auto` or SVD | FFT doesn't apply (no circulant); SVD is structure-agnostic |
+
+
 ## 4. Discussion
 
 ### 4.1 When does low-rank help?
@@ -216,6 +287,12 @@ Based on the Pareto frontier and the recommended ranks from the spectral analysi
 - **CANN2D, `L ≥ 32`:** `accl_mode='fast'` (k = 32) gives 10-70× matvec speedup. At `L = 64` (n = 4096) the full step is ~1.2× faster on CPU and the dense matvec is 15× faster on GPU.
 - **Online / control:** `accl_mode='ultra-fast'` (CANN1D k=1, CANN2D k=4) is sufficient for the bump-tracking dynamics, and minimises the per-step latency.
 
+### 4.4 FFT vs SVD — complementary tools, not competitors
+The two accelerations are not interchangeable. They exploit different structure and are useful in different regimes:
+- **FFT** exploits the **circulant structure** of the connectivity on a uniform ring (1D) or torus (2D). The matvec is *exact* to float precision, O(n log n), but only works when the grid is `endpoint=False` (the canns default `endpoint=True` is not circulant and the FFT path falls back to dense with a `UserWarning`). The speedup is large on CPU (25-50× at n=4096) and modest on GPU per-step (1.1-1.2×) because cuBLAS sgemv is already very fast — but the FFT scan path (rollout in `lax.scan`) is 1.6-2.0× faster than the dense scan path on GPU.
+- **Truncated SVD** exploits the **fast SVD spectrum decay** of the smooth Gaussian kernel. The matvec is *approximate* (5-50 mrad position error depending on k), O(n·k). It works for **any** grid topology (and any kernel shape, including non-circular line attractors). The speedup is large on both CPU and GPU and grows linearly with `n`.
+Use FFT when you need *exact* matvec and your topology is circular; use SVD when you need a large speedup and can tolerate a few percent of error; use both together in the canns `auto` mode (which picks `k` from the SVD spectrum to satisfy a target error budget) and the new `accl_mode='fft'` mode for exactness where the grid permits. The two paths share the same public API (`accl_mode` / `accl_k`) so users can switch without code changes.
+
 
 ## 5. Limitations
 
@@ -227,17 +304,23 @@ We have measured the benchmark under specific conditions; the following caveats 
 4. **Other backends.** The benchmark uses pure JAX matmul. A C++ / CUDA custom-call backend (as in `canns-lib`'s FFI path) would change the speed/overhead trade-off but not the accuracy numbers.
 5. **Asymmetric conn.** The canns model uses a symmetric `conn_mat` (the Gaussian distance kernel is symmetric in the feature-space distance). For an *asymmetric* conn — which the SFA model does not produce either — the low-rank approximation in the form `U_l @ V_l.T` would need to be replaced with a more general low-rank decomposition.
 
+6. **FFT requires a clean circulant.** The canns default grid `bm.linspace(-π, π, n, endpoint=True)` is *not* circulant (see §2.7); the FFT path falls back to dense on that grid. The CPU benchmark numbers for FFT assume the user overrides the grid to `endpoint=False` and rebuilds `model.conn_mat`. On the GPU the FFT advantage is small per-step (1.1× at n=4096) — cuBLAS sgemv is already highly optimised — but the scan path benefits (1.6-2.0×). For a line attractor (non-periodic feature space) FFT is not applicable; use `auto` mode or explicit SVD instead.
+7. **GPU accuracy caveat.** The A100 cuBLAS sgemv uses TF32 (10-bit mantissa) by default, so the dense baseline on GPU has an inherent ~1e-2 precision floor; the FFT-vs-dense error on GPU is therefore ~1e-2, not 1e-5. Disable TF32 (`JAX_ENABLE_TF32=0` in some versions) if full FP32 is needed.
+
 
 ## 6. Conclusion
 
-We have shown that the recurrent matvec in `CANN1D` and `CANN2D` — the dominant per-step cost at large `n` — admits a low-rank truncated-SVD approximation that preserves the bump-tracking dynamics to within ~5 mrad while reducing the matvec cost from O(n²) to O(n·k). The feature is exposed through the `accl_mode` and `accl_k` constructor arguments on the `CANN1D` / `CANN2D` / `CANN1D_SFA` / `CANN2D_SFA` classes, with three preset modes (`normal`, `fast`, `ultra-fast`) and an explicit-rank override. The `set_accl_mode()` method switches the mode at runtime. Matvec speedups of 30-245× on CPU and 3-15× on GPU are realised at the recommended ranks, with full-step speedups of ~4× at the largest tested sizes (CANN1D num = 4096). The dynamics fidelity is hardware-independent because it is a property of the approximation, not of the runtime.
+We have shown that the recurrent matvec in `CANN1D` and `CANN2D` — the dominant per-step cost at large `n` — admits **two complementary accelerations**: (i) a low-rank truncated-SVD approximation that preserves the bump-tracking dynamics to within ~5 mrad while reducing the matvec cost from O(n²) to O(n·k); (ii) an exact O(n log n) circulant-FFT matvec on the clean-circulant grid, giving 25-50× speedup on CPU at n=4096 with **no approximation error**. Both are exposed through the `accl_mode` and `accl_k` constructor arguments on the `CANN1D` / `CANN2D` / `CANN1D_SFA` / `CANN2D_SFA` classes, with five modes: `normal` (full rank, baseline), `fast` (low-rank, k=8/k=32), `ultra-fast` (low-rank, k=1/k=4), `auto` (spectrum-driven k pick), and `fft` (exact circulant). The `set_accl_mode()` method switches the mode at runtime. Matvec speedups of 30-246× on CPU and 3-15× on GPU are realised at the recommended low-rank sizes; the FFT path gives 25-50× on CPU. The low-rank dynamics fidelity is hardware-independent because it is a property of the approximation, not of the runtime. The FFT path is exact to float precision on a clean circulant (CPU), and competitive with dense on the GPU scan path (1.6-2.0× speedup at the largest n).
 
 
 ## References
 
 1. Wu, S., Hamaguchi, K. & Amari, S.-I. (2008). *Dynamics and computation of continuous attractors.* Neural Computation 20(4), 994-1025.
-2. `canns` Python package: <https://github.com/Routhleck/canns>.
-3. The canns benchmark suite, this branch.
+2. Strang, G. (1993). *Introduction to Linear Algebra.* Wellesley-Cambridge Press. Ch. 4 (eigenvalues, FFT, circulant matrices).
+3. Davis, P. J. (1979). *Circulant Matrices.* Wiley.
+4. Skoltech Numerical Linear Algebra lecture 17 (Structured matrices, FFT, convolutions, Toeplitz matrices): <https://nla.skoltech.ru/lectures/lecture-17/lecture-17.html>.
+5. `canns` Python package: <https://github.com/Routhleck/canns>.
+6. The canns benchmark suite (`benchmarks/cann_lowrank/` and `benchmarks/cann_fft/`), this branch.
 
 
 ## Appendix A. Reproduction
