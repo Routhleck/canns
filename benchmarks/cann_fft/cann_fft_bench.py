@@ -366,8 +366,13 @@ def main():
         ranks = [1, 4, 16]
     else:
         if is_gpu:
-            sizes_1d = [64, 128, 256, 512, 1024, 2048, 4096, 8192]
-            sizes_2d = [4, 8, 16, 32, 48, 64, 96, 128]
+            # Note: n > 4096 makes the CPU SVD (used to factorise the
+            # baseline conn) very slow (> 10 min per rank), which
+            # dominates the wall time. We cap at 4096 (1D) and 64 (2D;
+            # L=64 means n=4096; L=96 is n=9216 which is impractical
+            # with the CPU SVD baseline).
+            sizes_1d = [64, 128, 256, 512, 1024, 2048, 4096]
+            sizes_2d = [4, 8, 16, 32, 48, 64]
         else:
             sizes_1d = [n for n in [64, 128, 256, 512, 1024, 2048, 4096] if n <= args.cpu_only_1d_max]
             sizes_2d = [L for L in [4, 8, 16, 32, 48, 64] if L <= args.cpu_only_2d_max]

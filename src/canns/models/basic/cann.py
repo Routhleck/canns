@@ -210,11 +210,20 @@ class BaseCANN1D(BaseCANN):
             accl_mode (str, optional): Acceleration mode for the recurrent matvec.
                 One of ``"normal"`` (full rank, default), ``"fast"`` (low-rank
                 with rank ``ACCL_DEFAULT_K[("CANN1D", "fast")] = 8``),
-                ``"ultra-fast"`` (low-rank with rank 1), or ``"auto"`` (pick
+                ``"ultra-fast"`` (low-rank with rank 1), ``"auto"`` (pick
                 the rank from the SVD spectrum to satisfy
-                ``accl_target_err_mrad``). The recommended ``"fast"``
+                ``accl_target_err_mrad``), or ``"fft"`` (exact circulant
+                matvec, O(n log n)). The recommended ``"fast"``
                 setting keeps the bump-position error below ~5 mrad and
-                gives 30–245× matvec speedup at ``num >= 512``.
+                gives 30–245× matvec speedup at ``num >= 512``. The
+                ``"fft"`` mode gives a 25–50× speedup **and is exact**
+                (rel err < 1e-5) but only when the grid is uniform with
+                ``endpoint=False`` (i.e. a clean ring); the canns
+                default ``endpoint=True`` grid is not circulant, so the
+                FFT path silently falls back to ``"normal"`` with a
+                warning. To get the FFT speedup, override the grid:
+                ``model.x = bm.linspace(-bm.pi, bm.pi, num,
+                endpoint=False)``.
             accl_k (int, optional): Explicit low-rank truncation. If given,
                 overrides the default rank implied by ``accl_mode`` (and,
                 for ``"auto"``, the spectrum-based auto-pick). Must be
@@ -365,7 +374,13 @@ class BaseCANN1D(BaseCANN):
                 pass
             first_row = np.asarray(self.conn_mat[0, :], dtype=np.float32)
             n = first_row.shape[0]
-            if n > 1 and np.isclose(first_row[0], first_row[-1]):
+            # We use a tight rtol because for endpoint=False at large
+            # n, first_row[0] = f(0) = max and first_row[-1] =
+            # f(2π * (n-1)/n) which is f(2π - 2π/n) = f(2π/n) after
+            # the wrap convention. For n = 4096 the difference is
+            # ~3e-5 (within np.isclose's default rtol=1e-5, so the
+            # detection would mis-fire at large n on a clean grid).
+            if n > 1 and np.isclose(first_row[0], first_row[-1], rtol=1e-7, atol=1e-7):
                 # endpoint=True (canns default): the connectivity is
                 # not circulant under canns's wrap convention, so the
                 # FFT formula would be wrong. Fall back to dense.
@@ -901,7 +916,7 @@ class BaseCANN2D(BaseCANN):
             # L×L kernel are all f(0, 0) = max, so K[0, 0] ≈ K[0, L-1] ≈
             # K[L-1, 0] ≈ K[L-1, L-1] ≈ max. We detect by checking the
             # first row's first and last element.
-            if L > 1 and np.isclose(K_first_row[0, 0], K_first_row[0, L - 1]):
+            if L > 1 and np.isclose(K_first_row[0, 0], K_first_row[0, L - 1], rtol=1e-7, atol=1e-7):
                 # Fall back to dense for the endpoint=True default —
                 # the corner-duplicate handling for 2D is non-trivial
                 # and not worth implementing for an off-by-one artifact.
