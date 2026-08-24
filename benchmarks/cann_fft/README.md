@@ -18,8 +18,8 @@ speedup, override the grid:
 ```python
 model = CANN1D(num=4096, accl_mode="normal")
 model.x = bm.linspace(-bm.pi, bm.pi, 4096, endpoint=False)
-model.conn_mat = model.make_conn()       # rebuild K for the new grid
-model.set_accl_mode("fft")               # or pass it to the constructor
+model.conn_mat = model.make_conn()  # rebuild K for the new grid
+model.set_accl_mode("fft")  # or pass it to the constructor
 # for CANN2D, also override model.y and rebuild
 ```
 

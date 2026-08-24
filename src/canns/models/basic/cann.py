@@ -507,9 +507,7 @@ class BaseCANN1D(BaseCANN):
         error controlled by ``accl_k``.
         """
         if self._K_fft is not None:
-            return jax.numpy.real(
-                jax.numpy.fft.ifft(self._K_fft * jax.numpy.fft.fft(r))
-            )
+            return jax.numpy.real(jax.numpy.fft.ifft(self._K_fft * jax.numpy.fft.fft(r)))
         if self._U_l is None:
             return self.conn_mat @ r
         return self._U_l @ (self._V_l.T @ r)
@@ -935,9 +933,7 @@ class BaseCANN2D(BaseCANN):
                 self._V_l = None
                 self._K_fft = None
                 return
-            self._K_fft = jax.numpy.asarray(
-                jax.numpy.fft.fft2(jax.numpy.asarray(K_first_row))
-            )
+            self._K_fft = jax.numpy.asarray(jax.numpy.fft.fft2(jax.numpy.asarray(K_first_row)))
             self._fft_duplicate = False
             self._U_l = None
             self._V_l = None
@@ -1042,9 +1038,7 @@ class BaseCANN2D(BaseCANN):
         if self._K_fft is not None:
             L = self.length
             r_2d = r_flat.reshape(L, L)
-            out_2d = jax.numpy.real(
-                jax.numpy.fft.ifft2(self._K_fft * jax.numpy.fft.fft2(r_2d))
-            )
+            out_2d = jax.numpy.real(jax.numpy.fft.ifft2(self._K_fft * jax.numpy.fft.fft2(r_2d)))
             return out_2d.ravel()
         if self._U_l is None:
             return self.conn_mat @ r_flat

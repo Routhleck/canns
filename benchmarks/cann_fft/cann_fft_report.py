@@ -15,20 +15,19 @@ The script supports ``--tag cpu`` or ``--tag gpu``. It expects files of
 the form ``cann_fft_speed_{tag}.csv`` / ``cann_fft_accuracy_{tag}.csv``
 (default: unsuffixed).
 """
+
 from __future__ import annotations
 
 import argparse
 import csv
-import sys
 from collections import defaultdict
 from pathlib import Path
 
+import matplotlib
 import numpy as np
 
-import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
-from matplotlib.ticker import LogLocator, NullFormatter
 
 _HERE = Path(__file__).resolve().parent
 _RESULTS = _HERE / "results"
@@ -75,14 +74,16 @@ def fig_fft_speed(rows: list[dict], out: Path) -> None:
 
     fig, axes = plt.subplots(1, 2, figsize=(7.5, 3.4))
     titles = [("cann1d", "1D CANN", "num"), ("cann2d", "2D CANN", "L")]
-    for ax, (m, title, xlabel) in zip(axes, titles):
+    for ax, (m, title, xlabel) in zip(axes, titles, strict=False):
         sizes = sorted(by_model[m].keys())
         ns = [int(by_model[m][s][list(by_model[m][s].keys())[0]]["n_total"]) for s in sizes]
         dense_t = [float(by_model[m][s].get("dense", {}).get("per_step_ms", np.nan)) for s in sizes]
         fft_t = [float(by_model[m][s].get("fft", {}).get("per_step_ms", np.nan)) for s in sizes]
         svd1_t = [float(by_model[m][s].get("svd_k1", {}).get("per_step_ms", np.nan)) for s in sizes]
         svd4_t = [float(by_model[m][s].get("svd_k4", {}).get("per_step_ms", np.nan)) for s in sizes]
-        svd16_t = [float(by_model[m][s].get("svd_k16", {}).get("per_step_ms", np.nan)) for s in sizes]
+        svd16_t = [
+            float(by_model[m][s].get("svd_k16", {}).get("per_step_ms", np.nan)) for s in sizes
+        ]
         ax.loglog(ns, dense_t, "ko-", label="dense (baseline)", lw=1.5, ms=5)
         ax.loglog(ns, fft_t, "C0o-", label="FFT (exact)", lw=1.5, ms=5)
         ax.loglog(ns, svd1_t, "C1^--", label="SVD k=1", lw=1.0, ms=5, alpha=0.7)
@@ -107,12 +108,18 @@ def fig_fft_scan(rows: list[dict], out: Path) -> None:
         by_model[m][n_p][b] = r
     fig, axes = plt.subplots(1, 2, figsize=(7.5, 3.4))
     titles = [("cann1d", "1D CANN (T=200 scan)"), ("cann2d", "2D CANN (T=200 scan)")]
-    for ax, (m, title) in zip(axes, titles):
+    for ax, (m, title) in zip(axes, titles, strict=False):
         sizes = sorted(by_model[m].keys())
         ns = [int(by_model[m][s][list(by_model[m][s].keys())[0]]["n_total"]) for s in sizes]
-        dense_t = [float(by_model[m][s].get("dense", {}).get("scan_per_step_ms", np.nan)) for s in sizes]
-        fft_t = [float(by_model[m][s].get("fft", {}).get("scan_per_step_ms", np.nan)) for s in sizes]
-        svd1_t = [float(by_model[m][s].get("svd_k1", {}).get("scan_per_step_ms", np.nan)) for s in sizes]
+        dense_t = [
+            float(by_model[m][s].get("dense", {}).get("scan_per_step_ms", np.nan)) for s in sizes
+        ]
+        fft_t = [
+            float(by_model[m][s].get("fft", {}).get("scan_per_step_ms", np.nan)) for s in sizes
+        ]
+        svd1_t = [
+            float(by_model[m][s].get("svd_k1", {}).get("scan_per_step_ms", np.nan)) for s in sizes
+        ]
         ax.loglog(ns, dense_t, "ko-", label="dense", lw=1.5, ms=5)
         ax.loglog(ns, fft_t, "C0o-", label="FFT", lw=1.5, ms=5)
         ax.loglog(ns, svd1_t, "C1^--", label="SVD k=1", lw=1.0, ms=5, alpha=0.7)
@@ -134,13 +141,15 @@ def fig_fft_accuracy(acc_rows: list[dict], out: Path) -> None:
         by_model[m][n_p][b] = r
     fig, axes = plt.subplots(1, 2, figsize=(7.5, 3.4))
     titles = [("cann1d", "1D CANN"), ("cann2d", "2D CANN")]
-    for ax, (m, title) in zip(axes, titles):
+    for ax, (m, title) in zip(axes, titles, strict=False):
         sizes = sorted(by_model[m].keys())
         ns = [int(by_model[m][s][list(by_model[m][s].keys())[0]]["n_total"]) for s in sizes]
         fft_e = [float(by_model[m][s].get("fft", {}).get("max_abs_err", np.nan)) for s in sizes]
         svd1_e = [float(by_model[m][s].get("svd_k1", {}).get("max_abs_err", np.nan)) for s in sizes]
         svd4_e = [float(by_model[m][s].get("svd_k4", {}).get("max_abs_err", np.nan)) for s in sizes]
-        svd16_e = [float(by_model[m][s].get("svd_k16", {}).get("max_abs_err", np.nan)) for s in sizes]
+        svd16_e = [
+            float(by_model[m][s].get("svd_k16", {}).get("max_abs_err", np.nan)) for s in sizes
+        ]
         ax.semilogy(ns, fft_e, "C0o-", label="FFT", lw=1.5, ms=5)
         ax.semilogy(ns, svd1_e, "C1^--", label="SVD k=1", lw=1.0, ms=5, alpha=0.7)
         ax.semilogy(ns, svd4_e, "C3s--", label="SVD k=4", lw=1.0, ms=5, alpha=0.7)
@@ -157,15 +166,17 @@ def fig_fft_accuracy(acc_rows: list[dict], out: Path) -> None:
 def fig_fft_pareto(rows: list[dict], acc_rows: list[dict], out: Path) -> None:
     """Speed (per-step) vs accuracy scatter. Highlight: FFT is the only
     point at (1.0, exact)."""
-    by_model: dict[str, dict[int, dict[str, dict]]] = {"speed": defaultdict(lambda: defaultdict(dict)),
-                                                        "acc": defaultdict(lambda: defaultdict(dict))}
+    by_model: dict[str, dict[int, dict[str, dict]]] = {
+        "speed": defaultdict(lambda: defaultdict(dict)),
+        "acc": defaultdict(lambda: defaultdict(dict)),
+    }
     for r in rows:
         by_model["speed"][r["model"]][int(r["n_param"])][r["backend"]] = r
     for r in acc_rows:
         by_model["acc"][r["model"]][int(r["n_param"])][r["backend"]] = r
     fig, axes = plt.subplots(1, 2, figsize=(7.5, 3.4))
     titles = [("cann1d", "1D CANN"), ("cann2d", "2D CANN")]
-    for ax, (m, title) in zip(axes, titles):
+    for ax, (m, title) in zip(axes, titles, strict=False):
         for backend, marker, color in [
             ("fft", "o", "C0"),
             ("svd_k1", "^", "C1"),
@@ -199,8 +210,7 @@ def fig_fft_pareto(rows: list[dict], acc_rows: list[dict], out: Path) -> None:
 
 
 def md_table(headers: list[str], rows: list[list[str]]) -> str:
-    lines = ["| " + " | ".join(headers) + " |",
-             "|" + "|".join(["---"] * len(headers)) + "|"]
+    lines = ["| " + " | ".join(headers) + " |", "|" + "|".join(["---"] * len(headers)) + "|"]
     for row in rows:
         lines.append("| " + " | ".join(row) + " |")
     return "\n".join(lines)
@@ -246,22 +256,35 @@ def build_markdown(rows, acc_rows, tag: str) -> str:
                 continue
             r = cell[backend]
             a = cell_acc.get(backend, {})
-            headline_rows.append([
-                m,
-                str(last),
-                str(n_total),
-                backend,
-                f"{float(r['per_step_ms']):.4f}",
-                f"{float(r['scan_per_step_ms']):.4f}",
-                f"{float(r['speedup_vs_dense_step']):.2f}",
-                f"{float(r['speedup_vs_dense_scan']):.2f}",
-                f"{float(a.get('max_abs_err', 0)):.2e}",
-            ])
-    out.append(md_table(
-        ["model", "n", "n_total", "backend", "step_ms", "scan_ms",
-         "speedup_step", "speedup_scan", "max_err"],
-        headline_rows,
-    ))
+            headline_rows.append(
+                [
+                    m,
+                    str(last),
+                    str(n_total),
+                    backend,
+                    f"{float(r['per_step_ms']):.4f}",
+                    f"{float(r['scan_per_step_ms']):.4f}",
+                    f"{float(r['speedup_vs_dense_step']):.2f}",
+                    f"{float(r['speedup_vs_dense_scan']):.2f}",
+                    f"{float(a.get('max_abs_err', 0)):.2e}",
+                ]
+            )
+    out.append(
+        md_table(
+            [
+                "model",
+                "n",
+                "n_total",
+                "backend",
+                "step_ms",
+                "scan_ms",
+                "speedup_step",
+                "speedup_scan",
+                "max_err",
+            ],
+            headline_rows,
+        )
+    )
     out.append("")
 
     # All sizes (1D)
@@ -273,20 +296,23 @@ def build_markdown(rows, acc_rows, tag: str) -> str:
                 continue
             r = by_cell[("cann1d", n)][backend]
             a = acc_by_cell[("cann1d", n)].get(backend, {})
-            table_1d.append([
-                str(n),
-                backend,
-                f"{float(r['per_step_ms']):.4f}",
-                f"{float(r['scan_per_step_ms']):.4f}",
-                f"{float(r['speedup_vs_dense_step']):.2f}",
-                f"{float(r['speedup_vs_dense_scan']):.2f}",
-                f"{float(a.get('max_abs_err', 0)):.2e}",
-            ])
-    out.append(md_table(
-        ["num", "backend", "step_ms", "scan_ms",
-         "step_su", "scan_su", "max_err"],
-        table_1d,
-    ))
+            table_1d.append(
+                [
+                    str(n),
+                    backend,
+                    f"{float(r['per_step_ms']):.4f}",
+                    f"{float(r['scan_per_step_ms']):.4f}",
+                    f"{float(r['speedup_vs_dense_step']):.2f}",
+                    f"{float(r['speedup_vs_dense_scan']):.2f}",
+                    f"{float(a.get('max_abs_err', 0)):.2e}",
+                ]
+            )
+    out.append(
+        md_table(
+            ["num", "backend", "step_ms", "scan_ms", "step_su", "scan_su", "max_err"],
+            table_1d,
+        )
+    )
     out.append("")
 
     # All sizes (2D)
@@ -298,21 +324,24 @@ def build_markdown(rows, acc_rows, tag: str) -> str:
                 continue
             r = by_cell[("cann2d", L)][backend]
             a = acc_by_cell[("cann2d", L)].get(backend, {})
-            table_2d.append([
-                str(L),
-                str(int(r["n_total"])),
-                backend,
-                f"{float(r['per_step_ms']):.4f}",
-                f"{float(r['scan_per_step_ms']):.4f}",
-                f"{float(r['speedup_vs_dense_step']):.2f}",
-                f"{float(r['speedup_vs_dense_scan']):.2f}",
-                f"{float(a.get('max_abs_err', 0)):.2e}",
-            ])
-    out.append(md_table(
-        ["L", "n_total", "backend", "step_ms", "scan_ms",
-         "step_su", "scan_su", "max_err"],
-        table_2d,
-    ))
+            table_2d.append(
+                [
+                    str(L),
+                    str(int(r["n_total"])),
+                    backend,
+                    f"{float(r['per_step_ms']):.4f}",
+                    f"{float(r['scan_per_step_ms']):.4f}",
+                    f"{float(r['speedup_vs_dense_step']):.2f}",
+                    f"{float(r['speedup_vs_dense_scan']):.2f}",
+                    f"{float(a.get('max_abs_err', 0)):.2e}",
+                ]
+            )
+    out.append(
+        md_table(
+            ["L", "n_total", "backend", "step_ms", "scan_ms", "step_su", "scan_su", "max_err"],
+            table_2d,
+        )
+    )
     out.append("")
 
     out.append("## 4. Figures\n")
@@ -356,10 +385,10 @@ def build_markdown(rows, acc_rows, tag: str) -> str:
 
 def main():
     p = argparse.ArgumentParser()
-    p.add_argument("--tag", default="cpu",
-                   help="benchmark tag (looks for cann_fft_speed_{tag}.csv)")
-    p.add_argument("--out", default=str(_HERE / "results"),
-                   help="output dir for the summary file")
+    p.add_argument(
+        "--tag", default="cpu", help="benchmark tag (looks for cann_fft_speed_{tag}.csv)"
+    )
+    p.add_argument("--out", default=str(_HERE / "results"), help="output dir for the summary file")
     args = p.parse_args()
 
     speed_path = _RESULTS / f"cann_fft_speed_{args.tag}.csv"

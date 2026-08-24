@@ -45,7 +45,6 @@ Run:
 import time
 
 import brainpy.math as bm
-import jax.numpy as jnp
 import numpy as np
 
 from canns.models.basic import CANN1D, CANN2D
@@ -89,7 +88,7 @@ def time_per_step(model, T: int = 50) -> float:
     for _ in range(5):
         t0 = time.perf_counter()
         for t in range(T):
-            pos = (np.pi * t / max(T - 1, 1))
+            pos = np.pi * t / max(T - 1, 1)
             stim = model.get_stimulus_by_pos(bm.asarray(pos))
             model.update(stim)
         t1 = time.perf_counter()
@@ -106,14 +105,16 @@ def main():
     print("-" * 70)
 
     for num in (256, 1024, 4096):
-        for mode, expected_fft in (
+        for mode, _expected_fft in (
             ("normal", False),
             ("fft", True),
         ):
             model = make_clean_cann1d(num, mode)
             ms = time_per_step(model)
-            note = "EXACT" if (mode == "fft" and model.accl_mode == "fft") else (
-                "(fell back)" if mode == "fft" else ""
+            note = (
+                "EXACT"
+                if (mode == "fft" and model.accl_mode == "fft")
+                else ("(fell back)" if mode == "fft" else "")
             )
             print(f"{num:>6}  {mode:>6}  {ms:>10.4f}  {'-':>10}  {note:>20}")
 
@@ -135,7 +136,6 @@ def main():
     for L in (16, 32, 64):
         for mode in ("normal", "fft"):
             model = make_clean_cann2d(L, mode)
-            is_2d = True
             # 2D: pass a (2,) coordinate
             for _ in range(3):
                 stim = model.get_stimulus_by_pos(bm.asarray([0.0, 0.0]))
@@ -153,8 +153,9 @@ def main():
             times.sort()
             ms = times[len(times) // 2]
             n_total = L * L
-            print(f"  L={L:>3} (n={n_total:>4})  mode={model.accl_mode!r:>7}  "
-                  f"per-step = {ms:.4f} ms")
+            print(
+                f"  L={L:>3} (n={n_total:>4})  mode={model.accl_mode!r:>7}  per-step = {ms:.4f} ms"
+            )
 
 
 if __name__ == "__main__":

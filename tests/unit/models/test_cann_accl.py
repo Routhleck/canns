@@ -711,4 +711,3 @@ class TestFFTMode:
         for _ in range(5):
             stim = m.get_stimulus_by_pos(bm.asarray([0.0, 0.0]))
             m.update(stim)
-
