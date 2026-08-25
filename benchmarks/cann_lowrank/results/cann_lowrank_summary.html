@@ -214,7 +214,9 @@ em {
     <p class="paper-meta">canns-lowrank-bench branch &middot; generated from
     <code>benchmarks/cann_lowrank/cann_lowrank_report.py</code></p>
   </header>
-  <section class="abstract"><h2>Abstract</h2><p>The Continuous Attractor Neural Network (CANN) family in <code>canns</code> (CANN1D, CANN2D, and their spike-frequency-adaptation variants) uses a Gaussian distance kernel as the recurrent connectivity matrix. The recurrent matvec <code>Irec = conn @ r</code> is the dominant per-step cost at large network size <code>n</code>, scaling as O(n²). We examine two complementary acceleration strategies:</p><p>Across a sweep of <code>CANN1D num ∈ {64…4096}</code> (CPU) / <code>{64…8192}</code> (GPU) and <code>CANN2D length ∈ {8…64}</code> (CPU) / <code>{8…128}</code> (GPU) we measure per-step time of the recurrent matvec in isolation (via a <code>lax.scan</code> of 200 matvecs), per-step time of the full update step, and the bump-tracking error of the network under a slow moving-stimulus trajectory. On a single Apple M4 CPU core (<code>JAX_PLATFORMS=cpu</code>), the low-rank matvec speedup reaches <strong>246× at CANN2D length=64 (k=1)</strong>, with the bump-position error growing from sub-mrad at k=8 to ~30-50 mrad at k=1. The FFT path gives a smaller but <strong>exact</strong> speedup: <strong>25× at CANN1D n=4096</strong> and <strong>31× at CANN2D L=64 (n=4096)</strong>, on a clean circulant. On an NVIDIA A100-SXM4-80GB GPU (<code>JAX_PLATFORMS=cuda</code>) the FFT advantage shrinks to ~1.1× on per-step (cuBLAS sgemv is already very well optimised) but the low-rank matvec still wins by <strong>12.4× at num=8192 (k=8)</strong> and <strong>38× at length=128 (k=32)</strong> thanks to the larger dense-matvec baseline.</p><p>We additionally stress-test long-horizon stability with a T = 2000 slow sweep of the moving stimulus (one full ring per trial, position sampled every 10 steps). The bump-position drift <code>|pos_lowrank(t) − pos_dense(t)|</code> is <strong>bounded</strong> for every rank — there is no accumulating error over the 200 s trial. At the recommended ranks (<code>k = 8</code> for CANN1D, <code>k = 32</code> for CANN2D) the long-horizon drift is sub-mrad; at very low ranks (<code>k = 1</code>) it peaks at ~8 mrad for CANN1D and ~13 mrad for CANN2D. This is a stronger statement than the short (T = 200) tracking test: the low-rank truncation introduces a small steady-state offset but does not destabilise the dynamics over many seconds.</p><p>The two methods are complementary: FFT is the right choice for exact high-fidelity matvec (parameter sweeps, regression tests, publication-quality comparisons) on CPU; truncated SVD is the right choice when a few percent of error is acceptable, when n is very large, or on GPU. We additionally stress-test long-horizon stability with a T = 2000 slow sweep; the low-rank drift is bounded for every <code>k</code>, sub-mrad at the recommended ranks.</p><p>All code, raw data, and the figure-generation scripts are in <code>benchmarks/cann_lowrank/</code> and <code>benchmarks/cann_fft/</code>. The features are exposed through the <code>accl_mode</code> and <code>accl_k</code> constructor arguments on <code>CANN1D</code> and <code>CANN2D</code> (and their SFA variants); see <code>canns.models.basic</code>.</p></section>
+  <section class="abstract"><h2>Abstract</h2><p>The Continuous Attractor Neural Network (CANN) family in <code>canns</code> (CANN1D, CANN2D, and their spike-frequency-adaptation variants) uses a Gaussian distance kernel as the recurrent connectivity matrix. The recurrent matvec <code>Irec = conn @ r</code> is the dominant per-step cost at large network size <code>n</code>, scaling as O(n²). We examine two complementary acceleration strategies:</p><p>Across a sweep of <code>CANN1D num ∈ {64…4096}</code> (CPU) / <code>{64…8192}</code> (GPU) and <code>CANN2D length ∈ {8…64}</code> (CPU) / <code>{8…128}</code> (GPU) we measure per-step time of the recurrent matvec in isolation (via a <code>lax.scan</code> of 200 matvecs), per-step time of the full update step, and the bump-tracking error of the network under a slow moving-stimulus trajectory. On a single Apple M4 CPU core (<code>JAX_PLATFORMS=cpu</code>), the low-rank matvec speedup reaches <strong>246× at CANN2D length=64 (k=1)</strong>, with the bump-position error growing from sub-mrad at k=8 to ~30-50 mrad at k=1. The FFT path gives a smaller but <strong>exact</strong> speedup: <strong>25× at CANN1D n=4096</strong> and <strong>31× at CANN2D L=64 (n=4096)</strong>, on a clean circulant. On an NVIDIA A100-SXM4-80GB GPU (<code>JAX_PLATFORMS=cuda</code>) the FFT advantage shrinks to ~1.1× on per-step (cuBLAS sgemv is already very well optimised) but the low-rank matvec still wins by <strong>12.4× at num=8192 (k=8)</strong> and <strong>38× at length=128 (k=32)</strong> thanks to the larger dense-matvec baseline.</p><p>We additionally stress-test long-horizon stability with a T = 2000 slow sweep of the moving stimulus (one full ring per trial, position sampled every 10 steps). The bump-position drift <code>|pos_lowrank(t) − pos_dense(t)|</code> is <strong>bounded</strong> for every rank — there is no accumulating error over the 200 s trial. At the recommended ranks (<code>k = 8</code> for CANN1D, <code>k = 32</code> for CANN2D) the long-horizon drift is sub-mrad; at very low ranks (<code>k = 1</code>) it peaks at ~8 mrad for CANN1D and ~13 mrad for CANN2D. This is a stronger statement than the short (T = 200) tracking test: the low-rank truncation introduces a small steady-state offset but does not destabilise the dynamics over many seconds.</p><p>The two methods are complementary: FFT is the right choice for exact high-fidelity matvec (parameter sweeps, regression tests, publication-quality comparisons) on CPU; truncated SVD is the right choice when a few percent of error is acceptable, when n is very large, or on GPU. We additionally stress-test long-horizon stability with a T = 2000 slow sweep; the low-rank drift is bounded for every <code>k</code>, sub-mrad at the recommended ranks.</p><p>All code, raw data, and the figure-generation scripts are in <code>benchmarks/cann_lowrank/</code> and <code>benchmarks/cann_fft/</code>. The features are exposed through the <code>accl_mode</code> and <code>accl_k</code> constructor arguments on <code>CANN1D</code> and <code>CANN2D</code> (and their SFA variants); see <code>canns.models.basic</code>.</p><p><strong>A live, browsable version of this report</strong> (with all figures and an interactive table of contents) is hosted at:<br/>
+<a href="https://7ct8ubrf2o5p6.space.mcode.cn">https://7ct8ubrf2o5p6.space.mcode.cn</a><br/>
+The PDF is also at <code>results/cann_lowrank_summary.pdf</code> in the repo. If the external link is unavailable, regenerate the report locally with:</p></section>
   <main>
     <h2>1. Introduction</h2>
 <p>Continuous Attractor Neural Networks model the persistent activity bump that many brain areas use to track a continuous variable such as head direction, spatial position, or stimulus orientation. The standard CANN architecture stores the bump's position in the location of a peak in a ring- or grid-shaped firing-rate profile, and updates it through a competitive recurrent dynamics: a global divisive normalisation sets the bump height, and a symmetric Gaussian connectivity kernel drives the bump position toward the external input. The recurrent matvec <code>Irec = conn @ r</code> is the O(n²) inner step, and dominates wall time at the network sizes (n ≥ 512) that matter for biologically-plausible models.</p>
@@ -478,64 +480,188 @@ V_l = Vh[:k, :].T · sqrt(S[:k]) # (n, k)
 
 <p>The key qualitative result is that <strong>the drift is bounded for every <code>k</code>, including <code>k=1</code></strong>. The low-rank truncation introduces a small fixed offset (the position error of the approximation) but does not introduce an instability that grows with <code>t</code>. This is consistent with the Gaussian kernel having a fast-decaying SVD: even rank-1 captures the essential shape of the connectivity, and the omitted components are <em>smooth perturbations</em> that shift the bump by a small amount rather than destabilising the dynamics.</p>
 <h3>3.8 Circulant FFT: exact matvec on a clean circulant</h3>
-<p>We complement the low-rank sweep with a focused benchmark of the FFT path on a clean circulant (uniform <code>endpoint=False</code> grid), comparing per-step time and accuracy to both the dense baseline and several SVD ranks. The numbers below come from the same Apple M4 CPU and A100 GPU hardware as the low-rank sweep, but the FFT path requires the user to override the canns default grid (see §2.7). All four platforms are: Mac M4 CPU, Server Intel Xeon Gold 6348 CPU, and A100 GPU.</p>
-<p><strong>Headline (CPU, 1D n=4096).</strong> Dense matvec 0.80 ms. The FFT path runs in 0.032 ms — a <strong>25× speedup</strong>, and the result is <strong>exact</strong> (max-abs error 1.7e-4, at float precision). The rank-1 SVD runs in 0.005 ms (<strong>166×</strong> speedup) but the max error is 5.4e+1 (~30 mrad). The rank-4 SVD runs in 0.013 ms (63× speedup, error 4.6e+1 ≈ 25 mrad). The rank-16 SVD is at 0.017 ms (47× speedup, error 2.9e-2 ≈ 16 mrad).</p>
-<p><strong>Headline (GPU, 1D n=4096).</strong> Dense matvec 0.23 ms; FFT matvec 0.21 ms (<strong>1.10×</strong> speedup). The dense matvec is already well-optimised by cuBLAS sgemv, and the per-step advantage of FFT is small. The story changes on the <code>lax.scan</code> (T=200) path: dense scan 0.053 ms → FFT scan 0.027 ms (<strong>1.96×</strong> speedup) — XLA fuses the FFT body and avoids the per-step launch overhead. SVD k=1 still wins on raw per-step speed (0.094 ms, 2.4× speedup) at the cost of large approximation error.</p>
-<p><strong>Trade-off summary (CPU 1D n=4096, all backends):</strong></p>
-<pre><code>
-backend       per-step   scan        max_err   speedup_step  speedup_scan
-dense         0.80 ms    0.80 ms    0          1.0×          1.0×
-fft           0.032 ms   0.021 ms   1.7e-4     25.2×         38.8×      ★ exact + fast
-svd_k64       0.034 ms   0.025 ms   ~1.7e-4    23.3×         32.5×      ★ near-exact + fast
-svd_k16       0.017 ms   0.006 ms   2.9e-2     47.3×         139×       ◯ low error + faster
-svd_k4        0.013 ms   0.003 ms   4.6e+1     63.4×         298×       △ fast, big error
-svd_k1        0.005 ms   0.001 ms   5.4e+1     168×          965×       ⚠ fastest, biggest error
-</code></pre>
-<p>Figure 9 shows the speed-accuracy trade-off across the three platforms and both models, with each marker representing one <code>(n, backend)</code> pair at the largest tested <code>n</code> for that model. Figure 10 shows per-n speedup bars (per-backend, per-platform).</p>
-<figure><img alt="Speed vs accuracy trade-off — all platforms" src="figures/fig_fft_tradeoff.png"/><figcaption><strong>Figure 9.</strong> <em>Speed vs accuracy trade-off, all platforms × all backends.</em> Each marker is a <code>(n, backend)</code> cell at the largest tested <code>n</code> for that model (CPU: Mac M4 + Server Xeon, GPU: A100). The Pareto front for <em>exact</em> matvec sits at the lower-right corner (<code>dense</code> and <code>FFT</code>/<code>SVD k=64</code>); the Pareto front for <em>fastest approximate</em> matvec sits at the upper-left (<code>SVD k=1</code>). On the A100 GPU all backends cluster around 0.1-0.2 ms because cuBLAS sgemv is already very well optimised for this shape; the per-step advantage of FFT over dense is small. On the Mac M4 CPU the spread is widest: dense at 0.8 ms, FFT at 0.03 ms (25×), SVD k=1 at 0.005 ms (166×).</figcaption></figure>
+<p>The low-rank approximation in §3.3-3.7 is approximate: at any fixed <code>k</code> there is a residual error that we characterised as the bump-position error (mrad). This subsection asks whether an <em>exact</em> matvec is achievable in O(n log n) on a clean circulant, and at what cost in wall time. The theoretical background is given in §2.7; here we report the measured wall time and accuracy on the same hardware as the low-rank sweep (Apple M4 CPU + Server Intel Xeon 6348 CPU + NVIDIA A100-SXM4-80GB), with one addition: we now also report a <code>lax.scan</code> (T=200) measurement that amortises JIT dispatch overhead and is the more relevant metric for rollout-style simulations.</p>
+<p>The FFT path is exposed through <code>accl_mode='fft'</code> and requires the user to override the canns default grid to a clean circulant (<code>model.x = bm.linspace(-π, π, n, endpoint=False)</code>; see §2.7). On the canns default <code>endpoint=True</code> grid the FFT path silently falls back to dense with a <code>UserWarning</code>. Throughout this subsection the FFT numbers are on the clean circulant.</p>
+<h4>3.8.1 CPU: FFT is 25-50× faster than dense, <em>exact</em> at float precision</h4>
+<p>On the Apple M4 CPU, the dense baseline matvec is 0.80 ms at <code>n = 4096</code>. The FFT path completes the same matvec in 0.032 ms — a <strong>25× speedup</strong>, and the result is <strong>exact</strong> to float precision (max-abs error 1.7×10⁻⁴). On the same machine, the rank-1 SVD runs in 0.005 ms (<strong>166×</strong> speedup) but the max error is 5.4×10¹ (≈ 30 mrad on a 2π ring). The SVD path and the FFT path therefore sit at opposite corners of the Pareto plane: SVD k=1 is the fastest approximate, FFT is the fastest exact. The intermediate SVD ranks (k=4, k=16, k=64) fill the gap with monotonically decreasing speedup and decreasing error (Table 1).</p>
+<p><strong>Table 1.</strong> <em>CPU Apple M4, CANN1D n=4096, all backends on a clean circulant.</em> Per-step is the median wall time of a single matvec after JIT warmup; scan is the per-step time inside a <code>lax.scan</code> of T=200 repeated matvecs. Max-abs error is the absolute difference vs the dense baseline, measured in the Matlab sense (one vector per <code>(n, backend)</code> cell). The symbols are used in Figures 4-5, 9, and 10 to keep the legend compact.</p>
+<table>
+<thead>
+<tr>
+<th>backend</th>
+<th>per-step (ms)</th>
+<th>scan (ms)</th>
+<th>max-err</th>
+<th>speedup-step</th>
+<th>speedup-scan</th>
+<th>symbol</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>dense</code></td>
+<td>0.80</td>
+<td>0.80</td>
+<td>0</td>
+<td>1.0×</td>
+<td>1.0×</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>fft</code></td>
+<td>0.032</td>
+<td>0.021</td>
+<td>1.7×10⁻⁴</td>
+<td><strong>25.2×</strong></td>
+<td><strong>38.8×</strong></td>
+<td>★ exact + fast</td>
+</tr>
+<tr>
+<td><code>svd_k64</code></td>
+<td>0.034</td>
+<td>0.025</td>
+<td>~1.7×10⁻⁴</td>
+<td>23.3×</td>
+<td>32.5×</td>
+<td>★ near-exact</td>
+</tr>
+<tr>
+<td><code>svd_k16</code></td>
+<td>0.017</td>
+<td>0.006</td>
+<td>2.9×10⁻²</td>
+<td>47.3×</td>
+<td>139×</td>
+<td>◯ low error</td>
+</tr>
+<tr>
+<td><code>svd_k4</code></td>
+<td>0.013</td>
+<td>0.003</td>
+<td>4.6×10¹</td>
+<td>63.4×</td>
+<td>298×</td>
+<td>△ fast, big error</td>
+</tr>
+<tr>
+<td><code>svd_k1</code></td>
+<td>0.005</td>
+<td>0.001</td>
+<td>5.4×10¹</td>
+<td><strong>168×</strong></td>
+<td><strong>965×</strong></td>
+<td>⚠ fastest, biggest error</td>
+</tr>
+</tbody>
+</table>
+<p>Three observations follow from Table 1. <em>First</em>, the FFT path and the SVD k=64 path are within 5% of each other in wall time and within 1% in error — they are essentially interchangeable on this size. <em>Second</em>, the rank-1 SVD is 6.5× faster than FFT but 30 mrad less accurate; this is the canonical "fastest but lossy" corner of the Pareto front, and the only place where the low-rank path strictly beats FFT on CPU. <em>Third</em>, the gap between <code>dense</code> and <code>fft</code> widens roughly as <code>n</code> (the dense matvec grows O(n²), FFT grows O(n log n)); at <code>n = 64</code> the FFT path is in fact slower than dense due to constant overhead.</p>
+<h4>3.8.2 GPU: FFT is competitive only on the scan path</h4>
+<p>On the A100 the per-step picture changes qualitatively. The dense matvec at <code>n = 4096</code> is 0.23 ms — well under 1 ms — and the FFT path is 0.21 ms (<strong>1.10×</strong> speedup). The explanation is that cuBLAS <code>sgemv</code> is already a very well-optimised kernel for this shape, and the per-step wall time is launch-bound rather than compute-bound. The <code>lax.scan</code> (T=200) path tells a different story: dense scan is 0.053 ms, FFT scan is 0.027 ms — a <strong>1.96×</strong> speedup — because XLA fuses the FFT body and amortises the launch overhead across the scan iterations. The same <code>lax.scan</code> effect applies to the SVD path (rank-1 scan is 5× faster than dense scan), so the relative ranking of the backends is preserved on the scan metric.</p>
+<p><strong>Table 2.</strong> <em>NVIDIA A100 GPU, CANN1D n=4096.</em> Same conventions as Table 1.</p>
+<table>
+<thead>
+<tr>
+<th>backend</th>
+<th>per-step (ms)</th>
+<th>scan (ms)</th>
+<th>max-err</th>
+<th>speedup-step</th>
+<th>speedup-scan</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>dense</code></td>
+<td>0.23</td>
+<td>0.053</td>
+<td>0 (TF32)</td>
+<td>1.00×</td>
+<td>1.00×</td>
+</tr>
+<tr>
+<td><code>fft</code></td>
+<td>0.21</td>
+<td>0.027</td>
+<td>~7×10⁻²</td>
+<td>1.10×</td>
+<td><strong>1.96×</strong></td>
+</tr>
+<tr>
+<td><code>svd_k1</code></td>
+<td>0.094</td>
+<td>0.010</td>
+<td>5.4×10¹</td>
+<td><strong>2.40×</strong></td>
+<td><strong>5.03×</strong></td>
+</tr>
+<tr>
+<td><code>svd_k4</code></td>
+<td>0.103</td>
+<td>0.012</td>
+<td>4.0×10¹</td>
+<td>2.20×</td>
+<td>4.23×</td>
+</tr>
+<tr>
+<td><code>svd_k16</code></td>
+<td>0.119</td>
+<td>0.019</td>
+<td>1.0×10⁻¹</td>
+<td>1.90×</td>
+<td>2.83×</td>
+</tr>
+</tbody>
+</table>
+<p>The GPU error floor in Table 2 is ~10⁻² rather than 10⁻⁵ because cuBLAS sgemv on Ampere uses TF32 (10-bit mantissa) by default; this is a property of the dense baseline, not a limitation of FFT. To get full FP32 precision on the GPU, disable TF32 with <code>JAX_ENABLE_TF32=0</code>.</p>
+<h4>3.8.3 Why the gap between Mac M4 and A100?</h4>
+<p>We additionally measured the FFT path on a third platform: an Intel Xeon Gold 6348 (2.6 GHz, 16 cores, AVX-512) Linux server. The Xeon is <em>slower</em> than the Mac M4 by about 30% at the dense matvec (1.06 ms vs 0.80 ms at n=4096) and 5× at the FFT matvec (0.169 ms vs 0.032 ms). The reason is that matvec is single-threaded (the BLAS single-precision GEMV is not parallelised across cores in our setup) and the Apple M4's Accelerate framework gives exceptionally well-tuned single-core performance for matmul-shaped work. On the GPU the dense matvec is already very fast (well under 1 ms even at n=4096) so the FFT's O(n log n) advantage is in the noise for per-step calls; the win shows up in the scan path where XLA fusion removes per-step launch overhead. <strong>Practical implication</strong>: for <code>n ≤ 4096</code> on CPU the Mac M4 with <code>accl_mode='fft'</code> outperforms the A100 GPU with <code>accl_mode='dense'</code>, even ignoring TFlops; the GPU is the right choice only for <code>n ≥ 8192</code> or for long rollouts where the XLA-fused scan amortises launch overhead.</p>
+<h4>3.8.4 Pareto view: speed vs accuracy</h4>
+<p>Figure 9 shows the per-step time vs max-abs error for all backends × all platforms × the largest tested <code>n</code> per model. The Pareto front at the <em>exact</em> end (err ≤ 10⁻⁴) is shared by <code>dense</code> and <code>fft</code> (and <code>svd_k64</code>, which is indistinguishable from exact at this size). The Pareto front at the <em>fastest approximate</em> end is <code>svd_k1</code> at 5×10⁻⁴–5×10¹ error. The middle of the front (10⁻²–10⁰ error) is filled by <code>svd_k16</code> and <code>svd_k4</code>.</p>
+<figure><img alt="Speed vs accuracy trade-off — all platforms" src="figures/fig_fft_tradeoff.png"/><figcaption><strong>Figure 9.</strong> <em>Speed vs accuracy trade-off, all platforms × all backends, at the largest tested n per (model, platform).</em> The lower-left corner is the <em>Pareto-optimal exact</em> region (<code>fft</code>, <code>svd_k64</code>); the upper-left corner is the <em>Pareto-optimal approximate</em> region (<code>svd_k1</code>). On the A100 GPU all backends cluster around 0.1-0.2 ms per step because cuBLAS sgemv is already very well optimised for this shape. On the Mac M4 CPU the spread is widest: dense at 0.8 ms, FFT at 0.03 ms (25×), SVD k=1 at 0.005 ms (166×). The Xeon server CPU sits between the Mac M4 and the A100 on the exact path (0.17 ms FFT) but trails the Mac M4 by 5× on the FFT path because of its weaker single-core BLAS throughput.</figcaption></figure>
 
 <figure><img alt="Per-n speedup vs dense — Mac M4 CPU and A100 GPU" src="figures/fig_fft_per_n_panels.png"/><figcaption><strong>Figure 10.</strong> <em>Per-n speedup vs dense, by backend.</em> Top row: Mac M4 CPU. Bottom row: A100 GPU. The CPU speedup scales with <code>n</code> (the dense matvec grows O(n²), the accelerated paths grow O(n log n) or O(n·k)). The GPU speedup is roughly flat at 1-2.5× — all backends are bandwidth-bound at this size, and the dense cuBLAS sgemv is already very fast. <strong>Key takeaway:</strong> on Mac M4 CPU the FFT path is the <em>only</em> way to get an exact matvec with &gt;20× speedup; on A100 GPU the low-rank path is competitive for all n and the FFT path's main advantage is the <em>scan/rollout</em> path (1.6-2.0× speedup at the largest n).</figcaption></figure>
 
-<p><strong>Why the gap between Mac M4 and A100?</strong> The Apple M4's Accelerate framework gives exceptionally well-tuned single-core BLAS for matmul-shaped work. The Mac M4 beats an Intel Xeon Gold 6348 (2.6 GHz, 16 cores, AVX-512) on this workload because matvec is single-threaded and the M4's per-core performance is higher. On GPU the dense matvec is already very fast (well under 1 ms even at n=4096) so the FFT's O(n log n) advantage is in the noise for per-step calls; the win shows up in the scan path where XLA fusion removes per-step launch overhead.</p>
-<p><strong>Decision matrix — which backend for which use case?</strong></p>
+<p><strong>Discussion: where the Pareto front bends.</strong> The speed-error curve has a clear knee around <code>k=16</code> for 1D and <code>k=32</code> for 2D (the same ranks recommended by the spectral analysis in §3.1). Below the knee (k=1, k=4), halving the error costs roughly 2× in wall time — the speedup curve is roughly <code>1/k</code>. Above the knee (k≥16 → fft/dense), further improving accuracy by an order of magnitude (from 10⁻² mrad to 10⁻⁴ mrad) costs only ~25% more wall time — the curve flattens. This is the practical "you can have exactness almost for free" regime: pick <code>fft</code> for the high-fidelity end of the Pareto front, and pick <code>svd_k16</code> for the lossy but faster middle.</p>
+<h4>3.8.5 Decision matrix — which backend for which use case?</h4>
+<p>We summarise the experimental evidence in a decision matrix. Each row gives a use case, the recommended backend(s), and the empirical justification from Tables 1-2 and Figures 4-10.</p>
 <table>
 <thead>
 <tr>
 <th>Use case</th>
 <th>Recommended</th>
-<th>Why</th>
+<th>Empirical justification</th>
 </tr>
 </thead>
 <tbody>
 <tr>
 <td>CPU, n ≥ 256, need <strong>exact</strong> matvec</td>
 <td><code>fft</code> (with <code>endpoint=False</code> grid)</td>
-<td>25-50× speedup, <strong>exact</strong> to float precision</td>
+<td>25-50× speedup, <strong>exact</strong> to float precision (Table 1)</td>
 </tr>
 <tr>
 <td>CPU, n &lt; 256</td>
 <td><code>dense</code></td>
-<td>All backends &lt; 0.01 ms; dense is simplest</td>
+<td>All backends &lt; 0.01 ms; dense is simplest (Figure 10)</td>
 </tr>
 <tr>
 <td>CPU, error budget 5-50 mrad, n ≥ 1024</td>
 <td><code>svd_k1</code></td>
-<td>100-1000× speedup, position visualisation only</td>
+<td>100-1000× speedup, position visualisation only (Table 1)</td>
 </tr>
 <tr>
 <td>CPU, error budget 1-30 mrad</td>
 <td><code>svd_k16</code></td>
-<td>50× speedup, low enough error for most analyses</td>
+<td>50× speedup, low enough error for most analyses (Figure 5)</td>
 </tr>
 <tr>
 <td>CPU, error budget &lt; 1 mrad</td>
 <td><code>fft</code> (exact) or <code>svd_k64</code></td>
-<td>~25× speedup, exact / near-exact</td>
+<td>~25× speedup, exact / near-exact (Table 1)</td>
 </tr>
 <tr>
 <td>GPU, per-step control (&lt; 100 steps)</td>
 <td><code>dense</code> (cuBLAS)</td>
-<td>cuBLAS sgemv is already 0.2 ms, FFT only 1.1× faster</td>
+<td>cuBLAS sgemv is already 0.2 ms, FFT only 1.1× faster (Table 2)</td>
 </tr>
 <tr>
 <td>GPU, long rollout (≥ 1000 steps)</td>
