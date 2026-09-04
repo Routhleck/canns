@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.4.0] - 2026-09-04
+
 ### Added
 - **`accl_mode="fft"` for exact circulant matvec on CANN1D, CANN2D.** A fifth acceleration mode that exploits the circulant structure of the Gaussian distance kernel on a uniform ring (1D) or torus (2D). The matvec is computed exactly via `real(ifft(fft(c) ⊙ fft(r)))` in O(n log n) instead of O(n²). On a clean circulant (`endpoint=False` uniform grid) the FFT path is **exact** (rel err < 1e-5 at float precision, independent of n) and gives 25-50× per-step speedup on CPU at `n=4096`. On A100 GPU the per-step win is small (~10%) because cuBLAS sgemv is already very well-optimized; the scan/rollout path still benefits (1.6-2.0×). The canns default `endpoint=True` grid is not circulant under the canns wrap convention, so the FFT path silently falls back to `"normal"` with a `UserWarning` on that grid. To get the FFT speedup, override the grid:
     ```python
