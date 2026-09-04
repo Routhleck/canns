@@ -1,13 +1,9 @@
-"""CANN1D ``accl_mode="fft"``: exact circulant matvec on a clean ring.
+"""CANN2D ``accl_mode="fft"``: exact doubly-circulant matvec on a clean torus.
 
-The Gaussian distance kernel is right-circulant **only** on a uniform
-grid with ``endpoint=False``. The canns default ``endpoint=True``
-grid duplicates the wrap point, so this example:
-
-1. builds a CANN1D on the default grid and shows that ``fft``
-   silently falls back to ``"normal"`` with a warning;
-2. rebuilds the model on a clean ``endpoint=False`` grid and shows
-   the FFT path activated and exact to fp32 precision.
+Same setup caveat as :file:`cann1d_fft_mode.py`: the FFT path is
+exact only on a uniform ``endpoint=False`` grid. The canns default
+``endpoint=True`` grid is not doubly-circulant, so the mode falls
+back to dense with a warning.
 
 See :mod:`canns.models.basic.accel` for the underlying decision.
 """
@@ -17,7 +13,7 @@ import warnings
 import brainpy.math as bm
 import numpy as np
 
-from canns.models.basic import CANN1D
+from canns.models.basic import CANN2D
 
 bm.set_dt(0.1)
 
@@ -26,22 +22,22 @@ def main():
     # 1) Default grid (endpoint=True) -> falls back to dense.
     with warnings.catch_warnings(record=True) as caught:
         warnings.simplefilter("always")
-        cann = CANN1D(num=128, accl_mode="fft")
+        cann = CANN2D(length=16, accl_mode="fft")
     print(f"  default grid: requested=fft, got={cann.accl_mode}  "
           f"(silent fallback)")
     if caught:
         print(f"  warning: {str(caught[0].message)[:80]}...")
 
     # 2) Clean grid (endpoint=False) -> FFT path exact.
-    cann = CANN1D(num=128, accl_mode="normal")
-    cann.x = bm.linspace(-bm.pi, bm.pi, 128, endpoint=False)
+    cann = CANN2D(length=16, accl_mode="normal")
+    cann.x = bm.linspace(-bm.pi, bm.pi, 16, endpoint=False)
     cann.conn_mat = cann.make_conn()
     cann.set_accl_mode("fft")
     print(f"\n  clean grid: mode={cann.accl_mode}  "
           f"backend={type(cann.irec_backend).__name__}")
 
     # 3) Verify FFT matvec equals dense to fp32 precision.
-    r = bm.random.rand(128)
+    r = bm.random.rand(16 * 16)
     dense = np.asarray(cann.conn_mat @ r)
     fft_out = np.asarray(cann.irec_backend(r))
     rel_err = np.abs(dense - fft_out).max() / np.abs(dense).max()
