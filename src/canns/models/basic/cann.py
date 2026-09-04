@@ -6,7 +6,7 @@ from matplotlib import pyplot as plt
 
 from ...typing import time_type
 from ._base import BasicModel
-from .cann_accl import (
+from .accel import (
     ACCL_DEFAULT_K,
     ACCL_MODES,
     _pick_k_for_err_target,  # noqa: F401  (re-exported for backward compat)
@@ -161,7 +161,7 @@ class BaseCANN1D(BaseCANN):
             **kwargs: Additional keyword arguments passed to the parent BasicModel.
 
         See Also:
-            :mod:`canns.models.basic.cann_accl`: the strategy-pattern
+            :mod:`canns.models.basic.accel`: the strategy-pattern
             backends that implement the modes above, with a "which
             mode should I use?" decision table at the top of the
             module.
@@ -193,7 +193,7 @@ class BaseCANN1D(BaseCANN):
         # conn_mat reference) live on ``self.irec_backend``. ``update()``
         # just calls ``self.irec_backend(self.r.value)`` and the
         # backend chooses the right math. Adding a new mode means
-        # adding a new backend class in :mod:`.cann_accl` — this file
+        # adding a new backend class in :mod:`.accel` — this file
         # is not touched. See ``benchmarks/cann_lowrank`` for the SVD
         # trade-offs and ``benchmarks/cann_fft`` for the FFT comparison.
         self._accl_target_err_mrad = accl_target_err_mrad
@@ -267,7 +267,7 @@ class BaseCANN1D(BaseCANN):
         """(Re)build ``self.irec_backend`` for the current ``conn_mat``.
 
         The actual SVD / FFT pre-compute lives in
-        :func:`canns.models.basic.cann_accl.make_irec_backend`; this
+        :func:`canns.models.basic.accel.make_irec_backend`; this
         method is the thin convenience wrapper exposed on the model
         so callers (e.g. the test suite) can re-setup the backend
         after rebuilding ``conn_mat`` in place.
@@ -338,7 +338,7 @@ class BaseCANN1D(BaseCANN):
 
         Reflects the strategy currently held on ``self.irec_backend``:
         ``"normal"``, ``"fast"``, ``"ultra-fast"``, ``"auto"``, or
-        ``"fft"``. See :mod:`canns.models.basic.cann_accl` for the
+        ``"fft"``. See :mod:`canns.models.basic.accel` for the
         per-mode semantics.
         """
         return self.irec_backend.mode
@@ -401,7 +401,7 @@ class BaseCANN1D(BaseCANN):
         Thin wrapper around ``self.irec_backend(r)`` kept for
         backward compatibility (the test suite calls this directly).
         The dispatch (dense vs low-rank vs circulant-FFT) is entirely
-        inside the backend object; see :mod:`canns.models.basic.cann_accl`.
+        inside the backend object; see :mod:`canns.models.basic.accel`.
         """
         return self.irec_backend(r)
 
@@ -619,7 +619,7 @@ class BaseCANN2D(BaseCANN):
                 grid: ``model.x = bm.linspace(-bm.pi, bm.pi, length,
                 endpoint=False)``.
 
-                See :mod:`canns.models.basic.cann_accl` for a
+                See :mod:`canns.models.basic.accel` for a
                 side-by-side "which mode should I use?" guide.
             accl_k (int, optional): Explicit low-rank truncation. If given,
                 overrides the default rank implied by ``accl_mode`` (and,
@@ -660,7 +660,7 @@ class BaseCANN2D(BaseCANN):
         # conn_mat reference) live on ``self.irec_backend``. ``update()``
         # just calls ``self.irec_backend(self.r.value.reshape(-1))`` and
         # the backend chooses the right math. Adding a new mode means
-        # adding a new backend class in :mod:`.cann_accl` — this file is
+        # adding a new backend class in :mod:`.accel` — this file is
         # not touched. See ``benchmarks/cann_lowrank`` for the SVD
         # trade-offs and ``benchmarks/cann_fft`` for the FFT comparison.
         self._accl_target_err_mrad = accl_target_err_mrad
@@ -783,7 +783,7 @@ class BaseCANN2D(BaseCANN):
         """(Re)build ``self.irec_backend`` for the current ``conn_mat``.
 
         The actual SVD / FFT pre-compute lives in
-        :func:`canns.models.basic.cann_accl.make_irec_backend`; this
+        :func:`canns.models.basic.accel.make_irec_backend`; this
         method is the thin convenience wrapper exposed on the model
         so callers (e.g. the test suite) can re-setup the backend
         after rebuilding ``conn_mat`` in place.
@@ -856,7 +856,7 @@ class BaseCANN2D(BaseCANN):
 
         Reflects the strategy currently held on ``self.irec_backend``:
         ``"normal"``, ``"fast"``, ``"ultra-fast"``, ``"auto"``, or
-        ``"fft"``. See :mod:`canns.models.basic.cann_accl` for the
+        ``"fft"``. See :mod:`canns.models.basic.accel` for the
         per-mode semantics.
         """
         return self.irec_backend.mode
@@ -886,7 +886,7 @@ class BaseCANN2D(BaseCANN):
 
         Satisfies ``_U_l @ _V_l.T ≈ conn_mat`` up to the spectral tail
         past ``accl_k``. ``None`` whenever the current backend is not
-        :class:`canns.models.basic.cann_accl.LowRankIrec` (i.e. dense
+        :class:`canns.models.basic.accel.LowRankIrec` (i.e. dense
         or circulant-FFT). Exposed as a read-only attribute for tests
         and benchmarks that need to inspect the low-rank factors
         directly.
@@ -910,7 +910,7 @@ class BaseCANN2D(BaseCANN):
         Used by the ``"fft"`` mode to evaluate
         ``real(ifft2(K_fft ⊙ fft2(r_2d))).ravel()`` on a clean torus.
         ``None`` whenever the current backend is not
-        :class:`canns.models.basic.cann_accl.CirculantFFTIrec2D`.
+        :class:`canns.models.basic.accel.CirculantFFTIrec2D`.
         Exposed for tests and benchmarks.
         """
         return self.irec_backend.K_fft
@@ -922,7 +922,7 @@ class BaseCANN2D(BaseCANN):
         backward compatibility (the test suite calls this directly).
         The dispatch (dense vs low-rank vs doubly-circulant-FFT) is
         entirely inside the backend object; see
-        :mod:`canns.models.basic.cann_accl`.
+        :mod:`canns.models.basic.accel`.
 
         The input/output are flat ``(length²,)``. The caller is
         responsible for reshaping the result back to a 2D grid if
