@@ -14,24 +14,37 @@ performance-sensitive path should add a new result file here.
 benchmarks/
 ├── README.md                  # this file
 ├── shuffle_null_model.py      # current benchmark: FFI vs mp.Pool
-├── canns_lowrank/             # sub-benchmark for the accl_mode / accl_k
-│   │                              # low-rank matvec feature on CANN1D/2D
-│   ├── bench.py
-│   ├── report.py
-│   ├── REVIEW.md
-│   ├── README.md
-│   └── results/
-│       ├── cann_lowrank_summary.{md,html,pdf}   # paper-style writeup
-│       ├── cann_lowrank_*.csv
-│       ├── bump_trajectories_*.npz
-│       ├── bump_drift_*.npz
-│       └── figures/fig_*.{png,pdf}
-├── run_all.sh                 # one-shot re-runner (add new benchmarks here)
-└── results/
-    ├── v1.2.0-shuffle.csv         # macOS arm64 raw data, version-keyed, immutable
-    ├── v1.2.0-shuffle.md          # macOS arm64 writeup, immutable
-    ├── v1.2.0-shuffle-linux.csv   # Linux x86_64 16c raw data, immutable
-    ├── v1.2.0-shuffle-linux.md    # Linux x86_64 16c writeup, immutable
+├── canns-accl/                 # benchmarks for the accl_mode feature
+│   │                              # (low-rank SVD + circulant-FFT matvec)
+│   ├── README.md              #     unified entry point
+│   ├── run_all.sh             #     one-shot re-runner
+│   ├── lowrank/               #   SVD truncated-rank sweep
+│   │   ├── bench.py
+│   │   ├── report.py
+│   │   ├── REVIEW.md
+│   │   ├── _smoke/
+│   │   └── results/
+│   │       ├── cann_lowrank_summary.{md,html,pdf}  # paper-style writeup
+│   │       ├── cann_lowrank_*.csv
+│   │       ├── bump_trajectories_*.npz
+│   │       ├── bump_drift_*.npz
+│   │       └── figures/fig_*.{png,pdf}
+│   └── fft/                   #   circulant-FFT comparison sweep
+│       ├── bench.py
+│       ├── report.py
+│       ├── detailed_report.py
+│       ├── triple_report.py
+│       ├── combine_reports.py
+│       ├── TEACHING_FFT.md
+│       └── results/
+│           ├── cann_fft_summary.md
+│           ├── cann_fft_*.csv
+│           └── figures/fig_*.{png,pdf}
+└── results/                   # shuffle benchmark outputs (immutable, version-keyed)
+    ├── v1.2.0-shuffle.csv         # macOS arm64 raw data
+    ├── v1.2.0-shuffle.md          # macOS arm64 writeup
+    ├── v1.2.0-shuffle-linux.csv   # Linux x86_64 16c raw data
+    ├── v1.2.0-shuffle-linux.md    # Linux x86_64 16c writeup
     └── ...                        # future: v1.3.0-shuffle.md, etc.
 ```
 
@@ -85,8 +98,10 @@ When a release introduces (or re-tunes) a performance-sensitive path:
 
 1. Add a new benchmark script under `benchmarks/` (or extend an existing
    one) covering the new path.
-2. Wire it into `benchmarks/run_all.sh` so a single command reproduces
-   every committed result.
+2. Wire it into `benchmarks/canns-accl/run_all.sh` (for `accl_mode`
+   benchmarks) or a new top-level `benchmarks/run_all.sh` entry
+   (for other paths), so a single command reproduces every committed
+   result.
 3. Run the benchmark on the target hardware. Capture:
    - Hardware (CPU model + count, RAM, OS + version)
    - Software (Python version, `canns` version, `canns-lib` version, key
