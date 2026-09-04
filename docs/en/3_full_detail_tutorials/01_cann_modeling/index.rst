@@ -26,6 +26,7 @@ Advanced Tutorials
    06_hierarchical_network
    07_theta_sweep_hd_grid
    08_theta_sweep_place_cell
+   09_acceleration_modes
 
 Learning Path
 -------------
@@ -42,6 +43,9 @@ Learning Path
 - Tutorial 5: Multi-scale spatial representation
 - Tutorial 6: Theta-modulated dynamics
 - Tutorial 7: Complex environments with place cells
+- Tutorial 9: Speeding up large networks with the
+  ``accl_mode`` strategy pattern (low-rank SVD,
+  circulant-FFT, error-budget auto-pick)
 
 Prerequisites
 -------------
@@ -54,5 +58,5 @@ Estimated Time
 --------------
 
 - Foundation tutorials (1-4): 2-3 hours
-- Advanced tutorials (5-7): 2.5 hours
-- Total: 5 hours
+- Advanced tutorials (5-9): 3 hours
+- Total: 5-6 hours

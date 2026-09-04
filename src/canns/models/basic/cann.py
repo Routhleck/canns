@@ -1,15 +1,17 @@
 from __future__ import annotations
 
-import warnings
-
 import brainpy.math as bm
 import jax
-import jax.numpy as jnp
-import numpy as np
 from matplotlib import pyplot as plt
 
 from ...typing import time_type
 from ._base import BasicModel
+from .cann_accl import (
+    ACCL_DEFAULT_K,
+    ACCL_MODES,
+    _pick_k_for_err_target,  # noqa: F401  (re-exported for backward compat)
+    make_irec_backend,
+)
 
 __all__ = [
     # Base Model
@@ -25,86 +27,9 @@ __all__ = [
     # Acceleration modes
     "ACCL_MODES",
     "ACCL_DEFAULT_K",
+    # Helper for picking k from the SVD spectrum
+    "_pick_k_for_err_target",
 ]
-
-
-#: Recognised values for ``accl_mode``. ``"normal"`` is full-rank, the
-#: others are low-rank approximations of the recurrent matvec.
-#: ``"auto"`` selects the rank dynamically from the SVD spectrum
-#: to satisfy the ``accl_target_err_mrad`` budget; ``"fft"`` exploits
-#: the circulant structure of the Gaussian distance kernel on a
-#: uniform ring/torus and uses FFT to compute the matvec exactly
-#: in O(n log n).
-ACCL_MODES: tuple[str, ...] = ("normal", "fast", "ultra-fast", "auto", "fft")
-
-#: Default rank for each ``(model family, mode)`` combination.
-#:
-#: The "fast" defaults are the values recommended by
-#: ``benchmarks/cann_lowrank/results/cann_lowrank_summary.md``: the
-#: smallest rank that keeps the bump-position error below ~5 mrad
-#: (about 0.3° on a ring of circumference 2π).
-ACCL_DEFAULT_K: dict[tuple[str, str], int] = {
-    ("CANN1D", "fast"): 8,
-    ("CANN1D", "ultra-fast"): 1,
-    ("CANN2D", "fast"): 32,
-    ("CANN2D", "ultra-fast"): 4,
-}
-
-
-def _pick_k_for_err_target(
-    spectrum: np.ndarray,
-    target_err_mrad: float,
-) -> int:
-    """Pick the smallest rank whose predicted bump-tracking error is
-    within ``target_err_mrad``.
-
-    The estimate is calibrated against the ``canns_lowrank`` benchmark
-    (see ``benchmarks/cann_lowrank/results/cann_lowrank_summary.md``):
-
-    =========================== =====================
-    ``target_err_mrad`` budget  heuristic used
-    =========================== =====================
-    ``>= 4.0``                   ``k = 1`` (always preserves bump tracking; the leading singular vector of a Gaussian kernel *is* the bump shape)
-    ``>= 1.0``                   smallest k with ``captured_energy >= 0.5``
-    ``>= 0.5``                   smallest k with ``captured_energy >= 0.9``
-    ``>= 0.1``                   smallest k with ``captured_energy >= 0.99``
-    ``< 0.1``                    ``-1`` (no lowrank can satisfy; fall back to dense)
-    =========================== =====================
-
-    Args:
-        spectrum: Singular values of ``conn_mat`` (descending), as
-            returned by ``np.linalg.svd(..., full_matrices=False)``.
-        target_err_mrad: User-specified maximum allowed bump-position
-            error in milliradians.
-
-    Returns:
-        The rank to use. Returns ``-1`` (the dense sentinel) if no
-        low-rank truncation satisfies the budget.
-    """
-    spectrum = np.asarray(spectrum, dtype=np.float64)
-    if spectrum.size == 0:
-        return -1
-    if target_err_mrad >= 4.0:
-        return 1
-    if target_err_mrad >= 1.0:
-        threshold = 0.5
-    elif target_err_mrad >= 0.5:
-        threshold = 0.9
-    elif target_err_mrad >= 0.1:
-        threshold = 0.99
-    else:
-        return -1
-
-    sq = spectrum**2
-    total = float(sq.sum())
-    if total <= 0:
-        # All-zero spectrum: any k gives the exact (zero) approximation,
-        # so fall through to "use smallest k = 1".
-        return 1
-    cum = np.cumsum(sq) / total
-    # First k such that cum[k-1] >= threshold; default to dense.
-    idx = int(np.searchsorted(cum, threshold, side="left")) + 1
-    return min(idx, spectrum.size)
 
 
 class BaseCANN(BasicModel):
@@ -234,6 +159,12 @@ class BaseCANN1D(BaseCANN):
                 Default ``5.0`` mrad. See
                 :func:`_pick_k_for_err_target` for the calibration.
             **kwargs: Additional keyword arguments passed to the parent BasicModel.
+
+        See Also:
+            :mod:`canns.models.basic.cann_accl`: the strategy-pattern
+            backends that implement the modes above, with a "which
+            mode should I use?" decision table at the top of the
+            module.
         """
         super().__init__(num, **kwargs)
 
@@ -257,19 +188,22 @@ class BaseCANN1D(BaseCANN):
         # The connection matrix, defining the strength of synapses between all pairs of neurons.
         self.conn_mat = self.make_conn()
 
-        # --- Acceleration (low-rank recurrent matvec) ---
-        # ``_U_l`` and ``_V_l`` are the rank-``accl_k`` truncated SVD factors
-        # such that ``_U_l @ _V_l.T ≈ conn_mat``. They are ``None`` in
-        # ``"normal"`` mode. ``_K_fft`` is the precomputed FFT of the
-        # first row of ``conn_mat`` for the ``"fft"`` mode (circulant
-        # matvec). At most one of the two paths is active at a time.
-        # See ``benchmarks/cann_lowrank`` for the SVD speed/accuracy
+        # --- Acceleration (low-rank / circulant-FFT recurrent matvec) ---
+        # All pre-computed factors (SVD factors, FFT kernel, dense
+        # conn_mat reference) live on ``self.irec_backend``. ``update()``
+        # just calls ``self.irec_backend(self.r.value)`` and the
+        # backend chooses the right math. Adding a new mode means
+        # adding a new backend class in :mod:`.cann_accl` — this file
+        # is not touched. See ``benchmarks/cann_lowrank`` for the SVD
         # trade-offs and ``benchmarks/cann_fft`` for the FFT comparison.
-        self._U_l: jax.Array | None = None
-        self._V_l: jax.Array | None = None
-        self._K_fft: jax.Array | None = None
-        self._setup_accl(
-            accl_mode=accl_mode, accl_k=accl_k, accl_target_err_mrad=accl_target_err_mrad
+        self._accl_target_err_mrad = accl_target_err_mrad
+        self.irec_backend = make_irec_backend(
+            self,
+            family="CANN1D",
+            mode=accl_mode,
+            dim=1,
+            k=accl_k,
+            target_err_mrad=accl_target_err_mrad,
         )
 
     def dist(self, d):
@@ -321,124 +255,40 @@ class BaseCANN1D(BaseCANN):
         return self.A * bm.exp(-0.25 * bm.square(self.dist(self.x - pos) / self.a))
 
     # ------------------------------------------------------------------
-    # Low-rank acceleration of the recurrent matvec
+    # Acceleration of the recurrent matvec (delegated to a strategy
+    # object on ``self.irec_backend``)
     # ------------------------------------------------------------------
     def _setup_accl(
         self,
-        accl_mode: str,
-        accl_k: int | None,
+        accl_mode: str | None = None,
+        accl_k: int | None = None,
         accl_target_err_mrad: float = 5.0,
     ) -> None:
-        """Validate and (if needed) pre-compute the low-rank factors.
+        """(Re)build ``self.irec_backend`` for the current ``conn_mat``.
 
-        Sets ``self.accl_mode`` and ``self.accl_k`` and (when
-        ``accl_mode != "normal"``) ``self._U_l``, ``self._V_l`` such that
-        ``self._U_l @ self._V_l.T ≈ self.conn_mat`` (or, for ``"fft"``,
-        ``self._K_fft`` such that ``ifft(K_fft ⊙ fft(r))`` is the
-        circulant matvec).
+        The actual SVD / FFT pre-compute lives in
+        :func:`canns.models.basic.cann_accl.make_irec_backend`; this
+        method is the thin convenience wrapper exposed on the model
+        so callers (e.g. the test suite) can re-setup the backend
+        after rebuilding ``conn_mat`` in place.
 
-        For ``accl_mode == "auto"`` and ``accl_k is None``, the rank is
-        chosen from the SVD spectrum to satisfy
-        ``accl_target_err_mrad`` (see :func:`_pick_k_for_err_target`).
-        If no low-rank truncation can satisfy the budget the model
-        silently falls back to dense (``accl_mode = "normal"``).
+        ``accl_mode=None`` keeps the current mode; ``accl_k=None`` lets
+        the factory pick the mode default (or the spectrum pick for
+        ``"auto"``). For ``"auto"``, ``accl_target_err_mrad`` is only
+        used when ``accl_k is None``.
         """
-        if accl_mode not in ACCL_MODES:
-            raise ValueError(f"accl_mode must be one of {ACCL_MODES!r}, got {accl_mode!r}")
-        if accl_mode == "normal":
-            if accl_k is not None:
-                # Don't error — just inform. Setting accl_k with mode='normal'
-                # is harmless; we use the full rank regardless.
-                pass
-            self.accl_mode = "normal"
-            self.accl_k = -1
-            self._U_l = None
-            self._V_l = None
-            self._K_fft = None
-            return
-
-        if accl_mode == "fft":
-            # Exploit the circulant structure of the Gaussian distance
-            # kernel on a uniform ring. The FFT approach requires a
-            # *clean* circulant: the grid must be ``endpoint=False``
-            # (i.e. ``x[0] != x[-1]`` on the torus). The canns default
-            # uses ``endpoint=True``, which means the wrap brings both
-            # ``x[i] - x[0]`` and ``x[i] - x[-1]`` to 0 for ``i = 0`` but
-            # to *different* values for ``i > 0`` — the resulting
-            # ``conn_mat`` is not circulant, so the FFT formula does
-            # not apply. We detect this case and silently fall back
-            # to dense (with a warning) so the model still works.
-            if accl_k is not None:
-                # accl_k is meaningless in 'fft' (the matvec is exact).
-                # Accept silently, like we do for 'normal'.
-                pass
-            first_row = np.asarray(self.conn_mat[0, :], dtype=np.float32)
-            n = first_row.shape[0]
-            # We use a tight rtol because for endpoint=False at large
-            # n, first_row[0] = f(0) = max and first_row[-1] =
-            # f(2π * (n-1)/n) which is f(2π - 2π/n) = f(2π/n) after
-            # the wrap convention. For n = 4096 the difference is
-            # ~3e-5 (within np.isclose's default rtol=1e-5, so the
-            # detection would mis-fire at large n on a clean grid).
-            if n > 1 and np.isclose(first_row[0], first_row[-1], rtol=1e-7, atol=1e-7):
-                # endpoint=True (canns default): the connectivity is
-                # not circulant under canns's wrap convention, so the
-                # FFT formula would be wrong. Fall back to dense.
-                warnings.warn(
-                    "accl_mode='fft' requested but the grid appears to "
-                    "use endpoint=True (x[0] = x[-1] on the torus), which "
-                    "breaks the circulant structure. Falling back to "
-                    "dense. To use FFT acceleration, set a custom grid "
-                    "with endpoint=False, e.g. "
-                    "`model.x = bm.linspace(-bm.pi, bm.pi, num, endpoint=False)`.",
-                    stacklevel=2,
-                )
-                self.accl_mode = "normal"
-                self.accl_k = -1
-                self._U_l = None
-                self._V_l = None
-                self._K_fft = None
-                return
-            self._fft_duplicate = False
-            self._K_fft = jax.numpy.asarray(jnp.fft.fft(jnp.asarray(first_row)))
-            self._U_l = None
-            self._V_l = None
-            self.accl_mode = "fft"
-            self.accl_k = -1
-            return
-
-        # Compute the SVD once. We need it both for the 'auto' rank
-        # selection (if applicable) and for the factor storage.
-        U, S, Vt = np.linalg.svd(np.asarray(self.conn_mat), full_matrices=False)
-        n = S.shape[0]
-
-        # Resolve rank: explicit accl_k > 'auto' pick > mode default.
-        if accl_k is None and accl_mode == "auto":
-            picked = _pick_k_for_err_target(S, accl_target_err_mrad)
-            if picked == -1:
-                # Budget is too tight for any low-rank; use dense.
-                self.accl_mode = "normal"
-                self.accl_k = -1
-                self._U_l = None
-                self._V_l = None
-                self._K_fft = None
-                return
-            accl_k = picked
-        if accl_k is None:
-            accl_k = ACCL_DEFAULT_K[("CANN1D", accl_mode)]
-        if not (isinstance(accl_k, int) and accl_k >= 1):
-            raise ValueError(f"accl_k must be a positive int, got {accl_k!r}")
-        if accl_k > n:
-            # Truncate to full rank; matches numpy.linalg.svd semantics.
-            accl_k = n
-
-        # Store the balanced rank-`accl_k` factors as JAX arrays.
-        sqrtS = np.sqrt(S[:accl_k].astype(np.float32))
-        self._U_l = jax.numpy.asarray(U[:, :accl_k].astype(np.float32) * sqrtS)
-        self._V_l = jax.numpy.asarray(Vt[:accl_k, :].T.astype(np.float32) * sqrtS)
-        self._K_fft = None
-        self.accl_mode = accl_mode
-        self.accl_k = accl_k
+        new_mode = accl_mode if accl_mode is not None else self.irec_backend.mode
+        # Remember the err budget so subsequent ``set_accl_mode``
+        # calls (without an explicit target) can carry it across.
+        self._accl_target_err_mrad = accl_target_err_mrad
+        self.irec_backend = make_irec_backend(
+            self,
+            family="CANN1D",
+            mode=new_mode,
+            dim=1,
+            k=accl_k,
+            target_err_mrad=accl_target_err_mrad,
+        )
 
     def set_accl_mode(
         self,
@@ -467,50 +317,93 @@ class BaseCANN1D(BaseCANN):
             >>> model.set_accl_mode("auto", target_err_mrad=0.5)  # tighter budget
             >>> model.set_accl_mode("normal")      # back to full rank
         """
-        new_mode = mode if mode is not None else self.accl_mode
-        # ``k`` is treated as an *override*; ``None`` means "use the
-        # default for the new mode". This avoids accidentally carrying
-        # the sentinel ``-1`` (full rank) into a non-normal mode.
-        new_k = k
-        # Carry the existing err budget across ``set_accl_mode`` calls
-        # by remembering it on the instance. Set by ``__init__`` /
-        # ``_setup_accl`` if not previously stored.
+        new_mode = mode if mode is not None else self.irec_backend.mode
         if target_err_mrad is None:
             target_err_mrad = getattr(self, "_accl_target_err_mrad", 5.0)
         self._accl_target_err_mrad = target_err_mrad
-        self._setup_accl(
-            accl_mode=new_mode,
-            accl_k=new_k,
-            accl_target_err_mrad=target_err_mrad,
+        self.irec_backend = make_irec_backend(
+            self,
+            family="CANN1D",
+            mode=new_mode,
+            dim=1,
+            k=k,
+            target_err_mrad=target_err_mrad,
         )
+
+    # -- Public introspection (delegate to the backend) -----------------
+
+    @property
+    def accl_mode(self) -> str:
+        """The current acceleration mode (one of ``ACCL_MODES``).
+
+        Reflects the strategy currently held on ``self.irec_backend``:
+        ``"normal"``, ``"fast"``, ``"ultra-fast"``, ``"auto"``, or
+        ``"fft"``. See :mod:`canns.models.basic.cann_accl` for the
+        per-mode semantics.
+        """
+        return self.irec_backend.mode
+
+    @property
+    def accl_k(self) -> int:
+        """The effective low-rank rank, or ``-1`` for full-rank / exact FFT.
+
+        ``-1`` is returned in three cases: dense (``"normal"`` mode),
+        circulant-FFT (``"fft"`` mode, which is exact not truncated),
+        and ``"auto"`` mode when the budget is too tight to satisfy
+        with any lowrank (the model silently falls back to dense).
+        """
+        return self.irec_backend.k
 
     @property
     def is_accelerated(self) -> bool:
-        """True iff the model is using a low-rank recurrent matvec."""
-        return self.accl_mode != "normal"
+        """True iff the model is using a non-dense recurrent matvec
+        (low-rank or circulant-FFT)."""
+        return self.irec_backend.mode != "normal"
+
+    # -- Legacy introspection attributes (used by tests and benchmarks) --
+
+    @property
+    def _U_l(self) -> jax.Array | None:
+        """The ``U`` factor of the balanced SVD truncation, or ``None``.
+
+        Satisfies ``_U_l @ _V_l.T ≈ conn_mat`` up to the spectral tail
+        past ``accl_k``. ``None`` whenever the current backend is not
+        :class:`LowRankIrec` (i.e. dense or circulant-FFT). Exposed as
+        a read-only attribute for tests and benchmarks that need to
+        inspect the low-rank factors directly.
+        """
+        return self.irec_backend.U
+
+    @property
+    def _V_l(self) -> jax.Array | None:
+        """The ``V`` factor of the balanced SVD truncation, or ``None``.
+
+        See :attr:`_U_l` for the approximation guarantee and when this
+        is ``None``.
+        """
+        return self.irec_backend.V
+
+    @property
+    def _K_fft(self) -> jax.Array | None:
+        """The precomputed FFT of the (doubly-)circulant kernel, or ``None``.
+
+        Used by the ``"fft"`` mode to evaluate
+        ``real(ifft(K_fft ⊙ fft(r)))`` (1D) or
+        ``real(ifft2(K_fft ⊙ fft2(r_2d)))`` (2D). ``None`` whenever
+        the current backend is not :class:`CirculantFFTIrec1D` /
+        :class:`CirculantFFTIrec2D`. Exposed for tests and benchmarks.
+        """
+        return self.irec_backend.K_fft
 
     def _accel_Irec(self, r: jax.Array) -> jax.Array:
         """Compute the recurrent input ``Irec`` for a flat rate vector ``r``.
 
-        Branches on ``self.accl_mode``. The dense form is
-        ``conn @ r``; the low-rank form is
-        ``U_l @ (V_l.T @ r)``; the circulant-FFT form is
-        ``real(ifft(K_fft ⊙ fft(r)))`` for a clean circulant
-        (i.e. ``endpoint=False`` uniform grid; the canns
-        default ``endpoint=True`` grid is *not* circulant
-        and ``_setup_accl`` falls back to ``"normal"`` for
-        that case with a warning). The low-rank and FFT
-        forms are mathematically equivalent to the dense
-        form for symmetric ``conn_mat`` (the case for all
-        canns kernels built by ``make_conn``). The FFT form
-        is exact; the low-rank form has approximation
-        error controlled by ``accl_k``.
+        Thin wrapper around ``self.irec_backend(r)`` kept for
+        backward compatibility (the test suite calls this directly).
+        The dispatch (dense vs low-rank vs circulant-FFT) is entirely
+        inside the backend object; see :mod:`canns.models.basic.cann_accl`.
         """
-        if self._K_fft is not None:
-            return jax.numpy.real(jax.numpy.fft.ifft(self._K_fft * jax.numpy.fft.fft(r)))
-        if self._U_l is None:
-            return self.conn_mat @ r
-        return self._U_l @ (self._V_l.T @ r)
+        return self.irec_backend(r)
 
 
 class CANN1D(BaseCANN1D):
@@ -711,11 +604,23 @@ class BaseCANN2D(BaseCANN):
             accl_mode (str, optional): Acceleration mode for the recurrent matvec.
                 One of ``"normal"`` (full rank, default), ``"fast"`` (low-rank
                 with rank ``ACCL_DEFAULT_K[("CANN2D", "fast")] = 32``),
-                ``"ultra-fast"`` (low-rank with rank 4), or ``"auto"`` (pick
+                ``"ultra-fast"`` (low-rank with rank 4), ``"auto"`` (pick
                 the rank from the SVD spectrum to satisfy
-                ``accl_target_err_mrad``). At ``length=64`` the ``"fast"``
-                setting gives ~70× matvec speedup while keeping the
-                bump-position error below ~5 mrad.
+                ``accl_target_err_mrad``), or ``"fft"`` (exact doubly-
+                circulant matvec via 2D FFT, O(L² log L)). At ``length=64``
+                the ``"fast"`` setting gives ~70× matvec speedup while
+                keeping the bump-position error below ~5 mrad. The
+                ``"fft"`` mode gives a 25–50× speedup **and is exact**
+                (rel err < 1e-5) but only when the grid is uniform with
+                ``endpoint=False`` (i.e. a clean torus); the canns
+                default ``endpoint=True`` grid is not doubly-circulant,
+                so the FFT path silently falls back to ``"normal"``
+                with a warning. To get the FFT speedup, override the
+                grid: ``model.x = bm.linspace(-bm.pi, bm.pi, length,
+                endpoint=False)``.
+
+                See :mod:`canns.models.basic.cann_accl` for a
+                side-by-side "which mode should I use?" guide.
             accl_k (int, optional): Explicit low-rank truncation. If given,
                 overrides the default rank implied by ``accl_mode`` (and,
                 for ``"auto"``, the spectrum-based auto-pick). Must be
@@ -750,18 +655,23 @@ class BaseCANN2D(BaseCANN):
         # The connection matrix, defining the strength of synapses between all pairs of neurons.
         self.conn_mat = self.make_conn()
 
-        # --- Acceleration (low-rank recurrent matvec) ---
-        # ``_U_l`` and ``_V_l`` are the rank-``accl_k`` truncated SVD factors
-        # of the (length² × length²) recurrent matrix. ``_K_fft2`` is
-        # the precomputed 2D FFT of the first row reshaped to ``(L, L)``
-        # for the ``"fft"`` mode (doubly-circulant matvec). See
-        # ``benchmarks/cann_lowrank`` for the SVD trade-offs and
-        # ``benchmarks/cann_fft`` for the FFT comparison.
-        self._U_l: jax.Array | None = None
-        self._V_l: jax.Array | None = None
-        self._K_fft: jax.Array | None = None
-        self._setup_accl(
-            accl_mode=accl_mode, accl_k=accl_k, accl_target_err_mrad=accl_target_err_mrad
+        # --- Acceleration (low-rank / circulant-FFT recurrent matvec) ---
+        # All pre-computed factors (SVD factors, 2D FFT kernel, dense
+        # conn_mat reference) live on ``self.irec_backend``. ``update()``
+        # just calls ``self.irec_backend(self.r.value.reshape(-1))`` and
+        # the backend chooses the right math. Adding a new mode means
+        # adding a new backend class in :mod:`.cann_accl` — this file is
+        # not touched. See ``benchmarks/cann_lowrank`` for the SVD
+        # trade-offs and ``benchmarks/cann_fft`` for the FFT comparison.
+        self._accl_target_err_mrad = accl_target_err_mrad
+        self.irec_backend = make_irec_backend(
+            self,
+            family="CANN2D",
+            mode=accl_mode,
+            dim=2,
+            length=self.length,
+            k=accl_k,
+            target_err_mrad=accl_target_err_mrad,
         )
 
     def show_conn(self):
@@ -861,116 +771,41 @@ class BaseCANN2D(BaseCANN):
         return stimulus_flat.reshape((num_neurons_per_dim, num_neurons_per_dim))
 
     # ------------------------------------------------------------------
-    # Low-rank acceleration of the recurrent matvec
+    # Acceleration of the recurrent matvec (delegated to a strategy
+    # object on ``self.irec_backend``)
     # ------------------------------------------------------------------
     def _setup_accl(
         self,
-        accl_mode: str,
-        accl_k: int | None,
+        accl_mode: str | None = None,
+        accl_k: int | None = None,
         accl_target_err_mrad: float = 5.0,
     ) -> None:
-        """Validate and (if needed) pre-compute the low-rank factors.
+        """(Re)build ``self.irec_backend`` for the current ``conn_mat``.
 
-        Sets ``self.accl_mode`` and ``self.accl_k`` and (when
-        ``accl_mode != "normal"``) ``self._U_l``, ``self._V_l`` such that
-        ``self._U_l @ self._V_l.T ≈ self.conn_mat`` (which is
-        ``(length² × length²)`` here).
+        The actual SVD / FFT pre-compute lives in
+        :func:`canns.models.basic.cann_accl.make_irec_backend`; this
+        method is the thin convenience wrapper exposed on the model
+        so callers (e.g. the test suite) can re-setup the backend
+        after rebuilding ``conn_mat`` in place.
 
-        For ``accl_mode == "auto"`` and ``accl_k is None``, the rank is
-        chosen from the SVD spectrum to satisfy
-        ``accl_target_err_mrad`` (see :func:`_pick_k_for_err_target`).
-        If no low-rank truncation can satisfy the budget the model
-        silently falls back to dense (``accl_mode = "normal"``).
+        ``accl_mode=None`` keeps the current mode; ``accl_k=None`` lets
+        the factory pick the mode default (or the spectrum pick for
+        ``"auto"``). For ``"auto"``, ``accl_target_err_mrad`` is only
+        used when ``accl_k is None``.
         """
-        if accl_mode not in ACCL_MODES:
-            raise ValueError(f"accl_mode must be one of {ACCL_MODES!r}, got {accl_mode!r}")
-        if accl_mode == "normal":
-            self.accl_mode = "normal"
-            self.accl_k = -1
-            self._U_l = None
-            self._V_l = None
-            self._K_fft = None
-            return
-
-        if accl_mode == "fft":
-            # Exploit the doubly-circulant structure of the 2D radial
-            # Gaussian on a uniform torus: conn @ r is a 2D convolution
-            # computed exactly via 2D FFT in O(L² log L). The canns
-            # default uses endpoint=True which means x[0] = x[L-1] and
-            # y[0] = y[L-1]; in that case the doubly-circulant kernel
-            # has duplicated corner indices, and we fall back to dense
-            # (with a warning) since the (L-1)²-sized reduction is
-            # non-trivial. To get FFT acceleration for CANN2D, override
-            # ``model.x`` with a custom ``bm.linspace(z_min, z_max, L,
-            # endpoint=False)`` array.
-            if accl_k is not None:
-                # accl_k is meaningless in 'fft' (the matvec is exact).
-                # Accept silently, like we do for 'normal'.
-                pass
-            L = self.length
-            K_first_row = np.asarray(self.conn_mat[0, :], dtype=np.float32).reshape(L, L)
-            # Detect endpoint=True duplicate. With canns's default grid
-            # (bm.linspace with endpoint=True), the four corners of the
-            # L×L kernel are all f(0, 0) = max, so K[0, 0] ≈ K[0, L-1] ≈
-            # K[L-1, 0] ≈ K[L-1, L-1] ≈ max. We detect by checking the
-            # first row's first and last element.
-            if L > 1 and np.isclose(K_first_row[0, 0], K_first_row[0, L - 1], rtol=1e-7, atol=1e-7):
-                # Fall back to dense for the endpoint=True default —
-                # the corner-duplicate handling for 2D is non-trivial
-                # and not worth implementing for an off-by-one artifact.
-                warnings.warn(
-                    "accl_mode='fft' requested but the grid appears to "
-                    "use endpoint=True (x[0] = x[-1] on the torus), which "
-                    "breaks the doubly-circulant structure. Falling back "
-                    "to dense. To use FFT acceleration for CANN2D, set a "
-                    "custom grid with endpoint=False, e.g. "
-                    "`model.x = bm.linspace(-bm.pi, bm.pi, L, endpoint=False)`.",
-                    stacklevel=2,
-                )
-                self.accl_mode = "normal"
-                self.accl_k = -1
-                self._U_l = None
-                self._V_l = None
-                self._K_fft = None
-                return
-            self._K_fft = jax.numpy.asarray(jax.numpy.fft.fft2(jax.numpy.asarray(K_first_row)))
-            self._fft_duplicate = False
-            self._U_l = None
-            self._V_l = None
-            self.accl_mode = "fft"
-            self.accl_k = -1
-            return
-
-        # Compute the SVD once. We need it both for the 'auto' rank
-        # selection (if applicable) and for the factor storage.
-        U, S, Vt = np.linalg.svd(np.asarray(self.conn_mat), full_matrices=False)
-        n = S.shape[0]
-
-        # Resolve rank: explicit accl_k > 'auto' pick > mode default.
-        if accl_k is None and accl_mode == "auto":
-            picked = _pick_k_for_err_target(S, accl_target_err_mrad)
-            if picked == -1:
-                # Budget is too tight for any low-rank; use dense.
-                self.accl_mode = "normal"
-                self.accl_k = -1
-                self._U_l = None
-                self._V_l = None
-                self._K_fft = None
-                return
-            accl_k = picked
-        if accl_k is None:
-            accl_k = ACCL_DEFAULT_K[("CANN2D", accl_mode)]
-        if not (isinstance(accl_k, int) and accl_k >= 1):
-            raise ValueError(f"accl_k must be a positive int, got {accl_k!r}")
-        if accl_k > n:
-            accl_k = n
-
-        sqrtS = np.sqrt(S[:accl_k].astype(np.float32))
-        self._U_l = jax.numpy.asarray(U[:, :accl_k].astype(np.float32) * sqrtS)
-        self._V_l = jax.numpy.asarray(Vt[:accl_k, :].T.astype(np.float32) * sqrtS)
-        self._K_fft = None
-        self.accl_mode = accl_mode
-        self.accl_k = accl_k
+        new_mode = accl_mode if accl_mode is not None else self.irec_backend.mode
+        # Remember the err budget so subsequent ``set_accl_mode``
+        # calls (without an explicit target) can carry it across.
+        self._accl_target_err_mrad = accl_target_err_mrad
+        self.irec_backend = make_irec_backend(
+            self,
+            family="CANN2D",
+            mode=new_mode,
+            dim=2,
+            length=self.length,
+            k=accl_k,
+            target_err_mrad=accl_target_err_mrad,
+        )
 
     def set_accl_mode(
         self,
@@ -999,50 +834,101 @@ class BaseCANN2D(BaseCANN):
             >>> model.set_accl_mode("auto", target_err_mrad=0.5)  # tighter budget
             >>> model.set_accl_mode("normal")    # back to full rank
         """
-        new_mode = mode if mode is not None else self.accl_mode
-        # ``k`` is treated as an *override*; ``None`` means "use the
-        # default for the new mode". This avoids accidentally carrying
-        # the sentinel ``-1`` (full rank) into a non-normal mode.
-        new_k = k
-        # Carry the existing err budget across ``set_accl_mode`` calls.
+        new_mode = mode if mode is not None else self.irec_backend.mode
         if target_err_mrad is None:
             target_err_mrad = getattr(self, "_accl_target_err_mrad", 5.0)
         self._accl_target_err_mrad = target_err_mrad
-        self._setup_accl(
-            accl_mode=new_mode,
-            accl_k=new_k,
-            accl_target_err_mrad=target_err_mrad,
+        self.irec_backend = make_irec_backend(
+            self,
+            family="CANN2D",
+            mode=new_mode,
+            dim=2,
+            length=self.length,
+            k=k,
+            target_err_mrad=target_err_mrad,
         )
+
+    # -- Public introspection (delegate to the backend) -----------------
+
+    @property
+    def accl_mode(self) -> str:
+        """The current acceleration mode (one of ``ACCL_MODES``).
+
+        Reflects the strategy currently held on ``self.irec_backend``:
+        ``"normal"``, ``"fast"``, ``"ultra-fast"``, ``"auto"``, or
+        ``"fft"``. See :mod:`canns.models.basic.cann_accl` for the
+        per-mode semantics.
+        """
+        return self.irec_backend.mode
+
+    @property
+    def accl_k(self) -> int:
+        """The effective low-rank rank, or ``-1`` for full-rank / exact FFT.
+
+        ``-1`` is returned in three cases: dense (``"normal"`` mode),
+        circulant-FFT (``"fft"`` mode, which is exact not truncated),
+        and ``"auto"`` mode when the budget is too tight to satisfy
+        with any lowrank (the model silently falls back to dense).
+        """
+        return self.irec_backend.k
 
     @property
     def is_accelerated(self) -> bool:
-        """True iff the model is using a low-rank recurrent matvec."""
-        return self.accl_mode != "normal"
+        """True iff the model is using a non-dense recurrent matvec
+        (low-rank or circulant-FFT)."""
+        return self.irec_backend.mode != "normal"
+
+    # -- Legacy introspection attributes (used by tests and benchmarks) --
+
+    @property
+    def _U_l(self) -> jax.Array | None:
+        """The ``U`` factor of the balanced SVD truncation, or ``None``.
+
+        Satisfies ``_U_l @ _V_l.T ≈ conn_mat`` up to the spectral tail
+        past ``accl_k``. ``None`` whenever the current backend is not
+        :class:`canns.models.basic.cann_accl.LowRankIrec` (i.e. dense
+        or circulant-FFT). Exposed as a read-only attribute for tests
+        and benchmarks that need to inspect the low-rank factors
+        directly.
+        """
+        return self.irec_backend.U
+
+    @property
+    def _V_l(self) -> jax.Array | None:
+        """The ``V`` factor of the balanced SVD truncation, or ``None``.
+
+        See :attr:`_U_l` for the approximation guarantee and when this
+        is ``None``.
+        """
+        return self.irec_backend.V
+
+    @property
+    def _K_fft(self) -> jax.Array | None:
+        """The precomputed 2D FFT of the doubly-circulant kernel, or
+        ``None``.
+
+        Used by the ``"fft"`` mode to evaluate
+        ``real(ifft2(K_fft ⊙ fft2(r_2d))).ravel()`` on a clean torus.
+        ``None`` whenever the current backend is not
+        :class:`canns.models.basic.cann_accl.CirculantFFTIrec2D`.
+        Exposed for tests and benchmarks.
+        """
+        return self.irec_backend.K_fft
 
     def _accel_Irec(self, r_flat: jax.Array) -> jax.Array:
         """Compute the recurrent input for a flat rate vector.
 
-        Branches on ``self.accl_mode``. The dense form is
-        ``conn @ r``; the low-rank form is ``U_l @ (V_l.T @ r)``;
-        the doubly-circulant-FFT form is
-        ``real(ifft2(K_fft2 ⊙ fft2(r_2d))).ravel()``. The
-        low-rank and FFT forms are mathematically equivalent to
-        the dense form for the symmetric ``conn_mat`` built by
-        ``make_conn``. The FFT form is exact; the low-rank form
-        has approximation error controlled by ``accl_k``.
+        Thin wrapper around ``self.irec_backend(r_flat)`` kept for
+        backward compatibility (the test suite calls this directly).
+        The dispatch (dense vs low-rank vs doubly-circulant-FFT) is
+        entirely inside the backend object; see
+        :mod:`canns.models.basic.cann_accl`.
 
         The input/output are flat ``(length²,)``. The caller is
         responsible for reshaping the result back to a 2D grid if
         needed (see ``CANN2D.update``).
         """
-        if self._K_fft is not None:
-            L = self.length
-            r_2d = r_flat.reshape(L, L)
-            out_2d = jax.numpy.real(jax.numpy.fft.ifft2(self._K_fft * jax.numpy.fft.fft2(r_2d)))
-            return out_2d.ravel()
-        if self._U_l is None:
-            return self.conn_mat @ r_flat
-        return self._U_l @ (self._V_l.T @ r_flat)
+        return self.irec_backend(r_flat)
 
 
 class CANN2D(BaseCANN2D):
