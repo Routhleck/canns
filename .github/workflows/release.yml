@@ -14,7 +14,10 @@ jobs:
   build-and-publish:
     name: Build and publish Python package
     runs-on: ubuntu-latest
-    
+    # Required for PyPI trusted publishing (OIDC).
+    permissions:
+      id-token: write
+
     steps:
     - uses: actions/checkout@v4
       with:
