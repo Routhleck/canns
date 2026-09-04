@@ -30,6 +30,21 @@ jobs:
     - name: Set up Python (using uv)
       run: uv python install
 
+    - name: Checkout the version to release
+      # When triggered via workflow_dispatch, the working tree is at
+      # the current master HEAD, but the dynamic version detection in
+      # pyproject.toml will then produce e.g. '1.4.1.dev1+<sha>'
+      # because there are commits after the latest v* tag. Forcing
+      # checkout to the tag ensures the wheel filename matches the
+      # tag's version exactly. (On tag push the checkout is already
+      # at the tag SHA, so this step is a no-op.)
+      run: |
+        if [[ "$GITHUB_REF" != refs/tags/v* ]]; then
+          TAG=$(git describe --tags --abbrev=0)
+          echo "workflow_dispatch: checking out $TAG for the build"
+          git checkout "$TAG"
+        fi
+
     - name: Build package
       run: uv build
 
