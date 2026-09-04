@@ -26,6 +26,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **`tests/unit/models/test_cann_accl.py`** — 55 unit tests covering: default-mode behaviour, mode→default-rank mapping, explicit `accl_k` override, `k > n` clamping, validation (bad mode, bad k), `set_accl_mode` round-trips across `CANN1D / CANN2D / CANN1D_SFA / CANN2D_SFA`, the `auto` mode's spectrum-based `k` selection (`_pick_k_for_err_target` and end-to-end on `CANN1D / CANN2D / CANN1D_SFA`), and end-to-end dynamics checks (fast mode preserves `r_max` and bump position within tolerance of the dense model).
 - **`tests/unit/models/test_cann_accl.py::TestFFTMode`** — 16 unit tests covering the new `fft` mode: clean circulant 1D/2D matches dense to float precision, default endpoint=True grid correctly falls back with a warning, `accl_k` is ignored (matvec is exact), `set_accl_mode("fft")` round-trips, and end-to-end `model.update(...)` runs under FFT. Total 72 accl tests pass.
 
+### Changed
+- **Refactored CANN acceleration to a strategy pattern with a new `canns.models.basic.accel` subpackage.** Each `accl_mode` (`"normal"` / `"fast"` / `"ultra-fast"` / `"auto"` / `"fft"`) is now a self-contained `IrecBackend` class in `accel/_backends.py`; the model class holds one on `self.irec_backend` and just calls it from `update()`. Adding a new mode (e.g. `block-circulant`, Chebyshev) is a pure addition to `accel/`: write a class in `_backends.py`, append to `ACCL_MODES` in `__init__.py`, and add a dispatch branch in `make_irec_backend` (`_factory.py`). The `cann.py` model class is not touched. Public surface preserved (`accl_mode` / `accl_k` / `is_accelerated` / `_U_l` / `_V_l` / `_K_fft` / `_setup_accl` / `set_accl_mode` all behave identically; `ACCL_MODES`, `ACCL_DEFAULT_K`, `_pick_k_for_err_target` still importable from `canns.models.basic.cann`). `accel/__init__.py` carries a "Which backend should I use?" decision table and a "How to add a new backend" 3-step guide. `cann.py` shrinks by 195 net lines as a result.
+
+### Added
+- **New tutorial 9: `docs/{en,zh}/3_full_detail_tutorials/01_cann_modeling/09_acceleration_modes.ipynb`** (27 cells each, both `nbconvert --execute`-run, all 11 code cells with output). Walks through the strategy pattern, the decision table, all 5 modes, end-to-end dynamics match (`fast` vs `normal` r_max diff ≈ 9.5e-7 over 80 steps), runtime mode switching, and a 3-step custom-backend walkthrough. Both `index.rst` updated.
+
 ## [1.2.2] - 2026-08-10
 
 ### Changed
