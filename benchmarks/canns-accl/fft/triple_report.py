@@ -14,13 +14,12 @@ Hardware:
 
 from __future__ import annotations
 
-import sys
 import csv
 from collections import defaultdict
 from pathlib import Path
 
-import numpy as np
 import matplotlib
+
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
@@ -82,10 +81,12 @@ def build_summary(platforms: dict[str, list[dict]]) -> str:
     md.append("- **Server CPU**: Intel Xeon Gold 6348 @ 2.6 GHz, 16 cores, AVX-512 (Linux)")
     md.append("- **GPU**: NVIDIA A100-SXM4-80GB (Ampere; cuBLAS uses TF32 by default)\n")
 
-    md.append("All numbers are median per-step wall time (ms) for a single "
-              "recurrent matvec, after JIT warmup. Lower is better. "
-              "`scan` is the per-step time inside a `lax.scan` of T=200 "
-              "repeated matvecs (better reflects rollout cost).\n")
+    md.append(
+        "All numbers are median per-step wall time (ms) for a single "
+        "recurrent matvec, after JIT warmup. Lower is better. "
+        "`scan` is the per-step time inside a `lax.scan` of T=200 "
+        "repeated matvecs (better reflects rollout cost).\n"
+    )
 
     # Per (model) per (n) per (backend) — one table
     for model in ("cann1d", "cann2d"):
@@ -93,9 +94,13 @@ def build_summary(platforms: dict[str, list[dict]]) -> str:
         n_params = sorted({k[1] for k in by_cell if k[0] == model})
         backends = ("dense", "fft", "svd_k1", "svd_k4", "svd_k16")
         # Per-step table
-        header = ["n"] + [f"{PLATFORM_LABELS[p]} step" for p in plat_names] + \
-                 [f"{PLATFORM_LABELS[p]} scan" for p in plat_names] + \
-                 [f"speedup over Mac (step)"] + [f"speedup over Mac (scan)"]
+        header = (
+            ["n"]
+            + [f"{PLATFORM_LABELS[p]} step" for p in plat_names]
+            + [f"{PLATFORM_LABELS[p]} scan" for p in plat_names]
+            + ["speedup over Mac (step)"]
+            + ["speedup over Mac (scan)"]
+        )
         md.append("### per-step (ms) and T=200 scan (ms)\n")
         md.append("| " + " | ".join(header) + " |")
         md.append("|" + "|".join(["---"] * len(header)) + "|")
@@ -105,13 +110,25 @@ def build_summary(platforms: dict[str, list[dict]]) -> str:
                 if key not in by_cell:
                     continue
                 row_data = by_cell[key]
-                step_times = [float(row_data[p]["per_step_ms"]) if p in row_data else float("nan")
-                              for p in plat_names]
-                scan_times = [float(row_data[p]["scan_per_step_ms"]) if p in row_data else float("nan")
-                              for p in plat_names]
+                step_times = [
+                    float(row_data[p]["per_step_ms"]) if p in row_data else float("nan")
+                    for p in plat_names
+                ]
+                scan_times = [
+                    float(row_data[p]["scan_per_step_ms"]) if p in row_data else float("nan")
+                    for p in plat_names
+                ]
                 # Speedup over Mac CPU (maccpu)
-                mac_step = step_times[plat_names.index("maccpu")] if "maccpu" in plat_names else float("nan")
-                mac_scan = scan_times[plat_names.index("maccpu")] if "maccpu" in plat_names else float("nan")
+                mac_step = (
+                    step_times[plat_names.index("maccpu")]
+                    if "maccpu" in plat_names
+                    else float("nan")
+                )
+                mac_scan = (
+                    scan_times[plat_names.index("maccpu")]
+                    if "maccpu" in plat_names
+                    else float("nan")
+                )
                 step_su = [mac_step / t if t > 0 else float("nan") for t in step_times]
                 scan_su = [mac_scan / t if t > 0 else float("nan") for t in scan_times]
                 row = [f"n={n_p} {BACKEND_LABELS[backend]}"]
@@ -145,10 +162,16 @@ def fig_triple_speed(platforms: dict[str, list[dict]], out: Path):
                 sizes = sorted(by_n.keys())
                 ns = [by_n[s][0] for s in sizes]
                 ts = [by_n[s][1] for s in sizes]
-                ax.loglog(ns, ts, ls + PLATFORM_MARKERS[plat],
-                          color=PLATFORM_COLORS[plat],
-                          label=f"{PLATFORM_LABELS[plat]} {BACKEND_LABELS[backend]}",
-                          lw=1.2, ms=ms_size, alpha=0.85)
+                ax.loglog(
+                    ns,
+                    ts,
+                    ls + PLATFORM_MARKERS[plat],
+                    color=PLATFORM_COLORS[plat],
+                    label=f"{PLATFORM_LABELS[plat]} {BACKEND_LABELS[backend]}",
+                    lw=1.2,
+                    ms=ms_size,
+                    alpha=0.85,
+                )
         ax.set_xlabel("n" if m == "cann1d" else "n (L²)")
         ax.set_ylabel("per-step time (ms)")
         ax.set_title(title)
@@ -175,10 +198,16 @@ def fig_triple_scan(platforms: dict[str, list[dict]], out: Path):
                 sizes = sorted(by_n.keys())
                 ns = [by_n[s][0] for s in sizes]
                 ts = [by_n[s][1] for s in sizes]
-                ax.loglog(ns, ts, ls + PLATFORM_MARKERS[plat],
-                          color=PLATFORM_COLORS[plat],
-                          label=f"{PLATFORM_LABELS[plat]} {BACKEND_LABELS[backend]}",
-                          lw=1.2, ms=ms_size, alpha=0.85)
+                ax.loglog(
+                    ns,
+                    ts,
+                    ls + PLATFORM_MARKERS[plat],
+                    color=PLATFORM_COLORS[plat],
+                    label=f"{PLATFORM_LABELS[plat]} {BACKEND_LABELS[backend]}",
+                    lw=1.2,
+                    ms=ms_size,
+                    alpha=0.85,
+                )
         ax.set_xlabel("n" if m == "cann1d" else "n (L²)")
         ax.set_ylabel("per-step time inside T=200 scan (ms)")
         ax.set_title(title)
@@ -216,10 +245,16 @@ def fig_triple_speedup(platforms: dict[str, list[dict]], out: Path):
                 sizes = sorted(by_n.keys())
                 ns = [by_n[s][0] for s in sizes]
                 ts = [by_n[s][1] for s in sizes]
-                ax.loglog(ns, ts, ls + PLATFORM_MARKERS[plat],
-                          color=PLATFORM_COLORS[plat],
-                          label=f"{PLATFORM_LABELS[plat]} {BACKEND_LABELS[backend]}",
-                          lw=1.2, ms=ms_size, alpha=0.85)
+                ax.loglog(
+                    ns,
+                    ts,
+                    ls + PLATFORM_MARKERS[plat],
+                    color=PLATFORM_COLORS[plat],
+                    label=f"{PLATFORM_LABELS[plat]} {BACKEND_LABELS[backend]}",
+                    lw=1.2,
+                    ms=ms_size,
+                    alpha=0.85,
+                )
         ax.axhline(1.0, color="k", ls=":", lw=0.8, alpha=0.5, label="Mac M4 baseline (1×)")
         ax.set_xlabel("n" if m == "cann1d" else "n (L²)")
         ax.set_ylabel("speedup vs Mac M4 CPU")

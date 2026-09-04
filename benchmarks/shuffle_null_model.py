@@ -19,16 +19,9 @@ Records:
 
 Writes benchmarks/results/shuffle_results_<ts>.csv by default.
 """
+
 import argparse
 import csv
-import os
-import sys
-import time
-from dataclasses import asdict, dataclass
-from datetime import datetime
-from pathlib import Path
-
-import numpy as np
 
 # The legacy shuffle path inside canns uses multiprocessing.Pool to fan out
 # the K shuffles. The default Linux start method is 'fork', which copies
@@ -38,6 +31,14 @@ import numpy as np
 # without the parent's auxiliary threads. This matches what the canns
 # maintainers recommend on Linux+JAX systems.
 import multiprocessing as mp
+import sys
+import time
+from dataclasses import asdict, dataclass
+from datetime import datetime
+from pathlib import Path
+
+import numpy as np
+
 try:
     mp.set_start_method("forkserver")
 except RuntimeError:
@@ -50,12 +51,14 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
 # results are reproducible and obviously tied to a specific commit.
 try:
     import canns_lib
+
     print(f"canns_lib version: {canns_lib.__version__}", flush=True)
 except Exception as _exc:
     print(f"canns_lib not importable: {_exc}", flush=True)
 
 try:
     from canns_lib import _ripser_core as _core
+
     has_shuffle = hasattr(_core, "shuffle_null_model")
     print(f"FFI shuffle_null_model present: {has_shuffle}", flush=True)
 except Exception as _exc:
@@ -103,11 +106,19 @@ def timeit(fn, repeats):
 
 def run(T, N, n_shuffles, seed, ffi_args, legacy_args, repeats):
     spikes = np.random.RandomState(seed).poisson(0.3, size=(T, N)).astype(np.float32)
-    ffi_ms, ffi_out = timeit(lambda: _run_shuffle_analysis(spikes, num_shuffles=n_shuffles, **ffi_args), repeats)
-    legacy_ms, legacy_out = timeit(lambda: _run_shuffle_analysis(spikes, num_shuffles=n_shuffles, **legacy_args), repeats)
+    ffi_ms, ffi_out = timeit(
+        lambda: _run_shuffle_analysis(spikes, num_shuffles=n_shuffles, **ffi_args), repeats
+    )
+    legacy_ms, legacy_out = timeit(
+        lambda: _run_shuffle_analysis(spikes, num_shuffles=n_shuffles, **legacy_args), repeats
+    )
     return Row(
-        T=T, N=N, n_shuffles=n_shuffles, seed=seed,
-        ffi_ms=ffi_ms, legacy_ms=legacy_ms,
+        T=T,
+        N=N,
+        n_shuffles=n_shuffles,
+        seed=seed,
+        ffi_ms=ffi_ms,
+        legacy_ms=legacy_ms,
         speedup=legacy_ms / ffi_ms if ffi_ms > 0 else float("nan"),
         ffi_h1_mean=_hmean(ffi_out, 1),
         legacy_h1_mean=_hmean(legacy_out, 1),
@@ -125,8 +136,12 @@ def main(args):
 
     grid_args = {
         (T, N, K): dict(
-            ffi_args=dict(maxdim=args.maxdim, coeff=args.coeff, use_ffi_shuffle=True, progress_bar=False),
-            legacy_args=dict(maxdim=args.maxdim, coeff=args.coeff, use_ffi_shuffle=False, progress_bar=False),
+            ffi_args=dict(
+                maxdim=args.maxdim, coeff=args.coeff, use_ffi_shuffle=True, progress_bar=False
+            ),
+            legacy_args=dict(
+                maxdim=args.maxdim, coeff=args.coeff, use_ffi_shuffle=False, progress_bar=False
+            ),
         )
         for T in args.Ts
         for N in args.Ns
@@ -139,8 +154,11 @@ def main(args):
         except Exception as exc:
             print(f"FAIL T={T} N={N} K={K}: {exc}")
             continue
-        print(f"  T={T:5d} N={N:4d} K={K:5d}  FFI={r.ffi_ms:8.1f}ms  legacy={r.legacy_ms:9.1f}ms  speedup={r.speedup:7.1f}x  "
-              f"(h1 counts: ffi={r.ffi_h1_count}, legacy={r.legacy_h1_count})", flush=True)
+        print(
+            f"  T={T:5d} N={N:4d} K={K:5d}  FFI={r.ffi_ms:8.1f}ms  legacy={r.legacy_ms:9.1f}ms  speedup={r.speedup:7.1f}x  "
+            f"(h1 counts: ffi={r.ffi_h1_count}, legacy={r.legacy_h1_count})",
+            flush=True,
+        )
         rows.append(r)
 
     if not rows:
@@ -158,10 +176,13 @@ def main(args):
     print("\n=== speedup median by (T,N,K) ===", flush=True)
     print(f"{'T':>5}  {'N':>4}  {'K':>5}  {'FFI ms':>9}  {'Legacy ms':>10}  {'speedup':>9}")
     for r in rows:
-        print(f"{r.T:5d}  {r.N:4d}  {r.n_shuffles:5d}  {r.ffi_ms:9.1f}  {r.legacy_ms:10.1f}  {r.speedup:8.1f}x")
+        print(
+            f"{r.T:5d}  {r.N:4d}  {r.n_shuffles:5d}  {r.ffi_ms:9.1f}  {r.legacy_ms:10.1f}  {r.speedup:8.1f}x"
+        )
 
     # Speedup grouped by K and by (T*N)
     import statistics
+
     by_K = {}
     for r in rows:
         by_K.setdefault(r.n_shuffles, []).append(r.speedup)
@@ -181,7 +202,10 @@ if __name__ == "__main__":
     p.add_argument("--coeff", type=int, default=2)
     p.add_argument("--repeats", type=int, default=2)
     p.add_argument("--seed", type=int, default=42)
-    p.add_argument("--output-dir", type=str,
-                   default=str(Path(__file__).resolve().parent / "results"),
-                   help="Directory to write the CSV into. Defaults to benchmarks/results/.")
+    p.add_argument(
+        "--output-dir",
+        type=str,
+        default=str(Path(__file__).resolve().parent / "results"),
+        help="Directory to write the CSV into. Defaults to benchmarks/results/.",
+    )
     main(p.parse_args())

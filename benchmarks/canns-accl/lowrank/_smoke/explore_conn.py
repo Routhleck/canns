@@ -7,13 +7,16 @@ Goal:
     should decay exponentially — the precondition for low-rank being useful.)
   - Print a few numbers so we know what ranks are sane.
 """
-import sys
+
 import os
+import sys
+
 os.environ.setdefault("JAX_PLATFORMS", "cpu")
 sys.path.insert(0, "/Volumes/data-sch/projects/canns/src")
 
-import numpy as np
 import brainpy.math as bm
+import numpy as np
+
 from canns.models.basic import CANN1D, CANN2D
 
 bm.set_dt(0.1)
@@ -26,8 +29,8 @@ for num in [64, 128, 256, 512, 1024]:
     conn = bm.as_numpy(m.conn_mat)
     s = np.linalg.svd(conn, compute_uv=False)
     # top-k cumulative energy
-    total = (s ** 2).sum()
-    cum = np.cumsum(s ** 2) / total
+    total = (s**2).sum()
+    cum = np.cumsum(s**2) / total
     print(
         f"  num={num:>4d} | rank needed for 99% energy: {int(np.searchsorted(cum, 0.99)) + 1:>3d}"
         f" | for 99.9%: {int(np.searchsorted(cum, 0.999)) + 1:>3d}"
@@ -42,8 +45,8 @@ for length in [8, 16, 32, 64]:
     m = CANN2D(length=length)
     conn = bm.as_numpy(m.conn_mat)
     s = np.linalg.svd(conn, compute_uv=False)
-    total = (s ** 2).sum()
-    cum = np.cumsum(s ** 2) / total
+    total = (s**2).sum()
+    cum = np.cumsum(s**2) / total
     print(
         f"  L={length:>3d} (n={length * length:>6d}) | rank 99%: {int(np.searchsorted(cum, 0.99)) + 1:>3d}"
         f" | 99.9%: {int(np.searchsorted(cum, 0.999)) + 1:>3d}"

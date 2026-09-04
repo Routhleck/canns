@@ -31,14 +31,14 @@ This benchmark writes:
 Run:
 
     # CPU
-    uv run python benchmarks/cann_fft/cann_fft_bench.py
+    uv run python benchmarks/canns-accl/fft/bench.py
 
     # GPU
     JAX_PLATFORMS=cuda CUDA_VISIBLE_DEVICES=1 \\
-        uv run python benchmarks/cann_fft/cann_fft_bench.py
+        uv run python benchmarks/canns-accl/fft/bench.py
 
     # Quick smoke
-    uv run python benchmarks/cann_fft/cann_fft_bench.py --fast
+    uv run python benchmarks/canns-accl/fft/bench.py --fast
 """
 
 from __future__ import annotations

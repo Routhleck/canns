@@ -194,8 +194,8 @@ class BaseCANN1D(BaseCANN):
         # just calls ``self.irec_backend(self.r.value)`` and the
         # backend chooses the right math. Adding a new mode means
         # adding a new backend class in :mod:`.accel` — this file
-        # is not touched. See ``benchmarks/cann_lowrank`` for the SVD
-        # trade-offs and ``benchmarks/cann_fft`` for the FFT comparison.
+        # is not touched. See ``benchmarks/canns-accl/lowrank`` for the SVD
+        # trade-offs and ``benchmarks/canns-accl/fft`` for the FFT comparison.
         self._accl_target_err_mrad = accl_target_err_mrad
         self.irec_backend = make_irec_backend(
             self,
@@ -465,7 +465,7 @@ class CANN1D(BaseCANN1D):
         # Calculate the recurrent input from other neurons in the network.
         # In ``accl_mode != "normal"`` this is a low-rank matvec
         # ``U_l @ (V_l.T @ r)`` instead of ``conn @ r`` — see
-        # ``BaseCANN1D._accel_Irec`` and ``benchmarks/cann_lowrank``.
+        # ``BaseCANN1D._accel_Irec`` and ``benchmarks/canns-accl/lowrank``.
         Irec = self._accel_Irec(self.r.value)
         # Update the synaptic inputs using Euler's method. The change depends on a leak
         # current (-u), recurrent input (Irec), and external input (inp).
@@ -661,8 +661,8 @@ class BaseCANN2D(BaseCANN):
         # just calls ``self.irec_backend(self.r.value.reshape(-1))`` and
         # the backend chooses the right math. Adding a new mode means
         # adding a new backend class in :mod:`.accel` — this file is
-        # not touched. See ``benchmarks/cann_lowrank`` for the SVD
-        # trade-offs and ``benchmarks/cann_fft`` for the FFT comparison.
+        # not touched. See ``benchmarks/canns-accl/lowrank`` for the SVD
+        # trade-offs and ``benchmarks/canns-accl/fft`` for the FFT comparison.
         self._accl_target_err_mrad = accl_target_err_mrad
         self.irec_backend = make_irec_backend(
             self,

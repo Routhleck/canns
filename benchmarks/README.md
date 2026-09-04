@@ -16,8 +16,8 @@ benchmarks/
 ├── shuffle_null_model.py      # current benchmark: FFI vs mp.Pool
 ├── canns_lowrank/             # sub-benchmark for the accl_mode / accl_k
 │   │                              # low-rank matvec feature on CANN1D/2D
-│   ├── cann_lowrank_bench.py
-│   ├── cann_lowrank_report.py
+│   ├── bench.py
+│   ├── report.py
 │   ├── REVIEW.md
 │   ├── README.md
 │   └── results/

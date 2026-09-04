@@ -2,7 +2,7 @@
 comparison (CPU vs GPU) and emit a unified markdown + a Pareto plot.
 
 Run:
-    python benchmarks/cann_fft/combine_reports.py
+    python benchmarks/canns-accl/fft/combine_reports.py
 """
 
 from __future__ import annotations

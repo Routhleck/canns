@@ -39,7 +39,7 @@ runtime via ``model.set_accl_mode(...)`` without re-instantiating.
 ``accl_mode``       Math                                       Exact?       n=2048 speed  When to use
 ================== ========================================== ============ ============ ==================================
 ``"normal"``        ``W @ r``                                  Yes          1×            Default. Use for small ``num`` (≤ 128) where the overhead of any acceleration exceeds the savings, and as the reference for accuracy comparisons.
-``"fast"``          ``U @ (Vᵀ @ r)`` from rank-``k`` SVD       No (k-tail)  30–245×       Recommended for production. ~5 mrad bump-position error at the recommended ranks (``CANN1D`` k=8, ``CANN2D`` k=32). See ``benchmarks/cann_lowrank``.
+``"fast"``          ``U @ (Vᵀ @ r)`` from rank-``k`` SVD       No (k-tail)  30–245×       Recommended for production. ~5 mrad bump-position error at the recommended ranks (``CANN1D`` k=8, ``CANN2D`` k=32). See ``benchmarks/canns-accl/lowrank``.
 ``"ultra-fast"``    ``U @ (Vᵀ @ r)`` at k=1 (or 4 for 2D)      No (coarser) 100–500×      Only when the connection spectrum decays extremely fast (narrow Gaussian ``a``) or when only the bump's existence matters, not its precise position.
 ``"auto"``          rank picked from SVD spectrum              No (≤ budget) varies        Pick a rank automatically to satisfy ``accl_target_err_mrad`` (default 5 mrad). The user-facing knob is the error budget, not the rank.
 ``"fft"``           ``real(ifft(K_fft ⊙ fft(r)))``             **Yes**      25–50×        **Only** on a clean ring/torus with ``endpoint=False``. The canns default ``endpoint=True`` grid is not circulant, so this mode falls back to ``"normal"`` with a warning. See the table below for setup.
@@ -87,7 +87,7 @@ ACCL_MODES: tuple[str, ...] = ("normal", "fast", "ultra-fast", "auto", "fft")
 #: Default rank for each ``(model family, mode)`` combination.
 #:
 #: The "fast" defaults are the values recommended by
-#: ``benchmarks/cann_lowrank/results/cann_lowrank_summary.md``: the
+#: ``benchmarks/canns-accl/lowrank/results/cann_lowrank_summary.md``: the
 #: smallest rank that keeps the bump-position error below ~5 mrad
 #: (about 0.3° on a ring of circumference 2π).
 ACCL_DEFAULT_K: dict[tuple[str, str], int] = {

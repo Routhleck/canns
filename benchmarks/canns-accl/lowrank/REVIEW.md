@@ -1,8 +1,8 @@
 # Correctness review — low-rank recurrent matvec benchmark
 
 This is an audit of the low-rank benchmark in
-`benchmarks/cann_lowrank/cann_lowrank_bench.py` and
-`benchmarks/cann_lowrank/cann_lowrank_report.py`. The goal is to
+`benchmarks/canns-accl/lowrank/bench.py` and
+`benchmarks/canns-accl/lowrank/report.py`. The goal is to
 verify that the numbers in the writeup (`cann_lowrank_summary.md`)
 are trustworthy before adding the `accl_mode` / `accl_k` feature to
 the CANN1D / CANN2D models.

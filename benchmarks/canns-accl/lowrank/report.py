@@ -7,33 +7,33 @@ CSVs (``cann_lowrank_all_{cpu,gpu}.csv``) plus a
 six figures, and stitches them into a paper-style report at
 ``results/cann_lowrank_summary.md``.
 
-Run after cann_lowrank_bench.py has been invoked at least once (CPU)
+Run after bench.py has been invoked at least once (CPU)
 and optionally again with --gpu-sweep on a GPU machine:
 
   # CPU:
-  python cann_lowrank_bench.py --T 200 --tag cpu
+  python bench.py --T 200 --tag cpu
   # GPU (A100):
   CUDA_VISIBLE_DEVICES=1 JAX_PLATFORMS=cuda \\
-    python cann_lowrank_bench.py --gpu-sweep --T 200 --tag gpu
+    python bench.py --gpu-sweep --T 200 --tag gpu
   # Report:
-  python cann_lowrank_report.py
+  python report.py
 """
+
 from __future__ import annotations
 
 import argparse
 import csv
-import os
 import sys
 from collections import defaultdict
 from pathlib import Path
 
-import numpy as np
-
 # Matplotlib is optional — the report works without it (just no figures).
 import matplotlib
+import numpy as np
+
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
-from matplotlib.ticker import LogLocator, NullFormatter, NullLocator
+from matplotlib.ticker import LogLocator, NullLocator
 
 _HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(_HERE))
@@ -42,6 +42,7 @@ sys.path.insert(0, str(_HERE))
 # ---------------------------------------------------------------------------
 # Loading
 # ---------------------------------------------------------------------------
+
 
 def load_csv(path: Path) -> list[dict]:
     with path.open() as f:
@@ -68,6 +69,7 @@ def group_by_cell(rows: list[dict]) -> dict[tuple[str, int], dict[int, dict]]:
 # Figure generation
 # ---------------------------------------------------------------------------
 
+
 def _save(fig, out: Path) -> None:
     """Save a figure to both PNG (for web) and PDF (for papers)."""
     fig.savefig(out, dpi=150, bbox_inches="tight")
@@ -89,9 +91,7 @@ def fig_svd_spectrum(sv_1d: np.ndarray, sv_2d: np.ndarray, out: Path) -> None:
         f"CANN2D  (L={int(np.sqrt(len(sv_2d)))}, n={len(sv_2d)})",
     ]
 
-    for col, (sv, title) in enumerate(
-        [(sv_1d, titles[0]), (sv_2d, titles[1])]
-    ):
+    for col, (sv, title) in enumerate([(sv_1d, titles[0]), (sv_2d, titles[1])]):
         n = len(sv)
         # Top: log S
         ax = axes[0, col]
@@ -103,7 +103,7 @@ def fig_svd_spectrum(sv_1d: np.ndarray, sv_2d: np.ndarray, out: Path) -> None:
 
         # Bottom: cumulative energy
         ax = axes[1, col]
-        cum = np.cumsum(sv ** 2) / (sv ** 2).sum()
+        cum = np.cumsum(sv**2) / (sv**2).sum()
         ax.plot(np.arange(1, n + 1), cum, "k-", lw=1.5)
         # Place threshold annotations on a vertical strip at x=0.5 (left of plot)
         # so they don't overlap with the cumulative curve.
@@ -113,15 +113,15 @@ def fig_svd_spectrum(sv_1d: np.ndarray, sv_2d: np.ndarray, out: Path) -> None:
             ax.axhline(thr, ls=":", color="grey", lw=0.5)
             ax.axvline(idx, ls=":", color="grey", lw=0.5)
         # Compose a single legend-like textbox in the upper-left of each panel
-        labels = [
-            f"{thr*100:g}%: k = {int(np.searchsorted(cum, thr)) + 1}"
-            for thr in thrs
-        ]
+        labels = [f"{thr * 100:g}%: k = {int(np.searchsorted(cum, thr)) + 1}" for thr in thrs]
         ax.text(
-            0.02, 0.4, "\n".join(labels),
+            0.02,
+            0.4,
+            "\n".join(labels),
             transform=ax.transAxes,
             fontsize=8,
-            va="top", ha="left",
+            va="top",
+            ha="left",
             family="monospace",
             bbox=dict(boxstyle="round,pad=0.3", fc="white", ec="grey", lw=0.5),
         )
@@ -131,8 +131,7 @@ def fig_svd_spectrum(sv_1d: np.ndarray, sv_2d: np.ndarray, out: Path) -> None:
         ax.set_ylabel("cumulative energy")
         ax.grid(True, ls=":", lw=0.5, alpha=0.5)
 
-    fig.suptitle("SVD spectrum of the Gaussian distance kernel",
-                 fontsize=11, y=1.01)
+    fig.suptitle("SVD spectrum of the Gaussian distance kernel", fontsize=11, y=1.01)
     fig.tight_layout()
     _save(fig, out)
 
@@ -184,8 +183,7 @@ def fig_speedup(
         if fft_pts:
             xs = [p[0] for p in fft_pts]
             ys = [p[1] for p in fft_pts]
-            ax.loglog(xs, ys, "*-", color="crimson", lw=2.0, ms=14,
-                      label="FFT (exact)", zorder=5)
+            ax.loglog(xs, ys, "*-", color="crimson", lw=2.0, ms=14, label="FFT (exact)", zorder=5)
 
     # Reference: dense = 1x
     ax.axhline(1.0, ls=":", color="grey", lw=0.8)
@@ -210,10 +208,7 @@ def fig_trajectory_1d(traj: dict, out: Path) -> None:
     Top: position vs time, all k values overlaid with stimulus.
     Bottom: position error vs time, vs dense reference.
     """
-    ks = sorted(
-        int(k[1:]) for k in traj
-        if k.startswith("k") and k[1:].isdigit()
-    )
+    ks = sorted(int(k[1:]) for k in traj if k.startswith("k") and k[1:].isdigit())
     T = len(traj["k_full"])
     t = np.arange(T) * 0.1
     stim_pos = np.pi * t / max(T - 1, 1)
@@ -230,24 +225,28 @@ def fig_trajectory_1d(traj: dict, out: Path) -> None:
         color = cmap(i / max(len(ks) - 1, 1))
         ax.plot(t, arr, lw=1.0, color=color, alpha=0.85)
     ax.set_ylabel("bump position (rad)")
-    ax.set_title("CANN1D num=256 — bump center trajectory (decode via circular mean)",
-                 fontsize=10)
+    ax.set_title("CANN1D num=256 — bump center trajectory (decode via circular mean)", fontsize=10)
     # Tighten y-range — the moving stimulus only sweeps the positive half
     # of the ring (0 → π), and all k values track it there.
     ax.set_ylim(-0.3, np.pi + 0.3)
-    ax.set_yticks([0, np.pi/4, np.pi/2, 3*np.pi/4, np.pi])
+    ax.set_yticks([0, np.pi / 4, np.pi / 2, 3 * np.pi / 4, np.pi])
     ax.set_yticklabels(["0", "π/4", "π/2", "3π/4", "π"])
     ax.grid(True, ls=":", lw=0.5, alpha=0.5)
     # Top-axes legend (above the top subplot, outside the data area)
-    handles = [ax.plot([], [], color=cmap(i / max(len(ks) - 1, 1)),
-                      lw=1.5)[0] for i, k in enumerate(ks)]
-    handles = [ax.plot([], [], "k--", lw=1, alpha=0.4)[0],
-               ax.plot([], [], "k-", lw=2)[0]] + handles
+    handles = [
+        ax.plot([], [], color=cmap(i / max(len(ks) - 1, 1)), lw=1.5)[0] for i, k in enumerate(ks)
+    ]
+    handles = [ax.plot([], [], "k--", lw=1, alpha=0.4)[0], ax.plot([], [], "k-", lw=2)[0]] + handles
     labels = ["stimulus pos", "k=full (dense)"] + [f"k={k}" for k in ks]
-    fig.legend(handles, labels, loc="upper center",
-               bbox_to_anchor=(0.5, 1.0),
-               ncol=min(8, len(labels)), fontsize=7,
-               frameon=False)
+    fig.legend(
+        handles,
+        labels,
+        loc="upper center",
+        bbox_to_anchor=(0.5, 1.0),
+        ncol=min(8, len(labels)),
+        fontsize=7,
+        frameon=False,
+    )
 
     # Bottom: position error
     ax = axes[1]
@@ -273,33 +272,24 @@ def fig_trajectory_2d(traj: dict, out: Path) -> None:
     Top: (x, y) trajectory in 2D feature space.
     Bottom: 2D position error magnitude vs time.
     """
-    ks = sorted(
-        int(k[1:]) for k in traj
-        if k.startswith("k") and k[1:].isdigit()
-    )
+    ks = sorted(int(k[1:]) for k in traj if k.startswith("k") and k[1:].isdigit())
     T = len(traj["k_full"])
 
     fig, axes = plt.subplots(1, 2, figsize=(6.8, 3.2))
 
     # Left: 2D trajectory
     ax = axes[0]
-    stim = np.array([
-        [np.pi * t / max(T - 1, 1), np.pi * t / max(T - 1, 1)]
-        for t in range(T)
-    ])
+    stim = np.array([[np.pi * t / max(T - 1, 1), np.pi * t / max(T - 1, 1)] for t in range(T)])
     ax.plot(stim[:, 0], stim[:, 1], "k--", lw=1, alpha=0.4, label="stimulus pos")
-    ax.plot(traj["k_full"][:, 0], traj["k_full"][:, 1], "k-", lw=2.0,
-            label="k=full (dense)")
+    ax.plot(traj["k_full"][:, 0], traj["k_full"][:, 1], "k-", lw=2.0, label="k=full (dense)")
     cmap = plt.get_cmap("plasma")
     for i, k in enumerate(ks):
         arr = traj[f"k{k}"]
         color = cmap(i / max(len(ks) - 1, 1))
-        ax.plot(arr[:, 0], arr[:, 1], lw=1.0, color=color, alpha=0.85,
-                label=f"k={k}")
+        ax.plot(arr[:, 0], arr[:, 1], lw=1.0, color=color, alpha=0.85, label=f"k={k}")
     ax.set_xlabel("x (rad)")
     ax.set_ylabel("y (rad)")
-    ax.set_title("CANN2D L=16 — bump center trajectory",
-                 fontsize=10)
+    ax.set_title("CANN2D L=16 — bump center trajectory", fontsize=10)
     ax.set_xlim(-np.pi - 0.2, np.pi + 0.2)
     ax.set_ylim(-np.pi - 0.2, np.pi + 0.2)
     ax.set_xticks([-np.pi, 0, np.pi])
@@ -319,10 +309,9 @@ def fig_trajectory_2d(traj: dict, out: Path) -> None:
         dy = np.abs(traj["k_full"][:, 1] - arr[:, 1])
         dx = np.minimum(dx, z_range - dx)
         dy = np.minimum(dy, z_range - dy)
-        err = np.sqrt(dx ** 2 + dy ** 2)
+        err = np.sqrt(dx**2 + dy**2)
         color = cmap(i / max(len(ks) - 1, 1))
-        ax.semilogy(np.arange(T) * 0.1, err * 1000, lw=1.0, color=color,
-                    label=f"k={k}")
+        ax.semilogy(np.arange(T) * 0.1, err * 1000, lw=1.0, color=color, label=f"k={k}")
     ax.set_xlabel("time (s)")
     ax.set_ylabel("position error (mrad)")
     ax.set_title("2D position error vs time", fontsize=10)
@@ -364,10 +353,7 @@ def fig_long_drift_1d(drift: dict, out: Path) -> None:
     reference. A stable model has bounded error; an unstable one
     accumulates drift over the trial.
     """
-    ks = sorted(
-        int(k[1:]) for k in drift
-        if k.startswith("k") and k[1:].isdigit()
-    )
+    ks = sorted(int(k[1:]) for k in drift if k.startswith("k") and k[1:].isdigit())
     sample_step = int(drift["sample_step"])
     t = np.arange(len(drift["dense"])) * sample_step * 0.1  # dt=0.1
     stim_pos = _unwrap_ring(drift["stim_pos"])
@@ -393,15 +379,20 @@ def fig_long_drift_1d(drift: dict, out: Path) -> None:
     ax.set_yticklabels(["0", "π/2", "π", "3π/2", "2π"])
     ax.grid(True, ls=":", lw=0.5, alpha=0.5)
     # Top legend
-    handles = [ax.plot([], [], "k--", lw=1, alpha=0.4)[0],
-               ax.plot([], [], "k-", lw=2)[0]]
+    handles = [ax.plot([], [], "k--", lw=1, alpha=0.4)[0], ax.plot([], [], "k-", lw=2)[0]]
     for i, k in enumerate(ks):
         color = cmap(i / max(len(ks) - 1, 1))
         handles.append(ax.plot([], [], color=color, lw=1.5)[0])
     labels = ["stimulus pos", "k=full (dense)"] + [f"k={k}" for k in ks]
-    fig.legend(handles, labels, loc="upper center",
-               bbox_to_anchor=(0.5, 1.0),
-               ncol=min(8, len(labels)), fontsize=7, frameon=False)
+    fig.legend(
+        handles,
+        labels,
+        loc="upper center",
+        bbox_to_anchor=(0.5, 1.0),
+        ncol=min(8, len(labels)),
+        fontsize=7,
+        frameon=False,
+    )
 
     # Bottom: drift |pos - dense_pos| (in mrad), log scale
     ax = axes[1]
@@ -430,10 +421,7 @@ def fig_long_drift_2d(drift: dict, out: Path) -> None:
     Bottom: 2D Euclidean drift |pos - dense_pos| vs time on a log
     scale, per k.
     """
-    ks = sorted(
-        int(k[1:]) for k in drift
-        if k.startswith("k") and k[1:].isdigit()
-    )
+    ks = sorted(int(k[1:]) for k in drift if k.startswith("k") and k[1:].isdigit())
     sample_step = int(drift["sample_step"])
     t = np.arange(len(drift["dense"])) * sample_step * 0.1
 
@@ -442,20 +430,17 @@ def fig_long_drift_2d(drift: dict, out: Path) -> None:
     # Left: 2D trajectory
     ax = axes[0]
     stim = drift["stim_pos"]
-    ax.plot(stim[:, 0], stim[:, 1], "k--", lw=1, alpha=0.4,
-            label="stimulus pos")
-    ax.plot(drift["k_full"][:, 0], drift["k_full"][:, 1], "k-", lw=2.0,
-            label="k=full (dense)")
+    ax.plot(stim[:, 0], stim[:, 1], "k--", lw=1, alpha=0.4, label="stimulus pos")
+    ax.plot(drift["k_full"][:, 0], drift["k_full"][:, 1], "k-", lw=2.0, label="k=full (dense)")
     cmap = plt.get_cmap("plasma")
     for i, k in enumerate(ks):
         arr = drift[f"k{k}"]
         color = cmap(i / max(len(ks) - 1, 1))
-        ax.plot(arr[:, 0], arr[:, 1], lw=1.0, color=color, alpha=0.85,
-                label=f"k={k}")
+        ax.plot(arr[:, 0], arr[:, 1], lw=1.0, color=color, alpha=0.85, label=f"k={k}")
     ax.set_xlabel("x (rad)")
     ax.set_ylabel("y (rad)")
     ax.set_title(
-        f"CANN2D L=16 — long-trajectory drift (T=2000 diagonal sweep)",
+        "CANN2D L=16 — long-trajectory drift (T=2000 diagonal sweep)",
         fontsize=10,
     )
     ax.set_xlim(-np.pi - 0.2, np.pi + 0.2)
@@ -477,7 +462,7 @@ def fig_long_drift_2d(drift: dict, out: Path) -> None:
         dy = np.abs(drift["k_full"][:, 1] - arr[:, 1])
         dx = np.minimum(dx, z_range - dx)
         dy = np.minimum(dy, z_range - dy)
-        err = np.sqrt(dx ** 2 + dy ** 2)
+        err = np.sqrt(dx**2 + dy**2)
         color = cmap(i / max(len(ks) - 1, 1))
         ax.semilogy(t, err * 1000, lw=1.0, color=color, label=f"k={k}")
     ax.set_xlabel("time (s)")
@@ -530,12 +515,9 @@ def fig_pareto(
     fig, ax = plt.subplots(figsize=(6.0, 4.0))
 
     # k → marker shape (cycle through enough shapes for k=1..64)
-    ks_present = sorted({
-        k for _, cell in pairs for k in cell if k != -1
-    })
+    ks_present = sorted({k for _, cell in pairs for k in cell if k != -1})
     marker_pool = ["o", "s", "^", "D", "v", "P", "*", "X", "h", "p"]
-    k_to_marker = {k: marker_pool[i % len(marker_pool)]
-                   for i, k in enumerate(ks_present)}
+    k_to_marker = {k: marker_pool[i % len(marker_pool)] for i, k in enumerate(ks_present)}
 
     # n_neurons colormap
     cmap_n = plt.get_cmap("viridis")
@@ -553,19 +535,25 @@ def fig_pareto(
             sp = dense_mv / float(r["matvec_per_step_ms"])
             err = float(r["max_pos_err"]) * 1000  # mrad
             ax.scatter(
-                sp, err,
+                sp,
+                err,
                 s=80,
                 marker=k_to_marker[k],
-                color=color, alpha=0.78,
-                edgecolor="black", lw=0.5,
+                color=color,
+                alpha=0.78,
+                edgecolor="black",
+                lw=0.5,
                 zorder=3,
             )
             # Highlight the recommended k with a black ring
             if k == recommended_k:
                 ax.scatter(
-                    sp, err,
-                    s=200, facecolors="none",
-                    edgecolors="black", lw=1.6,
+                    sp,
+                    err,
+                    s=200,
+                    facecolors="none",
+                    edgecolors="black",
+                    lw=1.6,
                     zorder=4,
                 )
 
@@ -578,17 +566,20 @@ def fig_pareto(
             xs = [p[0] for p in fft_pts]
             ys = [p[1] for p in fft_pts]
             ax.scatter(
-                xs, ys,
-                s=200, marker="*", color="crimson",
-                edgecolor="black", lw=1.0, zorder=6,
+                xs,
+                ys,
+                s=200,
+                marker="*",
+                color="crimson",
+                edgecolor="black",
+                lw=1.0,
+                zorder=6,
                 label="FFT (exact)",
             )
 
     # Reference lines
-    ax.axvline(1.0, ls=":", color="grey", lw=0.7, alpha=0.6,
-               label="speedup = 1 (dense)")
-    ax.axhline(5.0, ls=":", color="grey", lw=0.7, alpha=0.6,
-               label="error = 5 mrad")
+    ax.axvline(1.0, ls=":", color="grey", lw=0.7, alpha=0.6, label="speedup = 1 (dense)")
+    ax.axhline(5.0, ls=":", color="grey", lw=0.7, alpha=0.6, label="error = 5 mrad")
 
     ax.set_xscale("log")
     ax.set_yscale("log")
@@ -599,6 +590,7 @@ def fig_pareto(
     ax.tick_params(labelsize=8)
     # Suppress cluttered minor ticks (same fix as fig_speedup)
     from matplotlib.ticker import LogLocator, NullLocator
+
     ax.xaxis.set_major_locator(LogLocator(base=10.0, numticks=4))
     ax.xaxis.set_minor_locator(NullLocator())
     ax.yaxis.set_major_locator(LogLocator(base=10.0, numticks=4))
@@ -606,25 +598,35 @@ def fig_pareto(
 
     # Marker-shape legend for k (compact, in lower-left of the data area)
     k_handles = [
-        plt.Line2D([0], [0], marker=k_to_marker[k], color="grey",
-                   markerfacecolor="grey", markersize=9, lw=0,
-                   label=f"k={k}")
+        plt.Line2D(
+            [0],
+            [0],
+            marker=k_to_marker[k],
+            color="grey",
+            markerfacecolor="grey",
+            markersize=9,
+            lw=0,
+            label=f"k={k}",
+        )
         for k in ks_present
     ]
-    leg_k = ax.legend(handles=k_handles, loc="lower left",
-                      title=f"rank k (○=k={recommended_k} highlighted)",
-                      title_fontsize=8, fontsize=7,
-                      frameon=True, ncol=2)
+    leg_k = ax.legend(
+        handles=k_handles,
+        loc="lower left",
+        title=f"rank k (○=k={recommended_k} highlighted)",
+        title_fontsize=8,
+        fontsize=7,
+        frameon=True,
+        ncol=2,
+    )
     leg_k.get_frame().set_edgecolor("grey")
     ax.add_artist(leg_k)
 
     # Reference-line legend
     ref_handles = [
-        plt.Line2D([0], [0], ls=":", color="grey", lw=0.8,
-                   label="speedup=1 / err=5 mrad"),
+        plt.Line2D([0], [0], ls=":", color="grey", lw=0.8, label="speedup=1 / err=5 mrad"),
     ]
-    ax.legend(handles=ref_handles, loc="upper right", fontsize=7,
-              frameon=True)
+    ax.legend(handles=ref_handles, loc="upper right", fontsize=7, frameon=True)
 
     # n_neurons colorbar (using the actual n_neurons range, not the
     # by_cell key — fixed bug for CANN2D)
@@ -646,6 +648,7 @@ def fig_pareto(
 # Helpers for tables
 # ---------------------------------------------------------------------------
 
+
 def fmt_speedup(s: float) -> str:
     if s >= 100:
         return f"{s:.0f}×"
@@ -660,15 +663,16 @@ def fmt_err(e: float) -> str:
     if e == 0:
         return "0"
     if abs(e) < 0.001:
-        return f"{e*1000:.2f} mrad"
+        return f"{e * 1000:.2f} mrad"
     if abs(e) < 0.1:
-        return f"{e*1000:.1f} mrad"
+        return f"{e * 1000:.1f} mrad"
     return f"{e:.3f}"
 
 
 # ---------------------------------------------------------------------------
 # Main
 # ---------------------------------------------------------------------------
+
 
 def _load_fft_for_overlay(fft_results_dir: Path, tag: str = "cpu") -> dict:
     """Load the FFT bench CSVs from `cann_fft/results/` and build a
@@ -733,21 +737,36 @@ def _load_fft_for_overlay(fft_results_dir: Path, tag: str = "cpu") -> dict:
 
 def main() -> None:
     p = argparse.ArgumentParser()
-    p.add_argument("--results", type=str, default=None,
-                   help="results dir (default: benchmarks/cann_lowrank/results)")
-    p.add_argument("--tag", type=str, default="cpu",
-                   help="which tag to use for the trajectory npz (cpu or gpu)")
-    p.add_argument("--html", action="store_true",
-                   help="also write a styled HTML version (NeurIPS-like) of the report")
-    p.add_argument("--pdf", action="store_true",
-                   help="also write a PDF version of the report (NeurIPS-like, requires weasyprint)")
-    p.add_argument("--pdf-only", action="store_true",
-                   help="write only the PDF (no MD, no HTML); implies --pdf")
+    p.add_argument(
+        "--results",
+        type=str,
+        default=None,
+        help="results dir (default: benchmarks/canns-accl/lowrank/results)",
+    )
+    p.add_argument(
+        "--tag",
+        type=str,
+        default="cpu",
+        help="which tag to use for the trajectory npz (cpu or gpu)",
+    )
+    p.add_argument(
+        "--html",
+        action="store_true",
+        help="also write a styled HTML version (NeurIPS-like) of the report",
+    )
+    p.add_argument(
+        "--pdf",
+        action="store_true",
+        help="also write a PDF version of the report (NeurIPS-like, requires weasyprint)",
+    )
+    p.add_argument(
+        "--pdf-only", action="store_true", help="write only the PDF (no MD, no HTML); implies --pdf"
+    )
     args = p.parse_args()
 
     results = Path(args.results) if args.results else _HERE / "results"
     if not results.exists():
-        print(f"ERROR: {results} not found. Run cann_lowrank_bench.py first.")
+        print(f"ERROR: {results} not found. Run bench.py first.")
         sys.exit(1)
 
     # Load all available CSVs (cpu, gpu, plus the legacy no-tag ones)
@@ -769,9 +788,9 @@ def main() -> None:
     cpu_by = group_by_cell(cpu_rows)
     gpu_by = group_by_cell(gpu_rows) if gpu_rows else {}
 
-    # Load FFT bench data (from canns_fft/results/) — used to overlay FFT
-    # on the speedup / Pareto figures for a unified comparison.
-    fft_results = _HERE.parent / "cann_fft" / "results"
+    # Load FFT bench data (from canns-accl/fft/results/) — used to overlay
+    # FFT on the speedup / Pareto figures for a unified comparison.
+    fft_results = _HERE.parent / "fft" / "results"
     fft_data = _load_fft_for_overlay(fft_results, tag=args.tag)
 
     # Load trajectories
@@ -804,47 +823,81 @@ def main() -> None:
             traj_npz["sv_2d"],
             figdir / "fig_svd_spectrum.png",
         )
-    fig_speedup(cpu_by, "CANN1D", "CANN1D — matvec speedup (CPU, Apple M4)",
-                figdir / "fig_speedup_cpu_cann1d.png",
-                fft_data=fft_data.get("cpu") if fft_data else None)
-    fig_speedup(cpu_by, "CANN2D", "CANN2D — matvec speedup (CPU, Apple M4)",
-                figdir / "fig_speedup_cpu_cann2d.png",
-                fft_data=fft_data.get("cpu") if fft_data else None)
+    fig_speedup(
+        cpu_by,
+        "CANN1D",
+        "CANN1D — matvec speedup (CPU, Apple M4)",
+        figdir / "fig_speedup_cpu_cann1d.png",
+        fft_data=fft_data.get("cpu") if fft_data else None,
+    )
+    fig_speedup(
+        cpu_by,
+        "CANN2D",
+        "CANN2D — matvec speedup (CPU, Apple M4)",
+        figdir / "fig_speedup_cpu_cann2d.png",
+        fft_data=fft_data.get("cpu") if fft_data else None,
+    )
     if gpu_by:
-        fig_speedup(gpu_by, "CANN1D", "CANN1D — matvec speedup (A100 80GB)",
-                    figdir / "fig_speedup_gpu_cann1d.png",
-                    fft_data=fft_data.get("gpu") if fft_data else None)
-        fig_speedup(gpu_by, "CANN2D", "CANN2D — matvec speedup (A100 80GB)",
-                    figdir / "fig_speedup_gpu_cann2d.png",
-                    fft_data=fft_data.get("gpu") if fft_data else None)
-    fig_pareto(cpu_by, "CANN1D", "CANN1D — speed/accuracy Pareto (CPU)",
-               figdir / "fig_pareto_cann1d.png", recommended_k=8,
-               fft_data=fft_data.get("cpu") if fft_data else None)
-    fig_pareto(cpu_by, "CANN2D", "CANN2D — speed/accuracy Pareto (CPU)",
-               figdir / "fig_pareto_cann2d.png", recommended_k=32,
-               fft_data=fft_data.get("cpu") if fft_data else None)
+        fig_speedup(
+            gpu_by,
+            "CANN1D",
+            "CANN1D — matvec speedup (A100 80GB)",
+            figdir / "fig_speedup_gpu_cann1d.png",
+            fft_data=fft_data.get("gpu") if fft_data else None,
+        )
+        fig_speedup(
+            gpu_by,
+            "CANN2D",
+            "CANN2D — matvec speedup (A100 80GB)",
+            figdir / "fig_speedup_gpu_cann2d.png",
+            fft_data=fft_data.get("gpu") if fft_data else None,
+        )
+    fig_pareto(
+        cpu_by,
+        "CANN1D",
+        "CANN1D — speed/accuracy Pareto (CPU)",
+        figdir / "fig_pareto_cann1d.png",
+        recommended_k=8,
+        fft_data=fft_data.get("cpu") if fft_data else None,
+    )
+    fig_pareto(
+        cpu_by,
+        "CANN2D",
+        "CANN2D — speed/accuracy Pareto (CPU)",
+        figdir / "fig_pareto_cann2d.png",
+        recommended_k=32,
+        fft_data=fft_data.get("cpu") if fft_data else None,
+    )
 
     if traj_npz:
         # 1D trajectory
-        traj_1d = {k.removeprefix("traj_1d_"): v for k, v in traj_npz.items()
-                   if k.startswith("traj_1d_")}
+        traj_1d = {
+            k.removeprefix("traj_1d_"): v for k, v in traj_npz.items() if k.startswith("traj_1d_")
+        }
         if "dense" in traj_1d:
             fig_trajectory_1d(traj_1d, figdir / "fig_trajectory_1d.png")
         # 2D trajectory
-        traj_2d = {k.removeprefix("traj_2d_"): v for k, v in traj_npz.items()
-                   if k.startswith("traj_2d_")}
+        traj_2d = {
+            k.removeprefix("traj_2d_"): v for k, v in traj_npz.items() if k.startswith("traj_2d_")
+        }
         if "dense" in traj_2d:
             fig_trajectory_2d(traj_2d, figdir / "fig_trajectory_2d.png")
 
     if drift_npz:
         # 1D long-trajectory drift
-        drift_1d = {k.removeprefix("drift_1d_"): v for k, v in drift_npz.items()
-                    if k.startswith("drift_1d_")}
+        drift_1d = {
+            k.removeprefix("drift_1d_"): v
+            for k, v in drift_npz.items()
+            if k.startswith("drift_1d_")
+        }
         if "dense" in drift_1d:
             fig_long_drift_1d(drift_1d, figdir / "fig_long_drift_1d.png")
         # 2D long-trajectory drift
-        drift_2d = {k.removeprefix("drift_2d_"): v for k, v in drift_npz.items()
-                    if k.startswith("drift_2d_")}
+        drift_2d = {
+            k.removeprefix("drift_2d_"): v
+            for k, v in drift_npz.items()
+            if k.startswith("drift_2d_")
+        }
         if "dense" in drift_2d:
             fig_long_drift_2d(drift_2d, figdir / "fig_long_drift_2d.png")
 
@@ -869,7 +922,7 @@ def main() -> None:
 
     html_text = None
     if write_html:
-        out_html = results / f"cann_lowrank_summary.html"
+        out_html = results / "cann_lowrank_summary.html"
         html_text = render_html(md, figdir=figdir)
         out_html.write_text(html_text, encoding="utf-8")
         print(f"Wrote {out_html}")
@@ -877,7 +930,7 @@ def main() -> None:
     if write_pdf:
         if html_text is None:
             html_text = render_html(md, figdir=figdir)
-        out_pdf = results / f"cann_lowrank_summary.pdf"
+        out_pdf = results / "cann_lowrank_summary.pdf"
         try:
             render_pdf(html_text, out_pdf, base_url=results)
             print(f"Wrote {out_pdf}")
@@ -888,14 +941,20 @@ def main() -> None:
 
 
 def render_markdown(
-    cpu_by: dict, gpu_by: dict, traj_npz: dict, drift_npz: dict,
-    figdir: Path, results_dir: Path,
+    cpu_by: dict,
+    gpu_by: dict,
+    traj_npz: dict,
+    drift_npz: dict,
+    figdir: Path,
+    results_dir: Path,
 ) -> str:
     md = []
     fig = lambda name: f"figures/{name}"  # noqa: E731
 
     # ---- Title + abstract ----
-    md.append("# Accelerating the recurrent matvec in CANN1D and CANN2D — low-rank SVD and circulant FFT\n")
+    md.append(
+        "# Accelerating the recurrent matvec in CANN1D and CANN2D — low-rank SVD and circulant FFT\n"
+    )
     md.append("## Abstract\n")
     md.append(
         "The Continuous Attractor Neural Network (CANN) family in `canns` "
@@ -963,7 +1022,7 @@ def render_markdown(
     )
     md.append(
         "All code, raw data, and the figure-generation scripts are in "
-        "`benchmarks/cann_lowrank/` and `benchmarks/cann_fft/`. The "
+        "`benchmarks/canns-accl/lowrank/` and `benchmarks/canns-accl/fft/`. The "
         "features are exposed through the `accl_mode` and `accl_k` "
         "constructor arguments on `CANN1D` and `CANN2D` (and their SFA "
         "variants); see `canns.models.basic`.\n"
@@ -978,7 +1037,7 @@ def render_markdown(
         "repo. If the external link is unavailable, regenerate the "
         "report locally with:\n"
         "```bash\n"
-        "python benchmarks/cann_lowrank/cann_lowrank_report.py --tag cpu --pdf --html\n"
+        "python benchmarks/canns-accl/lowrank/report.py --tag cpu --pdf --html\n"
         "```\n"
     )
 
@@ -1394,9 +1453,7 @@ def render_markdown(
     )
 
     # 3.8.1 CPU
-    md.append(
-        "#### 3.8.1 CPU: FFT is 25-50× faster than dense, *exact* at float precision\n"
-    )
+    md.append("#### 3.8.1 CPU: FFT is 25-50× faster than dense, *exact* at float precision\n")
     md.append(
         "On the Apple M4 CPU, the dense baseline matvec is 0.80 ms at "
         "`n = 4096`. The FFT path completes the same matvec in 0.032 ms — "
@@ -1420,21 +1477,29 @@ def render_markdown(
         "symbols are used in Figures 4-5, 9, and 10 to keep the "
         "legend compact.\n"
     )
-    md.append("| backend | per-step (ms) | scan (ms) | max-err | speedup-step | speedup-scan | symbol |")
+    md.append(
+        "| backend | per-step (ms) | scan (ms) | max-err | speedup-step | speedup-scan | symbol |"
+    )
     md.append("|---|---|---|---|---|---|---|")
     md.append("| `dense`        | 0.80   | 0.80   | 0           | 1.0×   | 1.0×   | —       |")
-    md.append("| `fft`          | 0.032  | 0.021  | 1.7×10⁻⁴    | **25.2×** | **38.8×** | ★ exact + fast |")
+    md.append(
+        "| `fft`          | 0.032  | 0.021  | 1.7×10⁻⁴    | **25.2×** | **38.8×** | ★ exact + fast |"
+    )
     md.append("| `svd_k64`      | 0.034  | 0.025  | ~1.7×10⁻⁴   | 23.3× | 32.5× | ★ near-exact |")
     md.append("| `svd_k16`      | 0.017  | 0.006  | 2.9×10⁻²    | 47.3× | 139×  | ◯ low error |")
-    md.append("| `svd_k4`       | 0.013  | 0.003  | 4.6×10¹     | 63.4× | 298×  | △ fast, big error |")
-    md.append("| `svd_k1`       | 0.005  | 0.001  | 5.4×10¹     | **168×** | **965×** | ⚠ fastest, biggest error |")
+    md.append(
+        "| `svd_k4`       | 0.013  | 0.003  | 4.6×10¹     | 63.4× | 298×  | △ fast, big error |"
+    )
+    md.append(
+        "| `svd_k1`       | 0.005  | 0.001  | 5.4×10¹     | **168×** | **965×** | ⚠ fastest, biggest error |"
+    )
     md.append(
         "\nThree observations follow from Table 1. *First*, the FFT "
         "path and the SVD k=64 path are within 5% of each other in "
         "wall time and within 1% in error — they are essentially "
         "interchangeable on this size. *Second*, the rank-1 SVD is "
         "6.5× faster than FFT but 30 mrad less accurate; this is the "
-        "canonical \"fastest but lossy\" corner of the Pareto front, "
+        'canonical "fastest but lossy" corner of the Pareto front, '
         "and the only place where the low-rank path strictly beats "
         "FFT on CPU. *Third*, the gap between `dense` and `fft` "
         "widens roughly as `n` (the dense matvec grows O(n²), FFT "
@@ -1443,9 +1508,7 @@ def render_markdown(
     )
 
     # 3.8.2 GPU
-    md.append(
-        "#### 3.8.2 GPU: FFT is competitive only on the scan path\n"
-    )
+    md.append("#### 3.8.2 GPU: FFT is competitive only on the scan path\n")
     md.append(
         "On the A100 the per-step picture changes qualitatively. The "
         "dense matvec at `n = 4096` is 0.23 ms — well under 1 ms — "
@@ -1461,10 +1524,7 @@ def render_markdown(
         "than dense scan), so the relative ranking of the backends "
         "is preserved on the scan metric.\n"
     )
-    md.append(
-        "**Table 2.** *NVIDIA A100 GPU, CANN1D n=4096.* Same "
-        "conventions as Table 1.\n"
-    )
+    md.append("**Table 2.** *NVIDIA A100 GPU, CANN1D n=4096.* Same conventions as Table 1.\n")
     md.append("| backend | per-step (ms) | scan (ms) | max-err | speedup-step | speedup-scan |")
     md.append("|---|---|---|---|---|---|")
     md.append("| `dense`   | 0.23 | 0.053 | 0 (TF32)  | 1.00× | 1.00× |")
@@ -1481,9 +1541,7 @@ def render_markdown(
     )
 
     # 3.8.3 Cross-platform
-    md.append(
-        "#### 3.8.3 Why the gap between Mac M4 and A100?\n"
-    )
+    md.append("#### 3.8.3 Why the gap between Mac M4 and A100?\n")
     md.append(
         "We additionally measured the FFT path on a third platform: "
         "an Intel Xeon Gold 6348 (2.6 GHz, 16 cores, AVX-512) Linux "
@@ -1507,9 +1565,7 @@ def render_markdown(
     )
 
     # 3.8.4 Pareto
-    md.append(
-        "#### 3.8.4 Pareto view: speed vs accuracy\n"
-    )
+    md.append("#### 3.8.4 Pareto view: speed vs accuracy\n")
     md.append(
         "Figure 9 shows the per-step time vs max-abs error for all "
         "backends × all platforms × the largest tested `n` per "
@@ -1536,7 +1592,9 @@ def render_markdown(
         "but trails the Mac M4 by 5× on the FFT path because of "
         "its weaker single-core BLAS throughput.\n"
     )
-    md.append(f"\n![Per-n speedup vs dense — Mac M4 CPU and A100 GPU]({fig('fig_fft_per_n_panels.png')})\n")
+    md.append(
+        f"\n![Per-n speedup vs dense — Mac M4 CPU and A100 GPU]({fig('fig_fft_per_n_panels.png')})\n"
+    )
     md.append(
         "**Figure 10.** *Per-n speedup vs dense, by backend.* Top "
         "row: Mac M4 CPU. Bottom row: A100 GPU. The CPU speedup "
@@ -1561,16 +1619,14 @@ def render_markdown(
         "(k≥16 → fft/dense), further improving accuracy by an "
         "order of magnitude (from 10⁻² mrad to 10⁻⁴ mrad) costs "
         "only ~25% more wall time — the curve flattens. This is "
-        "the practical \"you can have exactness almost for free\" "
+        'the practical "you can have exactness almost for free" '
         "regime: pick `fft` for the high-fidelity end of the "
         "Pareto front, and pick `svd_k16` for the lossy but faster "
         "middle.\n"
     )
 
     # 3.8.5 Decision matrix
-    md.append(
-        "#### 3.8.5 Decision matrix — which backend for which use case?\n"
-    )
+    md.append("#### 3.8.5 Decision matrix — which backend for which use case?\n")
     md.append(
         "We summarise the experimental evidence in a decision matrix. "
         "Each row gives a use case, the recommended backend(s), and "
@@ -1770,8 +1826,8 @@ def render_markdown(
         "matrices, FFT, convolutions, Toeplitz matrices): "
         "<https://nla.skoltech.ru/lectures/lecture-17/lecture-17.html>.\n"
         "5. `canns` Python package: <https://github.com/Routhleck/canns>.\n"
-        "6. The canns benchmark suite (`benchmarks/cann_lowrank/` and "
-        "`benchmarks/cann_fft/`), this branch.\n"
+        "6. The canns benchmark suite (`benchmarks/canns-accl/lowrank/` and "
+        "`benchmarks/canns-accl/fft/`), this branch.\n"
     )
 
     # ---- Appendix: reproduction ----
@@ -1781,21 +1837,21 @@ def render_markdown(
         "and JAX + brainpy.math installed (any recent version):\n"
         "```bash\n"
         "# CPU sweep (Apple M3 Pro, single core):\n"
-        "python benchmarks/cann_lowrank/cann_lowrank_bench.py --T 200 --tag cpu\n"
+        "python benchmarks/canns-accl/lowrank/bench.py --T 200 --tag cpu\n"
         "\n"
         "# Optional: also record the long-trajectory drift (T=2000):\n"
-        "python benchmarks/cann_lowrank/cann_lowrank_bench.py --T 200 --long-trajectory --tag cpu\n"
+        "python benchmarks/canns-accl/lowrank/bench.py --T 200 --long-trajectory --tag cpu\n"
         "\n"
         "# GPU sweep (NVIDIA A100, GPU 1):\n"
         "CUDA_VISIBLE_DEVICES=1 JAX_PLATFORMS=cuda \\\n"
-        "  python benchmarks/cann_lowrank/cann_lowrank_bench.py --gpu-sweep --T 200 --tag gpu\n"
+        "  python benchmarks/canns-accl/lowrank/bench.py --gpu-sweep --T 200 --tag gpu\n"
         "\n"
         "# Format the report (figures + markdown):\n"
-        "python benchmarks/cann_lowrank/cann_lowrank_report.py --tag cpu\n"
+        "python benchmarks/canns-accl/lowrank/report.py --tag cpu\n"
         "```\n"
         "The benchmark writes per-tag CSVs, a `bump_trajectories_{tag}.npz`, "
         "and (with `--long-trajectory`) a `bump_drift_{tag}.npz` "
-        "to `benchmarks/cann_lowrank/results/`. The report script reads "
+        "to `benchmarks/canns-accl/lowrank/results/`. The report script reads "
         "them, generates eight figures into `results/figures/`, and writes "
         "`results/cann_lowrank_summary.md` (this document). The "
         "complete sweep takes ~15 minutes on CPU and ~5 minutes on A100.\n"
@@ -1828,8 +1884,7 @@ def _accuracy_table(by_cell: dict) -> str:
         out.append(f"\n**{model}**\n")
         n_keys = sorted(nv for (m, nv) in by_cell if m == model)
         # All k values present
-        ks = sorted({k for (m, _n), cell in by_cell.items()
-                     if m == model for k in cell if k != -1})
+        ks = sorted({k for (m, _n), cell in by_cell.items() if m == model for k in cell if k != -1})
         # Header: for CANN2D add an L column; for CANN1D, n_neurons = key
         if model == "CANN2D":
             header = ["L", "n_neurons"] + [f"k={k}" for k in ks]
@@ -2213,9 +2268,7 @@ def render_html(md_text: str, figdir: Path) -> str:
             h.decompose()
     abstract_div = (
         '<section class="abstract">'
-        "<h2>Abstract</h2>"
-        + "".join(str(p) for p in abs_soup.find_all("p"))
-        + "</section>"
+        "<h2>Abstract</h2>" + "".join(str(p) for p in abs_soup.find_all("p")) + "</section>"
     )
 
     # Combine image + caption into <figure> in the body
@@ -2240,7 +2293,7 @@ def render_html(md_text: str, figdir: Path) -> str:
     <h1 class="paper-title">{title}</h1>
     <p class="paper-authors">sichaohe &middot; canns low-rank benchmark</p>
     <p class="paper-meta">canns-lowrank-bench branch &middot; generated from
-    <code>benchmarks/cann_lowrank/cann_lowrank_report.py</code></p>
+    <code>benchmarks/canns-accl/lowrank/report.py</code></p>
   </header>
   {abstract_div}
   <main>
@@ -2266,6 +2319,7 @@ def render_pdf(html_text: str, output_path: Path, base_url: Path) -> None:
         the figures directory (e.g., the results dir).
     """
     from weasyprint import HTML
+
     HTML(string=html_text, base_url=str(base_url)).write_pdf(str(output_path))
 
 

@@ -20,8 +20,8 @@ uv run python benchmarks/shuffle_null_model.py "$@"
 # sweep needs an A100 with `--gpu-sweep`. Both are optional — the report
 # gracefully falls back to whichever tag exists.
 echo "==> canns_lowrank — CPU sweep (~15 min on Apple M3 Pro)"
-uv run python benchmarks/canns_lowrank/cann_lowrank_bench.py --T 200 --tag cpu "$@"
+uv run python benchmarks/canns_lowrank/bench.py --T 200 --tag cpu "$@"
 echo "==> canns_lowrank — render report (markdown + HTML + PDF)"
-uv run python benchmarks/canns_lowrank/cann_lowrank_report.py --tag cpu --html --pdf "$@"
+uv run python benchmarks/canns_lowrank/report.py --tag cpu --html --pdf "$@"
 
 # Add new benchmarks below as they are introduced.

@@ -1,7 +1,7 @@
 """Generate a paper-style report for the FFT matvec benchmark.
 
 Reads ``results/cann_fft_speed.csv`` and
-``results/cann_fft_accuracy.csv`` (produced by ``cann_fft_bench.py``)
+``results/cann_fft_accuracy.csv`` (produced by ``bench.py``)
 and writes:
 
   - results/cann_fft_summary.md     — paper-style writeup

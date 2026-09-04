@@ -31,6 +31,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - **New tutorial 9: `docs/{en,zh}/3_full_detail_tutorials/01_cann_modeling/09_acceleration_modes.ipynb`** (27 cells each, both `nbconvert --execute`-run, all 11 code cells with output). Walks through the strategy pattern, the decision table, all 5 modes, end-to-end dynamics match (`fast` vs `normal` r_max diff ≈ 9.5e-7 over 80 steps), runtime mode switching, and a 3-step custom-backend walkthrough. Both `index.rst` updated.
+- **Consolidated `benchmarks/cann_lowrank/` + `benchmarks/cann_fft/` into `benchmarks/canns-accl/`.** The two suites benchmark the same `accl_mode` API and were added at different times; they now live together as `benchmarks/canns-accl/{lowrank,fft}/` (plus a unified `README.md` and a top-level `run_all.sh`). Script file names drop the `cann_lowrank_` / `cann_fft_` prefix (the parent `lowrank/` / `fft/` directory already disambiguates); result data files in `results/` keep the prefix for stable back-references. The `build_fancy_site.py` (interactive HTML site) was removed along with the live-report deployment; the report scripts still emit the markdown / PDF writeups. The historical CHANGELOG entries above continue to reference the old `benchmarks/cann_lowrank/` and `benchmarks/cann_fft/` paths; the new code paths are `benchmarks/canns-accl/lowrank/` and `benchmarks/canns-accl/fft/`.
 
 ## [1.2.2] - 2026-08-10
 

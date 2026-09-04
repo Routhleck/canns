@@ -13,14 +13,14 @@ We additionally stress-test long-horizon stability with a T = 2000 slow sweep of
 
 The two methods are complementary: FFT is the right choice for exact high-fidelity matvec (parameter sweeps, regression tests, publication-quality comparisons) on CPU; truncated SVD is the right choice when a few percent of error is acceptable, when n is very large, or on GPU. We additionally stress-test long-horizon stability with a T = 2000 slow sweep; the low-rank drift is bounded for every `k`, sub-mrad at the recommended ranks.
 
-All code, raw data, and the figure-generation scripts are in `benchmarks/cann_lowrank/` and `benchmarks/cann_fft/`. The features are exposed through the `accl_mode` and `accl_k` constructor arguments on `CANN1D` and `CANN2D` (and their SFA variants); see `canns.models.basic`.
+All code, raw data, and the figure-generation scripts are in `benchmarks/canns-accl/lowrank/` and `benchmarks/canns-accl/fft/`. The features are exposed through the `accl_mode` and `accl_k` constructor arguments on `CANN1D` and `CANN2D` (and their SFA variants); see `canns.models.basic`.
 
 
 **A live, browsable version of this report** (with all figures and an interactive table of contents) is hosted at:
 <https://7ct8ubrf2o5p6.space.mcode.cn>
 The PDF is also at `results/cann_lowrank_summary.pdf` in the repo. If the external link is unavailable, regenerate the report locally with:
 ```bash
-python benchmarks/cann_lowrank/cann_lowrank_report.py --tag cpu --pdf --html
+python benchmarks/canns-accl/lowrank/report.py --tag cpu --pdf --html
 ```
 
 
@@ -354,7 +354,7 @@ We have shown that the recurrent matvec in `CANN1D` and `CANN2D` — the dominan
 3. Davis, P. J. (1979). *Circulant Matrices.* Wiley.
 4. Skoltech Numerical Linear Algebra lecture 17 (Structured matrices, FFT, convolutions, Toeplitz matrices): <https://nla.skoltech.ru/lectures/lecture-17/lecture-17.html>.
 5. `canns` Python package: <https://github.com/Routhleck/canns>.
-6. The canns benchmark suite (`benchmarks/cann_lowrank/` and `benchmarks/cann_fft/`), this branch.
+6. The canns benchmark suite (`benchmarks/canns-accl/lowrank/` and `benchmarks/canns-accl/fft/`), this branch.
 
 
 ## Appendix A. Reproduction
@@ -362,19 +362,19 @@ We have shown that the recurrent matvec in `CANN1D` and `CANN2D` — the dominan
 From the repo root, with the `canns` source on `PYTHONPATH` and JAX + brainpy.math installed (any recent version):
 ```bash
 # CPU sweep (Apple M3 Pro, single core):
-python benchmarks/cann_lowrank/cann_lowrank_bench.py --T 200 --tag cpu
+python benchmarks/canns-accl/lowrank/bench.py --T 200 --tag cpu
 
 # Optional: also record the long-trajectory drift (T=2000):
-python benchmarks/cann_lowrank/cann_lowrank_bench.py --T 200 --long-trajectory --tag cpu
+python benchmarks/canns-accl/lowrank/bench.py --T 200 --long-trajectory --tag cpu
 
 # GPU sweep (NVIDIA A100, GPU 1):
 CUDA_VISIBLE_DEVICES=1 JAX_PLATFORMS=cuda \
-  python benchmarks/cann_lowrank/cann_lowrank_bench.py --gpu-sweep --T 200 --tag gpu
+  python benchmarks/canns-accl/lowrank/bench.py --gpu-sweep --T 200 --tag gpu
 
 # Format the report (figures + markdown):
-python benchmarks/cann_lowrank/cann_lowrank_report.py --tag cpu
+python benchmarks/canns-accl/lowrank/report.py --tag cpu
 ```
-The benchmark writes per-tag CSVs, a `bump_trajectories_{tag}.npz`, and (with `--long-trajectory`) a `bump_drift_{tag}.npz` to `benchmarks/cann_lowrank/results/`. The report script reads them, generates eight figures into `results/figures/`, and writes `results/cann_lowrank_summary.md` (this document). The complete sweep takes ~15 minutes on CPU and ~5 minutes on A100.
+The benchmark writes per-tag CSVs, a `bump_trajectories_{tag}.npz`, and (with `--long-trajectory`) a `bump_drift_{tag}.npz` to `benchmarks/canns-accl/lowrank/results/`. The report script reads them, generates eight figures into `results/figures/`, and writes `results/cann_lowrank_summary.md` (this document). The complete sweep takes ~15 minutes on CPU and ~5 minutes on A100.
 
 
 ## Appendix B. Raw data files

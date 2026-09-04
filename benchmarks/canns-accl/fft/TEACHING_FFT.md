@@ -1,7 +1,7 @@
 # CANN 的 FFT 加速 —— 从头讲透
 
 > **给完全不懂线性代数 / 傅里叶变换的读者准备**。也适合"想给别人讲清楚"的同学。
-> 配套实现在 `canns/models/basic/cann.py` 的 `accl_mode="fft"` 分支，benchmark 在 `benchmarks/cann_fft/`。
+> 配套实现在 `canns/models/basic/cann.py` 的 `accl_mode="fft"` 分支，benchmark 在 `benchmarks/canns-accl/fft/`。
 
 ---
 
@@ -436,7 +436,7 @@ A: 简单决策树：
    - 2024 Springer "cyclic group theory for CANN" —— 明确证明 W 在 translation-invariant ring 上是循环的
 
 4. **Project 内文档**：
-   - `benchmarks/cann_fft/README.md` —— 实测结果
-   - `benchmarks/cann_fft/results/cann_fft_triple_summary.md` —— 三平台对比
+   - `benchmarks/canns-accl/fft/README.md` —— 实测结果
+   - `benchmarks/canns-accl/fft/results/cann_fft_triple_summary.md` —— 三平台对比
    - `examples/cann/cann1d_fft_mode.py` —— 可运行 demo
 

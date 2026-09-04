@@ -22,7 +22,7 @@ def _pick_k_for_err_target(
     within ``target_err_mrad``.
 
     The estimate is calibrated against the ``canns_lowrank`` benchmark
-    (see ``benchmarks/cann_lowrank/results/cann_lowrank_summary.md``):
+    (see ``benchmarks/canns-accl/lowrank/results/cann_lowrank_summary.md``):
 
     =========================== =====================
     ``target_err_mrad`` budget  heuristic used
