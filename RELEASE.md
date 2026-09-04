@@ -93,7 +93,7 @@ The system uses multiple fallbacks to ensure version consistency:
 
 - **`pyproject.toml`**: Dynamic versioning configuration
 - **`docs/conf.py`**: Documentation version detection
-- **`.github/workflows/release.yml`**: Release automation
+- **`.github/workflows/publish.yml`**: PyPI publish (auto on `release.published`, manual via `workflow_dispatch`)
 - **`scripts/sync_version.py`**: Version synchronization tool
 
 ## Required Secrets
