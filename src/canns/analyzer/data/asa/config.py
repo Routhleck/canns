@@ -82,6 +82,18 @@ class TDAConfig:
         cloud is acceptable. Falls back to the legacy ``mp.Pool`` path
         automatically if the FFI is unavailable. Set to ``False`` to
         force the legacy behaviour.
+    shuffle_metric : str
+        Distance metric for the column-pair inner product inside the FFI
+        shuffle null model. One of ``"euclidean"`` (default; aliases
+        ``"l2"``), ``"manhattan"`` (aliases ``"l1"``, ``"cityblock"``),
+        ``"cosine"``, ``"chebyshev"`` (alias ``"linf"``), or
+        ``"minkowski"`` (requires ``shuffle_p``). Only consumed by the
+        FFI path; the legacy path keeps using ``metric`` for its point
+        cloud distance. Requires ``canns-lib>=0.10.3`` to take effect;
+        older FFI builds silently fall back to Euclidean.
+    shuffle_p : float or None
+        Exponent for ``shuffle_metric="minkowski"``; must be > 0 when set.
+        Ignored for any other metric.
     progress_bar : bool
         Whether to show progress bars.
     standardize : bool
@@ -108,6 +120,8 @@ class TDAConfig:
     do_shuffle: bool = False
     num_shuffles: int = 1000
     use_ffi_shuffle: bool = True
+    shuffle_metric: str = "euclidean"
+    shuffle_p: float | None = None
     progress_bar: bool = True
     standardize: bool = True
 

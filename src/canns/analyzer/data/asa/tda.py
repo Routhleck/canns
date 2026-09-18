@@ -216,6 +216,10 @@ def _perform_shuffle_analysis(embed_data: np.ndarray, config: TDAConfig) -> dict
         "maxdim": config.maxdim,
         "coeff": config.coeff,
         "use_ffi_shuffle": config.use_ffi_shuffle,
+        # FFI shuffle-only knobs. Filtered from legacy_kwargs in
+        # `_run_shuffle_analysis` so they don't leak into _compute_persistence.
+        "shuffle_metric": config.shuffle_metric,
+        "shuffle_p": config.shuffle_p,
     }
 
     shuffle_max = _run_shuffle_analysis(
@@ -694,19 +698,22 @@ def _run_shuffle_analysis(sspikes, num_shuffles=1000, num_cores=4, progress_bar=
     (logged via ``logging.warning``).
     """
     if kwargs.get("force_legacy", False) or not kwargs.get("use_ffi_shuffle", True):
-        # Strip FFI control flags from kwargs to avoid leaking them into the
-        # legacy path on any fallback (would otherwise recurse / crash).
+        # Strip FFI control flags and the FFI shuffle metric from kwargs to
+        # avoid leaking them into the legacy path (would otherwise reach
+        # _compute_persistence and TypeError on shuffle_metric).
         legacy_kwargs = {
-            k: v for k, v in kwargs.items() if k not in {"use_ffi_shuffle", "force_legacy"}
+            k: v for k, v in kwargs.items()
+            if k not in {"use_ffi_shuffle", "force_legacy", "shuffle_metric", "shuffle_p"}
         }
         return _run_shuffle_analysis_multiprocessing(
             sspikes, num_shuffles, num_cores, progress_bar, **legacy_kwargs
         )
-    # Strip FFI control flags so they don't leak into a legacy fallback (would
-    # otherwise recurse / crash). The fallback will use the same legacy path
-    # as in 1.1.x, preserving the public contract.
+    # Strip FFI control flags and the FFI shuffle metric so they don't leak
+    # into a legacy fallback (would otherwise recurse / crash). The fallback
+    # will use the same legacy path as in 1.1.x, preserving the public contract.
     legacy_kwargs = {
-        k: v for k, v in kwargs.items() if k not in {"use_ffi_shuffle", "force_legacy"}
+        k: v for k, v in kwargs.items()
+        if k not in {"use_ffi_shuffle", "force_legacy", "shuffle_metric", "shuffle_p"}
     }
     maxdim = int(kwargs.get("maxdim", 1))
     coeff = int(kwargs.get("coeff", 47))
@@ -732,6 +739,8 @@ def _run_shuffle_analysis(sspikes, num_shuffles=1000, num_cores=4, progress_bar=
             np.inf,
             coeff,
             0,
+            metric=str(kwargs.get("shuffle_metric", "euclidean")),
+            p=kwargs.get("shuffle_p"),
         )
         out: dict[int, list[float]] = {}
         for d in range(maxdim + 1):
