@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import Any
 
 from ...visualization import PlotConfig
 
@@ -70,34 +71,40 @@ class TDAConfig:
         Whether to run shuffle analysis.
     num_shuffles : int
         Number of shuffles for null distribution.
-    use_ffi_shuffle : bool
-        Run the shuffle null model via the Rust+rayon ``shuffle_null_model``
-        FFI shipped by ``canns-lib>=0.9.0`` (typically 100-3000x faster on
-        the shuffle loop). The FFI runs ripser on a Euclidean distance
-        matrix built directly from the raw (T, N) spike-train matrix,
-        skipping the timepoint downsampling / PCA / UMAP-denoising pipeline
-        of the legacy ``_compute_persistence`` path. The resulting null
-        distribution will therefore differ semantically from the legacy
-        path; this default is appropriate when the simplified point
-        cloud is acceptable. Falls back to the legacy ``mp.Pool`` path
-        automatically if the FFI is unavailable. Set to ``False`` to
-        force the legacy behaviour.
-    shuffle_metric : str
-        Distance metric for the column-pair inner product inside the FFI
-        shuffle null model. One of ``"euclidean"`` (default; aliases
-        ``"l2"``), ``"manhattan"`` (aliases ``"l1"``, ``"cityblock"``),
-        ``"cosine"``, ``"chebyshev"`` (alias ``"linf"``), or
-        ``"minkowski"`` (requires ``shuffle_p``). Only consumed by the
-        FFI path; the legacy path keeps using ``metric`` for its point
-        cloud distance. Requires ``canns-lib>=0.10.3`` to take effect;
-        older FFI builds silently fall back to Euclidean.
-    shuffle_p : float or None
-        Exponent for ``shuffle_metric="minkowski"``; must be > 0 when set.
-        Ignored for any other metric.
+    shuffle_backend : str, optional
+        ``"canns_lib"`` (the default) uses its pipeline-aware Python shuffle
+        scheduler; ``"python"`` uses the local reference scheduler. Both rerun
+        the complete real-data analysis for every independent neuron shift.
+        The library route requires the new pipeline API and never silently
+        retries failed numerical work with another backend.
+    use_ffi_shuffle : bool, optional
+        Deprecated compatibility alias: True selects ``"canns_lib"``, False
+        selects ``"python"``. Conflicting explicit backend selections raise.
+        This no longer selects the former raw-activity Euclidean shortcut.
+    shuffle_seed : int, optional
+        Seed for NumPy's default_rng. Mutually exclusive with explicit shifts.
+    shuffle_shifts : array-like, optional
+        Integer offsets with shape (num_shuffles, neurons), in [0, timepoints).
+        Positive offsets follow numpy.roll; zero is allowed.
+    shuffle_workers : int
+        Maximum number of simultaneous complete analyses; defaults to one.
+    sampling_backend : str
+        ``"python"`` keeps the existing sampling implementation. ``"rust"``
+        uses bounded sorting temporaries and the canns-lib fuzzy-union kernel;
+        it does not change the final distance-graph algorithm.
+    ph_threshold_policy : str
+        ``"legacy"`` preserves Ripser's default threshold. The optional
+        ``"max_finite_float32"`` stops at the greatest finite edge value in
+        each graph, retaining all finite edges and essential intervals.
+    ph_threshold : float, optional
+        Explicit filtration cutoff under the legacy policy. Cannot be combined
+        with ``"max_finite_float32"``; the same choice applies to real and null.
     progress_bar : bool
         Whether to show progress bars.
     standardize : bool
         Whether to standardize data before PCA (z-score).
+    do_cocycles : bool
+        Return representative cocycles from real and shuffled PH (default True).
 
     Examples
     --------
@@ -119,11 +126,17 @@ class TDAConfig:
     show: bool = True
     do_shuffle: bool = False
     num_shuffles: int = 1000
-    use_ffi_shuffle: bool = True
-    shuffle_metric: str = "euclidean"
-    shuffle_p: float | None = None
+    use_ffi_shuffle: bool | None = None
     progress_bar: bool = True
     standardize: bool = True
+    shuffle_backend: str | None = None
+    shuffle_seed: int | None = None
+    shuffle_shifts: Any = None
+    shuffle_workers: int = 1
+    sampling_backend: str = "python"
+    ph_threshold_policy: str = "legacy"
+    ph_threshold: float | None = None
+    do_cocycles: bool = True
 
 
 @dataclass

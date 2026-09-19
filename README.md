@@ -196,6 +196,7 @@ uv pip install canns
 ## Docs & Examples
 
 - Documentation and tutorials: <https://routhleck.com/canns/>
+- [Complete-pipeline ASA shuffle configuration and migration](docs/asa_shuffle.md)
 - Local scripts: `examples/`
 - Sphinx docs and notebooks: `docs/`
 - ASA GUI entry: `canns-gui`
