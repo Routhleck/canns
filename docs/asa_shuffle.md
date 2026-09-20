@@ -32,7 +32,6 @@ config = TDAConfig(
     do_shuffle=True,
     num_shuffles=100,
     shuffle_seed=17,
-    shuffle_backend="canns_lib",
     sampling_backend="rust",
     ph_threshold_policy="max_finite_float32",
     shuffle_workers=1,
@@ -42,12 +41,12 @@ config = TDAConfig(
 result = tda_vis(activity, config=config)
 ```
 
-This example requires the companion canns-lib release with its public
-`canns_lib.ripser.shuffle_null_model(..., pipeline=...)` API and `fuzzy_union`
-kernel. During migration, explicitly select `shuffle_backend="python"` and
-`sampling_backend="python"` to use the local full-pipeline reference with an
-older canns-lib PH backend. Missing capabilities are reported before the real
-analysis starts. A numerical failure never triggers an automatic backend change.
+This example requires the companion canns-lib release with the `fuzzy_union`
+kernel for Rust density sampling. Select `sampling_backend="python"` to retain
+the existing sampling implementation. In both cases, PH is computed by the same
+Rust Ripser backend through `canns_lib.ripser.ripser`. Missing sampling
+capabilities are reported before real analysis starts. Numerical failures never
+trigger an automatic backend change.
 
 Use either a `TDAConfig` or equivalent keyword arguments to `tda_vis`, not both.
 Unrecognized parameters and conflicting options raise errors. Budgets are
@@ -55,11 +54,24 @@ validated: `k` and `n_points` must fit the available selected timepoints, and
 `nbs` must not exceed `n_points`. `active_times` remains an upper bound; fewer
 available candidates are allowed when the other budgets still fit.
 
+## Division of responsibilities
+
+`TDAConfig` explicitly defines the ASA analysis, including activity selection,
+PCA, density sampling, graph construction and PH parameters. CANNs applies the
+same configuration to the real data and every shifted activity matrix; no
+analysis callback or arbitrary callback-argument dictionary is passed across
+the library boundary.
+
+CANNs generates circular-shift offsets locally and uses Rust numerical kernels
+from canns-lib. The library's separate `shuffle_null_model` function accepts
+point-cloud distance and PH
+parameters explicitly. It does not perform ASA activity selection, PCA or graph
+construction, so CANNs does not use it for ASA null distributions.
+
 ## Independent engineering options
 
 | Option | Default | Effect |
 |---|---|---|
-| `shuffle_backend` | `"canns_lib"` | Selects the new library scheduler or the local `"python"` scheduler. Both call the complete real-data pipeline. |
 | `sampling_backend` | `"python"` | Optional `"rust"` uses bounded row-sorting temporaries and a dense fuzzy-union kernel for density sampling. The final graph-building method is unchanged. |
 | `ph_threshold_policy` | `"legacy"` | Optional `"max_finite_float32"` uses each graph's greatest finite float32 edge value, retaining every finite edge. |
 | `ph_threshold` | `None` | Optional explicit filtration cutoff, applied to real and null. It cannot be combined with `"max_finite_float32"`. |
@@ -69,9 +81,18 @@ available candidates are allowed when the other budgets still fit.
 | `do_cocycles` | `True` | Whether PH returns cocycles. Forwarded consistently for real and null. |
 
 The Rust option still uses dense quadratic storage. This change does not make
-arbitrarily large sample budgets inexpensive. The library's no-callback PH
-route releases the Python GIL, but NumPy/BLAS and PH may also have their own
+arbitrarily large sample budgets inexpensive. Library PH calls without progress
+callbacks release the Python GIL, but NumPy/BLAS and PH may also have their own
 threads. Choose concurrency using the complete workflow's measured memory use.
+
+Concurrent rounds also require a thread-safe Numba threading layer. If Numba
+selects `workqueue`, CANNs rejects more than one simultaneous shuffle before
+real PH starts, because concurrent calls can abort Python. Use
+`shuffle_workers=1`, or configure an installed thread-safe Numba backend such as
+TBB or OpenMP before starting Python (see Numba's
+[`NUMBA_THREADING_LAYER` setting](https://numba.readthedocs.io/en/stable/user/threading-layer.html)).
+CANNs never changes that environment setting automatically. A batch
+with only one round does not require concurrent support.
 
 The finite-threshold policy is an opt-in optimization, not a fixed percentile
 cutoff. Missing edges stay infinite; higher-dimensional essential intervals are
@@ -82,7 +103,7 @@ smaller `ph_threshold` changes the filtration and its scientific interpretation.
 
 Offsets have shape `(num_shuffles, neurons)`, with integer values in `[0, T)`.
 Positive offsets mean `np.roll(activity[:, neuron], offset)`. Zero is allowed.
-Both schedulers generate all offsets before starting work, so the seed and
+The scheduler generates all offsets before starting work, so the seed and
 result order are independent of `shuffle_workers`. To reuse an old batch's exact
 shifts, pass its saved offsets, rather than assuming a different RNG reproduces
 them from the same integer seed.
@@ -98,11 +119,20 @@ On failure, `tda_vis` raises `ProcessingError` with the underlying exception
 chained. A shuffle exception exposes `index`, `offsets` and
 `original_exception`. No failed round is discarded, replaced by another seed,
 or assigned zero. No partial null distribution is returned. Already-running
-thread callbacks may need to finish before resources can be reclaimed.
+thread analyses may need to finish before resources can be reclaimed.
 
-The deprecated `use_ffi_shuffle=True/False` maps to the library/Python scheduler
-respectively, with a warning. It never selects the removed neuron-distance
-algorithm. An inconsistent explicit `shuffle_backend` is rejected.
+## Migration from earlier shuffle interfaces
+
+Remove `shuffle_backend`, `use_ffi_shuffle` and `force_legacy` from calls and
+saved configuration dictionaries. These obsolete selectors now raise
+`TypeError` rather than silently choosing a different null model. There is one
+ASA shuffle path: local offset generation and a bounded scheduler, followed by
+the complete ASA pipeline and Rust PH for every round. There is no separate
+NumPy PH implementation to select.
+
+Keep scientific parameters in `TDAConfig`. `sampling_backend` controls only the
+density-sampling implementation, while `shuffle_workers` controls concurrency.
+Neither option changes the PH backend or skips scientific preprocessing.
 
 ## What the result means
 
@@ -110,8 +140,9 @@ algorithm. An inconsistent explicit `shuffle_backend` is rejected.
 dimension, including every successful round in index order. Empty finite
 diagrams have maximum zero only after a successful computation. Essential H1 or
 higher classes emit a warning because these finite maxima do not test their
-significance. For full per-round diagrams and essential counts, use the public
-canns-lib API's `return_details=True` with an appropriate complete callback.
+significance. This ASA entry point returns per-round finite maxima; the generic
+canns-lib shuffle API's detailed diagrams describe its own point-cloud null and
+are not a substitute for ASA per-round diagrams.
 
 This change corrects pipeline and parameter consistency. It does not by itself
 make every ASA configuration an exact reproduction of Gardner et al. (2022).
@@ -124,5 +155,5 @@ its shuffles. Those thresholds are different. With 100 shuffles, the smallest
 corrected Monte Carlo p-value is `1 / 101`, not `p < 0.001`.
 
 See the [paper's Methods](https://www.nature.com/articles/s41586-021-04268-7)
-and the companion canns-lib shuffle guide for the callback contract, full
-outputs and migration details.
+and the companion canns-lib shuffle guide for its point-cloud null model,
+offset replay and migration details.

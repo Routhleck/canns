@@ -1,14 +1,11 @@
 from __future__ import annotations
 
-import importlib
-import inspect
 import logging
 import warnings
-from collections.abc import Callable
 from concurrent.futures import FIRST_COMPLETED, ThreadPoolExecutor, wait
 from dataclasses import replace
 from numbers import Integral
-from typing import Any, cast
+from typing import Any
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -74,7 +71,7 @@ def tda_vis(embed_data: np.ndarray, config: TDAConfig | None = None, **kwargs) -
     elif kwargs:
         raise TypeError("Pass either config or TDA keyword arguments, not both")
     config = _resolve_configuration(config)
-    _check_backend_availability(config, require_shuffle=config.do_shuffle)
+    _check_backend_availability(config)
     if config.do_shuffle:
         _validate_shuffle_input(
             embed_data,
@@ -290,27 +287,11 @@ def _compute_persistence(
             do_cocycles=do_cocycles,
         )
     )
-    _check_backend_availability(config, require_shuffle=False)
+    _check_backend_availability(config)
     return _compute_real_persistence(sspikes, config)["persistence"]
 
 
 def _resolve_configuration(config: TDAConfig) -> TDAConfig:
-    backend = config.shuffle_backend
-    if backend is not None and backend not in {"python", "canns_lib"}:
-        raise ValueError("shuffle_backend must be 'python' or 'canns_lib'")
-    if config.use_ffi_shuffle is not None:
-        if not isinstance(config.use_ffi_shuffle, bool):
-            raise TypeError("use_ffi_shuffle must be a bool or None")
-        legacy_backend = "canns_lib" if config.use_ffi_shuffle else "python"
-        if backend is not None and backend != legacy_backend:
-            raise ValueError("use_ffi_shuffle conflicts with shuffle_backend")
-        warnings.warn(
-            "use_ffi_shuffle is deprecated; use shuffle_backend='canns_lib' or 'python'. "
-            "Both now run the complete ASA pipeline.",
-            DeprecationWarning,
-            stacklevel=3,
-        )
-        backend = legacy_backend
     if config.sampling_backend not in {"python", "rust"}:
         raise ValueError("sampling_backend must be 'python' or 'rust'")
     if config.ph_threshold_policy not in {"legacy", "max_finite_float32"}:
@@ -320,7 +301,7 @@ def _resolve_configuration(config: TDAConfig) -> TDAConfig:
             raise ValueError("Explicit ph_threshold cannot be combined with max_finite_float32")
         if np.isnan(config.ph_threshold) or config.ph_threshold < 0:
             raise ValueError("ph_threshold must be nonnegative and not NaN")
-    return replace(config, shuffle_backend=backend or "canns_lib", use_ffi_shuffle=None)
+    return config
 
 
 def _validate_pipeline_parameters(activity, config):
@@ -350,22 +331,6 @@ def _validate_pipeline_parameters(activity, config):
         raise ValueError("nbs cannot exceed n_points")
 
 
-def _pipeline_shuffle_function() -> Callable[..., dict[int, list[float]]]:
-    module = importlib.import_module("canns_lib.ripser")
-    function = getattr(module, "shuffle_null_model", None)
-    try:
-        capable = callable(function) and "pipeline" in inspect.signature(function).parameters
-    except (TypeError, ValueError):
-        capable = False
-    if not capable:
-        raise ImportError(
-            "shuffle_backend='canns_lib' requires the pipeline-aware "
-            "canns_lib.ripser.shuffle_null_model API. Upgrade canns-lib or explicitly "
-            "select shuffle_backend='python'. The former raw-activity shortcut is not used."
-        )
-    return cast(Callable[..., dict[int, list[float]]], function)
-
-
 def _rust_fuzzy_union_function():
     function = getattr(_ripser_core, "fuzzy_union", None)
     if not callable(function):
@@ -376,13 +341,11 @@ def _rust_fuzzy_union_function():
     return function
 
 
-def _check_backend_availability(config: TDAConfig, *, require_shuffle: bool):
+def _check_backend_availability(config: TDAConfig):
     # Capability checks happen before real analysis; numerical failures never
     # select a different pipeline or restart with a different random shift.
     if config.sampling_backend == "rust":
         _rust_fuzzy_union_function()
-    if require_shuffle and config.shuffle_backend == "canns_lib":
-        _pipeline_shuffle_function()
 
 
 def _ph_threshold_options(distance, config):
@@ -816,11 +779,10 @@ def _run_shuffle_analysis(
 ):
     """Run the complete real-data pipeline after every independent neuron shift.
 
-    The library backend is a pipeline-aware scheduler, not the removed
-    raw-activity Euclidean shortcut. Capability errors are raised before work;
-    pipeline failures propagate with the failed iteration and its offsets.
+    CANNs owns the analysis and bounded scheduler. Every real and shuffled
+    analysis calls the same Rust PH backend through canns_lib.ripser.ripser.
+    Failures retain the iteration and offsets; there is no backend fallback.
     """
-    force_legacy = kwargs.pop("force_legacy", False)
     if config is None:
         config = TDAConfig(**kwargs)
     elif kwargs:
@@ -833,17 +795,8 @@ def _run_shuffle_analysis(
     if progress_bar is not None:
         overrides["progress_bar"] = progress_bar
     config = replace(config, **overrides)
-    if force_legacy:
-        if config.shuffle_backend not in (None, "python") or config.use_ffi_shuffle is True:
-            raise ValueError("force_legacy conflicts with the explicit shuffle backend")
-        warnings.warn(
-            "force_legacy is deprecated; use shuffle_backend='python'",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        config = replace(config, shuffle_backend="python")
     config = _resolve_configuration(config)
-    _check_backend_availability(config, require_shuffle=True)
+    _check_backend_availability(config)
     activity, offsets = _validate_shuffle_input(
         sspikes,
         config.num_shuffles,
@@ -851,23 +804,21 @@ def _run_shuffle_analysis(
         config.shuffle_shifts,
         config.shuffle_workers,
     )
-    # Only presentation controls differ: every scientific parameter remains in
-    # the same config consumed by _compute_real_persistence for real and null.
-    analysis_config = replace(config, do_shuffle=False, show=False, progress_bar=False)
-    if config.shuffle_backend == "canns_lib":
-        return _pipeline_shuffle_function()(
-            activity,
-            config.num_shuffles,
-            pipeline=_shuffle_persistence_pipeline,
-            pipeline_kwargs={"config": analysis_config},
-            seed=config.shuffle_seed,
-            shifts=offsets,
-            max_workers=config.shuffle_workers,
+    if offsets is None:
+        offsets = np.random.default_rng(config.shuffle_seed).integers(
+            0, activity.shape[0], size=(config.num_shuffles, activity.shape[1]), dtype=np.int64
         )
-    return _run_python_shuffle(activity, offsets, config, analysis_config)
+    offsets.flags.writeable = False
+    # Keep the input and random plan stable while workers run. Scientific
+    # settings are shared with real analysis; only presentation controls differ.
+    activity = np.array(activity, copy=True)
+    activity.flags.writeable = False
+    analysis_config = replace(config, do_shuffle=False, show=False, progress_bar=False)
+    return _run_asa_shuffle(activity, offsets, config, analysis_config)
 
 
 def _shuffle_persistence_pipeline(activity, *, config):
+    """Private ASA round, never a callback passed to another library."""
     persistence = _compute_real_persistence(activity, config)["persistence"]
     if len(persistence["dgms"]) != config.maxdim + 1:
         raise ValueError("Pipeline returned missing or extra homology dimensions")
@@ -878,6 +829,7 @@ def _validate_shuffle_input(activity, count, seed, shifts, workers):
     for name, value in (("num_shuffles", count), ("shuffle_workers", workers)):
         if isinstance(value, bool) or not isinstance(value, Integral) or value < 1:
             raise ValueError(f"{name} must be a positive integer")
+    _check_shuffle_concurrency(min(count, workers))
     activity = np.asarray(activity)
     if activity.ndim != 2 or 0 in activity.shape or activity.dtype.kind not in "fiu":
         raise ValueError("Shuffle activity must be a nonempty real numeric (time, neurons) matrix")
@@ -900,8 +852,25 @@ def _validate_shuffle_input(activity, count, seed, shifts, workers):
     return activity, offsets
 
 
+def _check_shuffle_concurrency(workers):
+    """Reject Numba workqueue before concurrent ASA analyses can abort Python."""
+    if HAS_NUMBA and workers > 1:
+        from numba import config, get_num_threads, threading_layer
+
+        if config.DISABLE_JIT:
+            return
+        # This public API initializes the selected layer before querying it.
+        get_num_threads()
+        if threading_layer() == "workqueue":
+            raise ValueError(
+                "Concurrent ASA shuffles cannot use Numba's non-thread-safe workqueue layer. "
+                "Set shuffle_workers=1, or configure an installed thread-safe Numba "
+                "threading backend before starting Python."
+            )
+
+
 class ShuffleIterationError(ProcessingError):
-    """A failed reference shuffle is evidence, never a missing/zero null draw."""
+    """A failed ASA shuffle is evidence, never a missing/zero null draw."""
 
     def __init__(self, index, offsets, original_exception):
         self.index = int(index)
@@ -940,11 +909,8 @@ def _finite_lifetime_summary(persistence, maxdim):
     return maxima, essential
 
 
-def _run_python_shuffle(activity, offsets, config, analysis_config):
-    if offsets is None:
-        offsets = np.random.default_rng(config.shuffle_seed).integers(
-            0, activity.shape[0], size=(config.num_shuffles, activity.shape[1]), dtype=np.int64
-        )
+def _run_asa_shuffle(activity, offsets, config, analysis_config):
+    """Execute complete ASA analyses with bounded concurrency and ordered results."""
     results = [None] * config.num_shuffles
 
     def work(index):
@@ -997,7 +963,6 @@ def _run_shuffle_analysis_multiprocessing(
     sspikes, num_shuffles=1000, num_cores=4, progress_bar=True, **kwargs
 ):
     """Compatibility entry point for the bounded complete-pipeline reference."""
-    kwargs["shuffle_backend"] = "python"
     return _run_shuffle_analysis(sspikes, num_shuffles, num_cores, progress_bar, **kwargs)
 
 

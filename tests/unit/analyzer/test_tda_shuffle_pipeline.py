@@ -1,8 +1,8 @@
 from __future__ import annotations
 
+import importlib
 from dataclasses import replace
 from threading import Event, Thread
-from types import SimpleNamespace
 
 import numpy as np
 import pytest
@@ -28,9 +28,14 @@ def config():
         maxdim=2,
         show=False,
         progress_bar=False,
-        shuffle_backend="python",
         num_shuffles=3,
     )
+
+
+@pytest.fixture
+def mocked_pipeline_concurrency(monkeypatch):
+    # These scheduler unit tests replace the entire numerical ASA pipeline.
+    monkeypatch.setattr(tda, "_check_shuffle_concurrency", lambda workers: None)
 
 
 def persistence(activity, config):
@@ -42,12 +47,13 @@ def persistence(activity, config):
     )
 
 
-def test_real_and_library_null_use_same_full_pipeline_and_config(monkeypatch, activity, config):
+def test_real_and_null_use_same_full_pipeline_and_config(
+    monkeypatch, activity, config, mocked_pipeline_concurrency
+):
     seen = []
     shifts = np.array([[0, 1, 2], [3, 4, 5], [6, 7, 8]], dtype=np.int64)
     config = replace(
         config,
-        shuffle_backend="canns_lib",
         shuffle_shifts=shifts,
         shuffle_workers=2,
         standardize=False,
@@ -62,25 +68,20 @@ def test_real_and_library_null_use_same_full_pipeline_and_config(monkeypatch, ac
         seen.append((data.copy(), settings))
         return persistence(data, settings)
 
-    def library(data, count, *, pipeline, pipeline_kwargs, seed, shifts, max_workers):
-        assert count == 3 and seed is None and max_workers == 2
-        out = {dim: [] for dim in range(config.maxdim + 1)}
-        for row in shifts:
-            shifted = np.column_stack([np.roll(data[:, j], int(s)) for j, s in enumerate(row)])
-            result = pipeline(shifted, **pipeline_kwargs)
-            values, _ = tda._finite_lifetime_summary(result, config.maxdim)
-            for dim in out:
-                out[dim].append(values[dim])
-        return out
+    def generic_shuffle(*args, **kwargs):
+        pytest.fail("generic point-cloud shuffle must never analyze ASA activity")
 
     monkeypatch.setattr(tda, "_compute_real_persistence", compute)
-    monkeypatch.setattr(tda, "_pipeline_shuffle_function", lambda: library)
+    library = importlib.import_module("canns_lib.ripser")
+    monkeypatch.setattr(library, "shuffle_null_model", generic_shuffle, raising=False)
+    monkeypatch.delattr(library, "generate_offsets", raising=False)
     monkeypatch.setattr(tda, "_handle_visualization", lambda *args: None)
     result = tda.tda_vis(activity, config=config)
     assert len(seen) == 4
     np.testing.assert_array_equal(seen[0][0], activity)
-    for i, (actual, settings) in enumerate(seen[1:]):
-        np.testing.assert_array_equal(actual, tda._shuffle_spike_trains(activity, shifts[i]))
+    expected = [tda._shuffle_spike_trains(activity, row) for row in shifts]
+    for actual, settings in seen[1:]:
+        assert sum(np.array_equal(actual, shifted) for shifted in expected) == 1
         for key in (
             "dim",
             "num_times",
@@ -99,6 +100,73 @@ def test_real_and_library_null_use_same_full_pipeline_and_config(monkeypatch, ac
         ):
             assert getattr(settings, key) == getattr(config, key)
     assert all(len(values) == 3 for values in result["shuffle_max"].values())
+
+
+@pytest.mark.parametrize("workers", [1, 2])
+def test_shuffle_matches_independent_complete_asa_rounds(monkeypatch, workers):
+    """Compare the scheduler against explicit full ASA computations, not another backend label."""
+    activity = np.random.default_rng(23).normal(size=(24, 4))
+    shifts = np.array([[0, 1, 2, 3], [4, 5, 6, 7]], dtype=np.int64)
+    config = TDAConfig(
+        dim=2,
+        num_times=2,
+        active_times=12,
+        k=5,
+        n_points=8,
+        nbs=5,
+        maxdim=2,
+        coeff=47,
+        show=False,
+        progress_bar=False,
+        num_shuffles=2,
+        shuffle_shifts=shifts,
+        shuffle_workers=workers,
+    )
+    if workers > 1 and tda.HAS_NUMBA:
+        from numba import config as numba_config
+        from numba import get_num_threads, threading_layer
+
+        if not numba_config.DISABLE_JIT:
+            get_num_threads()
+            if threading_layer() == "workqueue":
+                monkeypatch.setattr(
+                    tda, "_compute_real_persistence", lambda *args: pytest.fail("PH started")
+                )
+                with pytest.raises(ValueError, match="workqueue.*shuffle_workers=1"):
+                    tda._run_shuffle_analysis(activity, config=config)
+                return
+    shifted = [
+        np.column_stack([np.roll(activity[:, j], int(offset)) for j, offset in enumerate(row)])
+        for row in shifts
+    ]
+    reference = [tda._compute_real_persistence(data, config) for data in shifted]
+    compute = tda._compute_real_persistence
+    captured = {}
+
+    def record(data, settings):
+        index = next(i for i, expected in enumerate(shifted) if np.array_equal(data, expected))
+        result = compute(data, settings)
+        captured[index] = result
+        return result
+
+    monkeypatch.setattr(tda, "_compute_real_persistence", record)
+    maximums = tda._run_shuffle_analysis(activity, config=config)
+    assert len(captured) == len(reference)
+    for index, expected in enumerate(reference):
+        actual = captured[index]
+        for key in ("movetimes", "indstemp"):
+            np.testing.assert_array_equal(actual[key], expected[key])
+        for dim, diagram in enumerate(expected["persistence"]["dgms"]):
+            np.testing.assert_array_equal(actual["persistence"]["dgms"][dim], diagram)
+            finite = diagram[np.isfinite(diagram[:, 1])]
+            expected_max = float(np.max(finite[:, 1] - finite[:, 0])) if len(finite) else 0.0
+            assert maximums[dim][index] == expected_max
+        for actual_dimension, expected_dimension in zip(
+            actual["persistence"]["cocycles"], expected["persistence"]["cocycles"], strict=True
+        ):
+            assert len(actual_dimension) == len(expected_dimension)
+            for a, b in zip(actual_dimension, expected_dimension, strict=True):
+                np.testing.assert_array_equal(a, b)
 
 
 @pytest.mark.parametrize("maxdim,coeff,cocycles", [(0, 2, False), (1, 47, True), (3, 2, True)])
@@ -152,18 +220,24 @@ def test_actual_pipeline_passes_scientific_parameters(
     )
 
 
-@pytest.mark.parametrize("flag,expected", [(True, "canns_lib"), (False, "python")])
-def test_old_flag_is_explicit_compatibility_mapping(config, flag, expected):
-    with pytest.warns(DeprecationWarning, match="complete ASA"):
-        actual = tda._resolve_configuration(
-            replace(config, shuffle_backend=None, use_ffi_shuffle=flag)
-        )
-    assert actual.shuffle_backend == expected and actual.use_ffi_shuffle is None
-
-
-def test_conflicting_backend_flags_rejected(config):
-    with pytest.raises(ValueError, match="conflicts"):
-        tda._resolve_configuration(replace(config, shuffle_backend="python", use_ffi_shuffle=True))
+@pytest.mark.parametrize(
+    "keyword,value",
+    [
+        ("shuffle_backend", "python"),
+        ("shuffle_backend", "canns_lib"),
+        ("use_ffi_shuffle", True),
+        ("use_ffi_shuffle", False),
+        ("force_legacy", True),
+    ],
+)
+def test_removed_backend_options_fail_instead_of_selecting_a_different_null(
+    monkeypatch, activity, keyword, value
+):
+    monkeypatch.setattr(tda, "_compute_real_persistence", lambda *args: pytest.fail("PH started"))
+    with pytest.raises(TypeError, match=keyword):
+        tda.tda_vis(activity, **{keyword: value})
+    with pytest.raises(TypeError, match=keyword):
+        tda._run_shuffle_analysis(activity, **{keyword: value})
 
 
 def test_unknown_legacy_keyword_is_not_silently_ignored(activity):
@@ -171,40 +245,60 @@ def test_unknown_legacy_keyword_is_not_silently_ignored(activity):
         tda.tda_vis(activity, standardise=False)
 
 
-def test_missing_library_api_rejected_before_real_computation(monkeypatch, activity, config):
-    monkeypatch.setattr(tda.importlib, "import_module", lambda name: SimpleNamespace())
-    monkeypatch.setattr(tda, "_compute_real_persistence", lambda *a: pytest.fail("real PH started"))
-    with pytest.raises(ImportError, match="pipeline-aware"):
-        tda.tda_vis(activity, config=replace(config, shuffle_backend="canns_lib", do_shuffle=True))
-
-
-def test_old_library_api_cannot_reenter_raw_shortcut(monkeypatch):
-    def obsolete(raw, count, maxdim=1):
-        pytest.fail("obsolete API called")
-
-    monkeypatch.setattr(
-        tda.importlib, "import_module", lambda name: SimpleNamespace(shuffle_null_model=obsolete)
-    )
-    with pytest.raises(ImportError, match="pipeline-aware"):
-        tda._pipeline_shuffle_function()
-
-
-def test_numeric_library_failure_never_retries_python(monkeypatch, activity, config):
-    error = ArithmeticError("numerical failure at original shift")
-
-    def failing(*args, **kwargs):
-        raise error
-
-    monkeypatch.setattr(tda, "_pipeline_shuffle_function", lambda: failing)
-    monkeypatch.setattr(tda, "_run_python_shuffle", lambda *args: pytest.fail("silent retry"))
-    with pytest.raises(ArithmeticError) as actual:
-        tda._run_shuffle_analysis(activity, config=replace(config, shuffle_backend="canns_lib"))
-    assert actual.value is error
-
-
-def test_reference_failure_preserves_index_offsets_and_original_error(
-    monkeypatch, activity, config
+@pytest.mark.parametrize(
+    "layer,workers,count,do_shuffle,reject",
+    [
+        ("workqueue", 1, 3, True, False),
+        ("workqueue", 2, 1, True, False),
+        ("workqueue", 2, 3, False, False),
+        ("workqueue", 2, 3, True, True),
+        ("tbb", 2, 3, True, False),
+        ("omp", 2, 3, True, False),
+    ],
+)
+def test_numba_concurrency_checked_before_real_analysis(
+    monkeypatch, activity, config, layer, workers, count, do_shuffle, reject
 ):
+    import numba
+
+    initialized, seen = [], []
+    monkeypatch.setattr(tda, "HAS_NUMBA", True)
+    monkeypatch.setattr(numba.config, "DISABLE_JIT", False)
+    monkeypatch.setattr(numba, "get_num_threads", lambda: initialized.append(True) or 1)
+
+    def threading_layer():
+        assert initialized  # Query only after the public initialization API.
+        return layer
+
+    def compute(data, settings):
+        seen.append(data)
+        return persistence(data, settings)
+
+    monkeypatch.setattr(numba, "threading_layer", threading_layer)
+    monkeypatch.setattr(tda, "_compute_real_persistence", compute)
+    monkeypatch.setattr(tda, "_handle_visualization", lambda *args: None)
+    settings = replace(config, shuffle_workers=workers, num_shuffles=count, do_shuffle=do_shuffle)
+    if reject:
+        with pytest.raises(ValueError, match="workqueue.*shuffle_workers=1"):
+            tda.tda_vis(activity, config=settings)
+        assert not seen
+    else:
+        tda.tda_vis(activity, config=settings)
+        assert len(seen) == 1 + (count if do_shuffle else 0)
+    if not do_shuffle or min(workers, count) == 1:
+        assert not initialized
+
+
+def test_disabled_jit_does_not_require_a_numba_thread_pool(monkeypatch):
+    import numba
+
+    monkeypatch.setattr(tda, "HAS_NUMBA", True)
+    monkeypatch.setattr(numba.config, "DISABLE_JIT", True)
+    monkeypatch.setattr(numba, "get_num_threads", lambda: pytest.fail("Numba pool initialized"))
+    tda._check_shuffle_concurrency(2)
+
+
+def test_asa_failure_preserves_index_offsets_and_original_error(monkeypatch, activity, config):
     shifts = np.array([[0, 0, 0], [1, 2, 3], [4, 5, 6]])
     seen = []
     error = ArithmeticError("intentional failure")
@@ -224,8 +318,8 @@ def test_reference_failure_preserves_index_offsets_and_original_error(
     assert not actual.value.offsets.flags.writeable
 
 
-def test_parallel_reference_surfaces_failure_without_waiting_for_running_callback(
-    monkeypatch, activity, config
+def test_parallel_asa_surfaces_failure_without_waiting_for_running_analysis(
+    monkeypatch, activity, config, mocked_pipeline_concurrency
 ):
     shifts = np.array([[0, 0, 0], [1, 2, 3], [4, 5, 6]])
     started, release, finished, returned = (Event() for _ in range(4))
@@ -248,7 +342,8 @@ def test_parallel_reference_surfaces_failure_without_waiting_for_running_callbac
     def run():
         try:
             tda._run_shuffle_analysis(
-                activity, config=replace(config, shuffle_shifts=shifts, shuffle_workers=2)
+                activity,
+                config=replace(config, shuffle_shifts=shifts, shuffle_workers=2),
             )
         except BaseException as exc:
             outcomes.append(exc)
@@ -297,11 +392,16 @@ def test_successful_empty_diagram_is_zero_but_missing_dimension_fails(
 @pytest.mark.parametrize("workers", [1, 2])
 @pytest.mark.parametrize("seed", [21, np.int64(21)])
 def test_seed_plan_matches_default_rng_and_keeps_input(
-    monkeypatch, activity, config, workers, seed
+    monkeypatch, activity, config, mocked_pipeline_concurrency, workers, seed
 ):
     before = activity.copy()
     monkeypatch.setattr(tda, "_compute_real_persistence", persistence)
-    config = replace(config, shuffle_seed=seed, shuffle_workers=workers, num_shuffles=7)
+    config = replace(
+        config,
+        shuffle_seed=seed,
+        shuffle_workers=workers,
+        num_shuffles=7,
+    )
     expected_shifts = np.random.default_rng(21).integers(0, 12, size=(7, 3), dtype=np.int64)
     expected = {d: [] for d in range(3)}
     for shifts in expected_shifts:
@@ -313,10 +413,9 @@ def test_seed_plan_matches_default_rng_and_keeps_input(
     np.testing.assert_array_equal(activity, before)
 
 
-@pytest.mark.parametrize("backend", ["python", "canns_lib"])
 @pytest.mark.parametrize("seed", [True, np.bool_(True), -1, 1.5, np.random.default_rng(9)])
 def test_invalid_seed_rejected_before_real_without_mutating_generator(
-    monkeypatch, activity, config, backend, seed
+    monkeypatch, activity, config, seed
 ):
     monkeypatch.setattr(tda, "_check_backend_availability", lambda *args, **kwargs: None)
     monkeypatch.setattr(
@@ -327,7 +426,7 @@ def test_invalid_seed_rejected_before_real_without_mutating_generator(
     with pytest.raises(ValueError, match="shuffle_seed.*nonnegative integer"):
         tda.tda_vis(
             activity,
-            config=replace(config, do_shuffle=True, shuffle_backend=backend, shuffle_seed=seed),
+            config=replace(config, do_shuffle=True, shuffle_seed=seed),
         )
     if generator is not None:
         assert repr(generator.bit_generator.state) == before

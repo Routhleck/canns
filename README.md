@@ -24,6 +24,8 @@
 
 CANNs (Continuous Attractor Neural Networks toolkit) is a research toolkit built on [BrainPy](https://github.com/brainpy/BrainPy) and [JAX](https://github.com/jax-ml/jax), with optional Rust-accelerated [`canns-lib`](https://github.com/Routhleck/canns-lib) for selected performance-critical routines (e.g., TDA/Ripser and task generation). It bundles model collections, task generators, analyzers, and the ASA pipeline (GUI/TUI) so researchers can run simulations and analyze results in a consistent workflow. The API separates models, tasks, analyzers, and trainers to keep experiments modular and extensible.
 
+For ASA null testing, see [complete-pipeline shuffle configuration and migration](docs/asa_shuffle.md).
+
 ## Architecture
 
 <p align="center">

@@ -71,16 +71,6 @@ class TDAConfig:
         Whether to run shuffle analysis.
     num_shuffles : int
         Number of shuffles for null distribution.
-    shuffle_backend : str, optional
-        ``"canns_lib"`` (the default) uses its pipeline-aware Python shuffle
-        scheduler; ``"python"`` uses the local reference scheduler. Both rerun
-        the complete real-data analysis for every independent neuron shift.
-        The library route requires the new pipeline API and never silently
-        retries failed numerical work with another backend.
-    use_ffi_shuffle : bool, optional
-        Deprecated compatibility alias: True selects ``"canns_lib"``, False
-        selects ``"python"``. Conflicting explicit backend selections raise.
-        This no longer selects the former raw-activity Euclidean shortcut.
     shuffle_seed : int, optional
         Seed for NumPy's default_rng. Mutually exclusive with explicit shifts.
     shuffle_shifts : array-like, optional
@@ -126,10 +116,8 @@ class TDAConfig:
     show: bool = True
     do_shuffle: bool = False
     num_shuffles: int = 1000
-    use_ffi_shuffle: bool | None = None
     progress_bar: bool = True
     standardize: bool = True
-    shuffle_backend: str | None = None
     shuffle_seed: int | None = None
     shuffle_shifts: Any = None
     shuffle_workers: int = 1
