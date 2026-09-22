@@ -61,3 +61,6 @@ jobs:
 
       - name: Run tests
         run: uv run pytest -m "not slow"
+
+      - name: Check benchmark evidence validation
+        run: uv run pytest benchmarks/asa_shuffle/test_benchmark.py benchmarks/asa_shuffle/test_summary.py -q

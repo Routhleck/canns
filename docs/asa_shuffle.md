@@ -136,6 +136,12 @@ Neither option changes the PH backend or skips scientific preprocessing.
 
 ## What the result means
 
+For a reproducible comparison with the original Python multiprocessing path,
+see the [complete ASA shuffle benchmark](../../benchmarks/asa_shuffle/README.md).
+It records complete diagrams and cocycles, measures the whole process tree,
+and separates finite-threshold gains from comparisons at the same PH threshold.
+The historical shortcut's speedup numbers do not measure this complete pipeline.
+
 `result["shuffle_max"]` retains one maximum **finite** lifetime per round and
 dimension, including every successful round in index order. Empty finite
 diagrams have maximum zero only after a successful computation. Essential H1 or

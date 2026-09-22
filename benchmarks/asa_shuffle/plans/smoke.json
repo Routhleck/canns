@@ -1,0 +1,29 @@
+{
+  "seed": 1729,
+  "rounds": 2,
+  "repeats": 1,
+  "workers": [
+    1,
+    2
+  ],
+  "variants": [
+    "legacy-default",
+    "pr-finite"
+  ],
+  "cases": [
+    {
+      "name": "synthetic_h1",
+      "parameters": {
+        "dim": 6,
+        "num_times": 1,
+        "active_times": 200,
+        "k": 30,
+        "n_points": 80,
+        "nbs": 40,
+        "metric": "cosine",
+        "maxdim": 1,
+        "coeff": 47
+      }
+    }
+  ]
+}
