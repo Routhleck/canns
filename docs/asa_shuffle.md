@@ -136,11 +136,8 @@ Neither option changes the PH backend or skips scientific preprocessing.
 
 ## What the result means
 
-For a reproducible comparison with the original Python multiprocessing path,
-see the [complete ASA shuffle benchmark](../../benchmarks/asa_shuffle/README.md).
-It records complete diagrams and cocycles, measures the whole process tree,
-and separates finite-threshold gains from comparisons at the same PH threshold.
-The historical shortcut's speedup numbers do not measure this complete pipeline.
+See the [ASA shuffle benchmark results](../benchmarks/asa_shuffle/results/RESULTS.md)
+for measured time and memory improvements.
 
 `result["shuffle_max"]` retains one maximum **finite** lifetime per round and
 dimension, including every successful round in index order. Empty finite
@@ -161,5 +158,5 @@ its shuffles. Those thresholds are different. With 100 shuffles, the smallest
 corrected Monte Carlo p-value is `1 / 101`, not `p < 0.001`.
 
 See the [paper's Methods](https://www.nature.com/articles/s41586-021-04268-7)
-and the companion canns-lib shuffle guide for its point-cloud null model,
-offset replay and migration details.
+and the [canns-lib README](https://github.com/Routhleck/canns-lib#readme)
+for its point-cloud null model and API.
