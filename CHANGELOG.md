@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [1.5.0] - 2026-09-23
 
 ### Breaking
 - ASA shuffle now repeats the complete real-data analysis with the same `TDAConfig` after each independent neuron shift. CANNs owns offset generation and the bounded scheduler; real and shuffled data use the same Rust PH backend through `canns_lib.ripser.ripser`. The library's generic point-cloud shuffle is not used for ASA.
