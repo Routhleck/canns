@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Breaking
 - ASA shuffle now repeats the complete real-data analysis with the same `TDAConfig` after each independent neuron shift. CANNs owns offset generation and the bounded scheduler; real and shuffled data use the same Rust PH backend through `canns_lib.ripser.ripser`. The library's generic point-cloud shuffle is not used for ASA.
-- Removed `shuffle_backend`, `use_ffi_shuffle` and `force_legacy`; delete these obsolete selectors from calls and saved configuration dictionaries. They now raise `TypeError`, rather than selecting a different null model. `sampling_backend`, scientific parameters, seed/offset replay and worker limits remain configurable. Numerical failures retain their iteration and offsets and never trigger a backend fallback. See [ASA shuffle configuration and migration](docs/asa_shuffle.md).
+- Removed `shuffle_backend`, `use_ffi_shuffle` and `force_legacy`; delete these obsolete selectors from calls and saved configuration dictionaries. They now raise `TypeError`, rather than selecting a different null model. `sampling_backend`, scientific parameters, seed/offset replay and worker limits remain configurable. Numerical failures retain their iteration and offsets and never trigger a backend fallback. See `_run_shuffle_analysis` in `src/canns/analyzer/data/asa/tda.py` for the new configuration surface and migration recipe.
 - Concurrent ASA shuffles now reject Numba's non-thread-safe `workqueue` threading layer before real PH starts, preventing an interpreter abort. Single-round or single-worker runs remain supported; installed TBB/OpenMP backends retain concurrency support.
 
 ## [1.4.0] - 2026-09-04
