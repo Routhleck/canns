@@ -12,7 +12,6 @@
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.18453893.svg)](https://doi.org/10.5281/zenodo.18453893)
 [![arXiv](https://img.shields.io/badge/arXiv-2606.27783-b31b1b.svg)](https://arxiv.org/abs/2606.27783)
 
-
 <picture><img src="https://badges.ws/github/stars/routhleck/canns?logo=github" /></picture>
 [![PyPI Downloads](https://static.pepy.tech/personalized-badge/canns?period=total&units=INTERNATIONAL_SYSTEM&left_color=BLACK&right_color=GREEN&left_text=downloads)](https://pepy.tech/projects/canns)
 [![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/Routhleck/canns)
@@ -23,7 +22,6 @@
 ## Overview
 
 CANNs (Continuous Attractor Neural Networks toolkit) is a research toolkit built on [BrainPy](https://github.com/brainpy/BrainPy) and [JAX](https://github.com/jax-ml/jax), with optional Rust-accelerated [`canns-lib`](https://github.com/Routhleck/canns-lib) for selected performance-critical routines (e.g., TDA/Ripser and task generation). It bundles model collections, task generators, analyzers, and the ASA pipeline (GUI/TUI) so researchers can run simulations and analyze results in a consistent workflow. The API separates models, tasks, analyzers, and trainers to keep experiments modular and extensible.
-
 
 ## Architecture
 
@@ -47,8 +45,6 @@ parameters. This separation ensures maintainability, testability, and extensibil
 seamlessly integrate with the built-in ecosystem.
 
 ## Core Features
-
-
 
 - **Model collections**: basic CANNs (1D/2D, SFA), hierarchical path integration, theta-sweep models, brain-inspired models (e.g., Amari-Hopfield, linear/spiking layers)
 - **Task generators**: smooth tracking, population coding, template matching, open/closed-loop navigation
@@ -144,12 +140,10 @@ task = SmoothTracking1D(
 )
 task.get_data()
 
-
 # one-step simulation callback
 def step(t, stimulus):
     cann(stimulus)
     return cann.u.value, cann.inp.value
-
 
 # run simulation loop
 us, inputs = bm.for_loop(
