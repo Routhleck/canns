@@ -1,7 +1,10 @@
 from __future__ import annotations
 
 import logging
-import multiprocessing as mp
+import warnings
+from concurrent.futures import FIRST_COMPLETED, ThreadPoolExecutor, wait
+from dataclasses import replace
+from numbers import Integral
 from typing import Any
 
 import matplotlib.pyplot as plt
@@ -13,7 +16,7 @@ from scipy.sparse import coo_matrix
 from scipy.spatial.distance import pdist, squareform
 from sklearn import preprocessing
 
-from .config import Constants, ProcessingError, TDAConfig
+from .config import ProcessingError, TDAConfig
 
 try:
     from numba import njit
@@ -64,21 +67,18 @@ def tda_vis(embed_data: np.ndarray, config: TDAConfig | None = None, **kwargs) -
     """
     # Handle backward compatibility and configuration
     if config is None:
-        config = TDAConfig(
-            dim=kwargs.get("dim", 6),
-            num_times=kwargs.get("num_times", 5),
-            active_times=kwargs.get("active_times", 15000),
-            k=kwargs.get("k", 1000),
-            n_points=kwargs.get("n_points", 1200),
-            metric=kwargs.get("metric", "cosine"),
-            nbs=kwargs.get("nbs", 800),
-            maxdim=kwargs.get("maxdim", 1),
-            coeff=kwargs.get("coeff", 47),
-            show=kwargs.get("show", True),
-            do_shuffle=kwargs.get("do_shuffle", False),
-            num_shuffles=kwargs.get("num_shuffles", 1000),
-            progress_bar=kwargs.get("progress_bar", True),
-            standardize=kwargs.get("standardize", True),
+        config = TDAConfig(**kwargs)
+    elif kwargs:
+        raise TypeError("Pass either config or TDA keyword arguments, not both")
+    config = _resolve_configuration(config)
+    _check_backend_availability(config)
+    if config.do_shuffle:
+        _validate_shuffle_input(
+            embed_data,
+            config.num_shuffles,
+            config.shuffle_seed,
+            config.shuffle_shifts,
+            config.shuffle_workers,
         )
 
     try:
@@ -109,7 +109,7 @@ def tda_vis(embed_data: np.ndarray, config: TDAConfig | None = None, **kwargs) -
 
 def _compute_real_persistence(embed_data: np.ndarray, config: TDAConfig) -> dict[str, Any]:
     """Compute persistent homology for real data with progress tracking."""
-
+    _validate_pipeline_parameters(embed_data, config)
     logging.info("Processing real data - Starting TDA analysis (5 steps)")
 
     # Step 1: Time point downsampling
@@ -166,7 +166,8 @@ def _apply_pca_reduction(
     if standardize:
         scaled_data = preprocessing.scale(subset)
     else:
-        scaled_data = np.asarray(subset, dtype=np.float32)
+        scaled_data = np.asarray(subset, dtype=np.float64)
+        scaled_data = scaled_data - scaled_data.mean(axis=0)
     dimred, *_ = _pca(scaled_data, dim=dim)
     return dimred
 
@@ -179,6 +180,7 @@ def _apply_denoising(dimred: np.ndarray, config: TDAConfig) -> np.ndarray:
         num_sample=config.n_points,
         omega=1,  # Match external TDAvis: uses 1, not default 0.2
         metric=config.metric,
+        backend=config.sampling_backend,
     )
     return indstemp
 
@@ -194,9 +196,10 @@ def _compute_persistence_homology(
         d,
         maxdim=config.maxdim,
         coeff=config.coeff,
-        do_cocycles=True,
+        do_cocycles=config.do_cocycles,
         distance_matrix=True,
         progress_bar=config.progress_bar,
+        **_ph_threshold_options(d, config),
     )
 
 
@@ -204,26 +207,12 @@ def _perform_shuffle_analysis(embed_data: np.ndarray, config: TDAConfig) -> dict
     """Perform shuffle analysis with progress tracking."""
     print(f"\nStarting shuffle analysis with {config.num_shuffles} iterations...")
 
-    # Create parameters dict for shuffle analysis
-    shuffle_params = {
-        "dim": config.dim,
-        "num_times": config.num_times,
-        "active_times": config.active_times,
-        "k": config.k,
-        "n_points": config.n_points,
-        "metric": config.metric,
-        "nbs": config.nbs,
-        "maxdim": config.maxdim,
-        "coeff": config.coeff,
-        "use_ffi_shuffle": config.use_ffi_shuffle,
-    }
-
     shuffle_max = _run_shuffle_analysis(
         embed_data,
         num_shuffles=config.num_shuffles,
-        num_cores=Constants.MULTIPROCESSING_CORES,
+        num_cores=config.shuffle_workers,
         progress_bar=config.progress_bar,
-        **shuffle_params,
+        config=config,
     )
 
     # Print shuffle analysis summary
@@ -235,7 +224,7 @@ def _perform_shuffle_analysis(embed_data: np.ndarray, config: TDAConfig) -> dict
 def _print_shuffle_summary(shuffle_max: dict[int, Any]) -> None:
     """Print summary of shuffle analysis results."""
     print("\nSummary of shuffle-based analysis:")
-    for dim_idx in [0, 1, 2]:
+    for dim_idx in sorted(shuffle_max):
         if shuffle_max and dim_idx in shuffle_max and shuffle_max[dim_idx]:
             values = shuffle_max[dim_idx]
             print(
@@ -271,36 +260,110 @@ def _compute_persistence(
     maxdim=1,
     coeff=47,
     progress_bar=True,
+    standardize=True,
+    sampling_backend="python",
+    ph_threshold_policy="legacy",
+    ph_threshold=None,
+    do_cocycles=True,
 ):
-    # Time point downsampling
-    times_cube = np.arange(0, sspikes.shape[0], num_times)
-
-    # Select most active time points
-    movetimes = np.sort(np.argsort(np.sum(sspikes[times_cube, :], 1))[-active_times:])
-    movetimes = times_cube[movetimes]
-
-    # PCA dimensionality reduction
-    scaled_data = preprocessing.scale(sspikes[movetimes, :])
-    dimred, *_ = _pca(scaled_data, dim=dim)
-
-    # Point cloud sampling (denoising)
-    indstemp, *_ = _sample_denoising(dimred, k, n_points, 1, metric)
-
-    # Build distance matrix
-    d = _second_build(dimred, indstemp, metric=metric, nbs=nbs)
-    np.fill_diagonal(d, 0)
-
-    # Compute persistent homology
-    persistence = ripser(
-        d,
-        maxdim=maxdim,
-        coeff=coeff,
-        do_cocycles=True,
-        distance_matrix=True,
-        progress_bar=progress_bar,
+    """Compatibility wrapper around the same complete real-data pipeline."""
+    config = _resolve_configuration(
+        TDAConfig(
+            dim=dim,
+            num_times=num_times,
+            active_times=active_times,
+            k=k,
+            n_points=n_points,
+            metric=metric,
+            nbs=nbs,
+            maxdim=maxdim,
+            coeff=coeff,
+            show=False,
+            progress_bar=progress_bar,
+            standardize=standardize,
+            sampling_backend=sampling_backend,
+            ph_threshold_policy=ph_threshold_policy,
+            ph_threshold=ph_threshold,
+            do_cocycles=do_cocycles,
+        )
     )
+    _check_backend_availability(config)
+    return _compute_real_persistence(sspikes, config)["persistence"]
 
-    return persistence
+
+def _resolve_configuration(config: TDAConfig) -> TDAConfig:
+    if config.sampling_backend not in {"python", "rust"}:
+        raise ValueError("sampling_backend must be 'python' or 'rust'")
+    if config.ph_threshold_policy not in {"legacy", "max_finite_float32"}:
+        raise ValueError("ph_threshold_policy must be 'legacy' or 'max_finite_float32'")
+    if config.ph_threshold is not None:
+        if config.ph_threshold_policy != "legacy":
+            raise ValueError("Explicit ph_threshold cannot be combined with max_finite_float32")
+        if np.isnan(config.ph_threshold) or config.ph_threshold < 0:
+            raise ValueError("ph_threshold must be nonnegative and not NaN")
+    return config
+
+
+def _validate_pipeline_parameters(activity, config):
+    activity = np.asarray(activity)
+    if activity.ndim != 2 or activity.dtype.kind not in "fiu" or 0 in activity.shape:
+        raise ValueError("TDA activity must be a nonempty real numeric (time, neurons) matrix")
+    if not np.isfinite(activity).all():
+        raise ValueError("TDA activity must contain only finite values")
+    for name in ("dim", "num_times", "active_times", "k", "n_points", "nbs"):
+        value = getattr(config, name)
+        if isinstance(value, bool) or not isinstance(value, Integral) or value < 1:
+            raise ValueError(f"{name} must be a positive integer")
+    if (
+        isinstance(config.maxdim, bool)
+        or not isinstance(config.maxdim, Integral)
+        or config.maxdim < 0
+    ):
+        raise ValueError("maxdim must be a nonnegative integer")
+    candidates = min(config.active_times, len(range(0, len(activity), config.num_times)))
+    if candidates < 2:
+        raise ValueError("PCA requires at least two active timepoints")
+    if config.dim > min(candidates, activity.shape[1]):
+        raise ValueError("dim exceeds the available PCA dimensions")
+    if config.k > candidates or config.n_points > candidates:
+        raise ValueError("k and n_points cannot exceed the available active timepoints")
+    if config.nbs > config.n_points:
+        raise ValueError("nbs cannot exceed n_points")
+
+
+def _rust_fuzzy_union_function():
+    function = getattr(_ripser_core, "fuzzy_union", None)
+    if not callable(function):
+        raise ImportError(
+            "sampling_backend='rust' requires canns-lib with fuzzy_union; "
+            "upgrade canns-lib or explicitly select sampling_backend='python'"
+        )
+    return function
+
+
+def _check_backend_availability(config: TDAConfig):
+    # Capability checks happen before real analysis; numerical failures never
+    # select a different pipeline or restart with a different random shift.
+    if config.sampling_backend == "rust":
+        _rust_fuzzy_union_function()
+
+
+def _ph_threshold_options(distance, config):
+    if config.ph_threshold_policy == "legacy":
+        return {} if config.ph_threshold is None else {"thresh": config.ph_threshold}
+    if config.ph_threshold_policy != "max_finite_float32":
+        raise ValueError("Unknown PH threshold policy")
+    values = np.asarray(distance)
+    if np.isnan(values).any() or np.isneginf(values).any():
+        raise ValueError("PH graph contains NaN or negative infinity")
+    with np.errstate(over="ignore", invalid="ignore"):
+        finite = values[np.isfinite(values)].astype(np.float32)
+    if not finite.size or not np.isfinite(finite).all():
+        raise ValueError("PH graph finite edges must remain finite in float32")
+    threshold = float(finite.max())
+    if threshold >= np.finfo(np.float32).max:
+        raise ValueError("Maximum finite threshold collides with Ripser's sentinel")
+    return {"thresh": threshold}
 
 
 def _pca(data, dim=2):
@@ -316,8 +379,16 @@ def _pca(data, dim=2):
         var_exp (list): Variance explained by each principal component.
         evals (ndarray): Eigenvalues corresponding to the selected components.
     """
-    if dim < 2:
-        return data, [0], np.array([])
+    if dim == 1:
+        centered = np.asarray(data) - np.mean(data, axis=0)
+        covariance = np.atleast_2d(np.cov(centered, rowvar=False))
+        values, vectors = np.linalg.eigh(covariance)
+        index = int(np.argmax(values))
+        total = float(values.sum())
+        explained = [float(values[index]) / total * 100 if total else 0.0]
+        return centered @ vectors[:, index : index + 1], explained, values[index : index + 1]
+    if dim < 1:
+        raise ValueError("dim must be positive")
     _ = data.shape
     # mean center the data
     # data -= data.mean(axis=0)
@@ -344,7 +415,7 @@ def _pca(data, dim=2):
     return components, var_exp, evals[:dim]
 
 
-def _sample_denoising(data, k=10, num_sample=500, omega=0.2, metric="euclidean"):
+def _sample_denoising(data, k=10, num_sample=500, omega=0.2, metric="euclidean", backend="python"):
     """
     Perform denoising and greedy sampling based on mutual k-NN graph.
 
@@ -360,10 +431,43 @@ def _sample_denoising(data, k=10, num_sample=500, omega=0.2, metric="euclidean")
         d (ndarray): Pairwise similarity matrix of sampled points.
         Fs (ndarray): Sampling scores at each step.
     """
+    if not 1 <= k <= len(data) or not 1 <= num_sample <= len(data):
+        raise ValueError("k and num_sample must be in [1, available points]")
+    if backend == "rust":
+        return _sample_denoising_rust(data, k, num_sample, omega, metric)
+    if backend != "python":
+        raise ValueError("sampling backend must be 'python' or 'rust'")
     if HAS_NUMBA:
         return _sample_denoising_numba(data, k, num_sample, omega, metric)
     else:
         return _sample_denoising_numpy(data, k, num_sample, omega, metric)
+
+
+def _sample_denoising_rust(data, k, num_sample, omega, metric):
+    """Same density graph and greedy selection with bounded sorting temporaries."""
+    fuzzy_union = _rust_fuzzy_union_function()
+    n = data.shape[0]
+    distances = squareform(pdist(data, metric))
+    width = k
+    indices = np.empty((n, width), dtype=np.int64)
+    for start in range(0, n, 256):
+        stop = min(start + 256, n)
+        indices[start:stop] = np.argsort(distances[start:stop], axis=1)[:, :width]
+    knn_distances = np.take_along_axis(distances, indices, axis=1)
+    del distances
+    sigmas, rhos = _smooth_knn_dist(knn_distances, k, local_connectivity=0)
+    rows, cols, vals = _compute_membership_strengths(indices, knn_distances, sigmas, rhos)
+    del indices, knn_distances, sigmas, rhos
+    adjacency = fuzzy_union(
+        np.ascontiguousarray(rows, dtype=np.int64),
+        np.ascontiguousarray(cols, dtype=np.int64),
+        np.ascontiguousarray(vals, dtype=np.float64),
+        n,
+    )
+    del rows, cols, vals
+    selected, scores = _greedy_sampling_numba(adjacency, num_sample, omega)
+    sampled = _build_distance_matrix_numba(adjacency, selected)
+    return selected, sampled, scores
 
 
 def _sample_denoising_numpy(data, k=10, num_sample=500, omega=0.2, metric="euclidean"):
@@ -670,151 +774,219 @@ def _fast_pca_transform(data, components):
     return np.dot(data, components.T)
 
 
-def _run_shuffle_analysis(sspikes, num_shuffles=1000, num_cores=4, progress_bar=True, **kwargs):
-    """Perform shuffle analysis with optimized computation.
+def _run_shuffle_analysis(
+    sspikes, num_shuffles=None, num_cores=None, progress_bar=None, *, config=None, **kwargs
+):
+    """Run the complete real-data pipeline after every independent neuron shift.
 
-    Behavior depends on ``use_ffi_shuffle`` (in ``kwargs`` or in a global
-    default — see ``TDAConfig.use_ffi_shuffle``):
-
-    - ``use_ffi_shuffle=True`` (default): fast Rust+rayon ``shuffle_null_model``
-      FFI from ``canns-lib``. Computes a Euclidean distance matrix **directly
-      from the raw (T, N) spike-train matrix** and runs ripser, skipping
-      timepoint downsampling, PCA, UMAP denoising, and nbs thresholding.
-      Typically 100-3000x faster on the shuffle loop. The resulting null
-      distribution will differ semantically from the legacy path because
-      the input point cloud is different.
-    - ``use_ffi_shuffle=False``: legacy ``multiprocessing.Pool`` path, runs
-      ``_compute_persistence`` per shuffle (includes the full preprocessing
-      pipeline). Use only when you specifically need the legacy
-      preprocessing to be applied.
-    Use ``force_legacy=True`` to unconditionally bypass the FFI.
-
-    Falls back to the legacy path if ``canns-lib`` lacks the FFI, or if
-    ``maxdim > 2`` / shape is invalid for the FFI, or on any FFI exception
-    (logged via ``logging.warning``).
+    CANNs owns the analysis and bounded scheduler. Every real and shuffled
+    analysis calls the same Rust PH backend through canns_lib.ripser.ripser.
+    Failures retain the iteration and offsets; there is no backend fallback.
     """
-    if kwargs.get("force_legacy", False) or not kwargs.get("use_ffi_shuffle", True):
-        # Strip FFI control flags from kwargs to avoid leaking them into the
-        # legacy path on any fallback (would otherwise recurse / crash).
-        legacy_kwargs = {
-            k: v for k, v in kwargs.items() if k not in {"use_ffi_shuffle", "force_legacy"}
-        }
-        return _run_shuffle_analysis_multiprocessing(
-            sspikes, num_shuffles, num_cores, progress_bar, **legacy_kwargs
+    if config is None:
+        config = TDAConfig(**kwargs)
+    elif kwargs:
+        raise TypeError("Pass either config or shuffle TDA keyword arguments, not both")
+    overrides = {}
+    if num_shuffles is not None:
+        overrides["num_shuffles"] = num_shuffles
+    if num_cores is not None:
+        overrides["shuffle_workers"] = num_cores
+    if progress_bar is not None:
+        overrides["progress_bar"] = progress_bar
+    config = replace(config, **overrides)
+    config = _resolve_configuration(config)
+    _check_backend_availability(config)
+    activity, offsets = _validate_shuffle_input(
+        sspikes,
+        config.num_shuffles,
+        config.shuffle_seed,
+        config.shuffle_shifts,
+        config.shuffle_workers,
+    )
+    if offsets is None:
+        offsets = np.random.default_rng(config.shuffle_seed).integers(
+            0, activity.shape[0], size=(config.num_shuffles, activity.shape[1]), dtype=np.int64
         )
-    # Strip FFI control flags so they don't leak into a legacy fallback (would
-    # otherwise recurse / crash). The fallback will use the same legacy path
-    # as in 1.1.x, preserving the public contract.
-    legacy_kwargs = {
-        k: v for k, v in kwargs.items() if k not in {"use_ffi_shuffle", "force_legacy"}
-    }
-    maxdim = int(kwargs.get("maxdim", 1))
-    coeff = int(kwargs.get("coeff", 47))
-    if sspikes is None or sspikes.ndim != 2 or sspikes.shape[0] < 2 or sspikes.shape[1] < 2:
-        return _run_shuffle_analysis_multiprocessing(
-            sspikes, num_shuffles, num_cores, progress_bar, **legacy_kwargs
+    offsets.flags.writeable = False
+    # Keep the input and random plan stable while workers run. Scientific
+    # settings are shared with real analysis; only presentation controls differ.
+    activity = np.array(activity, copy=True)
+    activity.flags.writeable = False
+    analysis_config = replace(config, do_shuffle=False, show=False, progress_bar=False)
+    return _run_asa_shuffle(activity, offsets, config, analysis_config)
+
+
+def _shuffle_persistence_pipeline(activity, *, config):
+    """Private ASA round, never a callback passed to another library."""
+    persistence = _compute_real_persistence(activity, config)["persistence"]
+    if len(persistence["dgms"]) != config.maxdim + 1:
+        raise ValueError("Pipeline returned missing or extra homology dimensions")
+    return persistence
+
+
+def _validate_shuffle_input(activity, count, seed, shifts, workers):
+    for name, value in (("num_shuffles", count), ("shuffle_workers", workers)):
+        if isinstance(value, bool) or not isinstance(value, Integral) or value < 1:
+            raise ValueError(f"{name} must be a positive integer")
+    _check_shuffle_concurrency(min(count, workers))
+    activity = np.asarray(activity)
+    if activity.ndim != 2 or 0 in activity.shape or activity.dtype.kind not in "fiu":
+        raise ValueError("Shuffle activity must be a nonempty real numeric (time, neurons) matrix")
+    if not np.isfinite(activity).all():
+        raise ValueError("Shuffle activity must contain only finite values")
+    if seed is not None and shifts is not None:
+        raise ValueError("shuffle_seed and shuffle_shifts are mutually exclusive")
+    if seed is not None and (
+        isinstance(seed, (bool, np.bool_)) or not isinstance(seed, Integral) or seed < 0
+    ):
+        raise ValueError("shuffle_seed must be None or a nonnegative integer")
+    offsets = None
+    if shifts is not None:
+        offsets = np.asarray(shifts)
+        if offsets.shape != (count, activity.shape[1]) or offsets.dtype.kind not in "iu":
+            raise ValueError("shuffle_shifts must be an integer (num_shuffles, neurons) matrix")
+        if (offsets < 0).any() or (offsets >= activity.shape[0]).any():
+            raise ValueError("shuffle_shifts must be in [0, timepoints)")
+        offsets = np.array(offsets, dtype=np.int64, copy=True)
+    return activity, offsets
+
+
+def _check_shuffle_concurrency(workers):
+    """Reject Numba workqueue before concurrent ASA analyses can abort Python."""
+    if HAS_NUMBA and workers > 1:
+        from numba import config, get_num_threads, threading_layer
+
+        if config.DISABLE_JIT:
+            return
+        # This public API initializes the selected layer before querying it.
+        get_num_threads()
+        if threading_layer() == "workqueue":
+            raise ValueError(
+                "Concurrent ASA shuffles cannot use Numba's non-thread-safe workqueue layer. "
+                "Set shuffle_workers=1, or configure an installed thread-safe Numba "
+                "threading backend before starting Python."
+            )
+
+
+class ShuffleIterationError(ProcessingError):
+    """A failed ASA shuffle is evidence, never a missing/zero null draw."""
+
+    def __init__(self, index, offsets, original_exception):
+        self.index = int(index)
+        self.offsets = np.array(offsets, dtype=np.int64, copy=True)
+        self.offsets.flags.writeable = False
+        self.original_exception = original_exception
+        super().__init__(
+            f"Shuffle {index} failed with offsets {self.offsets.tolist()}: {original_exception}"
         )
-    if maxdim > 2:  # FFI supports 0..=2 only
-        return _run_shuffle_analysis_multiprocessing(
-            sspikes, num_shuffles, num_cores, progress_bar, **legacy_kwargs
+
+
+def _finite_lifetime_summary(persistence, maxdim):
+    diagrams = persistence["dgms"]
+    if len(diagrams) != maxdim + 1:
+        raise ValueError("Pipeline returned missing or extra homology dimensions")
+    maxima, essential = {}, {}
+    for dim, diagram in enumerate(diagrams):
+        a = np.asarray(diagram)
+        if a.ndim != 2 or a.shape[1] != 2 or a.dtype.kind not in "fiu":
+            raise ValueError(f"H{dim} diagram must be a real numeric (n, 2) array")
+        if not np.isfinite(a[:, 0]).all() or np.isnan(a[:, 1]).any():
+            raise ValueError(f"H{dim} has invalid birth/death values")
+        if np.isneginf(a[:, 1]).any() or (a[:, 1] < a[:, 0]).any():
+            raise ValueError(f"H{dim} has invalid death values")
+        finite = a[np.isfinite(a[:, 1])]
+        essential[dim] = int(np.isposinf(a[:, 1]).sum())
+        if not len(finite):
+            maxima[dim] = 0.0
+        elif a.dtype.kind in "iu":
+            maxima[dim] = float(max(int(death) - int(birth) for birth, death in finite))
+        else:
+            cast = finite.astype(np.result_type(a.dtype, np.float64), copy=False)
+            maxima[dim] = float(np.max(cast[:, 1] - cast[:, 0]))
+        if not np.isfinite(maxima[dim]):
+            raise ValueError(f"H{dim} finite lifetime overflowed")
+    return maxima, essential
+
+
+def _run_asa_shuffle(activity, offsets, config, analysis_config):
+    """Execute complete ASA analyses with bounded concurrency and ordered results."""
+    results = [None] * config.num_shuffles
+
+    def work(index):
+        try:
+            shifted = _shuffle_spike_trains(activity, offsets[index])
+            persistence = _shuffle_persistence_pipeline(shifted, config=analysis_config)
+            return _finite_lifetime_summary(persistence, config.maxdim)
+        except Exception as exc:
+            raise ShuffleIterationError(index, offsets[index], exc) from exc
+
+    workers = min(config.shuffle_workers, config.num_shuffles)
+    if workers == 1:
+        for index in range(config.num_shuffles):
+            results[index] = work(index)
+    else:
+        # Never submit the entire batch: at most workers complete analyses are
+        # queued/running, with one shifted activity matrix per active worker.
+        executor = ThreadPoolExecutor(max_workers=workers)
+        pending = {}
+        next_index = 0
+        try:
+            while next_index < config.num_shuffles or pending:
+                while next_index < config.num_shuffles and len(pending) < workers:
+                    pending[executor.submit(work, next_index)] = next_index
+                    next_index += 1
+                completed, _ = wait(pending, return_when=FIRST_COMPLETED)
+                for future in sorted(completed, key=pending.__getitem__):
+                    index = pending.pop(future)
+                    results[index] = future.result()
+        except BaseException:
+            for future in pending:
+                future.cancel()
+            # Running analyses cannot be forcibly stopped; surface the failed
+            # iteration immediately and cancel any work that has not started.
+            executor.shutdown(wait=False, cancel_futures=True)
+            raise
+        else:
+            executor.shutdown(wait=True)
+    if any(any(count for dim, count in essential.items() if dim > 0) for _, essential in results):
+        warnings.warn(
+            "Shuffle diagrams contain essential higher-dimensional intervals; "
+            "shuffle_max summarizes finite lifetimes only.",
+            RuntimeWarning,
+            stacklevel=3,
         )
-    try:
-        flat = np.ascontiguousarray(sspikes, dtype=np.float32).ravel()
-        t, n = sspikes.shape
-        if flat.size != t * n:
-            raise ValueError("sspikes is not contiguous")
-        result = _ripser_core.shuffle_null_model(
-            flat,
-            int(t),
-            int(n),
-            int(num_shuffles),
-            maxdim,
-            np.inf,
-            coeff,
-            0,
-        )
-        out: dict[int, list[float]] = {}
-        for d in range(maxdim + 1):
-            arr = np.asarray(result.get(d, []), dtype=np.float64)
-            out[d] = arr.tolist()
-        return out
-    except Exception as exc:  # noqa: BLE001
-        logging.warning(
-            "canns_lib shuffle_null_model FFI failed (%s); falling back to mp.Pool",
-            exc,
-        )
-        return _run_shuffle_analysis_multiprocessing(
-            sspikes, num_shuffles, num_cores, progress_bar, **legacy_kwargs
-        )
+    return {dim: [result[0][dim] for result in results] for dim in range(config.maxdim + 1)}
 
 
 def _run_shuffle_analysis_multiprocessing(
     sspikes, num_shuffles=1000, num_cores=4, progress_bar=True, **kwargs
 ):
-    """Original multiprocessing implementation for fallback."""
-    # Use numpy arrays with NaN for failed results (more efficient than None filtering)
-    max_lifetimes = {
-        0: np.full(num_shuffles, np.nan),
-        1: np.full(num_shuffles, np.nan),
-        2: np.full(num_shuffles, np.nan),
-    }
-
-    # Prepare task list
-    tasks = [(i, sspikes, kwargs) for i in range(num_shuffles)]
-    logging.info(
-        f"Starting shuffle analysis with {num_shuffles} iterations using {num_cores} cores..."
-    )
-
-    # Use multiprocessing pool for parallel processing
-    with mp.Pool(processes=num_cores) as pool:
-        results = list(pool.imap(_process_single_shuffle, tasks))
-        logging.info("Shuffle analysis completed")
-
-    # Collect results - use indexing instead of append for better performance
-    for idx, res in enumerate(results):
-        for dim, lifetime in res.items():
-            max_lifetimes[dim][idx] = lifetime
-
-    # Filter out NaN values (failed results) - convert to list for consistency
-    for dim in max_lifetimes:
-        max_lifetimes[dim] = max_lifetimes[dim][~np.isnan(max_lifetimes[dim])].tolist()
-
-    return max_lifetimes
+    """Compatibility entry point for the bounded complete-pipeline reference."""
+    return _run_shuffle_analysis(sspikes, num_shuffles, num_cores, progress_bar, **kwargs)
 
 
 def _process_single_shuffle(args):
-    """Process a single shuffle task."""
-    i, sspikes, kwargs = args
+    """Compatibility worker; numerical errors propagate instead of returning {}."""
+    index, activity, kwargs = args
+    config = _resolve_configuration(TDAConfig(**kwargs))
+    offsets = np.random.default_rng().integers(0, len(activity), size=activity.shape[1])
     try:
-        shuffled_data = _shuffle_spike_trains(sspikes)
-        persistence = _compute_persistence(shuffled_data, **kwargs)
-
-        dim_max_lifetimes = {}
-        for dim in [0, 1, 2]:
-            if dim < len(persistence["dgms"]):
-                # Filter out infinite values
-                valid_bars = [bar for bar in persistence["dgms"][dim] if not np.isinf(bar[1])]
-                if valid_bars:
-                    lifetimes = [bar[1] - bar[0] for bar in valid_bars]
-                    if lifetimes:
-                        dim_max_lifetimes[dim] = max(lifetimes)
-        return dim_max_lifetimes
-    except Exception as e:
-        print(f"Shuffle {i} failed: {str(e)}")
-        return {}
+        persistence = _shuffle_persistence_pipeline(
+            _shuffle_spike_trains(activity, offsets), config=config
+        )
+        return _finite_lifetime_summary(persistence, config.maxdim)[0]
+    except Exception as exc:
+        raise ShuffleIterationError(index, offsets, exc) from exc
 
 
-def _shuffle_spike_trains(sspikes):
-    """Perform random circular shift on spike trains."""
-    shuffled = sspikes.copy()
-    num_neurons = shuffled.shape[1]
-    num_timepoints = shuffled.shape[0]
-
-    # Independent shift for each neuron
-    for n in range(num_neurons):
-        shift = np.random.randint(0, num_timepoints)
-        shuffled[:, n] = np.roll(shuffled[:, n], shift)
-
+def _shuffle_spike_trains(sspikes, offsets=None):
+    """Positive independent circular shifts on each neuron's full time series."""
+    shuffled = np.empty_like(sspikes)
+    if offsets is None:
+        offsets = np.random.randint(0, len(sspikes), size=sspikes.shape[1])
+    for neuron, shift in enumerate(offsets):
+        shuffled[:, neuron] = np.roll(sspikes[:, neuron], int(shift))
     return shuffled
 
 
@@ -825,14 +997,13 @@ def _plot_barcode(persistence):
     Parameters:
         persistence (dict): Persistent homology result with 'dgms' key.
     """
-    cs = np.repeat([[0, 0.55, 0.2]], 3).reshape(3, 3).T  # RGB color for each dimension
     alpha = 1
     inf_delta = 0.1
-    colormap = cs
     dgms = persistence["dgms"]
     maxdim = len(dgms) - 1
+    colormap = np.tile([0, 0.55, 0.2], (maxdim + 1, 1))
     dims = np.arange(maxdim + 1)
-    labels = ["$H_0$", "$H_1$", "$H_2$"]
+    labels = [f"$H_{dim}$" for dim in dims]
 
     # Determine axis range
     min_birth, max_death = 0, 0
@@ -891,11 +1062,10 @@ def _plot_barcode_with_shuffle(persistence, shuffle_max):
     if shuffle_max is None:
         shuffle_max = {}
 
-    cs = np.repeat([[0, 0.55, 0.2]], 3).reshape(3, 3).T
     alpha = 1
     inf_delta = 0.1
-    colormap = cs
     maxdim = len(persistence["dgms"]) - 1
+    colormap = np.tile([0, 0.55, 0.2], (maxdim + 1, 1))
     dims = np.arange(maxdim + 1)
 
     min_birth, max_death = 0, 0
@@ -926,7 +1096,7 @@ def _plot_barcode_with_shuffle(persistence, shuffle_max):
         else:
             thresholds[dim] = 0
 
-    labels = ["$H_0$", "$H_1$", "$H_2$"]
+    labels = [f"$H_{dim}$" for dim in dims]
 
     for _, dim in enumerate(dims):
         axes = plt.subplot(gs[dim])
