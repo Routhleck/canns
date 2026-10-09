@@ -1,7 +1,7 @@
 # ---- Project Info and Dependencies ----
 
 [project.urls]
-Repository = "https://github.com/routhleck/canns"
+Repository = "https://github.com/sichaohe/canns"
 # Homepage = "https://..."
 Documentation = "https://routhleck.com/canns"
 

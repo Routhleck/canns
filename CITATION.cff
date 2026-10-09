@@ -55,7 +55,7 @@ authors:
       - "PKU-IDG/McGovern Institute for Brain Research, Peking University"
       - "Center of Quantitative Biology, Peking University"
     orcid: "https://orcid.org/0000-0001-9650-6935"
-repository-code: "https://github.com/Routhleck/canns"
+repository-code: "https://github.com/sichaohe/canns"
 url: "https://routhleck.com/canns"
 abstract: "A research toolkit built on BrainPy and JAX that bundles model collections, task generators, analyzers, and the ASA pipeline (GUI/TUI) so researchers can run simulations and analyze results in a consistent workflow."
 keywords:
